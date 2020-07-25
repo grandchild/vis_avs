@@ -225,8 +225,10 @@ yynewstate:
     {
       /* Give user a chance to reallocate the stack */
       /* Use copies of these so that the &'s don't force the real ones into memory. */
-      YYSTYPE *yyvs1 = yyvs;
-      short *yyss1 = yyss;
+
+      // The following two variables are unused -- Remove?
+      // YYSTYPE *yyvs1 = yyvs;
+      // short *yyss1 = yyss;
 
       /* Get the current used size of the three stacks, in elements.  */
       int size = yyssp - yyss + 1;
