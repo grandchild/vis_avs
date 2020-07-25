@@ -27,6 +27,7 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+#include "../gcc-hacks.h"
 #include <windows.h>
 #include "../ns-eel/ns-eel.h"
 #include "../ns-eel/ns-eel-int.h"
@@ -87,7 +88,7 @@ static double * NSEEL_CGEN_CALL megabuf_(double ***blocks, double *which)
 }
 
 static double * (NSEEL_CGEN_CALL *__megabuf)(double ***,double *) = &megabuf_;
-__declspec ( naked ) void _asm_megabuf(void)
+NAKED void _asm_megabuf(void)
 {
   double ***my_ctx;
   double *parm_a, *__nextBlock;
@@ -102,4 +103,4 @@ __declspec ( naked ) void _asm_megabuf(void)
   __asm { mov eax, __nextBlock } // this is custom, returning pointer
   __asm { mov esp, ebp }
 }
-__declspec ( naked ) void _asm_megabuf_end(void) {}
+NAKED void _asm_megabuf_end(void) {}

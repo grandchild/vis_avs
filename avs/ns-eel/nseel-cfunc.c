@@ -28,6 +28,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include "../gcc-hacks.h"
 #include <windows.h>
 #include <math.h>
 #include "ns-eel-int.h"
@@ -83,7 +84,7 @@ static double NSEEL_CGEN_CALL _sig(double *x, double *constraint)
 
 static double (*__asin)(double) = &asin;
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_asin(void)
+NAKED void nseel_asm_asin(void)
 {
   FUNC1_ENTER
 
@@ -91,11 +92,11 @@ __declspec ( naked ) void nseel_asm_asin(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void nseel_asm_asin_end(void) {}
+NAKED void nseel_asm_asin_end(void) {}
 
 static double (*__acos)(double) = &acos;
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_acos(void)
+NAKED void nseel_asm_acos(void)
 {
   FUNC1_ENTER
 
@@ -103,11 +104,11 @@ __declspec ( naked ) void nseel_asm_acos(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void nseel_asm_acos_end(void) {}
+NAKED void nseel_asm_acos_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 static double (*__atan)(double) = &atan;
-__declspec ( naked ) void nseel_asm_atan(void)
+NAKED void nseel_asm_atan(void)
 {
   FUNC1_ENTER
 
@@ -115,11 +116,11 @@ __declspec ( naked ) void nseel_asm_atan(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void nseel_asm_atan_end(void) {}
+NAKED void nseel_asm_atan_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 static double (*__atan2)(double,double) = &atan2;
-__declspec ( naked ) void nseel_asm_atan2(void)
+NAKED void nseel_asm_atan2(void)
 {
   FUNC2_ENTER
 
@@ -127,12 +128,12 @@ __declspec ( naked ) void nseel_asm_atan2(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void nseel_asm_atan2_end(void) {}
+NAKED void nseel_asm_atan2_end(void) {}
 
 
 //---------------------------------------------------------------------------------------------------------------
 static double (NSEEL_CGEN_CALL  * __sig)(double *,double *) = &_sig;
-__declspec ( naked ) void nseel_asm_sig(void)
+NAKED void nseel_asm_sig(void)
 {
   FUNC2_ENTER
 
@@ -140,11 +141,11 @@ __declspec ( naked ) void nseel_asm_sig(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void nseel_asm_sig_end(void) {}
+NAKED void nseel_asm_sig_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 static double (NSEEL_CGEN_CALL *__rand)(double *) = &_rand;
-__declspec ( naked ) void nseel_asm_rand(void)
+NAKED void nseel_asm_rand(void)
 {
   FUNC1_ENTER
 
@@ -152,11 +153,11 @@ __declspec ( naked ) void nseel_asm_rand(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void nseel_asm_rand_end(void) {}
+NAKED void nseel_asm_rand_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 static double (NSEEL_CGEN_CALL *__band)(double *,double *) = &_band;
-__declspec ( naked ) void nseel_asm_band(void)
+NAKED void nseel_asm_band(void)
 {
   FUNC2_ENTER
 
@@ -164,11 +165,11 @@ __declspec ( naked ) void nseel_asm_band(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void nseel_asm_band_end(void) {}
+NAKED void nseel_asm_band_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 static double ( NSEEL_CGEN_CALL  *__bor)(double *,double *) = &_bor;
-__declspec ( naked ) void nseel_asm_bor(void)
+NAKED void nseel_asm_bor(void)
 {
   FUNC2_ENTER
 
@@ -176,11 +177,11 @@ __declspec ( naked ) void nseel_asm_bor(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void nseel_asm_bor_end(void) {}
+NAKED void nseel_asm_bor_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 static double (* __pow)(double,double) = &pow;
-__declspec ( naked ) void nseel_asm_pow(void)
+NAKED void nseel_asm_pow(void)
 {
   FUNC2_ENTER
 
@@ -188,11 +189,11 @@ __declspec ( naked ) void nseel_asm_pow(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void nseel_asm_pow_end(void) {}
+NAKED void nseel_asm_pow_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 static double (*__exp)(double) = &exp;
-__declspec ( naked ) void nseel_asm_exp(void)
+NAKED void nseel_asm_exp(void)
 {
   FUNC1_ENTER
 
@@ -200,11 +201,11 @@ __declspec ( naked ) void nseel_asm_exp(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void nseel_asm_exp_end(void) {}
+NAKED void nseel_asm_exp_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 static double (*__floor)(double) = &floor;
-__declspec ( naked ) void nseel_asm_floor(void)
+NAKED void nseel_asm_floor(void)
 {
   FUNC1_ENTER
 
@@ -212,12 +213,12 @@ __declspec ( naked ) void nseel_asm_floor(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void nseel_asm_floor_end(void) {}
+NAKED void nseel_asm_floor_end(void) {}
 
 
 //---------------------------------------------------------------------------------------------------------------
 static double (*__ceil)(double) = &ceil;
-__declspec ( naked ) void nseel_asm_ceil(void)
+NAKED void nseel_asm_ceil(void)
 {
   FUNC1_ENTER
 
@@ -225,7 +226,7 @@ __declspec ( naked ) void nseel_asm_ceil(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void nseel_asm_ceil_end(void) {}
+NAKED void nseel_asm_ceil_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 
@@ -233,14 +234,14 @@ __declspec ( naked ) void nseel_asm_ceil_end(void) {}
 
 
 // do nothing, eh
-__declspec ( naked ) void nseel_asm_exec2(void)
+NAKED void nseel_asm_exec2(void)
 {
 }
-__declspec ( naked ) void nseel_asm_exec2_end(void) { }
+NAKED void nseel_asm_exec2_end(void) { }
 
 
 
-__declspec ( naked ) void nseel_asm_invsqrt(void)
+NAKED void nseel_asm_invsqrt(void)
 {
   __asm 
   {
@@ -270,11 +271,11 @@ __declspec ( naked ) void nseel_asm_invsqrt(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_invsqrt_end(void) {}
+NAKED void nseel_asm_invsqrt_end(void) {}
 
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_sin(void)
+NAKED void nseel_asm_sin(void)
 {
   __asm 
   {
@@ -285,10 +286,10 @@ __declspec ( naked ) void nseel_asm_sin(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_sin_end(void) {}
+NAKED void nseel_asm_sin_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_cos(void)
+NAKED void nseel_asm_cos(void)
 {
   __asm 
   {
@@ -299,10 +300,10 @@ __declspec ( naked ) void nseel_asm_cos(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_cos_end(void) {}
+NAKED void nseel_asm_cos_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_tan(void)
+NAKED void nseel_asm_tan(void)
 {
   __asm 
   {
@@ -314,10 +315,10 @@ __declspec ( naked ) void nseel_asm_tan(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_tan_end(void) {}
+NAKED void nseel_asm_tan_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_sqr(void)
+NAKED void nseel_asm_sqr(void)
 {
   __asm 
   {
@@ -328,10 +329,10 @@ __declspec ( naked ) void nseel_asm_sqr(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_sqr_end(void) {}
+NAKED void nseel_asm_sqr_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_sqrt(void)
+NAKED void nseel_asm_sqrt(void)
 {
   __asm 
   {
@@ -343,11 +344,11 @@ __declspec ( naked ) void nseel_asm_sqrt(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_sqrt_end(void) {}
+NAKED void nseel_asm_sqrt_end(void) {}
 
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_log(void)
+NAKED void nseel_asm_log(void)
 {
   __asm 
   {
@@ -361,10 +362,10 @@ __declspec ( naked ) void nseel_asm_log(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_log_end(void) {}
+NAKED void nseel_asm_log_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_log10(void)
+NAKED void nseel_asm_log10(void)
 {
   __asm 
   {
@@ -378,10 +379,10 @@ __declspec ( naked ) void nseel_asm_log10(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_log10_end(void) {}
+NAKED void nseel_asm_log10_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_abs(void)
+NAKED void nseel_asm_abs(void)
 {
   __asm 
   {
@@ -392,11 +393,11 @@ __declspec ( naked ) void nseel_asm_abs(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_abs_end(void) {}
+NAKED void nseel_asm_abs_end(void) {}
 
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_assign(void)
+NAKED void nseel_asm_assign(void)
 {
   __asm 
   {
@@ -404,10 +405,10 @@ __declspec ( naked ) void nseel_asm_assign(void)
     fstp qword ptr [ebx]
   }
 }
-__declspec ( naked ) void nseel_asm_assign_end(void) {}
+NAKED void nseel_asm_assign_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_add(void)
+NAKED void nseel_asm_add(void)
 {
   __asm 
   {
@@ -418,10 +419,10 @@ __declspec ( naked ) void nseel_asm_add(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_add_end(void) {}
+NAKED void nseel_asm_add_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_sub(void)
+NAKED void nseel_asm_sub(void)
 {
   __asm 
   {
@@ -432,10 +433,10 @@ __declspec ( naked ) void nseel_asm_sub(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_sub_end(void) {}
+NAKED void nseel_asm_sub_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_mul(void)
+NAKED void nseel_asm_mul(void)
 {
   __asm 
   {
@@ -446,10 +447,10 @@ __declspec ( naked ) void nseel_asm_mul(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_mul_end(void) {}
+NAKED void nseel_asm_mul_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_div(void)
+NAKED void nseel_asm_div(void)
 {
   __asm 
   {
@@ -460,10 +461,10 @@ __declspec ( naked ) void nseel_asm_div(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_div_end(void) {}
+NAKED void nseel_asm_div_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_mod(void)
+NAKED void nseel_asm_mod(void)
 {
   __asm 
   {
@@ -490,10 +491,10 @@ __declspec ( naked ) void nseel_asm_mod(void)
 
   }
 }
-__declspec ( naked ) void nseel_asm_mod_end(void) {}
+NAKED void nseel_asm_mod_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_or(void)
+NAKED void nseel_asm_or(void)
 {
   __asm 
   {
@@ -511,10 +512,10 @@ __declspec ( naked ) void nseel_asm_or(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_or_end(void) {}
+NAKED void nseel_asm_or_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_and(void)
+NAKED void nseel_asm_and(void)
 {
   __asm 
   {
@@ -534,10 +535,10 @@ __declspec ( naked ) void nseel_asm_and(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_and_end(void) {}
+NAKED void nseel_asm_and_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_uplus(void) // this is the same as doing nothing, it seems
+NAKED void nseel_asm_uplus(void) // this is the same as doing nothing, it seems
 {
 #if 0
   __asm 
@@ -553,10 +554,10 @@ __declspec ( naked ) void nseel_asm_uplus(void) // this is the same as doing not
   }
 #endif
 }
-__declspec ( naked ) void nseel_asm_uplus_end(void) {}
+NAKED void nseel_asm_uplus_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_uminus(void)
+NAKED void nseel_asm_uminus(void)
 {
   __asm 
   {
@@ -569,12 +570,12 @@ __declspec ( naked ) void nseel_asm_uminus(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_uminus_end(void) {}
+NAKED void nseel_asm_uminus_end(void) {}
 
 
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_sign(void)
+NAKED void nseel_asm_sign(void)
 {
   __asm
   {
@@ -599,12 +600,12 @@ nonzero:
 zero:
   }
 }
-__declspec ( naked ) void nseel_asm_sign_end(void) {}
+NAKED void nseel_asm_sign_end(void) {}
 
 
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_bnot(void)
+NAKED void nseel_asm_bnot(void)
 {
   __asm
   {
@@ -620,10 +621,10 @@ __declspec ( naked ) void nseel_asm_bnot(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_bnot_end(void) {}
+NAKED void nseel_asm_bnot_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_if(void)
+NAKED void nseel_asm_if(void)
 {
   __asm
   {
@@ -646,14 +647,14 @@ __declspec ( naked ) void nseel_asm_if(void)
     // at this point, the return value will be in eax, as desired
   }
 }
-__declspec ( naked ) void nseel_asm_if_end(void) {}
+NAKED void nseel_asm_if_end(void) {}
 
 #ifdef NSEEL_LOOPFUNC_SUPPORT
 #ifndef NSEEL_LOOPFUNC_SUPPORT_MAXLEN
 #define NSEEL_LOOPFUNC_SUPPORT_MAXLEN (4096)
 #endif
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_repeat(void)
+NAKED void nseel_asm_repeat(void)
 {
   __asm
   {
@@ -677,11 +678,11 @@ again:
 skip:
   }
 }
-__declspec ( naked ) void nseel_asm_repeat_end(void) {}
+NAKED void nseel_asm_repeat_end(void) {}
 #endif
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_equal(void)
+NAKED void nseel_asm_equal(void)
 {
   __asm
   {
@@ -698,10 +699,10 @@ __declspec ( naked ) void nseel_asm_equal(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_equal_end(void) {}
+NAKED void nseel_asm_equal_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_below(void)
+NAKED void nseel_asm_below(void)
 {
   __asm
   {
@@ -717,10 +718,10 @@ __declspec ( naked ) void nseel_asm_below(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_below_end(void) {}
+NAKED void nseel_asm_below_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void nseel_asm_above(void)
+NAKED void nseel_asm_above(void)
 {
   __asm
   {
@@ -736,10 +737,10 @@ __declspec ( naked ) void nseel_asm_above(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_above_end(void) {}
+NAKED void nseel_asm_above_end(void) {}
 
 
-__declspec ( naked ) void nseel_asm_min(void)
+NAKED void nseel_asm_min(void)
 {
   __asm 
   {
@@ -757,9 +758,9 @@ __declspec ( naked ) void nseel_asm_min(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_min_end(void) {}
+NAKED void nseel_asm_min_end(void) {}
 
-__declspec ( naked ) void nseel_asm_max(void)
+NAKED void nseel_asm_max(void)
 {
   __asm 
   {
@@ -776,5 +777,5 @@ __declspec ( naked ) void nseel_asm_max(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void nseel_asm_max_end(void) {}
+NAKED void nseel_asm_max_end(void) {}
 
