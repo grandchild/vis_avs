@@ -95,16 +95,54 @@ be sure to preserve edi, too.
 
 #else
 
+// __LOCAL_SIZE = 0 ?
 #define FUNC1_ENTER \
-  double *parm_a, *__nextBlock;
+  double *parm_a, *__nextBlock; \
+    __asm__ __volatile__ ( \
+    "  mov  %%ebp, %%esp\n" \
+    "  sub  %%esp, 0\n" \
+    "  mov  dword ptr %0, %%eax\n" \
+    "  mov  %1, %%esi\n" \
+    :"=m"(parm_a), "=m"(__nextBlock) \
+    : \
+    :"esi", "eax" \
+  );
 
 #define FUNC2_ENTER \
-  double *parm_a,*parm_b,*__nextBlock;
+  double *parm_a,*parm_b,*__nextBlock; \
+  __asm__ __volatile__ ( \
+    "  mov  %%ebp, %%esp\n" \
+    "  sub  %%esp, 0\n" \
+    "  mov  dword ptr %0, %%eax\n" \
+    "  mov  dword ptr %1, %%ebx\n" \
+    "  mov  dword ptr %2, %%esi\n" \
+    :"=m"(parm_a), "=m"(parm_b), "=m"(__nextBlock) \
+    : \
+    :"esi", "eax", "ebx" \
+  );
 
 #define FUNC3_ENTER \
-  double *parm_a,*parm_b,*parm_c,*__nextBlock;
+  double *parm_a,*parm_b,*parm_c,*__nextBlock; \
+  __asm__ __volatile__ ( \
+    "  mov  %%ebp, %%esp\n" \
+    "  sub  %%esp, 0\n" \
+    "  mov  dword ptr %0, %%eax\n" \
+    "  mov  dword ptr %1, %%ebx\n" \
+    "  mov  dword ptr %2, %%ecx\n" \
+    "  mov  dword ptr %3, %%esi\n" \
+    :"=m"(parm_a), "=m"(parm_b), "=m"(parm_c), "=m"(__nextBlock) \
+    : \
+    :"esi", "eax", "ebx", "ecx" \
+  );
 
-#define FUNC_LEAVE
+#define FUNC_LEAVE \
+  __asm__ __volatile__ ( \
+    "  mov  %%eax, %%esi\n" \
+    "  add  %%esi, 8\n" \
+    "  mov  %%esp, %%ebp\n" \
+    : : \
+    :"esi", "eax" \
+  );
 
 #endif
 

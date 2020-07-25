@@ -778,7 +778,19 @@ void NSEEL_code_execute(NSEEL_CODEHANDLE code)
       popad
     }
 #else
-    /* TODO: Translate to GCC __asm__ block */
+    __asm__ __volatile__ (
+      "  mov %%ebx, %0\n\t"
+      "  mov %%eax, %1\n\t"
+      "  pushad\n\t"
+      "  add %%ebx, 31\n\t"
+      "  add %%ebx, ~31\n\t"
+      "  mov %%edi, %%ebx\n\t"
+      "  call %%eax\n\t"
+      "  popad\n\t"
+      :
+      : "r"(baseptr), "r"(startPoint)
+      : "eax", "ebx", "edi"
+    );
 #endif
   }
 }

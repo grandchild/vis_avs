@@ -99,7 +99,16 @@ NAKED void _asm_megabuf(void)
   __asm { mov dword ptr my_ctx, edx }
   __asm { mov dword ptr parm_a, eax }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "  mov %%edx, 0xffffffff\n\t"
+    "  mov %%ebp, %%esp\n\t"
+    "  sub %%esp, 0\n\t"  // __LOCAL_SIZE = 0
+    "  mov dword ptr %0, %%edx\n\t"
+    "  mov dword ptr %1, %%eax\n\t"
+    :"=m"(my_ctx), "=m"(parm_a)
+    :
+    :"eax", "edx"
+  );
 #endif
   __nextBlock = __megabuf(my_ctx,parm_a);
 
@@ -107,7 +116,13 @@ NAKED void _asm_megabuf(void)
   __asm { mov eax, __nextBlock } // this is custom, returning pointer
   __asm { mov esp, ebp }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "  mov  %%eax, %0\n\t"
+    "  mov  %%esp, %%ebp\n\t"
+    :
+    :"m"(__nextBlock)
+    :"eax", "ebx"
+  );
 #endif
 
 }

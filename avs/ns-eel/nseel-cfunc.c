@@ -272,7 +272,32 @@ NAKED void nseel_asm_invsqrt(void)
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "  fld qword ptr [%%eax]\n\t"
+
+    "  mov %%edx, 0x5f3759df\n\t"
+    "  fst dword ptr [%%esi]\n\t"
+    // floating point stack has input, as does [eax]
+    "  fmul dword ptr [%0]\n\t"
+    "  mov %%ecx, [%%esi]\n\t"
+    "  sar %%ecx, 1\n\t"
+    "  sub %%edx, %%ecx\n\t"
+    "  mov [%%esi], %%edx\n\t"
+
+    // st(0) = input, [eax] has x
+    "  fmul dword ptr [%%esi]\n\t"
+    "  fmul dword ptr [%%esi]\n\t"
+    "  fadd dword ptr [%1]\n\t"
+    "  fmul dword ptr [%%esi]\n\t"
+    "  mov %%eax, %%esi\n\t"
+
+    "  fstp qword ptr [%%esi]\n\t"
+
+    "  add %%esi, 8\n\t"
+    :"=m"(negativezeropointfive), "=m"(onepointfive)
+    :
+    :"eax", "edx", "esi", "ecx"
+  );
 #endif
 }
 NAKED void nseel_asm_invsqrt_end(void) {}
