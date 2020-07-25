@@ -110,7 +110,7 @@ int nseel_yylex(compileContext *ctx, char **exp)
             }
             return(ERROR);
     }
-    if (c = (final >> 11) & 037)
+    if ((c = (final >> 11) & 037))
             ctx->llend = ctx->llsave[c-1];
     if ((c = (*lp->llactr)(ctx,final&03777)) >= 0)
             return(c);
@@ -127,7 +127,7 @@ void nseel_llinit(compileContext *ctx)
 
 static int llinp(compileContext *ctx, char **exp)
 {
-        register c;
+        register int c;
         register struct lextab *lp;
         register char *cp;
 

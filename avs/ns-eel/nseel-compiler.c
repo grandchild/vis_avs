@@ -50,9 +50,9 @@ double *NSEEL_getglobalregs()
 
 #define LLB_DSIZE (65536-64)
 typedef struct _llBlock {
-	struct _llBlock *next;
+  struct _llBlock *next;
   int sizeused;
-	char block[LLB_DSIZE];
+  char block[LLB_DSIZE];
 } llBlock;
 
 typedef struct _startPtr {
@@ -128,41 +128,41 @@ static void freeBlocks(llBlock *start);
 
 
 static functionType fnTable1[] = {
-													 { "if",     nseel_asm_if,nseel_asm_if_end,    3 },
+                           { "if",        nseel_asm_if,      nseel_asm_if_end,      3, NULL },
 #ifdef NSEEL_LOOPFUNC_SUPPORT
-													 { "loop", nseel_asm_repeat,nseel_asm_repeat_end, 2 },
+                           { "loop",      nseel_asm_repeat,  nseel_asm_repeat_end,  2, NULL },
 #endif
-                           { "sin",   nseel_asm_sin,nseel_asm_sin_end,   1 },
-                           { "cos",    nseel_asm_cos,nseel_asm_cos_end,   1 },
-                           { "tan",    nseel_asm_tan,nseel_asm_tan_end,   1 },
-                           { "asin",   nseel_asm_asin,nseel_asm_asin_end,  1 },
-                           { "acos",   nseel_asm_acos,nseel_asm_acos_end,  1 },
-                           { "atan",   nseel_asm_atan,nseel_asm_atan_end,  1 },
-                           { "atan2",  nseel_asm_atan2,nseel_asm_atan2_end, 2 },
-                           { "sqr",    nseel_asm_sqr,nseel_asm_sqr_end,   1 },
-                           { "sqrt",   nseel_asm_sqrt,nseel_asm_sqrt_end,  1 },
-                           { "pow",    nseel_asm_pow,nseel_asm_pow_end,   2 },
-                           { "exp",    nseel_asm_exp,nseel_asm_exp_end,   1 },
-                           { "log",    nseel_asm_log,nseel_asm_log_end,   1 },
-                           { "log10",  nseel_asm_log10,nseel_asm_log10_end, 1 },
-                           { "abs",    nseel_asm_abs,nseel_asm_abs_end,   1 },
-                           { "min",    nseel_asm_min,nseel_asm_min_end,   2 },
-                           { "max",    nseel_asm_max,nseel_asm_max_end,   2 },
-													 { "sigmoid",nseel_asm_sig,nseel_asm_sig_end,   2 } ,
-													 { "sign",   nseel_asm_sign,nseel_asm_sign_end,  1 } ,
-													 { "rand",   nseel_asm_rand,nseel_asm_rand_end,  1 } ,
-													 { "band",   nseel_asm_band,nseel_asm_band_end,  2 } ,
-													 { "bor",    nseel_asm_bor,nseel_asm_bor_end,   2 } ,
-													 { "bnot",   nseel_asm_bnot,nseel_asm_bnot_end,  1 } ,
-													 { "equal",  nseel_asm_equal,nseel_asm_equal_end, 2 },
-													 { "below",  nseel_asm_below,nseel_asm_below_end, 2 },
-													 { "above",  nseel_asm_above,nseel_asm_above_end, 2 },
-                           { "floor",  nseel_asm_floor,nseel_asm_floor_end, 1 },
-                           { "ceil",   nseel_asm_ceil,nseel_asm_ceil_end,  1 },
-                           { "invsqrt",   nseel_asm_invsqrt,nseel_asm_invsqrt_end,  1 },
-                           { "assign",nseel_asm_assign,nseel_asm_assign_end,2},
-                           { "exec2",nseel_asm_exec2,nseel_asm_exec2_end,2},
-                           { "exec3",nseel_asm_exec2,nseel_asm_exec2_end,3},
+                           { "sin",       nseel_asm_sin,     nseel_asm_sin_end,     1, NULL },
+                           { "cos",       nseel_asm_cos,     nseel_asm_cos_end,     1, NULL },
+                           { "tan",       nseel_asm_tan,     nseel_asm_tan_end,     1, NULL },
+                           { "asin",      nseel_asm_asin,    nseel_asm_asin_end,    1, NULL },
+                           { "acos",      nseel_asm_acos,    nseel_asm_acos_end,    1, NULL },
+                           { "atan",      nseel_asm_atan,    nseel_asm_atan_end,    1, NULL },
+                           { "atan2",     nseel_asm_atan2,   nseel_asm_atan2_end,   2, NULL },
+                           { "sqr",       nseel_asm_sqr,     nseel_asm_sqr_end,     1, NULL },
+                           { "sqrt",      nseel_asm_sqrt,    nseel_asm_sqrt_end,    1, NULL },
+                           { "pow",       nseel_asm_pow,     nseel_asm_pow_end,     2, NULL },
+                           { "exp",       nseel_asm_exp,     nseel_asm_exp_end,     1, NULL },
+                           { "log",       nseel_asm_log,     nseel_asm_log_end,     1, NULL },
+                           { "log10",     nseel_asm_log10,   nseel_asm_log10_end,   1, NULL },
+                           { "abs",       nseel_asm_abs,     nseel_asm_abs_end,     1, NULL },
+                           { "min",       nseel_asm_min,     nseel_asm_min_end,     2, NULL },
+                           { "max",       nseel_asm_max,     nseel_asm_max_end,     2, NULL },
+                           { "sigmoid",   nseel_asm_sig,     nseel_asm_sig_end,     2, NULL },
+                           { "sign",      nseel_asm_sign,    nseel_asm_sign_end,    1, NULL },
+                           { "rand",      nseel_asm_rand,    nseel_asm_rand_end,    1, NULL },
+                           { "band",      nseel_asm_band,    nseel_asm_band_end,    2, NULL },
+                           { "bor",       nseel_asm_bor,     nseel_asm_bor_end,     2, NULL },
+                           { "bnot",      nseel_asm_bnot,    nseel_asm_bnot_end,    1, NULL },
+                           { "equal",     nseel_asm_equal,   nseel_asm_equal_end,   2, NULL },
+                           { "below",     nseel_asm_below,   nseel_asm_below_end,   2, NULL },
+                           { "above",     nseel_asm_above,   nseel_asm_above_end,   2, NULL },
+                           { "floor",     nseel_asm_floor,   nseel_asm_floor_end,   1, NULL },
+                           { "ceil",      nseel_asm_ceil,    nseel_asm_ceil_end,    1, NULL },
+                           { "invsqrt",   nseel_asm_invsqrt, nseel_asm_invsqrt_end, 1, NULL },
+                           { "assign",    nseel_asm_assign,  nseel_asm_assign_end,  2, NULL },
+                           { "exec2",     nseel_asm_exec2,   nseel_asm_exec2_end,   2, NULL },
+                           { "exec3",     nseel_asm_exec2,   nseel_asm_exec2_end,   3, NULL },
                            };
 
 static functionType *fnTableUser;
@@ -171,7 +171,7 @@ static int fnTableUser_size;
 functionType *nseel_getFunctionFromTable(int idx)
 {
   if (idx<0) return 0;
-  if (idx>=sizeof(fnTable1)/sizeof(fnTable1[0]))
+  if ((size_t)idx>=sizeof(fnTable1)/sizeof(fnTable1[0]))
   {
     idx -= sizeof(fnTable1)/sizeof(fnTable1[0]);
     if (!fnTableUser || idx >= fnTableUser_size) return 0;
@@ -225,7 +225,7 @@ static void *realAddress(void *fn, void *fn_e, int *size)
 #else
   // Release Mode
   *size  = (int)fn_e - (int) fn;
-	return fn;
+  return fn;
 #endif
 }
 
@@ -233,11 +233,11 @@ static void *realAddress(void *fn, void *fn_e, int *size)
 static void freeBlocks(llBlock *start)
 {
   while (start)
-	{
+  {
     llBlock *llB = start->next;
     GlobalFree(start);
-	  start=llB;
-	}
+    start=llB;
+  }
 }
 
 //---------------------------------------------------------------------------------------------------------------
@@ -279,7 +279,7 @@ static void *__newBlock(llBlock **start, int size)
 //---------------------------------------------------------------------------------------------------------------
 static int *findFBlock(char *p)
 {
-  while (*(int *)p != 0xFFFFFFFF) p++;
+  while (*(int *)p != (int)0xFFFFFFFF) p++;
   return (int*)p;
 }
 
@@ -295,10 +295,10 @@ int nseel_createCompiledValue(compileContext *ctx, double value, double *addrVal
   if (addrValue == NULL)
   {
     ctx->l_stats[3]+=sizeof(double);
-	  *(dupValue = (double *)newBlock(sizeof(double))) = value;
+    *(dupValue = (double *)newBlock(sizeof(double))) = value;
   }
   else
-	  dupValue = addrValue;
+    dupValue = addrValue;
 
   ((int*)block)[0]=5;
   block[4]=X86_MOV_EAX_DIRECTVALUE; // mov eax, <value>
@@ -313,35 +313,36 @@ static int nseel_getFunctionAddress(int fntype, int fn, int *size, NSEEL_PPPROC 
 {
   *pProc = NULL;
   switch (fntype)
-	{
-  	case MATH_SIMPLE:
-	  	switch (fn)
-			{
-			  case FN_ASSIGN:
-				  return (int)realAddress(nseel_asm_assign,nseel_asm_assign_end,size);
-			  case FN_ADD:
-				  return (int)realAddress(nseel_asm_add,nseel_asm_add_end,size);
-			  case FN_SUB:
-				  return (int)realAddress(nseel_asm_sub,nseel_asm_sub_end,size);
-			  case FN_MULTIPLY:
-				  return (int)realAddress(nseel_asm_mul,nseel_asm_mul_end,size);
-			  case FN_DIVIDE:
-				  return (int)realAddress(nseel_asm_div,nseel_asm_div_end,size);
-			  case FN_MODULO:
-				  return (int)realAddress(nseel_asm_mod,nseel_asm_mod_end,size);
-			  case FN_AND:
-				  return (int)realAddress(nseel_asm_and,nseel_asm_and_end,size);
-			  case FN_OR:
-				  return (int)realAddress(nseel_asm_or,nseel_asm_or_end,size);
-			  case FN_UPLUS:
-				  return (int)realAddress(nseel_asm_uplus,nseel_asm_uplus_end,size);
-			  case FN_UMINUS:
-				  return (int)realAddress(nseel_asm_uminus,nseel_asm_uminus_end,size);
-			}
-	  case MATH_FN:
+  {
+    case MATH_SIMPLE:
+      switch (fn)
+      {
+        case FN_ASSIGN:
+          return (int)realAddress(nseel_asm_assign,nseel_asm_assign_end,size);
+        case FN_ADD:
+          return (int)realAddress(nseel_asm_add,nseel_asm_add_end,size);
+        case FN_SUB:
+          return (int)realAddress(nseel_asm_sub,nseel_asm_sub_end,size);
+        case FN_MULTIPLY:
+          return (int)realAddress(nseel_asm_mul,nseel_asm_mul_end,size);
+        case FN_DIVIDE:
+          return (int)realAddress(nseel_asm_div,nseel_asm_div_end,size);
+        case FN_MODULO:
+          return (int)realAddress(nseel_asm_mod,nseel_asm_mod_end,size);
+        case FN_AND:
+          return (int)realAddress(nseel_asm_and,nseel_asm_and_end,size);
+        case FN_OR:
+          return (int)realAddress(nseel_asm_or,nseel_asm_or_end,size);
+        case FN_UPLUS:
+          return (int)realAddress(nseel_asm_uplus,nseel_asm_uplus_end,size);
+        case FN_UMINUS:
+          return (int)realAddress(nseel_asm_uminus,nseel_asm_uminus_end,size);
+      }
+      break;
+    case MATH_FN:
       {
         functionType *p=nseel_getFunctionFromTable(fn);
-		    if (!p) 
+        if (!p) 
         {
           if (size) *size=0;
           return 0;
@@ -349,7 +350,7 @@ static int nseel_getFunctionAddress(int fntype, int fn, int *size, NSEEL_PPPROC 
         if (p->pProc) *pProc=p->pProc;
         return (int)realAddress(p->afunc,p->func_e,size);
       }
-	}		
+  }   
   return 0;
 }
 
@@ -646,7 +647,7 @@ NSEEL_CODEHANDLE NSEEL_code_compile(NSEEL_VMCTX _ctx, char *_expression)
   expression_start=expression=preprocessCode(ctx,_expression);
 
   while (*expression)
-	{
+  {
     startPtr *tmp;
     char *expr;
     ctx->colCount=0;
@@ -655,7 +656,7 @@ NSEEL_CODEHANDLE NSEEL_code_compile(NSEEL_VMCTX _ctx, char *_expression)
     while (*expression == ';' || *expression == ' ') expression++;
     if (!*expression) break;
     expr=expression;
-	  while (*expression && *expression != ';') expression++;
+    while (*expression && *expression != ';') expression++;
     if (*expression) *expression++ = 0;
 
     // parse

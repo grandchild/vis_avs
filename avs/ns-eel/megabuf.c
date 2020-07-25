@@ -35,7 +35,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 void megabuf_ppproc(void *data, int data_size, void **userfunc_data)
 {
-  if (data_size > 5 && *(int*)((char *)data+1) == 0xFFFFFFFF)
+  if (data_size > 5 && *(int*)((char *)data+1) == (int)0xFFFFFFFF)
   {
     *(int*)((char *)data+1) = (int) (userfunc_data+0);
   }
