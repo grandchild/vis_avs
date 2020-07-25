@@ -108,8 +108,12 @@ be sure to preserve edi, too.
 
 #endif
 
-
+#ifdef _MSC_VER
 #define NSEEL_CGEN_CALL __fastcall
+#else
+#define NSEEL_CGEN_CALL __attribute__((fastcall))
+#endif
 
 
 #endif//__NS_EEL_ADDFUNCS_H__
+ 
