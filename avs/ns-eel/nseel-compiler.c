@@ -80,7 +80,7 @@ static void *__newBlock(llBlock **start,int size);
 static void freeBlocks(llBlock *start);
 
 #define DECL_ASMFUNC(x)         \
-  void nseel_asm_##x##(void);        \
+  void nseel_asm_##x(void);        \
   void nseel_asm_##x##_end(void);    \
 
   DECL_ASMFUNC(sin)
