@@ -92,15 +92,23 @@ NAKED void _asm_megabuf(void)
 {
   double ***my_ctx;
   double *parm_a, *__nextBlock;
+#ifdef _MSC_VER
   __asm { mov edx, 0xFFFFFFFF }
   __asm { mov ebp, esp }
   __asm { sub esp, __LOCAL_SIZE }
   __asm { mov dword ptr my_ctx, edx }
   __asm { mov dword ptr parm_a, eax }
-  
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
   __nextBlock = __megabuf(my_ctx,parm_a);
 
+#ifdef _MSC_VER
   __asm { mov eax, __nextBlock } // this is custom, returning pointer
   __asm { mov esp, ebp }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
+
 }
 NAKED void _asm_megabuf_end(void) {}

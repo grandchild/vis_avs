@@ -243,7 +243,8 @@ NAKED void nseel_asm_exec2_end(void) { }
 
 NAKED void nseel_asm_invsqrt(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     fld qword ptr [eax]
 
@@ -267,9 +268,12 @@ NAKED void nseel_asm_invsqrt(void)
     mov eax, esi
 
     fstp qword ptr [esi]
-  
+
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_invsqrt_end(void) {}
 
@@ -277,7 +281,8 @@ NAKED void nseel_asm_invsqrt_end(void) {}
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_sin(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     fld qword ptr [eax]
     fsin
@@ -285,13 +290,17 @@ NAKED void nseel_asm_sin(void)
     fstp qword ptr [esi]
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_sin_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_cos(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     fld qword ptr [eax]
     fcos
@@ -299,13 +308,17 @@ NAKED void nseel_asm_cos(void)
     fstp qword ptr [esi]
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_cos_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_tan(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     fld qword ptr [eax]
     fsincos
@@ -314,13 +327,17 @@ NAKED void nseel_asm_tan(void)
     fstp qword ptr [esi]
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_tan_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_sqr(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     fld qword ptr [eax]
     fmul st(0), st(0)
@@ -328,13 +345,17 @@ NAKED void nseel_asm_sqr(void)
     fstp qword ptr [esi]
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_sqr_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_sqrt(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     fld qword ptr [eax]
     fabs
@@ -343,6 +364,9 @@ NAKED void nseel_asm_sqrt(void)
     fstp qword ptr [esi]
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_sqrt_end(void) {}
 
@@ -350,7 +374,8 @@ NAKED void nseel_asm_sqrt_end(void) {}
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_log(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     fld1
     fldl2e
@@ -361,13 +386,17 @@ NAKED void nseel_asm_log(void)
     fstp qword ptr [esi]
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_log_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_log10(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     fld1
     fldl2t
@@ -378,13 +407,17 @@ NAKED void nseel_asm_log10(void)
     fstp qword ptr [esi]
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_log10_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_abs(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     fld qword ptr [eax]
     fabs
@@ -392,6 +425,9 @@ NAKED void nseel_asm_abs(void)
     fstp qword ptr [esi]
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_abs_end(void) {}
 
@@ -399,18 +435,23 @@ NAKED void nseel_asm_abs_end(void) {}
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_assign(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     fld qword ptr [eax]
     fstp qword ptr [ebx]
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_assign_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_add(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     fld qword ptr [eax]
     fadd qword ptr [ebx]
@@ -418,13 +459,17 @@ NAKED void nseel_asm_add(void)
     fstp qword ptr [esi]
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_add_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_sub(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     fld qword ptr [ebx]
     fsub qword ptr [eax]
@@ -432,13 +477,17 @@ NAKED void nseel_asm_sub(void)
     fstp qword ptr [esi]
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_sub_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_mul(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     fld qword ptr [ebx]
     fmul qword ptr [eax]
@@ -446,13 +495,17 @@ NAKED void nseel_asm_mul(void)
     fstp qword ptr [esi]
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_mul_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_div(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     fld qword ptr [ebx]
     fdiv qword ptr [eax]
@@ -460,13 +513,17 @@ NAKED void nseel_asm_div(void)
     fstp qword ptr [esi]
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_div_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_mod(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     fld qword ptr [ebx]
 
@@ -490,13 +547,17 @@ NAKED void nseel_asm_mod(void)
     add esi, 8
 
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_mod_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_or(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     fld qword ptr [ebx]
     fld qword ptr [eax]
@@ -511,13 +572,17 @@ NAKED void nseel_asm_or(void)
     mov eax, esi
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_or_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_and(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     fld qword ptr [ebx]
     fld qword ptr [eax]
@@ -534,6 +599,9 @@ NAKED void nseel_asm_and(void)
     mov eax, esi
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_and_end(void) {}
 
@@ -559,7 +627,8 @@ NAKED void nseel_asm_uplus_end(void) {}
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_uminus(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     mov ecx, [eax]
     mov ebx, [eax+4]
@@ -569,6 +638,9 @@ NAKED void nseel_asm_uminus(void)
     mov eax, esi
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_uminus_end(void) {}
 
@@ -577,6 +649,7 @@ NAKED void nseel_asm_uminus_end(void) {}
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_sign(void)
 {
+#ifdef _MSC_VER
   __asm
   {
     mov ecx, [eax+4]
@@ -599,6 +672,9 @@ nonzero:
     add esi, 8
 zero:
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_sign_end(void) {}
 
@@ -607,6 +683,7 @@ NAKED void nseel_asm_sign_end(void) {}
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_bnot(void)
 {
+#ifdef _MSC_VER
   __asm
   {
     fld qword ptr [eax]
@@ -620,12 +697,16 @@ NAKED void nseel_asm_bnot(void)
     mov eax, esi
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_bnot_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_if(void)
 {
+#ifdef _MSC_VER
   __asm
   {
     fld qword ptr [eax]
@@ -646,6 +727,9 @@ NAKED void nseel_asm_if(void)
 
     // at this point, the return value will be in eax, as desired
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_if_end(void) {}
 
@@ -656,6 +740,7 @@ NAKED void nseel_asm_if_end(void) {}
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_repeat(void)
 {
+#ifdef _MSC_VER
   __asm
   {
     fld qword ptr [eax]
@@ -677,6 +762,9 @@ again:
     jnz again
 skip:
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_repeat_end(void) {}
 #endif
@@ -684,6 +772,7 @@ NAKED void nseel_asm_repeat_end(void) {}
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_equal(void)
 {
+#ifdef _MSC_VER
   __asm
   {
     fld qword ptr [eax]
@@ -698,12 +787,16 @@ NAKED void nseel_asm_equal(void)
     mov eax, esi
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_equal_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_below(void)
 {
+#ifdef _MSC_VER
   __asm
   {
     fld qword ptr [ebx]
@@ -717,12 +810,16 @@ NAKED void nseel_asm_below(void)
     mov eax, esi
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_below_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_above(void)
 {
+#ifdef _MSC_VER
   __asm
   {
     fld qword ptr [eax]
@@ -736,13 +833,17 @@ NAKED void nseel_asm_above(void)
     mov eax, esi
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_above_end(void) {}
 
 
 NAKED void nseel_asm_min(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     fld qword ptr [eax]
     fld qword ptr [ebx]
@@ -757,12 +858,16 @@ NAKED void nseel_asm_min(void)
     mov eax, esi
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_min_end(void) {}
 
 NAKED void nseel_asm_max(void)
 {
-  __asm 
+#ifdef _MSC_VER
+  __asm
   {
     fld qword ptr [eax]
     fld qword ptr [ebx]
@@ -776,6 +881,9 @@ NAKED void nseel_asm_max(void)
     mov eax, esi
     add esi, 8
   }
+#else
+  /* TODO: Translate to GCC __asm__ block */
+#endif
 }
 NAKED void nseel_asm_max_end(void) {}
 

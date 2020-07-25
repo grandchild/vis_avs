@@ -764,6 +764,7 @@ void NSEEL_code_execute(NSEEL_CODEHANDLE code)
 
   {
     int startPoint=(int)h->code;
+#ifdef _MSC_VER
     __asm 
     {
       mov ebx, baseptr
@@ -775,6 +776,9 @@ void NSEEL_code_execute(NSEEL_CODEHANDLE code)
       call eax
       popad
     }
+#else
+    /* TODO: Translate to GCC __asm__ block */
+#endif
   }
 }
 

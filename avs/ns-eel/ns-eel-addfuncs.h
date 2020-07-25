@@ -62,6 +62,8 @@ be sure to preserve edi, too.
 
 
 
+#ifdef _MSC_VER
+
 #define FUNC1_ENTER \
   double *parm_a, *__nextBlock; \
   __asm { mov ebp, esp } \
@@ -90,6 +92,22 @@ be sure to preserve edi, too.
   __asm { mov eax, esi } \
   __asm { add esi, 8 }  \
   __asm { mov esp, ebp }
+
+#else
+
+#define FUNC1_ENTER \
+  double *parm_a, *__nextBlock;
+
+#define FUNC2_ENTER \
+  double *parm_a,*parm_b,*__nextBlock;
+
+#define FUNC3_ENTER \
+  double *parm_a,*parm_b,*parm_c,*__nextBlock;
+
+#define FUNC_LEAVE
+
+#endif
+
 
 #define NSEEL_CGEN_CALL __fastcall
 
