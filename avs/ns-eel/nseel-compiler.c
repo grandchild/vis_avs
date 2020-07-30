@@ -186,7 +186,7 @@ int NSEEL_init() // returns 0 on success
   return 0;
 }
 
-void NSEEL_addfunctionex(char *name, int nparms, int code_startaddr, int code_len, void *pproc)
+void NSEEL_addfunctionex(char *name, int nparms, int code_startaddr, int code_len, NSEEL_PPPROC pproc)
 {
   if (!fnTableUser || !(fnTableUser_size&7))
   {
@@ -766,7 +766,7 @@ void NSEEL_code_execute(NSEEL_CODEHANDLE code)
   {
     int startPoint=(int)h->code;
 #ifdef _MSC_VER
-    __asm 
+    __asm
     {
       mov ebx, baseptr
       mov eax, startPoint

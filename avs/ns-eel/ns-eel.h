@@ -35,9 +35,11 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern "C" {
 #endif
 
+typedef void (*NSEEL_PPPROC)(void *data, int data_size, void **userfunc_data);
+
 int NSEEL_init(); // returns 0 on success
 #define NSEEL_addfunction(name,nparms,code,len) NSEEL_addfunctionex((name),(nparms),(code),(len),0)
-void NSEEL_addfunctionex(char *name, int nparms, int code_startaddr, int code_len, void *pproc);
+void NSEEL_addfunctionex(char *name, int nparms, int code_startaddr, int code_len, NSEEL_PPPROC pproc);
 void NSEEL_quit();
 int *NSEEL_getstats(); // returns a pointer to 5 ints... source bytes, static code bytes, call code bytes, data bytes, number of code handles
 double *NSEEL_getglobalregs();

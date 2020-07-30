@@ -33,10 +33,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 
-typedef void (*NSEEL_PPPROC)(void *data, int data_size, void **userfunc_data);
-
-
-
 // these are used for making your own naked functions in C.
 /*
 For example:
