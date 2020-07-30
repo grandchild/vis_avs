@@ -1,5 +1,32 @@
 # vis_avs - Advanced Visualization Studio
 
+## GCC Build Effort
+
+This fork is currently (2020) trying to make AVS build with **MingW-w64 GCC**. The
+original source release needs an ancient MSVC 6<sup><sup>[citation needed]</sup></sup>
+to build. Consequently, towards the final years of AVS activity, there were only a
+perceived handful of people who could still get the code to compile.
+
+So the primary concern today is getting a **v2.81d**-compliant *vis_avs.dll* version
+that can be built with a modern toolchain. Any fixes or improvements to AVS will be held
+off until after that goal is achieved.
+
+On Linux, to see how far along we are, build with CMake:
+
+```shell
+mkdir build
+cd build
+# Use your cross-compile-toolchain cmake here,
+# and fill in your toolchain into CMake-MingWcross-toolchain.txt:
+i686-w64-mingw32-cmake -D CMAKE_TOOLCHAIN_FILE=../CMake-MingWcross-toolchain.txt ..
+make
+```
+
+
+<sub>Upstream README below</sub>
+
+---
+
 ## Description
 
 Advanced Visualization Studio (AVS), is a music visualization plugin for Winamp. It was designed by Winamp's creator, Justin Frankel. AVS has a customizable design which allows users to create their own visualization effects, or "presets". AVS was made open source software in May 2005, released under a BSD-style license. —[Wikipedia](http://en.wikipedia.org/wiki/Advanced_Visualization_Studio)
