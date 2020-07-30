@@ -233,8 +233,8 @@ static void movestringover(char *str, int amount)
 {
   char tmp[1024+8];
 
-  int l=(int)strlen(str);
-  l=min(1024-amount-1,l);
+  // l = min(1024-amount-1, strlen(str));
+  int l=strnlen(str, 1024-amount-1);
 
   memcpy(tmp,str,l+1);
 
