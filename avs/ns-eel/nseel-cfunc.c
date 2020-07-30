@@ -273,29 +273,29 @@ NAKED void nseel_asm_invsqrt(void)
   }
 #else
   __asm__ __volatile__ (
-    "  fld qword ptr [%%eax]\n\t"
+    "fld qword ptr [%%eax]\n\t"
 
-    "  mov %%edx, 0x5f3759df\n\t"
-    "  fst dword ptr [%%esi]\n\t"
+    "mov %%edx, 0x5f3759df\n\t"
+    "fst dword ptr [%%esi]\n\t"
     // floating point stack has input, as does [eax]
-    "  fmul dword ptr [%0]\n\t"
-    "  mov %%ecx, [%%esi]\n\t"
-    "  sar %%ecx, 1\n\t"
-    "  sub %%edx, %%ecx\n\t"
-    "  mov [%%esi], %%edx\n\t"
+    "fmul dword ptr [%0]\n\t"
+    "mov %%ecx, [%%esi]\n\t"
+    "sar %%ecx, 1\n\t"
+    "sub %%edx, %%ecx\n\t"
+    "mov [%%esi], %%edx\n\t"
 
     // st(0) = input, [eax] has x
-    "  fmul dword ptr [%%esi]\n\t"
-    "  fmul dword ptr [%%esi]\n\t"
-    "  fadd dword ptr [%1]\n\t"
-    "  fmul dword ptr [%%esi]\n\t"
-    "  mov %%eax, %%esi\n\t"
+    "fmul dword ptr [%%esi]\n\t"
+    "fmul dword ptr [%%esi]\n\t"
+    "fadd dword ptr [%1]\n\t"
+    "fmul dword ptr [%%esi]\n\t"
+    "mov %%eax, %%esi\n\t"
 
-    "  fstp qword ptr [%%esi]\n\t"
+    "fstp qword ptr [%%esi]\n\t"
 
-    "  add %%esi, 8\n\t"
-    :"=m"(negativezeropointfive), "=m"(onepointfive)
+    "add %%esi, 8\n\t"
     :
+    :"m"(negativezeropointfive), "m"(onepointfive)
     :"eax", "edx", "esi", "ecx"
   );
 #endif
@@ -316,7 +316,14 @@ NAKED void nseel_asm_sin(void)
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%eax]\n\t"
+    "fsin\n\t"
+    "mov %%eax, %%esi\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "add %%esi, 8\n"
+    : : :"eax", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_sin_end(void) {}
@@ -334,7 +341,14 @@ NAKED void nseel_asm_cos(void)
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%eax]\n\t"
+    "fcos\n\t"
+    "mov %%eax, %%esi\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "add %%esi, 8\n"
+    : : :"eax", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_cos_end(void) {}
@@ -353,7 +367,15 @@ NAKED void nseel_asm_tan(void)
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%eax]\n\t"
+    "fsincos\n\t"
+    "fdivp\n\t"  // no-operand version of fdiv is implicit fdivp
+    "mov %%eax, %%esi\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "add %%esi, 8\n"
+    : : : "eax", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_tan_end(void) {}
@@ -371,7 +393,14 @@ NAKED void nseel_asm_sqr(void)
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%eax]\n\t"
+    "fmul st(0), st(0)\n\t"
+    "mov %%eax, %%esi\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "add %%esi, 8\n"
+    : : : "eax", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_sqr_end(void) {}
@@ -390,7 +419,15 @@ NAKED void nseel_asm_sqrt(void)
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%eax]\n\t"
+    "fabs\n\t"
+    "fsqrt\n\t"
+    "mov %%eax, %%esi\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "add %%esi, 8\n"
+    : : : "eax", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_sqrt_end(void) {}
@@ -412,7 +449,17 @@ NAKED void nseel_asm_log(void)
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld1\n\t"
+    "fldl2e\n\t"
+    "fdivp\n\t"
+    "fld qword ptr [%%eax]\n\t"
+    "mov %%eax, %%esi\n\t"
+    "fyl2x\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "add %%esi, 8\n"
+    : : : "eax", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_log_end(void) {}
@@ -433,7 +480,17 @@ NAKED void nseel_asm_log10(void)
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld1\n\t"
+    "fldl2t\n\t"
+    "fdivp\n\t"
+    "fld qword ptr [%%eax]\n\t"
+    "mov %%eax, %%esi\n\t"
+    "fyl2x\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "add %%esi, 8\n"
+    : : : "eax", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_log10_end(void) {}
@@ -451,7 +508,14 @@ NAKED void nseel_asm_abs(void)
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%eax]\n\t"
+    "fabs\n\t"
+    "mov %%eax, %%esi\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "add %%esi, 8\n"
+    : : : "eax", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_abs_end(void) {}
@@ -467,7 +531,11 @@ NAKED void nseel_asm_assign(void)
     fstp qword ptr [ebx]
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%eax]\n\t"
+    "fstp qword ptr [%%ebx]\n"
+    : : : "eax", "ebx"
+  );
 #endif
 }
 NAKED void nseel_asm_assign_end(void) {}
@@ -485,7 +553,14 @@ NAKED void nseel_asm_add(void)
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%eax]\n\t"
+    "fadd qword ptr [%%ebx]\n\t"
+    "mov %%eax, %%esi\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "add %%esi, 8\n"
+    : : : "eax", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_add_end(void) {}
@@ -503,7 +578,14 @@ NAKED void nseel_asm_sub(void)
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%ebx]\n\t"
+    "fsub qword ptr [%%eax]\n\t"
+    "mov %%eax, %%esi\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "add %%esi, 8\n"
+    : : : "eax", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_sub_end(void) {}
@@ -521,7 +603,14 @@ NAKED void nseel_asm_mul(void)
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%ebx]\n\t"
+    "fmul qword ptr [%%eax]\n\t"
+    "mov %%eax, %%esi\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "add %%esi, 8\n"
+    : : : "eax", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_mul_end(void) {}
@@ -539,7 +628,14 @@ NAKED void nseel_asm_div(void)
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%ebx]\n\t"
+    "fdiv qword ptr [%%eax]\n\t"
+    "mov %%eax, %%esi\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "add %%esi, 8\n"
+    : : : "eax", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_div_end(void) {}
@@ -570,10 +666,33 @@ NAKED void nseel_asm_mod(void)
     mov eax, esi
     fstp qword ptr [esi]
     add esi, 8
-
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%ebx]\n\t"
+
+    "fld qword ptr [%%eax]\n\t"
+    "fsub qword ptr [%0 + 4]\n\t"
+    "fabs\n\t"
+    "fadd qword ptr [%%eax]\n\t"
+    "fadd dword ptr [%0 + 4]\n\t"
+
+    "fmul dword ptr [%1]\n\t"
+
+    "fistp dword ptr [%%esi]\n\t"
+    "fistp dword ptr [%%esi + 4]\n\t"
+    "mov %%eax, [%%esi + 4]\n\t"
+    "xor %%edx, %%edx\n\t"
+    "div dword ptr [%%esi]\n\t"
+    "mov [%%esi], %%edx\n\t"
+    "fild dword ptr [%%esi]\n\t"
+    "mov %%eax, %%esi\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "add %%esi, 8\n"
+    :
+    : "m"(g_cmpaddtab), "m"(g_half)
+    : "eax", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_mod_end(void) {}
@@ -598,7 +717,21 @@ NAKED void nseel_asm_or(void)
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%ebx]\n\t"
+    "fld qword ptr [%%eax]\n\t"
+    "fistp qword ptr [%%esi]\n\t"
+    "fistp qword ptr [%%esi + 8]\n\t"
+    "mov %%ebx, [%%esi + 8]\n\t"
+    "or [%%esi], %%ebx\n\t"
+    "mov %%ebx, [%%esi + 12]\n\t"
+    "or [%%esi + 4], %%ebx\n\t"
+    "fild qword ptr [%%esi]\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "mov %%eax, %%esi\n\t"
+    "add %%esi, 8\n"
+    : : : "eax", "ebx", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_or_end(void) {}
@@ -625,7 +758,21 @@ NAKED void nseel_asm_and(void)
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%ebx]\n\t"
+    "fld qword ptr [%%eax]\n\t"
+    "fistp qword ptr [%%esi]\n\t"
+    "fistp qword ptr [%%esi + 8]\n\t"
+    "mov %%ebx, [%%esi + 8]\n\t"
+    "and [%%esi], %%ebx\n\t"
+    "mov %%ebx, [%%esi + 12]\n\t"
+    "and [%%esi + 4], %%ebx\n\t"
+    "fild qword ptr [%%esi]\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "mov %%eax, %%esi\n\t"
+    "add %%esi, 8\n"
+    : : : "eax", "ebx", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_and_end(void) {}
@@ -664,7 +811,16 @@ NAKED void nseel_asm_uminus(void)
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "mov %%ecx, [%%eax]\n\t"
+    "mov %%ebx, [%%eax+4]\n\t"
+    "xor %%ebx, 0x80000000\n\t"
+    "mov [%%esi], %%ecx\n\t"
+    "mov [%%esi+4], %%ebx\n\t"
+    "mov %%eax, %%esi\n\t"
+    "add %%esi, 8\n"
+    : : : "eax", "ebx", "ecx", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_uminus_end(void) {}
@@ -698,7 +854,26 @@ nonzero:
 zero:
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "mov %%ecx, [%%eax+4]\n\t"
+    "mov %%edx, [%%eax]\n\t"
+    "test %%edx, 0xFFFFFFFF\n\t"
+    "jnz nonzero\n\t"
+    // high dword (minus sign bit) is zero 
+    "test %%ecx, 0x7FFFFFFF\n\t"
+    "jz zero\n"
+    // zero zero, return the value passed directly
+  "nonzero:\n\t"
+    "shr %%ecx, 31\n\t"
+    "fld dword ptr [%0 + %%ecx * 4]\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "mov %%eax, %%esi\n\t"
+    "add %%esi, 8\n"
+  "zero:\n"
+    :
+    : "m"(g_signs)
+    : "eax", "ecx", "edx", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_sign_end(void) {}
@@ -718,12 +893,26 @@ NAKED void nseel_asm_bnot(void)
     shr eax, 6
     and eax, (1<<2)
     fld dword ptr [g_cmpaddtab+eax]
-    fstp qword ptr [esi]   
+    fstp qword ptr [esi]
     mov eax, esi
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%eax]\n\t"
+    "fabs\n\t"
+    "fcomp qword ptr [%0]\n\t"
+    "fstsw %%ax\n\t"
+    "shr %%eax, 6\n\t"
+    "and %%eax, (1<<2)\n\t"
+    "fld dword ptr [%1 + %%eax]\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "mov %%eax, %%esi\n\t"
+    "add %%esi, 8\n"
+    :
+    : "m"(g_closefact), "m"(g_cmpaddtab)
+    : "eax", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_bnot_end(void) {}
@@ -753,7 +942,22 @@ NAKED void nseel_asm_if(void)
     // at this point, the return value will be in eax, as desired
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%eax]\n\t"
+    "fabs\n\t"
+    "fcomp qword ptr [%0]\n\t"
+    "fstsw %%ax\n\t"
+    "shr %%eax, 6\n\t"
+    "mov dword ptr [%%esi], 0xFFFFFFFF\n\t"
+    "mov dword ptr [%%esi+4], 0xFFFFFFFF\n\t"
+    "and %%eax, (1<<2)\n\t"
+    "mov %%eax, [%%esi + %%eax]\n\t"
+    "mov %%eax, %%esi\n\t"
+    "add %%esi, 8\n"
+    :
+    : "m"(g_closefact), "m"(g_cmpaddtab)
+    : "eax", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_if_end(void) {}
@@ -788,7 +992,29 @@ again:
 skip:
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%eax]\n\t"
+    "fistp dword ptr [%%esi]\n\t"
+    "mov %%ecx, [%%esi]\n\t"
+    "cmp %%ecx, 1\n\t"
+    "jl skip"
+    "cmp %%ecx, %0\n\t"
+    "jl again\n\t"
+    "mov %%ecx, %0\n"
+  "again:\n\t\t"
+      "push %%ecx\n\t\t"
+      "push %%esi\n\t\t\t" // revert back to last temp workspace
+        "mov %%ecx, 0xFFFFFFFF\n\t\t\t"
+        "call ecx\n\t\t"
+      "pop %%esi\n\t\t"
+      "pop %%ecx\n\t"
+    "dec %%ecx\n\t"
+    "jnz again\n"
+  "skip:\n"
+    :
+    :"m"(NSEEL_LOOPFUNC_SUPPORT_MAXLEN)
+    :"eax", "ecx", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_repeat_end(void) {}
@@ -808,12 +1034,27 @@ NAKED void nseel_asm_equal(void)
     shr eax, 6
     and eax, (1<<2)
     fld dword ptr [g_cmpaddtab+eax]
-    fstp qword ptr [esi]   
+    fstp qword ptr [esi]
     mov eax, esi
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%eax]\n\t"
+    "fsub qword ptr [%%ebx]\n\t"
+    "fabs\n\t"
+    "fcomp qword ptr [%0]\n\t"
+    "fstsw %%ax\n\t"
+    "shr %%eax, 6\n\t"
+    "and %%eax, (1<<2)\n\t"
+    "fld dword ptr [%1 + %%eax]\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "mov %%eax, %%esi\n\t"
+    "add %%esi, 8\n\t"
+    :
+    :"m"(g_closefact), "m"(g_cmpaddtab)
+    :"eax", "ebx", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_equal_end(void) {}
@@ -830,13 +1071,25 @@ NAKED void nseel_asm_below(void)
     shr eax, 6
     and eax, (1<<2)
     fld dword ptr [g_cmpaddtab+eax]
-
-    fstp qword ptr [esi]   
+    fstp qword ptr [esi]
     mov eax, esi
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%ebx]\n\t"
+    "fcomp qword ptr [%%eax]\n\t"
+    "fstsw %%ax\n\t"
+    "shr %%eax, 6\n\t"
+    "and %%eax, (1<<2)\n\t"
+    "fld dword ptr [%0 + %%eax]\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "mov %%eax, %%esi\n\t"
+    "add %%esi, 8\n\t"
+    :
+    :"m"(g_cmpaddtab)
+    :"eax", "ebx", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_below_end(void) {}
@@ -854,12 +1107,25 @@ NAKED void nseel_asm_above(void)
     and eax, (1<<2)
     fld dword ptr [g_cmpaddtab+eax]
 
-    fstp qword ptr [esi]   
+    fstp qword ptr [esi]
     mov eax, esi
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%eax]\n\t"
+    "fcomp qword ptr [%%ebx]\n\t"
+    "fstsw %%ax\n\t"
+    "shr %%eax, 6\n\t"
+    "and %%eax, (1<<2)\n\t"
+    "fld dword ptr [%0 + %%eax]\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "mov %%eax, %%esi\n\t"
+    "add %%esi, 8\n\t"
+    :
+    :"m"(g_cmpaddtab)
+    :"eax", "ebx", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_above_end(void) {}
@@ -884,7 +1150,23 @@ NAKED void nseel_asm_min(void)
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%eax]\n\t"
+    "fld qword ptr [%%ebx]\n\t"
+    "fld st(1)\n\t"
+    "fsub st(0), st(1)\n\t"
+    "fabs\n\t"  // stack contains fabs(1-2),1,2
+    "fchs\n\t"
+    "faddp\n\t" // no-operand version of fadd is implicit faddp
+    "faddp\n\t"
+    "fmul dword ptr [%0]\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "mov %%eax, %%esi\n\t"
+    "add %%esi, 8\n\t"
+    :
+    :"m"(g_half)
+    :"eax", "ebx", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_min_end(void) {}
@@ -907,7 +1189,22 @@ NAKED void nseel_asm_max(void)
     add esi, 8
   }
 #else
-  /* TODO: Translate to GCC __asm__ block */
+  __asm__ __volatile__ (
+    "fld qword ptr [%%eax]\n\t"
+    "fld qword ptr [%%ebx]\n\t"
+    "fld st(1)\n\t"
+    "fsub st(0), st(1)\n\t"
+    "fabs\n\t"  // stack contains fabs(1-2),1,2
+    "faddp\n\t"
+    "faddp\n\t"
+    "fmul dword ptr [%0]\n\t"
+    "fstp qword ptr [%%esi]\n\t"
+    "mov %%eax, %%esi\n\t"
+    "add %%esi, 8\n\t"
+    :
+    :"m"(g_half)
+    :"eax", "ebx", "esi"
+  );
 #endif
 }
 NAKED void nseel_asm_max_end(void) {}
