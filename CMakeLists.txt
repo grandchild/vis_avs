@@ -22,7 +22,12 @@ else()
     # link_libraries(#[[...]])
 endif()
 
-add_compile_definitions(NO_MMX __LOCAL_SIZE=0)
+add_compile_definitions(
+    NO_MMX                # Avoid as much asm code as possible in the beginning to get
+                          # to a successful build first.
+    AVS_MEGABUF_SUPPORT   # No reason to not enable this -> the #ifdefs should probably
+                          # be removed eventually.
+)
 
 file(GLOB SRC_FILES_NS_EEL avs/ns-eel/*.c)
 file(GLOB SRC_FILES_VIS_AVS avs/vis_avs/*.cpp)
