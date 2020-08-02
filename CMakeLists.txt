@@ -4,10 +4,16 @@ cmake_policy(SET CMP0048 NEW) # allow setting VERSION directly in project() comm
 # project name and version
 project(vis_avs VERSION 2.82)
 
-if(MSVC)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(/W4 /WX /Zc:__cplusplus)
-else()
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0.0")
+        message(SEND_ERROR
+            "need GCC version >=8, for naked-function support for x86 target")
+    endif()
     add_compile_options(-g -Wall -Wextra -masm=intel)
+else() # TODO: Clang option
+    message(SEND_ERROR "unsupported compiler ${CMAKE_CXX_COMPILER_ID}")
 endif()
 
 if(WIN32)
