@@ -1,0 +1,31 @@
+name: Build on Windows with MSVC
+
+on:
+- pull_request
+- push
+
+jobs:
+  build_and_test:
+    name: Build on Windows with MSVC
+    runs-on: windows-latest
+    steps:
+      - uses: microsoft/setup-msbuild@v1.0.1
+
+      - uses: actions/checkout@v2
+
+      - name: Configure
+        shell: cmd
+        run: |-
+          md build
+          cd build
+          cmake -G"Visual Studio 16 2019" -A Win32 ..
+
+      - name: Make
+        shell: cmd
+        run: |-
+          msbuild "%GITHUB_WORKSPACE%/build/vis_avs.sln" /m
+
+      - uses: actions/upload-artifact@v2.1.4
+        with:
+          name: vis_avs_msvc.zip
+          path: build/Debug/vis_avs.dll
