@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.10)
 cmake_policy(SET CMP0048 NEW) # allow setting VERSION directly in project() command
 
 # project name and version
@@ -22,11 +22,11 @@ else()
     # link_libraries(#[[...]])
 endif()
 
-add_compile_definitions(
-    NO_MMX                # Avoid as much asm code as possible in the beginning to get
-                          # to a successful build first.
-    AVS_MEGABUF_SUPPORT   # No reason to not enable this -> the #ifdefs should probably
-                          # be removed eventually.
+add_definitions(
+    -DNO_MMX                # Avoid as much asm code as possible in the beginning to get
+                            # to a successful build first.
+    -DAVS_MEGABUF_SUPPORT   # No reason to not enable this -> the #ifdefs should probably
+                            # be removed eventually.
 )
 
 file(GLOB SRC_FILES_NS_EEL avs/ns-eel/*.c)
