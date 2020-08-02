@@ -1,0 +1,34 @@
+name: Build on Ubuntu with MinGW GCC
+
+on:
+- pull_request
+- push
+
+jobs:
+  build_and_test:
+    name: Build on Ubuntu with MinGW GCC
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install build dependencies
+        run: |-
+          sudo apt-get install --yes mingw-w64
+
+      - name: Configure
+        run: |-
+          set -e
+          mkdir build
+          cd build
+          cmake -DCMAKE_TOOLCHAIN_FILE=CMake-MingWcross-toolchain.txt ..
+
+      - name: Make
+        run: |-
+          make -C build VERBOSE=1
+          find build
+          mv build/vis_avs.dll build/vis_avs_281d_mingw_debug.dll
+
+      - uses: actions/upload-artifact@v2.1.4
+        with:
+          name: vis_avs_mingw.zip
+          path: build/*.dll
