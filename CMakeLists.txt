@@ -5,7 +5,7 @@ cmake_policy(SET CMP0048 NEW) # allow setting VERSION directly in project() comm
 project(vis_avs VERSION 2.82)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    add_compile_options(/W4 /WX /Zc:__cplusplus)
+    add_compile_options(/W4)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0.0")
         message(SEND_ERROR
