@@ -330,7 +330,7 @@ C_RBASE *C_RLibrary::CreateRenderer(int *which, int *has_r2)
   if (*which >= 0 && *which < NumRetrFuncs)
   {
     if (has_r2) *has_r2 = RetrFuncs[*which].is_r2;
-    return RetrFuncs[*which].rf();
+    return RetrFuncs[*which].rf(NULL);
   }
 
   if (*which == LIST_ID)
@@ -358,7 +358,7 @@ C_RBASE *C_RLibrary::CreateRenderer(int *which, int *has_r2)
       {
         *which=NamedApeToBuiltinTrans[x].newidx;
         if (has_r2) *has_r2 = RetrFuncs[*which].is_r2;
-        return RetrFuncs[*which].rf();
+        return RetrFuncs[*which].rf(NULL);
       }
     }
   }

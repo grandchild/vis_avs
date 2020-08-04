@@ -36,7 +36,7 @@ class C_RLibrary {
   protected:
     typedef struct
     {
-      C_RBASE *(*rf)(char *desc=NULL);
+      C_RBASE *(*rf)(char *desc);
       int is_r2;
     } rfStruct;
     rfStruct *RetrFuncs;
