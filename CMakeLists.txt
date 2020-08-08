@@ -11,7 +11,14 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         message(SEND_ERROR
             "need GCC version >=8, for naked-function support for x86 target")
     endif()
-    add_compile_options(-g -Wall -Wextra -masm=intel)
+    add_compile_options(
+        -g
+        # -Wall -Wextra
+        -Wno-write-strings
+        # -fpermissive needed for MAKEINTRESOURCE macro, which casts LPSTR to
+        # WORD, a.k.a. char* to short unsigned int
+        -fpermissive
+        -masm=intel)
 else() # TODO: Clang option
     message(SEND_ERROR "unsupported compiler ${CMAKE_CXX_COMPILER_ID}")
 endif()
