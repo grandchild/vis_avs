@@ -380,7 +380,7 @@ if (thisLen < Avg/2 - Avg*0.2)
 	{
 	if (learning)
 		{
-		if (abs(Avg - (TC - t[1].TC)) < abs(Avg - (t[0].TC - t[1].TC)))
+		if (abs((int)(Avg - (TC - t[1].TC))) < abs((int)(Avg - (t[0].TC - t[1].TC))))
 			{
 /*			if (predictionLastTC && t[0].Type == BEAT_GUESSED && Type == BEAT_REAL)
 				predictionLastTC += (TC - t[0].TC)/2;*/
@@ -394,7 +394,7 @@ if (thisLen < Avg/2 - Avg*0.2)
 
 if (learning) 
   for (offI=2;offI<offIMax;offI++) // Try to see if this beat is in the middle of our current Bpm, or maybe 1/3, 1/4 etc... to offIMax
-	if ((float)abs((Avg/offI)-thisLen) < (float)(Avg/offI)*0.2)
+	if ((float)abs((int)((Avg/offI)-thisLen)) < (float)(Avg/offI)*0.2)
 		{
 		_halfDiscriminated[(*_hdPos)++]=1; // Should test if offI==2 before doing that, but seems to have better results ? I'll have to investigate this
 		(*_hdPos)%=8;
@@ -514,7 +514,7 @@ totalTC=0;
 for (i=0;i<TCHistSize-1;i++)
 	{
 	v += TCHist[i].TC - TCHist[i+1].TC;
-	if (abs(Avg-v) < et)
+	if (abs((int)(Avg-v)) < et)
 		{
 		totalTC += v;
 		totalN++;
