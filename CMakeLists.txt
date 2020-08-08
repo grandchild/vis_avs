@@ -38,7 +38,11 @@ add_definitions(
 file(GLOB SRC_FILES_NS_EEL avs/ns-eel/*.c)
 file(GLOB SRC_FILES_VIS_AVS avs/vis_avs/*.cpp)
 
-add_library(vis_avs SHARED ${SRC_FILES_NS_EEL} ${SRC_FILES_VIS_AVS})
+add_library(vis_avs SHARED
+    ${SRC_FILES_NS_EEL}
+    ${SRC_FILES_VIS_AVS}
+    avs/gcc-hacks.c
+)
 
 if(NOT MSVC)
     # # tests

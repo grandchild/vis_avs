@@ -4,7 +4,14 @@
 // construction). GCC has no naked attribute for __declspec, but an
 // __attribute__.
 #ifdef _MSC_VER
+
 #define NAKED __declspec(naked)
-#else
+
+#else  // _MSC_VER
+
 #define NAKED __attribute__((naked))
-#endif
+
+int min(int a, int b);
+int max(int a, int b);
+
+#endif  // _MSC_VER
