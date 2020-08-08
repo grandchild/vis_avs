@@ -95,10 +95,10 @@ C_THISCLASS::~C_THISCLASS()
 {
 }
 
-#define MASK_SH1 (~(((1<<7)|(1<<15)|(1<<23))<<1))
-#define MASK_SH2 (~(((3<<6)|(3<<14)|(3<<22))<<2))
-#define MASK_SH3 (~(((7<<5)|(7<<13)|(7<<21))<<3))
-#define MASK_SH4 (~(((15<<4)|(15<<12)|(15<<20))<<4))
+#define MASK_SH1 (~(((1u<<7u)|(1u<<15u)|(1u<<23u))<<1u))
+#define MASK_SH2 (~(((3u<<6u)|(3u<<14u)|(3u<<22u))<<2u))
+#define MASK_SH3 (~(((7u<<5u)|(7u<<13u)|(7u<<21u))<<3u))
+#define MASK_SH4 (~(((15u<<4u)|(15u<<12u)|(15u<<20u))<<4u))
 static unsigned int mmx_mask1[2]={MASK_SH1,MASK_SH1};
 static unsigned int mmx_mask2[2]={MASK_SH2,MASK_SH2};
 static unsigned int mmx_mask3[2]={MASK_SH3,MASK_SH3};
