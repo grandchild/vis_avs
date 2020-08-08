@@ -180,7 +180,7 @@ void C_THISCLASS::smp_render(int this_thread, int max_threads, char visdata[2][2
       int y=outh-at_top-at_bottom;
       unsigned int adj_tl1=0,adj_tl2=0;
       unsigned __int64 adj2=0;
-      if (roundmode) { adj_tl1=0x04040404; adj_tl2=0x05050505; adj2=0x0505050505050505i64; }
+      if (roundmode) { adj_tl1=0x04040404; adj_tl2=0x05050505; adj2=0x0505050505050505L; }
       while (y--)
       {
         int x;
@@ -411,7 +411,7 @@ mmx_light_blur_loop:
       int y=outh-at_top-at_bottom;
       int adj_tl1=0,adj_tl2=0;
       unsigned __int64 adj2=0;
-      if (roundmode) { adj_tl1=0x02020202; adj_tl2=0x03030303; adj2=0x0303030303030303i64; }
+      if (roundmode) { adj_tl1=0x02020202; adj_tl2=0x03030303; adj2=0x0303030303030303L; }
 
       while (y--)
       {
@@ -620,7 +620,7 @@ mmx_heavy_blur_loop:
       int y=outh-at_top-at_bottom;
       int adj_tl1=0,adj_tl2=0;
       unsigned __int64 adj2=0;
-      if (roundmode) { adj_tl1=0x03030303; adj_tl2=0x04040404; adj2=0x0404040404040404i64; }
+      if (roundmode) { adj_tl1=0x03030303; adj_tl2=0x04040404; adj2=0x0404040404040404L; }
       while (y--)
       {
         int x;
