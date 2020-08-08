@@ -132,6 +132,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 	case IDC_RGB:
 		return 0;
 	case IDC_RBG:
+#ifdef _MSC_VER
 		__asm {
 			mov ebx, framebuffer;
 			mov ecx, c;
@@ -157,9 +158,13 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			test ecx, ecx;
 			jnz lp1;
 		}
+#else // _MSC_VER
+		// TODO: Port to GCC asm
+#endif
 		break;
 		
 	case IDC_BRG:
+#ifdef _MSC_VER
 		__asm {
 			mov ebx, framebuffer;
 			mov ecx, c;
@@ -201,9 +206,13 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			test ecx, ecx;
 			jnz lp2;
 		}
+#else // _MSC_VER
+		// TODO: Port to GCC asm
+#endif
 		break;
 
 	case IDC_BGR:
+#ifdef _MSC_VER
 		__asm {
 			mov ebx, framebuffer;
 			mov ecx, c;
@@ -233,9 +242,13 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			test ecx, ecx;
 			jnz lp3;
 		}
+#else // _MSC_VER
+		// TODO: Port to GCC asm
+#endif
 		break;
 
 	case IDC_GBR:
+#ifdef _MSC_VER
 		__asm {
 			mov ebx, framebuffer;
 			mov ecx, c;
@@ -273,9 +286,13 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			test ecx, ecx;
 			jnz lp4;
 		}
+#else // _MSC_VER
+		// TODO: Port to GCC asm
+#endif
 		break;
 
 	case IDC_GRB:
+#ifdef _MSC_VER
 		__asm {
 			mov ebx, framebuffer;
 			mov ecx, c;
@@ -317,6 +334,9 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			test ecx, ecx;
 			jnz lp5;
 		}
+#else // _MSC_VER
+		// TODO: Port to GCC asm
+#endif
 		break;
 	}
 	return 0;

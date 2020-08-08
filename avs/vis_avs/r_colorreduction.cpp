@@ -134,6 +134,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 	while (a--) b=(b<<1)&0xFF;
 	b |= (b<<16) | (b<<8);
 	c = w*h;
+#ifdef _MSC_VER
 	__asm {
 		mov ebx, framebuffer;
 		mov ecx, c;
@@ -149,6 +150,9 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 		jmp lp;
 		end:
 	}
+#else // _MSC_VER
+	// TODO: Port to GCC asm
+#endif
 	return 0;
 }
 

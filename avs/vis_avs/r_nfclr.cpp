@@ -101,13 +101,18 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			cf=df=0;
 			int i=w*h;
 			int c=color;
-			if (!blend) __asm
-			{
-				mov ecx, i
-				mov edi, framebuffer
-				mov eax, c
-				rep stosd
-			} 
+			if (!blend) {
+#ifdef _MSC_VER
+				__asm {
+					mov ecx, i
+					mov edi, framebuffer
+					mov eax, c
+					rep stosd
+				}
+#else // _MSC_VER
+				// TODO: Port to GCC asm
+#endif
+			}
 			else 
 			{
 #ifdef NO_MMX

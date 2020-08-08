@@ -174,6 +174,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 	c = w*h;
 	switch (config.ml) {
 	case MD_XI:
+#ifdef _MSC_VER
 		__asm {
 			mov ebx, framebuffer;
 			mov ecx, c;
@@ -191,8 +192,12 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			mov [ebx+ecx*4], eax;
 			jmp lp0;			
 		}
+#else // _MSC_VER
+		// TODO: Port to GCC asm
+#endif
 		break;
 	case MD_XS:
+#ifdef _MSC_VER
 		__asm {
 			mov ebx, framebuffer;
 			mov ecx, c;
@@ -210,9 +215,13 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			mov [ebx+ecx*4], eax;
 			jmp lp9;			
 		}
+#else // _MSC_VER
+		// TODO: Port to GCC asm
+#endif
 		break;
 	case MD_X8:
 		c = w*h/2;
+#ifdef _MSC_VER
 		__asm {
 			mov ebx, framebuffer;
 			mov ecx, c;
@@ -228,9 +237,13 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			jz end;
 			jmp lp1;
 		}
+#else // _MSC_VER
+		// TODO: Port to GCC asm
+#endif
 		break;
 	case MD_X4:
 		c = w*h/2;
+#ifdef _MSC_VER
 		__asm {
 			mov ebx, framebuffer;
 			mov ecx, c;
@@ -245,9 +258,13 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			jz end;
 			jmp lp2;
 		}
+#else // _MSC_VER
+		// TODO: Port to GCC asm
+#endif
 		break;
 	case MD_X2:
 		c = w*h/2;
+#ifdef _MSC_VER
 		__asm {
 			mov ebx, framebuffer;
 			mov ecx, c;
@@ -261,10 +278,14 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			jz end;
 			jmp lp3;
 		}
+#else // _MSC_VER
+		// TODO: Port to GCC asm
+#endif
 		break;
 	case MD_X05:
 		c = w*h/2;
 		mask = 0x7F7F7F7F7F7F7F7F;
+#ifdef _MSC_VER
 		__asm {
 			mov ebx, framebuffer;
 			mov ecx, c;
@@ -280,10 +301,14 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			jz end;
 			jmp lp4;
 		}
+#else // _MSC_VER
+		// TODO: Port to GCC asm
+#endif
 		break;
 	case MD_X025:
 		c = w*h/2;
 		mask = 0x3F3F3F3F3F3F3F3F;
+#ifdef _MSC_VER
 		__asm {
 			mov ebx, framebuffer;
 			mov ecx, c;
@@ -299,10 +324,14 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			jz end;
 			jmp lp5;
 		}
+#else // _MSC_VER
+		// TODO: Port to GCC asm
+#endif
 		break;
 	case MD_X0125:
 		c = w*h/2;
 		mask = 0x1F1F1F1F1F1F1F1F;
+#ifdef _MSC_VER
 		__asm {
 			mov ebx, framebuffer;
 			mov ecx, c;
@@ -318,10 +347,17 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			jz end;
 			jmp lp6;
 		}
+#else // _MSC_VER
+		// TODO: Port to GCC asm
+#endif
 		break;
 	}
 	end:
+#ifdef _MSC_VER
 	__asm emms;
+#else // _MSC_VER
+	// TODO: Port to GCC asm
+#endif
 	return 0;
 }
 

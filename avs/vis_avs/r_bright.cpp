@@ -150,6 +150,7 @@ static void mmx_brighten_block(int *p, int rm, int gm, int bm, int l)
     (bm>>8)|((gm>>8)<<16),
     rm>>8
   };
+#ifdef _MSC_VER
   __asm 
   {
     mov eax, p
@@ -171,6 +172,9 @@ mmx_brightblock_loop:
     jnz mmx_brightblock_loop
     emms
   };
+#else // _MSC_VER
+  // TODO: Port to GCC asm
+#endif // _MSC_VER
 }
 
 

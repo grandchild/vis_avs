@@ -15,6 +15,7 @@ static int timingEnters;
 
 static void rdtsc(unsigned int t[2])
 {
+#ifdef _MSC_VER
 	__asm 
 	{
 		mov esi, t
@@ -23,6 +24,9 @@ static void rdtsc(unsigned int t[2])
 		mov [esi], eax
 		mov [esi+4], edx
 	}
+#else // _MSC_VER
+    // TODO: Port to GCC asm
+#endif
 }
 	
 void _timingInit(void)

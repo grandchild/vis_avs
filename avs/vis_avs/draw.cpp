@@ -912,6 +912,7 @@ void homemadeBlitFrom32bpp(DDSURFACEDESC *out, void *in, int w, int h, int sy, i
     for (y = sy; y < ey; y ++)
     {
       unsigned char *optr = (unsigned char *)out->lpSurface + (y * out->lPitch);
+#ifdef _MSC_VER
       __asm
       {
         mov edi, optr
@@ -961,6 +962,9 @@ void homemadeBlitFrom32bpp(DDSURFACEDESC *out, void *in, int w, int h, int sy, i
         dec ecx
         jnz conv15_loop  
       }
+#else // _MSC_VER
+      // TODO: port to GCC asm
+#endif // _MSC_VER
       inptr += w;
     }
 
@@ -974,6 +978,7 @@ void homemadeBlitFrom32bpp(DDSURFACEDESC *out, void *in, int w, int h, int sy, i
     for (y = sy; y < ey; y ++)
     {
       unsigned char *optr = (unsigned char *)out->lpSurface + (y * out->lPitch);
+#ifdef _MSC_VER
       __asm
       {
         mov edi, optr
@@ -1020,6 +1025,9 @@ void homemadeBlitFrom32bpp(DDSURFACEDESC *out, void *in, int w, int h, int sy, i
         dec ecx
         jnz conv16_loop  
       }
+#else // _MSC_VER
+      // TODO: port to GCC asm
+#endif // _MSC_VER
       inptr += w;
     }
 

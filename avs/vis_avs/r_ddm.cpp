@@ -401,7 +401,13 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
     }
   }
 #ifndef NO_MMX
-  if (subpixel) __asm emms;
+  if (subpixel) {
+#ifdef _MSC_VER
+    __asm emms;
+#else // _MSC_VER
+    // TODO: Port to GCC asm
+#endif
+  }
 #endif
   return 1;
 }
