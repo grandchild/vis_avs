@@ -50,7 +50,8 @@ extern int cfg_fs_fps,cfg_fs_flip,cfg_fs_height,cfg_fs_use_overlay;
 extern int cfg_bkgnd_render, cfg_bkgnd_render_color;
 static LPDIRECTDRAW		   g_lpDD;
 static LPDIRECTDRAWSURFACE g_lpRenderSurf[2], g_lpPrimSurf, g_lpPrimSurfBack;
-static g_bpp, g_fs, g_noshoww;
+// the following line was given without type. was there a default type in MSVC?
+static int g_bpp, g_fs, g_noshoww;
 int g_w, g_h, g_dsw, g_dsh;
 extern HWND g_hwnd;
 static CRITICAL_SECTION g_cs;
