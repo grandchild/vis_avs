@@ -45,7 +45,7 @@ C_RLibrary *g_render_library;
 
 int is_mmx(void) {	
 	DWORD retval1,retval2;	
-	__try { 		
+	try { 		
 		_asm {
 			mov eax, 1		// set up CPUID to return processor version and features
 										//	0 = vendor string, 1 = version info, 2 = cache info
@@ -54,7 +54,7 @@ int is_mmx(void) {
 			mov retval1, eax		
 			mov retval2, edx
 		}	
-	} __except(EXCEPTION_EXECUTE_HANDLER) { retval1 = retval2= 0;}
+	} catch(...) { retval1 = retval2= 0;}
 	if (!retval1) return 0;
 	return (retval2&0x800000)?1:0;
 }

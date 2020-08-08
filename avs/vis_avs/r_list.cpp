@@ -478,11 +478,11 @@ int C_RenderListClass::render(char visdata[2][2][576], int isBeat, int *framebuf
         {
           if (g_config_seh && renders[x].effect_index != LIST_ID)
           {
-            __try 
+            try
             {
               t=renders[x].render->render(visdata,isBeat,s?fbout:framebuffer,s?framebuffer:fbout,w,h);
             }
-  		      __except(EXCEPTION_EXECUTE_HANDLER)
+  		      catch(...)
 	  	      {
               t=0;
             }
@@ -719,11 +719,11 @@ int C_RenderListClass::render(char visdata[2][2][576], int isBeat, int *framebuf
     }
     else if (g_config_seh && renders[x].effect_index != LIST_ID)
     {
-      __try 
+      try
       {
         t=renders[x].render->render(visdata,isBeat,s?fbout:thisfb,s?thisfb:fbout,w,h);
       }
-  		__except(EXCEPTION_EXECUTE_HANDLER)
+  		catch(...)
 	  	{
         t=0;
       }
