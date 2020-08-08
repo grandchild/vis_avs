@@ -30,6 +30,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _R_DEFS_H_
 #define _R_DEFS_H_
 
+#include "../gcc-hacks.h"
+
 // base class declaration, compatibility class
 class RString;
 
