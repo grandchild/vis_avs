@@ -542,12 +542,12 @@ int Wnd_Init(struct winampVisModule *this_mod)
 #ifndef WA2_EMBED
   {
     RECT ir={cfg_x,cfg_y,cfg_w+cfg_x,cfg_y+cfg_h};
-    RECT or;
-    my_getViewport(&or,&ir);
-    if (cfg_x < or.left) cfg_x=or.left;
-    if (cfg_y < or.top) cfg_y=or.top;
-    if (cfg_x > or.right-16) cfg_x=or.right-16;
-    if (cfg_y > or.bottom-16) cfg_y=or.bottom-16;
+    RECT or_;
+    my_getViewport(&or_,&ir);
+    if (cfg_x < or_.left) cfg_x=or_.left;
+    if (cfg_y < or_.top) cfg_y=or_.top;
+    if (cfg_x > or_.right-16) cfg_x=or_.right-16;
+    if (cfg_y > or_.bottom-16) cfg_y=or_.bottom-16;
     // determine bounding rectangle for window
   }
 #endif
