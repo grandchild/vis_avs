@@ -641,7 +641,7 @@ static void __inline mmx_adjblend_block(int *o, int *in1, int *in2, int len, int
 #ifdef NO_MMX
   while (len--)
   {
-    *o++=BLEND_ADJ(*in1++,*in2++,inblendval);
+    *o++=BLEND_ADJ(*in1++,*in2++,v);
   }
 #else
   __asm
