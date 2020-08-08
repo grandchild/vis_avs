@@ -150,6 +150,10 @@ static __inline int FASTMIN(int x, int y)
 
 static unsigned int __inline BLEND_MAX(unsigned int a, unsigned int b)
 {
+  // TODO: Replace with SSE instructions? -> PMAXUB/PMINUB
+  //       Since AVS's resolution is guaranteed to be a multiple of 4 anyway, this
+  //       optimization could go further and work on 4 pixels at once by using AVX's
+  //       128-bit-width VPMAXUB instruction.
 	register unsigned int t;
   int _a=a&0xff;
   int _b=b&0xff;
