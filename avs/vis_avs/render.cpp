@@ -47,6 +47,7 @@ int is_mmx(void) {
 	DWORD retval1,retval2;	
 	try {
 #ifdef _MSC_VER
+    // TODO [cleanup]: This is CPUID, maybe it wasn't available in MASM at the time?
 		_asm {
 			mov eax, 1		// set up CPUID to return processor version and features
 										//	0 = vendor string, 1 = version info, 2 = cache info
@@ -56,7 +57,15 @@ int is_mmx(void) {
 			mov retval2, edx
 		}	
 #else // _MSC_VER
-    // TODO: Port to GCC asm
+      __asm__ __volatile__ (
+        "mov %%eax, 1\n\t"
+        "cpuid\n\t"
+        "mov %0, %%eax\n\t"
+        "mov %1, %%edx\n\t"
+        :"=m"(retval1), "=m"(retval2)
+        :/* no inputs */
+        :"eax", "ebx", "ecx", "edx"
+      );
 #endif
 	} catch(...) { retval1 = retval2= 0;}
 	if (!retval1) return 0;
