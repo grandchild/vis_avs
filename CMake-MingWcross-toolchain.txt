@@ -5,4 +5,12 @@ SET(CMAKE_SYSTEM_NAME Windows)
 SET(CMAKE_C_COMPILER ${CROSS_CC_NAME}-gcc)
 SET(CMAKE_CXX_COMPILER ${CROSS_CC_NAME}-g++)
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    # These dependent DLLs are introduced by mingw32, and should be next to vis_avs.dll.
+    configure_file(${CROSS_CC_PREFIX}/bin/libgcc_s_dw2-1.dll    . COPYONLY)
+    configure_file(${CROSS_CC_PREFIX}/bin/libssp-0.dll          . COPYONLY)
+    configure_file(${CROSS_CC_PREFIX}/bin/libstdc++-6.dll       . COPYONLY)
+    configure_file(${CROSS_CC_PREFIX}/bin/libwinpthread-1.dll   . COPYONLY)
+endif()
+
 # configure_file(${CROSS_CC_PREFIX}/bin/libgtest.dll        . COPYONLY)
