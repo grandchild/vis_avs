@@ -1,11 +1,12 @@
 # vis_avs - Advanced Visualization Studio
 
-## GCC Build Effort
+## Modern Toolchain Build Effort
 
-This fork is currently (2020) trying to make AVS build with **MingW-w64 GCC**. The
-original source release needs an ancient MSVC 6<sup><sup>[citation needed]</sup></sup>
-to build. Consequently, towards the final years of AVS activity, there were only a
-perceived handful of people who could still get the code to compile.
+This fork is currently (2020) trying to make AVS build with **MingW-w64 GCC** as well as
+a modern **MSVC**. The original source release needs an ancient MSVC 6<sup><sup>
+[citation needed] </sup></sup> to build. Consequently, towards the final years of AVS
+activity, there were only a perceived handful of people who could still get the code to
+compile.
 
 So the primary concern today is getting a **v2.81d**-compliant *vis_avs.dll* version
 that can be built with a modern toolchain. Any fixes or improvements to AVS will be held
@@ -21,6 +22,24 @@ cd build
 i686-w64-mingw32-cmake -D CMAKE_TOOLCHAIN_FILE=../CMake-MingWcross-toolchain.txt ..
 make
 ```
+
+
+## Conventions
+
+There is room for improvements in the code, but the first step should be replicating the
+behavior of v2.81d as well as possible. If going through the code reveals areas of
+possible improvements, then mark them with a TODO comment, possibly using a secondary
+flag to categorize the suggestion:
+
+| tag | intent |
+|-----|--------|
+|`// TODO [cleanup]: <comment>`    |cleaner or more readable code is possible here   |
+|`// TODO [bugfix]: <comment>`     |more stable or less buggy code is possible here  |
+|`// TODO [improvement]: <comment>`|the performance of AVS could be better here      |
+|`// TODO [feature]: <comment>`    |a new capability of AVS could be implemented here|
+
+Arguably cleanup could happen right away (and sometimes it does), but in the archival
+spirit of the project it's only done sparingly up until v2.81d compliance.
 
 
 <sub>Upstream README below</sub>
