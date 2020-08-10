@@ -127,6 +127,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 
 	c = w*h;
 
+	// TODO [improvement]: All of these byte-swapping sections just smell like PSHUFB
 	switch (config.mode) {
 	default:
 	case IDC_RGB:
@@ -159,7 +160,34 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			jnz lp1;
 		}
 #else // _MSC_VER
-		// TODO: Port to GCC asm
+		__asm__ __volatile__ (
+			"mov %%ebx, %0\n\t"
+			"mov %%ecx, %1\n"
+			"lp1:\n\t"
+			"sub %%ecx, 4\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4]\n\t"
+			"xchg %%ah, %%al\n\t"
+			"mov [%%ebx + %%ecx * 4], %%eax\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4 + 4]\n\t"
+			"xchg %%ah, %%al\n\t"
+			"mov [%%ebx + %%ecx * 4 + 4], %%eax\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4 + 8]\n\t"
+			"xchg %%ah, %%al\n\t"
+			"mov [%%ebx + %%ecx * 4 + 8], %%eax\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4 + 12]\n\t"
+			"xchg %%ah, %%al\n\t"
+			"mov [%%ebx + %%ecx * 4 + 12], %%eax\n\t"
+
+			"test %%ecx, %%ecx\n\t"
+			"jnz lp1\n\t"
+			:/* no outputs */
+			:"m"(framebuffer), "m"(c)
+			:"eax", "ebx", "ecx"
+		);
 #endif
 		break;
 		
@@ -207,7 +235,50 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			jnz lp2;
 		}
 #else // _MSC_VER
-		// TODO: Port to GCC asm
+		__asm__ __volatile__ (
+			"mov %%ebx, %0\n\t"
+			"mov %%ecx, %1\n"
+			"lp2:\n\t"
+			"sub %%ecx, 4\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4]\n\t"
+			"mov %%dl, %%al\n\t"
+			"shr %%eax, 8\n\t"
+			"bswap %%eax\n\t"
+			"mov %%ah, %%dl\n\t"
+			"bswap %%eax\n\t"
+			"mov [%%ebx + %%ecx * 4], %%eax\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4 + 4]\n\t"
+			"mov %%dl, %%al\n\t"
+			"shr %%eax, 8\n\t"
+			"bswap %%eax\n\t"
+			"mov %%ah, %%dl\n\t"
+			"bswap %%eax\n\t"
+			"mov [%%ebx + %%ecx * 4 + 4], %%eax\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4 + 8]\n\t"
+			"mov %%dl, %%al\n\t"
+			"shr %%eax, 8\n\t"
+			"bswap %%eax\n\t"
+			"mov %%ah, %%dl\n\t"
+			"bswap %%eax\n\t"
+			"mov [%%ebx + %%ecx * 4 + 8], %%eax\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4 + 12]\n\t"
+			"mov %%dl, %%al\n\t"
+			"shr %%eax, 8\n\t"
+			"bswap %%eax\n\t"
+			"mov %%ah, %%dl\n\t"
+			"bswap %%eax\n\t"
+			"mov [%%ebx + %%ecx * 4 + 12], %%eax\n\t"
+
+			"test %%ecx, %%ecx\n\t"
+			"jnz lp2\n\t"
+			:/* no outputs */
+			:"m"(framebuffer), "m"(c)
+			:"eax", "ebx", "ecx"
+		);
 #endif
 		break;
 
@@ -243,7 +314,38 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			jnz lp3;
 		}
 #else // _MSC_VER
-		// TODO: Port to GCC asm
+		__asm__ __volatile__ (
+			"mov %%ebx, %0\n\t"
+			"mov %%ecx, %1\n"
+			"lp3:\n\t"
+			"sub %%ecx, 4\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4]\n\t"
+			"bswap %%eax\n\t"
+			"shr %%eax, 8\n\t"
+			"mov [%%ebx + %%ecx * 4], %%eax\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4 + 4]\n\t"
+			"bswap %%eax\n\t"
+			"shr %%eax, 8\n\t"
+			"mov [%%ebx + %%ecx * 4 + 4], %%eax\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4 + 8]\n\t"
+			"bswap %%eax\n\t"
+			"shr %%eax, 8\n\t"
+			"mov [%%ebx + %%ecx * 4 + 8], %%eax\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4 + 12]\n\t"
+			"bswap %%eax\n\t"
+			"shr %%eax, 8\n\t"
+			"mov [%%ebx + %%ecx * 4 + 12], %%eax\n\t"
+
+			"test %%ecx, %%ecx\n\t"
+			"jnz lp3\n\t"
+			:/* no outputs */
+			:"m"(framebuffer), "m"(c)
+			:"eax", "ebx", "ecx"
+		);
 #endif
 		break;
 
@@ -287,7 +389,46 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			jnz lp4;
 		}
 #else // _MSC_VER
-		// TODO: Port to GCC asm
+		__asm__ __volatile__ (
+			"mov %%ebx, %0\n\t"
+			"mov %%ecx, %1\n"
+			"lp4:\n\t"
+			"sub %%ecx, 4\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4]\n\t"
+			"mov %%edx, %%eax\n\t"
+			"bswap %%edx\n\t"
+			"shl %%edx, 8\n\t"
+			"mov %%al, %%dh\n\t"
+			"mov [%%ebx + %%ecx * 4], %%eax\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4 + 4]\n\t"
+			"mov %%edx, %%eax\n\t"
+			"bswap %%edx\n\t"
+			"shl %%edx, 8\n\t"
+			"mov %%al, %%dh\n\t"
+			"mov [%%ebx + %%ecx * 4 + 4], %%eax\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4 + 8]\n\t"
+			"mov %%edx, %%eax\n\t"
+			"bswap %%edx\n\t"
+			"shl %%edx, 8\n\t"
+			"mov %%al, %%dh\n\t"
+			"mov [%%ebx + %%ecx * 4 + 8], %%eax\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4 + 12]\n\t"
+			"mov %%edx, %%eax\n\t"
+			"bswap %%edx\n\t"
+			"shl %%edx, 8\n\t"
+			"mov %%al, %%dh\n\t"
+			"mov [%%ebx + %%ecx * 4 + 12], %%eax\n\t"
+
+			"test %%ecx, %%ecx\n\t"
+			"jnz lp4\n\t"
+			:/* no outputs */
+			:"m"(framebuffer), "m"(c)
+			:"eax", "ebx", "ecx", "edx"
+		);
 #endif
 		break;
 
@@ -335,7 +476,50 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			jnz lp5;
 		}
 #else // _MSC_VER
-		// TODO: Port to GCC asm
+		__asm__ __volatile__ (
+			"mov %%ebx, %0\n\t"
+			"mov %%ecx, %1\n"
+			"lp5:\n\t"
+			"sub %%ecx, 4\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4]\n\t"
+			"shl %%eax, 8\n\t"
+			"bswap %%eax\n\t"
+			"xchg %%ah, %%al\n\t"
+			"bswap %%eax\n\t"
+			"shr %%eax, 8\n\t"
+			"mov [%%ebx + %%ecx * 4], %%eax\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4 + 4]\n\t"
+			"shl %%eax, 8\n\t"
+			"bswap %%eax\n\t"
+			"xchg %%ah, %%al\n\t"
+			"bswap %%eax\n\t"
+			"shr %%eax, 8\n\t"
+			"mov [%%ebx + %%ecx * 4 + 4], %%eax\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4 + 8]\n\t"
+			"shl %%eax, 8\n\t"
+			"bswap %%eax\n\t"
+			"xchg %%ah, %%al\n\t"
+			"bswap %%eax\n\t"
+			"shr %%eax, 8\n\t"
+			"mov [%%ebx + %%ecx * 4 + 8], %%eax\n\t"
+
+			"mov %%eax, dword ptr [%%ebx + %%ecx * 4 + 12]\n\t"
+			"shl %%eax, 8\n\t"
+			"bswap %%eax\n\t"
+			"xchg %%ah, %%al\n\t"
+			"bswap %%eax\n\t"
+			"shr %%eax, 8\n\t"
+			"mov [%%ebx + %%ecx * 4 + 12], %%eax\n\t"
+
+			"test %%ecx, %%ecx\n\t"
+			"jnz lp5\n\t"
+			:/* no outputs */
+			:"m"(framebuffer), "m"(c)
+			:"eax", "ebx", "ecx"
+		);
 #endif
 		break;
 	}
