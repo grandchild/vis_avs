@@ -964,7 +964,46 @@ void homemadeBlitFrom32bpp(DDSURFACEDESC *out, void *in, int w, int h, int sy, i
         jnz conv15_loop  
       }
 #else // _MSC_VER
-      // TODO: port to GCC asm
+      __asm__ __volatile__ (
+        "mov %%edi, %0\n\t"
+        "mov %%esi, %1\n\t"
+        "mov %%ecx, %2\n\t"
+        "mov %%ebx, 0b00000000111110001111100011111000\n\t" // 0x00f8f8f8
+        "shr %%ecx, 1\n"
+        
+        "conv15_loop:\n\t"
+        "mov %%eax, [%%esi]\n\t"
+        "mov %%edx, [%%esi+4]\n\t"
+        
+        "and %%eax, %%ebx\n\t"
+        "and %%edx, %%ebx\n\t"
+        
+        "shr %%ah, 3\n\t"
+        "shr %%dh, 3\n\t"
+        "shr %%ax, 3\n\t"
+        "shr %%dx, 3\n\t"
+        "ror %%eax, 10\n\t"
+        "ror %%edx, 10\n\t"
+        "shr %%ah, 1\n\t"
+        "shr %%dh, 1\n\t"
+        "mov %%al, %%ah\n\t"
+        "mov %%dl, %%dh\n\t"
+        "rol %%eax, 10\n\t"
+        "rol %%edx, 10\n\t"
+        
+        "shl %%edx, 16\n\t"
+        "and %%eax, 0x0000ffff\n\t"
+        "add %%esi, 8\n\t"
+        "or %%eax, %%edx\n\t"
+        "mov [%%edi], %%eax\n\t"
+        
+        "add %%edi, 4\n\t"
+        "dec %%ecx\n\t"
+        "jnz conv15_loop\n\t"
+        :/* no outputs */
+        :"m"(optr), "m"(inptr), "m"(mw)
+        :"eax", "ebx", "ecx", "esi", "edi"
+      );
 #endif // _MSC_VER
       inptr += w;
     }
@@ -1027,7 +1066,44 @@ void homemadeBlitFrom32bpp(DDSURFACEDESC *out, void *in, int w, int h, int sy, i
         jnz conv16_loop  
       }
 #else // _MSC_VER
-      // TODO: port to GCC asm
+      __asm__ __volatile__ (
+        "mov %%edi, %0\n\t"
+        "mov %%esi, %1\n\t"
+        "mov %%ecx, %2\n\t"
+        "mov %%ebx, 0b00000000111110001111110011111000\n\t" // 0x00f8fcf8
+        "shr %%ecx, 1\n"
+        
+        "conv16_loop:\n\t"
+        "mov %%eax, [%%esi]\n\t"
+        "mov %%edx, [%%esi+4]\n\t"
+        
+        "and %%eax, %%ebx\n\t"
+        "and %%edx, %%ebx\n\t"
+        
+        "shr %%ah, 2\n\t"
+        "shr %%dh, 2\n\t"
+        "shr %%ax, 3\n\t"
+        "shr %%dx, 3\n\t"
+        "ror %%eax, 8\n\t"
+        "ror %%edx, 8\n\t"
+        "add %%al, %%ah\n\t"
+        "add %%dl, %%dh\n\t"
+        "rol %%eax, 8\n\t"
+        "rol %%edx, 8\n\t"
+        
+        "shl %%edx, 16\n\t"
+        "and %%eax, 0x0000ffff\n\t"
+        "add %%esi, 8\n\t"
+        "or %%eax, %%edx\n\t"
+        "mov [%%edi], %%eax\n\t"
+        
+        "add %%edi, 4\n\t"
+        "dec %%ecx\n\t"
+        "jnz conv16_loop\n\t"
+        :/* no outputs */
+        :"m"(optr), "m"(inptr), "m"(mw)
+        :"eax", "ebx", "ecx", "esi", "edi"
+      );
 #endif // _MSC_VER
       inptr += w;
     }
