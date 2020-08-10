@@ -405,7 +405,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 #ifdef _MSC_VER
     __asm emms;
 #else // _MSC_VER
-    // TODO: Port to GCC asm
+    __asm__ __volatile__ ("emms");
 #endif
   }
 #endif
