@@ -100,11 +100,11 @@ NAKED void _asm_megabuf(void)
   __asm { mov dword ptr parm_a, eax }
 #else
   __asm__ __volatile__ (
-    "  mov %%edx, 0xffffffff\n\t"
-    "  mov %%ebp, %%esp\n\t"
-    "  sub %%esp, 0\n\t"  // __LOCAL_SIZE = 0
-    "  mov dword ptr %0, %%edx\n\t"
-    "  mov dword ptr %1, %%eax\n\t"
+    "mov %%edx, 0xffffffff\n\t"
+    "mov %%ebp, %%esp\n\t"
+    "sub %%esp, 0\n\t"  // __LOCAL_SIZE = 0
+    "mov dword ptr %0, %%edx\n\t"
+    "mov dword ptr %1, %%eax\n\t"
     :"=m"(my_ctx), "=m"(parm_a)
     :
     :"eax", "edx"
@@ -117,8 +117,8 @@ NAKED void _asm_megabuf(void)
   __asm { mov esp, ebp }
 #else
   __asm__ __volatile__ (
-    "  mov  %%eax, %0\n\t"
-    "  mov  %%esp, %%ebp\n\t"
+    "mov  %%eax, %0\n\t"
+    "mov  %%esp, %%ebp\n\t"
     :
     :"m"(__nextBlock)
     :"eax", "ebx"
