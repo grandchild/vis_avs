@@ -151,7 +151,25 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 		end:
 	}
 #else // _MSC_VER
-	// TODO: Port to GCC asm
+	__asm__ __volatile__ (
+		"mov %%ebx, %0\n\t"
+		"mov %%ecx, %1\n\t"
+		"mov %%edx, %2\n"
+		"lp:\n\t"
+		"sub %%ecx, 4\n\t"
+		"test %%ecx, %%ecx\n\t"
+		"jz end\n\t"
+		// TODO [improvement]: could be put into one or two packed instructions?
+		"and dword ptr [%%ebx + %%ecx * 4], %%edx\n\t"
+		"and dword ptr [%%ebx + %%ecx * 4 + 4], %%edx\n\t"
+		"and dword ptr [%%ebx + %%ecx * 4 + 8], %%edx\n\t"
+		"and dword ptr [%%ebx + %%ecx * 4 + 12], %%edx\n\t"
+		"jmp lp\n"
+		"end:"
+		:/* no outputs */
+		:"m"(framebuffer), "m"(c), "m"(b)
+		:"ebx", "ecx", "edx"
+	);
 #endif
 	return 0;
 }
