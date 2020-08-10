@@ -19,13 +19,22 @@ static void rdtsc(unsigned int t[2])
 	__asm 
 	{
 		mov esi, t
+        // TODO [cleanup]: This is RDTSC, maybe it wasn't available in MASM at the time?
 		_emit 0xf
 		_emit 0x31
 		mov [esi], eax
 		mov [esi+4], edx
 	}
 #else // _MSC_VER
-    // TODO: Port to GCC asm
+    __asm__ __volatile__ (
+        "mov %%esi, %0\n\t"
+        "rdtsc\n\t"
+        "mov [%%esi], %%eax\n\t"
+        "mov [%%esi + 4], %%edx\n\t"
+        :/* no outputs */
+        :"m"(t)
+        :"eax", "esi"
+    );
 #endif
 }
 	
