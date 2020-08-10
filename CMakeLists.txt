@@ -39,8 +39,8 @@ endif()
 add_definitions(
     -DNO_MMX                # Avoid as much asm code as possible in the beginning to get
                             # to a successful build first.
-    -DAVS_MEGABUF_SUPPORT   # No reason to not enable this -> the #ifdefs should probably
-                            # be removed eventually.
+    -DAVS_MEGABUF_SUPPORT   # No reason to not enable this -> the #ifdefs should
+                            # probably be removed eventually.
 )
 
 file(GLOB SRC_FILES_NS_EEL avs/ns-eel/*.c)
@@ -48,6 +48,8 @@ file(GLOB SRC_FILES_VIS_AVS avs/vis_avs/*.cpp)
 # This file appears to be an older version of r_contrast.cpp left in the source tree.
 list(REMOVE_ITEM SRC_FILES_VIS_AVS "${CMAKE_SOURCE_DIR}/avs/vis_avs/r_colorreplace.cpp")
 
+set(CMAKE_SHARED_LIBRARY_PREFIX "")  # Removes "lib" prefix from output to achieve
+                                     # original filename "vis_avs.dll"
 add_library(vis_avs SHARED
     ${SRC_FILES_NS_EEL}
     ${SRC_FILES_VIS_AVS}
@@ -55,8 +57,10 @@ add_library(vis_avs SHARED
 )
 
 target_link_libraries(vis_avs
-    ddraw  # draw.cpp includes ddraw.h: https://docs.microsoft.com/en-us/windows/win32/api/ddraw/nf-ddraw-directdrawcreate
-    vfw32  # r_avi.cpp includes vfw.h: https://docs.microsoft.com/en-us/windows/win32/multimedia/avifile-functions-and-macros
+    ddraw  # draw.cpp includes ddraw.h
+           # https://docs.microsoft.com/en-us/windows/win32/api/ddraw/nf-ddraw-directdrawcreate
+    vfw32  # r_avi.cpp includes vfw.h
+           # https://docs.microsoft.com/en-us/windows/win32/multimedia/avifile-functions-and-macros
 )
 
 if(NOT MSVC)
