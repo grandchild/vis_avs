@@ -18,7 +18,8 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         # -fpermissive needed for MAKEINTRESOURCE macro, which casts LPSTR to
         # WORD, a.k.a. char* to short unsigned int
         -fpermissive
-        -masm=intel)
+        -masm=intel
+    )
 else() # TODO: Clang option
     message(SEND_ERROR "unsupported compiler ${CMAKE_CXX_COMPILER_ID}")
 endif()
@@ -44,11 +45,18 @@ add_definitions(
 
 file(GLOB SRC_FILES_NS_EEL avs/ns-eel/*.c)
 file(GLOB SRC_FILES_VIS_AVS avs/vis_avs/*.cpp)
+# This file appears to be an older version of r_contrast.cpp left in the source tree.
+list(REMOVE_ITEM SRC_FILES_VIS_AVS "${CMAKE_SOURCE_DIR}/avs/vis_avs/r_colorreplace.cpp")
 
 add_library(vis_avs SHARED
     ${SRC_FILES_NS_EEL}
     ${SRC_FILES_VIS_AVS}
     avs/gcc-hacks.c
+)
+
+target_link_libraries(vis_avs
+    ddraw  # draw.cpp includes ddraw.h: https://docs.microsoft.com/en-us/windows/win32/api/ddraw/nf-ddraw-directdrawcreate
+    vfw32  # r_avi.cpp includes vfw.h: https://docs.microsoft.com/en-us/windows/win32/multimedia/avifile-functions-and-macros
 )
 
 if(NOT MSVC)
