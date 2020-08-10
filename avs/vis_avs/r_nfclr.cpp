@@ -110,7 +110,15 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 					rep stosd
 				}
 #else // _MSC_VER
-				// TODO: Port to GCC asm
+				__asm__ __volatile__ (
+					"mov %%ecx, %0\n\t"
+					"mov %%edi, %1\n\t"
+					"mov %%eax, %2\n\t"
+					"rep stosd\n\t"
+					:/* no outputs */
+					:"m"(i), "m"(framebuffer), "m"(c)
+					:"eax", "ecx", "edi"
+				);
 #endif
 			}
 			else 
@@ -126,6 +134,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 					int icolor[2]={this->color,this->color};
 					int vc[2] = { ~((1<<7)|(1<<15)|(1<<23)),~((1<<7)|(1<<15)|(1<<23))};
 					i/=4;
+#ifdef _MSC_VER
 					__asm
 					{
 						movq mm6, vc
@@ -155,6 +164,39 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 						jnz _l1
 						emms
 					}
+#else // _MSC_VER
+					__asm__ __volatile__ (
+						"movq %%mm6, %0\n\t"
+						"movq %%mm7, %1\n\t"
+						"psrlq %%mm7, 1\n\t"
+						"pand %%mm7, %%mm6\n\t"
+						"mov %%edx, %2\n\t"
+						"mov %%edi, %3\n"
+						"_l1:\n\t"
+						"movq %%mm0, [%%edi]\n\t"
+
+						"movq %%mm1, [%%edi+8]\n\t"
+						"psrlq %%mm0, 1\n\t"
+
+						"pand %%mm0, %%mm6\n\t"
+						"psrlq %%mm1, 1\n\t"
+
+						"paddb %%mm0, %%mm7\n\t"
+						"pand %%mm1, %%mm6\n\t"
+
+						"movq [%%edi], %%mm0\n\t"
+						"paddb %%mm1, %%mm7\n\t"
+
+						"movq [%%edi + 8], %%mm1\n\t"
+						"add %%edi, 16\n\t"
+						"dec %%edx\n\t"
+						"jnz _l1\n\t"
+						"emms\n\t"
+						:/* no outputs */
+						:"m"(vc), "m"(icolor), "m"(i), "m"(framebuffer)
+						:"edx", "edi"
+					);
+#endif // _MSC_VER
 				}
 #endif
 			}
