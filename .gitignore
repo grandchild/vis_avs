@@ -1,0 +1,20 @@
+# build output
+*.dll
+*.lib
+*.so
+*.a
+*.obj
+*.o
+
+/build*/
+/cmake-build*/
+
+# IDEs
+.idea/
+
+
+# syncthing
+.stfolder/
+.stversions/
+.stignore
+
