@@ -358,7 +358,7 @@ __declspec ( naked ) void _asm_gmegabuf(void)
     "mov dword ptr %0, %%eax\n"
     :"=m"(parm_a)
     :
-    :"eax", "edx", "ebp", "esp"
+    :"eax", "edx", "ebp"
   );
 #endif
   
@@ -373,7 +373,7 @@ __declspec ( naked ) void _asm_gmegabuf(void)
     "mov %%esp, %%ebp\n"
     :
     : "m"(__nextBlock)
-    :"eax", "esp", "ebp"
+    :"eax", "ebp"
   );
 #endif
 }
