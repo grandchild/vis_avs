@@ -35,7 +35,7 @@ flag to categorize the suggestion:
 |-----|--------|
 |`// TODO [cleanup]: <comment>`    |cleaner or more readable code is possible here   |
 |`// TODO [bugfix]: <comment>`     |more stable or less buggy code is possible here  |
-|`// TODO [improvement]: <comment>`|the performance of AVS could be better here      |
+|`// TODO [performance]: <comment>`|the performance of AVS could be better here      |
 |`// TODO [feature]: <comment>`    |a new capability of AVS could be implemented here|
 
 Arguably cleanup could happen right away (and sometimes it does), but in the archival

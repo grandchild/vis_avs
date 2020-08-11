@@ -229,10 +229,10 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			mov eax, dword ptr [ebx+ecx*4];
 			cmp eax, 0xFFFFFF;
 			je sk9; // TODO [bugfix]: this could be jae, to account for garbage in MSByte
-			// TODO [improvement]: the next _3_ lines could be compressed into just
-			//         mov [ebx+ecx*4], 0x000000
-			//         sk9:
-			//       since the white pixel (= 0xFFFFFF) doesn't need to be rewritten
+			// TODO [performance]: the next _3_ lines could be compressed into just
+			//          mov [ebx+ecx*4], 0x000000
+			//          sk9:
+			//      since the white pixel (= 0xFFFFFF) doesn't need to be rewritten
 			mov eax, 0x000000;
 			sk9:
 			mov [ebx+ecx*4], eax;

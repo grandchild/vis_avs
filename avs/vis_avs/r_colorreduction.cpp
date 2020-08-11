@@ -159,7 +159,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 		"sub %%ecx, 4\n\t"
 		"test %%ecx, %%ecx\n\t"
 		"jz end\n\t"
-		// TODO [improvement]: could be put into one or two packed instructions?
+		// TODO [performance]: could be put into one or two packed instructions?
 		"and dword ptr [%%ebx + %%ecx * 4], %%edx\n\t"
 		"and dword ptr [%%ebx + %%ecx * 4 + 4], %%edx\n\t"
 		"and dword ptr [%%ebx + %%ecx * 4 + 8], %%edx\n\t"

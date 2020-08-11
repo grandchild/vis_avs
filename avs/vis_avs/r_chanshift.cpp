@@ -127,7 +127,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 
 	c = w*h;
 
-	// TODO [improvement]: All of these byte-swapping sections just smell like PSHUFB
+	// TODO [performance]: All of these byte-swapping sections just smell like PSHUFB
 	switch (config.mode) {
 	default:
 	case IDC_RGB:
