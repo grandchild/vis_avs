@@ -30,6 +30,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <windows.h>
 #include <stdio.h>
 #include <math.h>
+#include "../../gcc-hacks.h"
 #include "Compiler.h"
 #include "eval.h"
 
@@ -218,7 +219,7 @@ static double SHITCALL getmouse_(double *which)
 
 static double (*__asin)(double) = &asin;
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_asin(void)
+NAKED void _asm_asin(void)
 {
   FUNC1_ENTER
 
@@ -226,11 +227,11 @@ __declspec ( naked ) void _asm_asin(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_asin_end(void) {}
+NAKED void _asm_asin_end(void) {}
 
 static double (*__acos)(double) = &acos;
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_acos(void)
+NAKED void _asm_acos(void)
 {
   FUNC1_ENTER
 
@@ -238,11 +239,11 @@ __declspec ( naked ) void _asm_acos(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_acos_end(void) {}
+NAKED void _asm_acos_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 static double (*__atan)(double) = &atan;
-__declspec ( naked ) void _asm_atan(void)
+NAKED void _asm_atan(void)
 {
   FUNC1_ENTER
 
@@ -250,11 +251,11 @@ __declspec ( naked ) void _asm_atan(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_atan_end(void) {}
+NAKED void _asm_atan_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 static double (*__atan2)(double,double) = &atan2;
-__declspec ( naked ) void _asm_atan2(void)
+NAKED void _asm_atan2(void)
 {
   FUNC2_ENTER
 
@@ -262,12 +263,12 @@ __declspec ( naked ) void _asm_atan2(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_atan2_end(void) {}
+NAKED void _asm_atan2_end(void) {}
 
 
 //---------------------------------------------------------------------------------------------------------------
 static double (SHITCALL  * __sig)(double *,double *) = &_sig;
-__declspec ( naked ) void _asm_sig(void)
+NAKED void _asm_sig(void)
 {
   FUNC2_ENTER
 
@@ -275,11 +276,11 @@ __declspec ( naked ) void _asm_sig(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_sig_end(void) {}
+NAKED void _asm_sig_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 static double (SHITCALL *__rand)(double *) = &_rand;
-__declspec ( naked ) void _asm_rand(void)
+NAKED void _asm_rand(void)
 {
   FUNC1_ENTER
 
@@ -287,11 +288,11 @@ __declspec ( naked ) void _asm_rand(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_rand_end(void) {}
+NAKED void _asm_rand_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 static double (SHITCALL *__band)(double *,double *) = &_band;
-__declspec ( naked ) void _asm_band(void)
+NAKED void _asm_band(void)
 {
   FUNC2_ENTER
 
@@ -299,11 +300,11 @@ __declspec ( naked ) void _asm_band(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_band_end(void) {}
+NAKED void _asm_band_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 static double ( SHITCALL  *__bor)(double *,double *) = &_bor;
-__declspec ( naked ) void _asm_bor(void)
+NAKED void _asm_bor(void)
 {
   FUNC2_ENTER
 
@@ -311,11 +312,11 @@ __declspec ( naked ) void _asm_bor(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_bor_end(void) {}
+NAKED void _asm_bor_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 static double (* __pow)(double,double) = &pow;
-__declspec ( naked ) void _asm_pow(void)
+NAKED void _asm_pow(void)
 {
   FUNC2_ENTER
 
@@ -323,11 +324,11 @@ __declspec ( naked ) void _asm_pow(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_pow_end(void) {}
+NAKED void _asm_pow_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 static double (*__exp)(double) = &exp;
-__declspec ( naked ) void _asm_exp(void)
+NAKED void _asm_exp(void)
 {
   FUNC1_ENTER
 
@@ -335,11 +336,11 @@ __declspec ( naked ) void _asm_exp(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_exp_end(void) {}
+NAKED void _asm_exp_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 static double (*__floor)(double) = &floor;
-__declspec ( naked ) void _asm_floor(void)
+NAKED void _asm_floor(void)
 {
   FUNC1_ENTER
 
@@ -347,12 +348,12 @@ __declspec ( naked ) void _asm_floor(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_floor_end(void) {}
+NAKED void _asm_floor_end(void) {}
 
 
 //---------------------------------------------------------------------------------------------------------------
 static double (*__ceil)(double) = &ceil;
-__declspec ( naked ) void _asm_ceil(void)
+NAKED void _asm_ceil(void)
 {
   FUNC1_ENTER
 
@@ -360,14 +361,14 @@ __declspec ( naked ) void _asm_ceil(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_ceil_end(void) {}
+NAKED void _asm_ceil_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 
 
 
 static double (SHITCALL *__getosc)(double *,double *,double *) = &getosc_;
-__declspec ( naked ) void _asm_getosc(void)
+NAKED void _asm_getosc(void)
 {
   FUNC3_ENTER
 
@@ -375,11 +376,11 @@ __declspec ( naked ) void _asm_getosc(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_getosc_end(void) {}
+NAKED void _asm_getosc_end(void) {}
 
 
 static double (SHITCALL *__getspec)(double *,double *,double *) = &getspec_;
-__declspec ( naked ) void _asm_getspec(void)
+NAKED void _asm_getspec(void)
 {
   FUNC3_ENTER
 
@@ -387,10 +388,10 @@ __declspec ( naked ) void _asm_getspec(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_getspec_end(void) {}
+NAKED void _asm_getspec_end(void) {}
 
 static double (SHITCALL *__gettime)(double *) = &gettime_;
-__declspec ( naked ) void _asm_gettime(void)
+NAKED void _asm_gettime(void)
 {
   FUNC1_ENTER
   
@@ -398,17 +399,17 @@ __declspec ( naked ) void _asm_gettime(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_gettime_end(void) {}
+NAKED void _asm_gettime_end(void) {}
 
 // do nothing, eh
-__declspec ( naked ) void _asm_exec2(void)
+NAKED void _asm_exec2(void)
 {
 }
-__declspec ( naked ) void _asm_exec2_end(void) { }
+NAKED void _asm_exec2_end(void) { }
 
 
 static double (SHITCALL *__getmouse)(double *) = &getmouse_;
-__declspec ( naked ) void _asm_getmouse(void)
+NAKED void _asm_getmouse(void)
 {
   FUNC1_ENTER
   
@@ -416,11 +417,11 @@ __declspec ( naked ) void _asm_getmouse(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_getmouse_end(void) {}
+NAKED void _asm_getmouse_end(void) {}
 
 
 static double (SHITCALL *__setmousepos)(double *,double *) = &setmousepos_;
-__declspec ( naked ) void _asm_setmousepos(void)
+NAKED void _asm_setmousepos(void)
 {
   FUNC2_ENTER
   
@@ -428,11 +429,11 @@ __declspec ( naked ) void _asm_setmousepos(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_setmousepos_end(void) {}
+NAKED void _asm_setmousepos_end(void) {}
 
 
 
-__declspec ( naked ) void _asm_invsqrt(void)
+NAKED void _asm_invsqrt(void)
 {
   __asm 
   {
@@ -462,11 +463,11 @@ __declspec ( naked ) void _asm_invsqrt(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_invsqrt_end(void) {}
+NAKED void _asm_invsqrt_end(void) {}
 
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_sin(void)
+NAKED void _asm_sin(void)
 {
   __asm 
   {
@@ -477,10 +478,10 @@ __declspec ( naked ) void _asm_sin(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_sin_end(void) {}
+NAKED void _asm_sin_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_cos(void)
+NAKED void _asm_cos(void)
 {
   __asm 
   {
@@ -491,10 +492,10 @@ __declspec ( naked ) void _asm_cos(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_cos_end(void) {}
+NAKED void _asm_cos_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_tan(void)
+NAKED void _asm_tan(void)
 {
   __asm 
   {
@@ -506,10 +507,10 @@ __declspec ( naked ) void _asm_tan(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_tan_end(void) {}
+NAKED void _asm_tan_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_sqr(void)
+NAKED void _asm_sqr(void)
 {
   __asm 
   {
@@ -520,10 +521,10 @@ __declspec ( naked ) void _asm_sqr(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_sqr_end(void) {}
+NAKED void _asm_sqr_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_sqrt(void)
+NAKED void _asm_sqrt(void)
 {
   __asm 
   {
@@ -535,11 +536,11 @@ __declspec ( naked ) void _asm_sqrt(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_sqrt_end(void) {}
+NAKED void _asm_sqrt_end(void) {}
 
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_log(void)
+NAKED void _asm_log(void)
 {
   __asm 
   {
@@ -553,10 +554,10 @@ __declspec ( naked ) void _asm_log(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_log_end(void) {}
+NAKED void _asm_log_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_log10(void)
+NAKED void _asm_log10(void)
 {
   __asm 
   {
@@ -570,10 +571,10 @@ __declspec ( naked ) void _asm_log10(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_log10_end(void) {}
+NAKED void _asm_log10_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_abs(void)
+NAKED void _asm_abs(void)
 {
   __asm 
   {
@@ -584,11 +585,11 @@ __declspec ( naked ) void _asm_abs(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_abs_end(void) {}
+NAKED void _asm_abs_end(void) {}
 
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_assign(void)
+NAKED void _asm_assign(void)
 {
   __asm 
   {
@@ -596,10 +597,10 @@ __declspec ( naked ) void _asm_assign(void)
     fstp qword ptr [ebx]
   }
 }
-__declspec ( naked ) void _asm_assign_end(void) {}
+NAKED void _asm_assign_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_add(void)
+NAKED void _asm_add(void)
 {
   __asm 
   {
@@ -610,10 +611,10 @@ __declspec ( naked ) void _asm_add(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_add_end(void) {}
+NAKED void _asm_add_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_sub(void)
+NAKED void _asm_sub(void)
 {
   __asm 
   {
@@ -624,10 +625,10 @@ __declspec ( naked ) void _asm_sub(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_sub_end(void) {}
+NAKED void _asm_sub_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_mul(void)
+NAKED void _asm_mul(void)
 {
   __asm 
   {
@@ -638,10 +639,10 @@ __declspec ( naked ) void _asm_mul(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_mul_end(void) {}
+NAKED void _asm_mul_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_div(void)
+NAKED void _asm_div(void)
 {
   __asm 
   {
@@ -652,10 +653,10 @@ __declspec ( naked ) void _asm_div(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_div_end(void) {}
+NAKED void _asm_div_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_mod(void)
+NAKED void _asm_mod(void)
 {
   __asm 
   {
@@ -682,10 +683,10 @@ __declspec ( naked ) void _asm_mod(void)
 
   }
 }
-__declspec ( naked ) void _asm_mod_end(void) {}
+NAKED void _asm_mod_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_or(void)
+NAKED void _asm_or(void)
 {
   __asm 
   {
@@ -703,10 +704,10 @@ __declspec ( naked ) void _asm_or(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_or_end(void) {}
+NAKED void _asm_or_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_and(void)
+NAKED void _asm_and(void)
 {
   __asm 
   {
@@ -726,10 +727,10 @@ __declspec ( naked ) void _asm_and(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_and_end(void) {}
+NAKED void _asm_and_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_uplus(void) // this is the same as doing nothing, it seems
+NAKED void _asm_uplus(void) // this is the same as doing nothing, it seems
 {
 #if 0
   __asm 
@@ -745,10 +746,10 @@ __declspec ( naked ) void _asm_uplus(void) // this is the same as doing nothing,
   }
 #endif
 }
-__declspec ( naked ) void _asm_uplus_end(void) {}
+NAKED void _asm_uplus_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_uminus(void)
+NAKED void _asm_uminus(void)
 {
   __asm 
   {
@@ -761,12 +762,12 @@ __declspec ( naked ) void _asm_uminus(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_uminus_end(void) {}
+NAKED void _asm_uminus_end(void) {}
 
 
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_sign(void)
+NAKED void _asm_sign(void)
 {
   __asm
   {
@@ -781,12 +782,12 @@ __declspec ( naked ) void _asm_sign(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_sign_end(void) {}
+NAKED void _asm_sign_end(void) {}
 
 
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_bnot(void)
+NAKED void _asm_bnot(void)
 {
   __asm
   {
@@ -802,10 +803,10 @@ __declspec ( naked ) void _asm_bnot(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_bnot_end(void) {}
+NAKED void _asm_bnot_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_if(void)
+NAKED void _asm_if(void)
 {
   __asm
   {
@@ -828,10 +829,10 @@ __declspec ( naked ) void _asm_if(void)
     // at this point, the return value will be in eax, as desired
   }
 }
-__declspec ( naked ) void _asm_if_end(void) {}
+NAKED void _asm_if_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_equal(void)
+NAKED void _asm_equal(void)
 {
   __asm
   {
@@ -848,10 +849,10 @@ __declspec ( naked ) void _asm_equal(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_equal_end(void) {}
+NAKED void _asm_equal_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_below(void)
+NAKED void _asm_below(void)
 {
   __asm
   {
@@ -867,10 +868,10 @@ __declspec ( naked ) void _asm_below(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_below_end(void) {}
+NAKED void _asm_below_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-__declspec ( naked ) void _asm_above(void)
+NAKED void _asm_above(void)
 {
   __asm
   {
@@ -886,10 +887,10 @@ __declspec ( naked ) void _asm_above(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_above_end(void) {}
+NAKED void _asm_above_end(void) {}
 
 
-__declspec ( naked ) void _asm_min(void)
+NAKED void _asm_min(void)
 {
   __asm 
   {
@@ -907,9 +908,9 @@ __declspec ( naked ) void _asm_min(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_min_end(void) {}
+NAKED void _asm_min_end(void) {}
 
-__declspec ( naked ) void _asm_max(void)
+NAKED void _asm_max(void)
 {
   __asm 
   {
@@ -926,5 +927,5 @@ __declspec ( naked ) void _asm_max(void)
     add esi, 8
   }
 }
-__declspec ( naked ) void _asm_max_end(void) {}
+NAKED void _asm_max_end(void) {}
 

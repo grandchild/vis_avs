@@ -37,7 +37,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /*
 For example:
 static double (*__acos)(double) = &acos;
-__declspec ( naked ) void _asm_acos(void)
+NAKED void _asm_acos(void)
 {
   FUNC1_ENTER
 
@@ -45,7 +45,7 @@ __declspec ( naked ) void _asm_acos(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_acos_end(void) {}
+NAKED void _asm_acos_end(void) {}
 
 
 

@@ -28,6 +28,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 #include <windows.h>
+#include "../gcc-hacks.h"
 #include "avs_eelif.h"
 #include "../ns-eel/ns-eel-addfuncs.h"
 
@@ -147,7 +148,7 @@ static double NSEEL_CGEN_CALL getmouse_(double *which)
 }
 
 static double (NSEEL_CGEN_CALL *__getosc)(double *,double *,double *) = &getosc_;
-__declspec ( naked ) void _asm_getosc(void)
+NAKED void _asm_getosc(void)
 {
   FUNC3_ENTER
 
@@ -155,11 +156,11 @@ __declspec ( naked ) void _asm_getosc(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_getosc_end(void) {}
+NAKED void _asm_getosc_end(void) {}
 
 
 static double (NSEEL_CGEN_CALL *__getspec)(double *,double *,double *) = &getspec_;
-__declspec ( naked ) void _asm_getspec(void)
+NAKED void _asm_getspec(void)
 {
   FUNC3_ENTER
 
@@ -167,10 +168,10 @@ __declspec ( naked ) void _asm_getspec(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_getspec_end(void) {}
+NAKED void _asm_getspec_end(void) {}
 
 static double (NSEEL_CGEN_CALL *__gettime)(double *) = &gettime_;
-__declspec ( naked ) void _asm_gettime(void)
+NAKED void _asm_gettime(void)
 {
   FUNC1_ENTER
   
@@ -178,11 +179,11 @@ __declspec ( naked ) void _asm_gettime(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_gettime_end(void) {}
+NAKED void _asm_gettime_end(void) {}
 
 
 static double (NSEEL_CGEN_CALL *__getmouse)(double *) = &getmouse_;
-__declspec ( naked ) void _asm_getmouse(void)
+NAKED void _asm_getmouse(void)
 {
   FUNC1_ENTER
   
@@ -190,11 +191,11 @@ __declspec ( naked ) void _asm_getmouse(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_getmouse_end(void) {}
+NAKED void _asm_getmouse_end(void) {}
 
 
 static double (NSEEL_CGEN_CALL *__setmousepos)(double *,double *) = &setmousepos_;
-__declspec ( naked ) void _asm_setmousepos(void)
+NAKED void _asm_setmousepos(void)
 {
   FUNC2_ENTER
   
@@ -202,7 +203,7 @@ __declspec ( naked ) void _asm_setmousepos(void)
 
   FUNC_LEAVE
 }
-__declspec ( naked ) void _asm_setmousepos_end(void) {}
+NAKED void _asm_setmousepos_end(void) {}
 
 
 
@@ -342,7 +343,7 @@ static double * NSEEL_CGEN_CALL gmegabuf_(double *which)
 }
 
 static double * (NSEEL_CGEN_CALL *__gmegabuf)(double *) = &gmegabuf_;
-__declspec ( naked ) void _asm_gmegabuf(void)
+NAKED void _asm_gmegabuf(void)
 {
   double *parm_a, *__nextBlock;
 #ifdef _MSC_VER
@@ -377,4 +378,4 @@ __declspec ( naked ) void _asm_gmegabuf(void)
   );
 #endif
 }
-__declspec ( naked ) void _asm_gmegabuf_end(void) {}
+NAKED void _asm_gmegabuf_end(void) {}
