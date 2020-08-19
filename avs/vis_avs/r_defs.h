@@ -297,6 +297,7 @@ extern int const mmx_blendadj_mask[2];
 #ifndef NO_MMX
 static unsigned int __inline BLEND_ADJ(unsigned int a, unsigned int b, int v)
 {
+#ifdef _MSC_VER // MSVC asm
   __asm
   {
     movd mm3, [v] // VVVVVVVV
@@ -327,6 +328,33 @@ static unsigned int __inline BLEND_ADJ(unsigned int a, unsigned int b, int v)
 
     movd eax, mm0
   }
+#else // _MSC_VER, GCC asm
+  unsigned int out;
+  __asm__ __volatile__ (
+    "movd      %%mm3, [%[v]]\n\t"
+    "movd      %%mm0, [%[a]]\n\t"
+    "packuswb  %%mm3, %%mm3\n\t"
+    "movd      %%mm1, [%[b]]\n\t"
+    "punpcklwd %%mm3, %%mm3\n\t"
+    "movq      %%mm4, [%[mmx_blend4_revn]]\n\t"
+    "punpckldq %%mm3, %%mm3\n\t"
+    "punpcklbw %%mm0, [%[mmx_blend4_zero]]\n\t"
+    "pand      %%mm3, [%[mmx_blendadj_mask]]\n\t"
+    "punpcklbw %%mm1, [%[mmx_blend4_zero]]\n\t"
+    "psubw     %%mm4, %%mm3\n\t"
+    "pmullw    %%mm0, %%mm3      \n\t"
+    "pmullw    %%mm1, %%mm4\n\t"
+    "paddw     %%mm0, %%mm1\n\t"
+    "psrlw     %%mm0, 8\n\t"
+    "packuswb  %%mm0, %%mm0\n\t"
+    "movd      %[out], %%mm0\n\t"
+    : [out]"=m"(out)
+    : [v]"m"(v), [a]"m"(a), [b]"m"(b), [mmx_blend4_revn]"m"(mmx_blend4_revn),
+      [mmx_blend4_zero]"m"(mmx_blend4_zero), [mmx_blendadj_mask]"m"(mmx_blendadj_mask)
+    :
+  );
+  return out;
+#endif // _MSC_VER
 }
 #endif
 
@@ -345,6 +373,7 @@ static __inline unsigned int BLEND4(unsigned int *p1, unsigned int w, int xp, in
   t|=(g_blendtable[(p1[0]>>16)&0xff][a1]+g_blendtable[(p1[1]>>16)&0xff][a2]+g_blendtable[(p1[w]>>16)&0xff][a3]+g_blendtable[(p1[w+1]>>16)&0xff][a4])<<16;
   return t;      
 #else
+#ifdef _MSC_VER // MSVC asm
   __asm
   {
     movd mm6, xp
@@ -411,6 +440,50 @@ static __inline unsigned int BLEND4(unsigned int *p1, unsigned int w, int xp, in
 
     movd eax, mm0
   }
+#else // _MSC_VER, GCC asm
+  unsigned int out;
+  __asm__ __volatile__ (
+    "movd      %%mm6, %[xp]\n\t"
+    "mov       %%eax, %[p1]\n\t"
+    "movd      %%mm7, %[yp]\n\t"
+    "mov       %%esi, %[w]\n\t"
+    "movq      %%mm4, %[mmx_blend4_revn]\n\t"
+    "punpcklwd %%mm6,%%mm6\n\t"
+    "movq      %%mm5, %[mmx_blend4_revn]\n\t"
+    "punpcklwd %%mm7,%%mm7\n\t"
+    "movd      %%mm0, [%%eax]\n\t"
+    "punpckldq %%mm6,%%mm6\n\t"
+    "movd      %%mm1, [%%eax + 4]\n\t"
+    "punpckldq %%mm7,%%mm7\n\t"
+    "movd      %%mm2, [%%eax + %%esi * 4]\n\t"
+    "punpcklbw %%mm0, [%[mmx_blend4_zero]]\n\t"
+    "movd      %%mm3, [%%eax + %%esi * 4 + 4]\n\t"
+    "psubw     %%mm4, %%mm6\n\t"
+    "punpcklbw %%mm1, [%[mmx_blend4_zero]]\n\t"
+    "pmullw    %%mm0, %%mm4\n\t"
+    "punpcklbw %%mm2, [%[mmx_blend4_zero]]\n\t"
+    "pmullw    %%mm1, %%mm6\n\t"
+    "punpcklbw %%mm3, [%[mmx_blend4_zero]]\n\t"
+    "psubw     %%mm5, %%mm7\n\t"
+    "pmullw    %%mm2, %%mm4\n\t"
+    "pmullw    %%mm3, %%mm6\n\t"
+    "paddw     %%mm0, %%mm1\n\t"
+    "psrlw     %%mm0, 8\n\t"
+    "paddw     %%mm2, %%mm3\n\t"
+    "pmullw    %%mm0, %%mm5\n\t"
+    "psrlw     %%mm2, 8\n\t"
+    "pmullw    %%mm2, %%mm7\n\t"
+    "paddw     %%mm0, %%mm2\n\t"
+    "psrlw     %%mm0, 8\n\t"
+    "packuswb  %%mm0, %%mm0\n\t"
+    "movd      %[out], %%mm0\n\t"
+    : [out]"=m"(out)
+    : [xp]"m"(xp), [p1]"m"(p1), [yp]"m"(yp), [w]"m"(w),
+      [mmx_blend4_revn]"m"(mmx_blend4_revn), [mmx_blend4_zero]"m"(mmx_blend4_zero)
+    : "eax"
+  );
+  return out;
+#endif // _MSC_VER
 #endif
 }
 
@@ -431,6 +504,7 @@ static __inline unsigned int BLEND4_16(unsigned int *p1, unsigned int w, int xp,
   t|=(g_blendtable[(p1[0]>>16)&0xff][a1]+g_blendtable[(p1[1]>>16)&0xff][a2]+g_blendtable[(p1[w]>>16)&0xff][a3]+g_blendtable[(p1[w+1]>>16)&0xff][a4])<<16;
   return t;      
 #else
+#ifdef _MSC_VER // MSVC asm
   __asm
   {
     movd mm6, xp
@@ -500,6 +574,52 @@ static __inline unsigned int BLEND4_16(unsigned int *p1, unsigned int w, int xp,
 
     movd eax, mm0
   }
+#else // _MSC_VER, GCC asm
+  unsigned int out;
+  __asm__ __volatile__ (
+    "movd      %%mm6, %[xp]\n\t"
+    "mov       %%eax, %[p1]\n\t"
+    "movd      %%mm7, %[yp]\n\t"
+    "mov       %%esi, %[w]\n\t"
+    "movq      %%mm4, %[mmx_blend4_revn]\n\t"
+    "psrlw     %%mm6, 8\n\t"
+    "movq      %%mm5, %[mmx_blend4_revn]\n\t"
+    "psrlw     %%mm7, 8\n\t"
+    "movd      %%mm0, [%%eax]\n\t"
+    "punpcklwd %%mm6,%%mm6\n\t"
+    "movd      %%mm1, [%%eax + 4]\n\t"
+    "punpcklwd %%mm7,%%mm7\n\t"
+    "movd      %%mm2, [%%eax + %%esi * 4]\n\t"
+    "punpckldq %%mm6,%%mm6\n\t"
+    "movd      %%mm3, [%%eax + %%esi * 4 + 4]\n\t"
+    "punpckldq %%mm7,%%mm7\n\t"
+    "punpcklbw %%mm0, [%[mmx_blend4_zero]]\n\t"
+    "psubw     %%mm4, %%mm6\n\t"
+    "punpcklbw %%mm1, [%[mmx_blend4_zero]]\n\t"
+    "pmullw    %%mm0, %%mm4\n\t"
+    "punpcklbw %%mm2, [%[mmx_blend4_zero]]\n\t"
+    "pmullw    %%mm1, %%mm6\n\t"
+    "punpcklbw %%mm3, [%[mmx_blend4_zero]]\n\t"
+    "psubw     %%mm5, %%mm7\n\t"
+    "pmullw    %%mm2, %%mm4\n\t"
+    "pmullw    %%mm3, %%mm6\n\t"
+    "paddw     %%mm0, %%mm1\n\t"
+    "psrlw     %%mm0, 8\n\t"
+    "paddw     %%mm2, %%mm3\n\t"
+    "pmullw    %%mm0, %%mm5\n\t"
+    "psrlw     %%mm2, 8\n\t"
+    "pmullw    %%mm2, %%mm7\n\t"
+    "paddw     %%mm0, %%mm2\n\t"
+    "psrlw     %%mm0, 8\n\t"
+    "packuswb  %%mm0, %%mm0\n\t"
+    "movd      %[out], %%mm0\n\t"
+    : [out]"=m"(out)
+    : [xp]"m"(xp), [p1]"m"(p1), [yp]"m"(yp), [w]"m"(w),
+      [mmx_blend4_revn]"m"(mmx_blend4_revn), [mmx_blend4_zero]"m"(mmx_blend4_zero)
+    : "eax", "esi"
+  );
+  return out;
+#endif // _MSC_VER
 #endif
 }
 
@@ -521,6 +641,7 @@ static __inline void mmx_avgblend_block(int *output, int *input, int l)
     ~((1<<7)|(1<<15)|(1<<23)),
       ~((1<<7)|(1<<15)|(1<<23))
   };
+#ifdef _MSC_VER // MSVC asm
   __asm 
   {
     mov eax, input
@@ -554,6 +675,40 @@ mmx_avgblend_loop:
     jnz mmx_avgblend_loop
     emms
   };
+#else // _MSC_VER, GCC asm
+  __asm__ __volatile__ (
+    "mov     %%eax, %[input]\n\t"
+    "mov     %%edi, %[output]\n\t"
+    "mov     %%ecx, %[l]\n\t"
+    "shr     %%ecx, 2\n\t"
+    ".align 16\n"
+    "mmx_avgblend_loop:\n\t"
+    "movq    %%mm0, [%%eax]\n\t"
+    "movq    %%mm1, [%%edi]\n\t"
+    "psrlq   %%mm0, 1\n\t"
+    "movq    %%mm2, [%%eax + 8]\n\t"
+    "psrlq   %%mm1, 1\n\t"
+    "movq    %%mm3, [%%edi + 8]\n\t"
+    "psrlq   %%mm2, 1\n\t"
+    "pand    %%mm0, [%[mask]]\n\t"
+    "psrlq   %%mm3, 1\n\t"
+    "pand    %%mm1, [%[mask]]\n\t"
+    "pand    %%mm2, [%[mask]]\n\t"
+    "paddusb %%mm0, %%mm1\n\t"
+    "pand    %%mm3, [%[mask]]\n\t"
+    "add     %%eax, 16\n\t"
+    "paddusb %%mm2, %%mm3\n\t"
+    "movq    [%%edi], %%mm0\n\t"
+    "movq    [%%edi + 8], %%mm2\n\t"
+    "add     %%edi, 16\n\t"
+    "dec     %%ecx\n\t"
+    "jnz     mmx_avgblend_loop\n\t"
+    "emms\n\t"
+    : /* no outputs */
+    : [input]"m"(input), [output]"m"(output), [l]"m"(l), [mask]"m"(mask)
+    : "eax", "ecx", "edi"
+  );
+#endif // _MSC_VER
 #endif
 }
 
@@ -567,6 +722,7 @@ static __inline void mmx_addblend_block(int *output, int *input, int l)
     output++;
   }
 #else
+#ifdef _MSC_VER // MSVC asm
   __asm 
   {
     mov eax, input
@@ -592,6 +748,32 @@ mmx_addblend_loop:
     jnz mmx_addblend_loop
     emms
   };
+#else // _MSC_VER, GCC asm
+  __asm__ __volatile__ (
+    "mov     %%eax, %[input]\n\t"
+    "mov     %%edi, %[output]\n\t"
+    "mov     %%ecx, %[l]\n\t"
+    "shr     %%ecx, 2\n\t"
+    ".align  16\n"
+    "mmx_addblend_loop:\n\t"
+    "movq    %%mm0, [%%eax]\n\t"
+    "movq    %%mm1, [%%edi]\n\t"
+    "movq    %%mm2, [%%eax + 8]\n\t"
+    "movq    %%mm3, [%%edi + 8]\n\t"
+    "paddusb %%mm0, %%mm1\n\t"
+    "paddusb %%mm2, %%mm3\n\t"
+    "add     %%eax, 16\n\t"
+    "movq    [%%edi], %%mm0\n\t"
+    "movq    [%%edi + 8], %%mm2\n\t"
+    "add     %%edi, 16\n\t"
+    "dec     %%ecx\n\t"
+    "jnz     mmx_addblend_loop\n\t"
+    "emms\n\t"
+    : /* no outputs */
+    : [input]"m"(input), [output]"m"(output), [l]"m"(l)
+    : "eax", "ecx", "edi"
+  );
+#endif // _MSC_VER
 #endif
 }
 
@@ -604,6 +786,7 @@ static __inline void mmx_mulblend_block(int *output, int *input, int l)
     output++;
   }
 #else
+#ifdef _MSC_VER // MSVC asm
   __asm 
   {
     mov eax, input
@@ -637,6 +820,41 @@ mmx_mulblend_loop:
     jnz mmx_mulblend_loop
     emms
   };
+#else // _MSC_VER, GCC asm
+  __asm__ __volatile__ (
+    "mov       %%eax, %[input]\n\t"
+    "mov       %%edi, %[output]\n\t"
+    "mov       %%ecx, %[l]\n\t"
+    "shr       %%ecx, 2\n\t"
+    ".align    16\n"
+    "mmx_mulblend_loop:\n\t"
+    "movd      %%mm0, [%%eax]\n\t"
+    "movd      %%mm1, [%%edi]\n\t"
+    "movd      %%mm2, [%%eax + 4]\n\t"
+    "punpcklbw %%mm0, [%[mmx_blend4_zero]]\n\t"
+    "movd      %%mm3, [%%edi+4]\n\t"
+    "punpcklbw %%mm1, [%[mmx_blend4_zero]]\n\t"
+    "punpcklbw %%mm2, [%[mmx_blend4_zero]]\n\t"
+    "pmullw    %%mm0, %%mm1\n\t"
+    "punpcklbw %%mm3, [%[mmx_blend4_zero]]\n\t"
+    "psrlw     %%mm0, 8\n\t"
+    "pmullw    %%mm2, %%mm3\n\t"
+    "packuswb  %%mm0, %%mm0\n\t"
+    "psrlw     %%mm2, 8\n\t"
+    "packuswb  %%mm2, %%mm2\n\t"
+    "add       %%eax, 8\n\t"
+    "movd      [%%edi], %%mm0\n\t"
+    "movd      [%%edi + 4], %%mm2\n\t"
+    "add       %%edi, 8\n\t"
+    "dec       %%ecx\n\t"
+    "jnz       mmx_mulblend_loop\n\t"
+    "emms\n\t"
+    : /* no outputs */
+    : [input]"m"(input), [output]"m"(output), [l]"m"(l),
+      [mmx_blend4_zero]"m"(mmx_blend4_zero)
+    : "eax", "ecx", "edi"
+  );
+#endif // _MSC_VER
 #endif
 }
 
@@ -648,6 +866,7 @@ static void __inline mmx_adjblend_block(int *o, int *in1, int *in2, int len, int
     *o++=BLEND_ADJ(*in1++,*in2++,v);
   }
 #else
+#ifdef _MSC_VER // MSVC asm
   __asm
   {
     movd mm3, [v] // VVVVVVVV
@@ -710,6 +929,54 @@ _mmx_adjblend_loop:
 
     emms
   };
+#else // _MSC_VER, GCC asm
+  __asm__ __volatile__ (
+    "movd      %%mm3, [%[v]]\n\t"
+    "mov       %%ecx, %[len]\n\t"
+    "packuswb  %%mm3, %%mm3\n\t"
+    "mov       %%edx, %[o]\n\t"
+    "punpcklwd %%mm3, %%mm3\n\t"
+    "mov       %%esi, in1\n\t"
+    "movq      %%mm4, [%[mmx_blend4_revn]]\n\t"
+    "punpckldq %%mm3, %%mm3\n\t"
+    "pand      %%mm3, [%[mmx_blendadj_mask]]\n\t"
+    "mov       %%edi, in2\n\t"
+    "shr       %%ecx, 1\n\t"
+    "psubw     %%mm4, %%mm3\n\t"
+    ".align    16\n"
+    "_mmx_adjblend_loop:\n\t"
+    "movd      %%mm0, [%%esi]\n\t"
+    "movd      %%mm1, [%%edi]\n\t"
+    "punpcklbw %%mm0, [%[mmx_blend4_zero]]\n\t"
+    "movd      %%mm6, [%%esi + 4]\n\t"
+    "punpcklbw %%mm1, [%[mmx_blend4_zero]]\n\t"
+    "movd      %%mm7, [%%edi + 4]\n\t"
+    "punpcklbw %%mm6, [%[mmx_blend4_zero]]\n\t"
+    "pmullw    %%mm0, %%mm3\n\t"
+    "punpcklbw %%mm7, [%[mmx_blend4_zero]]\n\t"
+    "pmullw    %%mm1, %%mm4\n\t"
+    "pmullw    %%mm6, %%mm3\n\t"
+    "pmullw    %%mm7, %%mm4\n\t"
+    "paddw     %%mm0, %%mm1\n\t"
+    "paddw     %%mm6, %%mm7\n\t"
+    "add       %%edi, 8\n\t"
+    "psrlw     %%mm0, 8\n\t"
+    "add       %%esi, 8\n\t"
+    "psrlw     %%mm6, 8\n\t"
+    "packuswb  %%mm0, %%mm0\n\t"
+    "packuswb  %%mm6, %%mm6\n\t"
+    "movd      [%%edx], %%mm0\n\t"
+    "movd      [%%edx + 4], %%mm6\n\t"
+    "add       %%edx, 8\n\t"
+    "dec       %%ecx\n\t"
+    "jnz       _mmx_adjblend_loop\n\t"
+    "emms     \n\t"
+    : /* no outputs */
+    : [v]"m"(v), [len]"m"(len), [o]"m"(o), [mmx_blend4_revn]"m"(mmx_blend4_revn),
+      [mmx_blendadj_mask]"m"(mmx_blendadj_mask), [mmx_blend4_zero]"m"(mmx_blend4_zero)
+    : "ecx", "edx", "esi", "edi"
+  );
+#endif // _MSC_VER
 #endif
 }
 
