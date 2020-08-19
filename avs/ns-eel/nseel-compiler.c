@@ -98,7 +98,7 @@ static void freeBlocks(llBlock *start);
   DECL_ASMFUNC(log10)
   DECL_ASMFUNC(abs)
   DECL_ASMFUNC(min)
-  DECL_ASMFUNC(min)
+  // DECL_ASMFUNC(min)  // TODO [cleanup]: Remove for good.
   DECL_ASMFUNC(max)
   DECL_ASMFUNC(sig)
   DECL_ASMFUNC(sign)
