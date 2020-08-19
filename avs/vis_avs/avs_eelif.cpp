@@ -359,7 +359,7 @@ NAKED void _asm_gmegabuf(void)
     "mov dword ptr %0, %%eax\n"
     :"=m"(parm_a)
     :
-    :"eax", "edx", "ebp"
+    :"eax", "edx" // ebp is written to but is an invalid clobber...
   );
 #endif
   
@@ -374,7 +374,7 @@ NAKED void _asm_gmegabuf(void)
     "mov %%esp, %%ebp\n"
     :
     : "m"(__nextBlock)
-    :"eax", "ebp"
+    :"eax"
   );
 #endif
 }

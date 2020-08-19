@@ -121,7 +121,7 @@ NAKED void _asm_megabuf(void)
     "mov  %%esp, %%ebp\n\t"
     :
     :"m"(__nextBlock)
-    :"eax", "ebx"
+    :"eax"
   );
 #endif
 
