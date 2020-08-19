@@ -178,13 +178,13 @@ mmx_brightblock_loop:
     "mov %%ebx, %0\n\t"
     "mov %%ecx, %1\n\t"
     "movq %%mm1, [%2]\n\t"
-    "align 16\n"
+    ".align 16\n"
     "mmx_brightblock_loop:\n\t"
     "pxor %%mm0, %%mm0\n\t"
     "punpcklbw %%mm0, [%%eax]\n\t"
 
     "pmulhw %%mm0, %%mm1\n\t"
-    "packusbw %%mm0, %%mm0\n\t"
+    "packuswb %%mm0, %%mm0\n\t"
 
     "movd [%%eax], %%mm0\n\t"
     "add %%eax, 4\n\t"
