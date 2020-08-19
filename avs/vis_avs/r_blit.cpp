@@ -219,6 +219,7 @@ int C_THISCLASS::blitter_normal(int *framebuffer, int *fbout, int w, int h, int 
 #else
       {
           __int64 mem5,mem7;
+#ifdef _MSC_VER // MSVC asm
           __asm
           {
             mov edi, fbout         
@@ -378,9 +379,107 @@ int C_THISCLASS::blitter_normal(int *framebuffer, int *fbout, int w, int h, int 
             
             jnz mmx_scale_loop1
             mov fbout, edi
+            emms
           }
+#else // _MSC_VER, GCC asm
+          __asm__ __volatile__ (
+            "mov       %%edi, %[fbout]\n\t"
+            "mov       %%esi, %[w]\n\t"
+            "movd      %%mm7, %[ypart]\n\t"
+            "punpcklwd %%mm7, %%mm7\n\t"
+            "movq      %%mm5, %[revn]\n\t"
+            "punpckldq %%mm7, %%mm7\n\t"
+            "psubw     %%mm5, %%mm7\n\t"
+            "mov       %%ecx, %%esi\n\t"
+            "movq      %[mem5], %%mm5\n\t"
+            "movq      %[mem7], %%mm7\n\t"
+            "shr       %%ecx, 1\n\t"
+            "mov       %%edx, %[s_x]\n\t"
+            ".align    16\n"
+            "mmx_scale_loop1:\n\t"
+            "mov       %%ebx, %%edx\n\t"
+            "mov       %%eax, %%edx\n\t"
+            "shr       %%eax, 14\n\t"
+            "add       %%edx, %[ds_x]\n\t"
+            "shr       %%ebx, 8\n\t"
+            "and       %%eax, ~3\n\t"
+            "add       %%eax, %[src]\n\t"
+            "and       %%ebx, 0xff\n\t"
+            "movd      %%mm6, %%ebx\n\t"
+            "movq      %%mm4, %[revn]\n\t"
+            "punpcklwd %%mm6, %%mm6\n\t"
+            "movd      %%mm0, [%%eax]\n\t"
+            "punpckldq %%mm6, %%mm6\n\t"
+            "movd      %%mm1, [%%eax+4]\n\t"
+            "psubw     %%mm4, %%mm6\n\t"
+            "movd      %%mm2, [%%eax + %%esi * 4]\n\t"
+            "punpcklbw %%mm0, [%[zero]]\n\t"
+            "movd      %%mm3, [%%eax + %%esi * 4 + 4]\n\t"
+            "pmullw    %%mm0, %%mm4\n\t"
+            "punpcklbw %%mm1, [%[zero]]\n\t"
+            "mov       %%eax, %%edx\n\t"
+            "pmullw    %%mm1, %%mm6\n\t"
+            "punpcklbw %%mm2, [%[zero]]\n\t"
+            "pmullw    %%mm2, %%mm4\n\t"
+            "punpcklbw %%mm3, [%[zero]]\n\t"
+            "pmullw    %%mm3, %%mm6\n\t"
+            "shr       %%eax, 14\n\t"
+            "mov       %%ebx, %%edx\n\t"
+            "and       %%eax, ~3\n\t"
+            "paddw     %%mm0, %%mm1\n\t"
+            "shr       %%ebx, 8\n\t"
+            "psrlw     %%mm0, 8\n\t"
+            "add       %%eax, %[src]\n\t"
+            "paddw     %%mm2, %%mm3\n\t"
+            "and       %%ebx, 0xff\n\t"
+            "pmullw    %%mm0, %[mem5]\n\t"
+            "psrlw     %%mm2, 8\n\t"
+            "pmullw    %%mm2, %[mem7]\n\t"
+            "add       %%edx, %[ds_x]\n\t"
+            "movd      %%mm6, %%ebx\n\t"
+            "movq      %%mm4, %[revn]\n\t"
+            "punpcklwd %%mm6, %%mm6\n\t"
+            "movd      %%mm1, [%%eax+4]\n\t"
+            "movd      %%mm7, [%%eax + %%esi * 4]\n\t"
+            "paddw     %%mm0, %%mm2\n\t"
+            "movd      %%mm5, [%%eax]\n\t"
+            "psrlw     %%mm0, 8\n\t"
+            "movd      %%mm3, [%%eax + %%esi * 4 + 4]\n\t"
+            "packuswb  %%mm0, %%mm0\n\t"
+            "movd      [%%edi], %%mm0\n\t"
+            "punpckldq %%mm6, %%mm6\n\t"
+            "punpcklbw %%mm5, [%[zero]]\n\t"
+            "psubw     %%mm4, %%mm6\n\t"
+            "punpcklbw %%mm1, [%[zero]]\n\t"
+            "pmullw    %%mm5, %%mm4\n\t"
+            "punpcklbw %%mm7, [%[zero]]\n\t"
+            "pmullw    %%mm1, %%mm6\n\t"
+            "punpcklbw %%mm3, [%[zero]]\n\t"
+            "pmullw    %%mm7, %%mm4\n\t"
+            "paddw     %%mm5, %%mm1\n\t"
+            "pmullw    %%mm3, %%mm6\n\t"
+            "psrlw     %%mm5, 8\n\t"
+            "pmullw    %%mm5, %[mem5]\n\t"
+            "add       %%edi, 8\n\t"
+            "paddw     %%mm7, %%mm3\n\t"
+            "psrlw     %%mm7, 8\n\t"
+            "pmullw    %%mm7, %[mem7]\n\t"
+            "dec       %%ecx\n\t"
+            "paddw     %%mm5, %%mm7\n\t"
+            "psrlw     %%mm5, 8\n\t"
+            "packuswb  %%mm5, %%mm5\n\t"
+            "movd      [%%edi - 4], %%mm5\n\t"
+            "jnz       mmx_scale_loop1\n\t"
+            "mov       %[fbout], %%edi\n\t"
+            "emms\n\t"
+            : [fbout]"+m"(fbout)
+            : [w]"m"(w), [ypart]"m"(ypart), [revn]"m"(revn), [s_x]"m"(s_x),
+              [ds_x]"m"(ds_x), [src]"m"(src), [zero]"m"(zero), [mem5]"m"(mem5),
+              [mem7]"m"(mem7)
+            : "eax", "ebx", "ecx", "edx", "esi", "edi"
+          );
+#endif // _MSC_VER
       } // end mmx
-    __asm emms;
 #endif
       if (blend) // reblend this scanline with the original
       {
