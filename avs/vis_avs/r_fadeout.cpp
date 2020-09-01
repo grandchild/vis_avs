@@ -147,6 +147,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 		int x;
     unsigned char *t=fadtab[0];
 		for (x = 0; x < 8; x ++) fadj[x]=this->fadelen;
+#ifdef _MSC_VER // MSVC asm
 		__asm 
 		{
 			mov edx, l
@@ -206,6 +207,56 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 		_l3:
 			emms
 		}
+#else // _MSC_VER, GCC asm
+        __asm__ __volatile__ (
+            "mov     %%edx, %[l]\n\t"
+            "mov     %%edi, %[framebuffer]\n\t"
+            "movq    %%mm7, [%[fadj]]\n\t"
+            "shr     %%edx, 3\n\t"
+            ".align  16\n"
+            "_l1:\n\t"
+            "movq    %%mm0, [%%edi]\n\t"
+            "movq    %%mm1, [%%edi + 8]\n\t"
+            "movq    %%mm2, [%%edi + 16]\n\t"
+            "psubusb %%mm0, %%mm7\n\t"
+            "movq    %%mm3, [%%edi + 24]\n\t"
+            "psubusb %%mm1, %%mm7\n\t"
+            "movq    [%%edi], %%mm0\n\t"
+            "psubusb %%mm2, %%mm7\n\t"
+            "movq    [%%edi + 8], %%mm1\n\t"
+            "psubusb %%mm3, %%mm7\n\t"
+            "movq    [%%edi + 16], %%mm2\n\t"
+            "movq    [%%edi + 24], %%mm3\n\t"
+            "add     %%edi, 8 * 4\n\t"
+            "dec     %%edx\n\t"
+            "jnz     _l1\n\t"
+            "mov     %%edx, %[l]\n\t"
+            "sub     %%eax, %%eax\n\t"
+            "and     %%edx, 7\n\t"
+            "jz      _l3\n\t"
+            "sub     %%ebx, %%ebx\n\t"
+            "sub     %%ecx, %%ecx\n\t"
+            "mov     %%esi, %[t]\n"
+            "_l2:\n\t"
+            "mov     al, [%%edi]\n\t"
+            "mov     bl, [%%edi + 1]\n\t"
+            "mov     cl, [%%edi + 2]\n\t"
+            "sub     al, [%%esi + %%eax]\n\t"
+            "sub     bl, [%%esi + %%ebx]\n\t"
+            "sub     cl, [%%esi + %%ecx]\n\t"
+            "mov     [%%edi], %%al\n\t"
+            "mov     [%%edi + 1], %%bl\n\t"
+            "mov     [%%edi + 2], %%cl\n\t"
+            "add     %%edi, 4\n\t"
+            "dec     %%edx\n\t"
+            "jnz     _l2\n"
+            "_l3:\n\t"
+            "emms\n\t"
+            : /* no outputs */
+            : [l]"m"(l), [framebuffer]"m"(framebuffer), [fadj]"m"(fadj), [t]"m"(t)
+            : "eax", "ebx", "ecx", "edx", "edi", "esi"
+        );
+#endif // _MSC_VER
   }
 #endif
 	timingLeave(1);
