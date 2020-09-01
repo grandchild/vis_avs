@@ -4,6 +4,7 @@ SET(CROSS_CC_PREFIX /usr/${CROSS_CC_NAME})
 SET(CMAKE_SYSTEM_NAME Windows)
 SET(CMAKE_C_COMPILER ${CROSS_CC_NAME}-gcc)
 SET(CMAKE_CXX_COMPILER ${CROSS_CC_NAME}-g++)
+SET(CMAKE_RC_COMPILER ${CROSS_CC_NAME}-windres)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # These dependent DLLs are introduced by mingw32, and should be next to vis_avs.dll.

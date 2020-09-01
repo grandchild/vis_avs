@@ -49,6 +49,7 @@ file(GLOB SRC_FILES_NS_EEL
 file(GLOB SRC_FILES_VIS_AVS
     avs/vis_avs/*.cpp
     avs/vis_avs/*.c
+    avs/vis_avs/*.rc
 )
 # This file appears to be an older version of r_contrast.cpp left in the source tree.
 list(REMOVE_ITEM SRC_FILES_VIS_AVS "${CMAKE_SOURCE_DIR}/avs/vis_avs/r_colorreplace.cpp")
