@@ -364,7 +364,11 @@ void DD_CreateSurfaces(int w, int h, int fsh, int fs, int fsbpp, int flip, int d
           ypos+=dypos;
         }
 #ifndef NO_MMX
+#ifdef _MSC_VER // MSVC asm
         __asm emms;
+#else // _MSC_VER, GCC asm
+        __asm__ __volatile__ ("emms");
+#endif // _MSC_VER
 #endif
       }
       g_lpRenderSurf[wh]->Unlock(d.lpSurface);
@@ -566,6 +570,7 @@ bool CopyRGBSurfaceToYUVSurfaceMMX(
 		cm4[0] = 0;     cm4[1] = 32768/2; cm4[2] = 0;     cm4[3] = 32768/2;
     }
     
+#ifdef _MSC_VER // MSVC asm
 	__asm
 	{
 		mov   edx, h
@@ -678,6 +683,66 @@ bool CopyRGBSurfaceToYUVSurfaceMMX(
 
 		emms
 	}
+#else // _MSC_VER, GCC asm
+    // TODO [cleanup]: re-incorporate some of the comments/formatting from above
+    __asm__ __volatile__ (
+      "mov      %%edx, %[h]\n\t"
+      "mov      %%esi, %[pPixels1]\n\t"
+      "mov      %%edi, %[pPixels2]\n\t"
+      "sub      %%edi, 4\n\t"
+      "movq     %%mm4, %[cm4]\n\t"
+      "movq     %%mm5, %[cm1]\n\t"
+      "movq     %%mm6, %[cm2]\n\t"
+      "movq     %%mm7, %[cm3]\n\t"
+      ".align   8\n"
+      "yuvscanlineloop:\n\t"
+      "mov      %%ecx, %[loops_per_scanline]\n\t"
+      ".align   8\n"
+      "yuvloop:\n\t"
+      "movq     %%mm0, qword ptr [%%esi]\n\t"
+      "movq     %%mm1, qword ptr [%%esi]\n\t"
+      "movq     %%mm2, qword ptr [%%esi]\n\t"
+      "pslld    %%mm0, 8\n\t"
+      "pslld    %%mm1, 16\n\t"
+      "pslld    %%mm2, 24\n\t"
+      "psrld    %%mm0, 24\n\t"
+      "psrld    %%mm1, 24\n\t"
+      "psrld    %%mm2, 24\n\t"
+      "movq     %%mm3, %%mm0\n\t"
+      "pslld    %%mm0, 16\n\t"
+      "por      %%mm0, %%mm3\n\t"
+      "movq     %%mm3, %%mm1\n\t"
+      "pslld    %%mm1, 16\n\t"
+      "por      %%mm1, %%mm3\n\t"
+      "movq     %%mm3, %%mm2\n\t"
+      "pslld    %%mm2, 16\n\t"
+      "por      %%mm2, %%mm3\n\t"
+      "pmullw   %%mm0, %%mm5\n\t"
+      "add      %%edi, 4\n\t"
+      "pmullw   %%mm1, %%mm6\n\t"
+      "add      %%esi, 8\n\t"
+      "pmullw   %%mm2, %%mm7\n\t"
+      "paddsw   %%mm0, %%mm4\n\t"
+      "paddsw   %%mm0, %%mm1\n\t"
+      "paddsw   %%mm0, %%mm2\n\t"
+      "psrlw    %%mm0, 7\n\t"
+      "packuswb %%mm0, %%mm0\n\t"
+      "movd     dword ptr [%%edi], %%mm0\n\t"
+      "loop     yuvloop\n\t"
+      "add      %%esi, %[extra_bytes_per_scanline_src]\n\t"
+      "add      %%edi, %[extra_bytes_per_scanline_dest]\n\t"
+      "dec      %%edx\n\t"
+      "jnz      yuvscanlineloop\n\t"
+      "emms\n\t"
+      : /* no outputs */
+      : [h]"m"(h), [pPixels1]"m"(pPixels1), [pPixels2]"m"(pPixels2), [cm4]"m"(cm4),
+        [cm1]"m"(cm1), [cm2]"m"(cm2), [cm3]"m"(cm3),
+        [loops_per_scanline]"m"(loops_per_scanline),
+        [extra_bytes_per_scanline_src]"m"(extra_bytes_per_scanline_src),
+        [extra_bytes_per_scanline_dest]"m"(extra_bytes_per_scanline_dest)
+      : "edx", "esi", "edi", "ecx"
+    );
+#endif // _MSC_VER
    
     return true;
 }
