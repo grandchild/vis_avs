@@ -136,8 +136,9 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
     0x7F7F7F7F,
   };
   int l=(w*h);
-  if (dir == 0) __asm 
-		{
+  if (dir == 0) {
+#ifdef _MSC_VER // MSVC asm
+    __asm {
 			mov edx, l
 			mov edi, framebuffer
       shr edx, 3 // 8 pixels at a time
@@ -176,7 +177,49 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 		_l3:
 			emms
 		}
-  else if (dir == 1) __asm 
+#else // _MSC_VER, GCC asm
+    __asm__ __volatile__ (
+      "mov     %%edx, %[l]\n\t"
+      "mov     %%edi, %[framebuffer]\n\t"
+      "shr     %%edx, 3\n\t"
+      ".align  16\n"
+      "_l1:\n\t"
+      "movq    %%mm0, [%%edi]\n\t"
+      "movq    %%mm1, [%%edi + 8]\n\t"
+      "movq    %%mm2, [%%edi + 16]\n\t"
+      "paddusb %%mm0, %%mm0\n\t"
+      "movq    %%mm3, [%%edi+24]\n\t"
+      "paddusb %%mm1, %%mm1\n\t"
+      "paddusb %%mm2, %%mm2\n\t"
+      "movq    [%%edi], %%mm0\n\t"
+      "paddusb %%mm3, %%mm3\n\t"
+      "movq    [%%edi + 8], %%mm1\n\t"
+      "movq    [%%edi + 16], %%mm2\n\t"
+      "movq    [%%edi + 24], %%mm3\n\t"
+      "add     %%edi, 32\n\t"
+      "dec     %%edx\n\t"
+      "jnz     _l1\n\t"
+      "mov     %%edx, %[l]\n\t"
+      "and     %%edx, 7\n\t"
+      "shr     %%edx, 1\n\t"
+      "jz      _l3\n"
+      "_l2:\n\t"
+      "movq    %%mm3, [%%edi]\n\t"
+      "paddusb %%mm3, %%mm3\n\t"
+      "movq    [%%edi], %%mm3\n\t"
+      "add     %%edi, 8\n\t"
+      "dec     %%edx\n\t"
+      "jnz     _l2\n"
+      "_l3:\n\t"
+      "emms\n\t"
+      : /* no outputs */
+      : [l]"m"(l), [framebuffer]"m"(framebuffer)
+      : "edx", "esi"
+    );
+#endif // _MSC_VER
+  } else if (dir == 1) {
+#ifdef _MSC_VER // MSVC asm
+    __asm 
 		{
 			mov edx, l
       movq mm7, [mask]
@@ -229,6 +272,53 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 		_lr3:
 			emms
 		}
+#else // _MSC_VER, GCC asm
+    __asm__ __volatile__ (
+      "mov   %%edx, %[l]\n\t"
+      "movq  %%mm7, [%[mask]]\n\t"
+      "mov   %%edi, %[framebuffer]\n\t"
+      "shr   %%edx, 3\n\t"
+      ".align 16\n"
+      "_lr1:\n\t"
+      "movq  %%mm0, [%%edi]\n\t"
+      "movq  %%mm1, [%%edi + 8]\n\t"
+      "movq  %%mm2, [%%edi + 16]\n\t"
+      "psrlq %%mm0, 1\n\t"
+      "movq  %%mm3, [%%edi + 24]\n\t"
+      "pand  %%mm0, %%mm7\n\t"
+      "psrlq %%mm1, 1\n\t"
+      "movq  [%%edi], %%mm0\n\t"
+      "psrlq %%mm2, 1\n\t"
+      "pand  %%mm1, %%mm7\n\t"
+      "movq  [%%edi + 8], %%mm1\n\t"
+      "pand  %%mm2, %%mm7\n\t"
+      "psrlq %%mm3, 1\n\t"
+      "movq  [%%edi + 16], %%mm2\n\t"
+      "pand  %%mm3, %%mm7\n\t"
+      "movq  [%%edi + 24], %%mm3\n\t"
+      "add   %%edi, 32\n\t"
+      "dec   %%edx\n\t"
+      "jnz   _lr1\n\t"
+      "mov   %%edx, %[l]\n\t"
+      "and   %%edx, 7\n\t"
+      "shr   %%edx, 1\n\t"
+      "jz    _lr3\n"
+      "_lr2:\n\t"
+      "movq  %%mm3, [%%edi]\n\t"
+      "psrlq %%mm3, 1\n\t"
+      "pand  %%mm3, %%mm7\n\t"
+      "movq  [%%edi], %%mm3\n\t"
+      "add   %%edi, 8\n\t"
+      "dec   %%edx\n\t"
+      "jnz   _lr2\n"
+      "_lr3:\n\t"
+      "emms\n\t"
+      :
+      : [l]"m"(l), [mask]"m"(mask), [framebuffer]"m"(framebuffer)
+      : "edx", "edi"
+    );
+#endif // _MSC_VER
+  }
 #endif
   return 0;
 }
