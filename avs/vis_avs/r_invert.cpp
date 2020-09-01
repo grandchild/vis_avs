@@ -100,6 +100,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
   
 #ifndef NO_MMX
     int a[2]={0xffffff,0xffffff};
+#ifdef _MSC_VER // MSVC asm
     __asm
     {
       mov ecx, i
@@ -138,6 +139,47 @@ _mmx_invert_endloop:
 _mmx_invert_noendloop:
       emms
     }
+#else // _MSC_VER, GCC asm
+    __asm__ __volatile__ (
+      "mov    %%ecx, %[i]\n\t"
+      "shr    %%ecx, 3\n\t"
+      "movq   %%mm0, [%[a]]\n\t"
+      "mov    %%edi, %[p]\n\t"
+      ".align 16\n"
+      "_mmx_invert_loop:\n\t"
+      "movq   %%mm1, [%%edi]\n\t"
+      "movq   %%mm2, [%%edi + 8]\n\t"
+      "pxor   %%mm1, %%mm0\n\t"
+      "movq   %%mm3, [%%edi + 16]\n\t"
+      "pxor   %%mm2, %%mm0\n\t"
+      "movq   %%mm4, [%%edi + 24]\n\t"
+      "pxor   %%mm3, %%mm0\n\t"
+      "movq   [%%edi], %%mm1\n\t"
+      "pxor   %%mm4, %%mm0\n\t"
+      "movq   [%%edi + 8], %%mm2\n\t"
+      "movq   [%%edi + 16], %%mm3\n\t"
+      "movq   [%%edi + 24], %%mm4\n\t"
+      "add    %%edi, 32\n\t"
+      "dec    %%ecx\n\t"
+      "jnz    _mmx_invert_loop\n\t"
+      "mov    %%ecx, %[i]\n\t"
+      "shr    %%ecx, 1\n\t"
+      "and    %%ecx, 3\n\t"
+      "jz     _mmx_invert_noendloop\n"
+      "_mmx_invert_endloop:\n\t"
+      "movq   %%mm1, [%%edi]\n\t"
+      "pxor   %%mm1, %%mm0\n\t"
+      "movq   [%%edi], %%mm1\n\t"
+      "add    %%edi, 8\n\t"
+      "dec    %%ecx\n\t"
+      "jnz    _mmx_invert_endloop\n"
+      "_mmx_invert_noendloop:\n\t"
+      "emms\n\t"
+      : /* no outputs */
+      : [i]"m"(i), [a]"m"(a), [p]"m"(p)
+      : "ecx", "edi"
+    );
+#endif // _MSC_VER
 #else 
   while (i--) *p++ = 0xFFFFFF^*p;
 #endif
