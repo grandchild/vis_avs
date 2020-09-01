@@ -406,8 +406,13 @@ void C_THISCLASS::smp_render(int this_thread, int max_threads, char visdata[2][2
       yseek=(yc_pos>>16)-lypos;
       if (!yseek) 
       {
+        // TODO [cleanup]: Replace all "emms" calls with single macro?
         #ifndef NO_MMX
+#ifdef _MSC_VER // MSVC asm
           __asm emms;
+#else // _MSC_VER, GCC asm
+          __asm__ __volatile__ ("emms");
+#endif // _MSC_VER
         #endif
         return;
       }
@@ -455,7 +460,11 @@ void C_THISCLASS::smp_render(int this_thread, int max_threads, char visdata[2][2
             if (!seek) 
             {
               #ifndef NO_MMX
-                __asm emms;
+#ifdef _MSC_VER // MSVC asm
+              __asm emms;
+#else // _MSC_VER, GCC asm
+              __asm__ __volatile__ ("emms");
+#endif // _MSC_VER
               #endif
               return;
             }
@@ -579,7 +588,11 @@ void C_THISCLASS::smp_render(int this_thread, int max_threads, char visdata[2][2
 
 
 #ifndef NO_MMX
+#ifdef _MSC_VER // MSVC asm
   __asm emms;
+#else // _MSC_VER, GCC asm
+    __asm__ __volatile__ ("emms");
+#endif // _MSC_VER
 #endif
   
 }
