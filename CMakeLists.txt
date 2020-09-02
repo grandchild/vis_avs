@@ -37,10 +37,11 @@ else()
 endif()
 
 add_definitions(
-    -DNO_MMX                # Avoid as much asm code as possible in the beginning to get
-                            # to a successful build first.
     -DAVS_MEGABUF_SUPPORT   # No reason to not enable this -> the #ifdefs should
                             # probably be removed eventually.
+    # -DNO_MMX              # Use (usually slower) C equivalents for MMX assembly.
+                            # (Initially enabled for quick porting but should be
+                            # removed, now that all MMX sections are ported.)
 )
 
 file(GLOB SRC_FILES_NS_EEL
