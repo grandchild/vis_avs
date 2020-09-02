@@ -947,11 +947,11 @@ _mmx_adjblend_loop:
     "packuswb  %%mm3, %%mm3\n\t"
     "mov       %%edx, %[o]\n\t"
     "punpcklwd %%mm3, %%mm3\n\t"
-    "mov       %%esi, in1\n\t"
+    "mov       %%esi, %[in1]\n\t"
     "movq      %%mm4, [%[mmx_blend4_revn]]\n\t"
     "punpckldq %%mm3, %%mm3\n\t"
     "pand      %%mm3, [%[mmx_blendadj_mask]]\n\t"
-    "mov       %%edi, in2\n\t"
+    "mov       %%edi, %[in2]\n\t"
     "shr       %%ecx, 1\n\t"
     "psubw     %%mm4, %%mm3\n\t"
     ".align    16\n"
@@ -983,8 +983,9 @@ _mmx_adjblend_loop:
     "jnz       _mmx_adjblend_loop%=\n\t"
     "emms     \n\t"
     : /* no outputs */
-    : [v]"m"(v), [len]"m"(len), [o]"m"(o), [mmx_blend4_revn]"m"(mmx_blend4_revn),
-      [mmx_blendadj_mask]"m"(mmx_blendadj_mask), [mmx_blend4_zero]"m"(mmx_blend4_zero)
+    : [v]"m"(v), [len]"m"(len), [o]"m"(o), [in1]"m"(in1), [in2]"m"(in2),
+      [mmx_blend4_revn]"m"(mmx_blend4_revn), [mmx_blendadj_mask]"m"(mmx_blendadj_mask),
+      [mmx_blend4_zero]"m"(mmx_blend4_zero)
     : "ecx", "edx", "esi", "edi"
   );
 #endif // _MSC_VER
