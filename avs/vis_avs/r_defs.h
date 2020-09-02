@@ -676,13 +676,21 @@ mmx_avgblend_loop:
     emms
   };
 #else // _MSC_VER, GCC asm
+  /* Remark on the use of "%=":
+     This function is declared as "static inline" and so the compiler generates no
+     explicit code for the function. Instead the resulting asm is copied as-is to all
+     places where function is called (in the hope of a speed gain, at the cost of binary
+     size). The asm contains a label, which would be an illegal duplicate in the
+     complete binary, since the function is used more than once. Thankfully, GCC
+     provides the special %= asm format string, which is replaced by a number that is
+     unique for each copy -- thus creating unique jump labels at each call. */
   __asm__ __volatile__ (
     "mov     %%eax, %[input]\n\t"
     "mov     %%edi, %[output]\n\t"
     "mov     %%ecx, %[l]\n\t"
     "shr     %%ecx, 2\n\t"
     ".align 16\n"
-    "mmx_avgblend_loop:\n\t"
+    "mmx_avgblend_loop%=:\n\t"
     "movq    %%mm0, [%%eax]\n\t"
     "movq    %%mm1, [%%edi]\n\t"
     "psrlq   %%mm0, 1\n\t"
@@ -702,7 +710,7 @@ mmx_avgblend_loop:
     "movq    [%%edi + 8], %%mm2\n\t"
     "add     %%edi, 16\n\t"
     "dec     %%ecx\n\t"
-    "jnz     mmx_avgblend_loop\n\t"
+    "jnz     mmx_avgblend_loop%=\n\t"
     "emms\n\t"
     : /* no outputs */
     : [input]"m"(input), [output]"m"(output), [l]"m"(l), [mask]"m"(mask)
@@ -749,13 +757,14 @@ mmx_addblend_loop:
     emms
   };
 #else // _MSC_VER, GCC asm
+  /* See remark before GCC asm block in mmx_avgblend_block() above. */
   __asm__ __volatile__ (
     "mov     %%eax, %[input]\n\t"
     "mov     %%edi, %[output]\n\t"
     "mov     %%ecx, %[l]\n\t"
     "shr     %%ecx, 2\n\t"
     ".align  16\n"
-    "mmx_addblend_loop:\n\t"
+    "mmx_addblend_loop%=:\n\t"
     "movq    %%mm0, [%%eax]\n\t"
     "movq    %%mm1, [%%edi]\n\t"
     "movq    %%mm2, [%%eax + 8]\n\t"
@@ -767,7 +776,7 @@ mmx_addblend_loop:
     "movq    [%%edi + 8], %%mm2\n\t"
     "add     %%edi, 16\n\t"
     "dec     %%ecx\n\t"
-    "jnz     mmx_addblend_loop\n\t"
+    "jnz     mmx_addblend_loop%=\n\t"
     "emms\n\t"
     : /* no outputs */
     : [input]"m"(input), [output]"m"(output), [l]"m"(l)
@@ -821,13 +830,14 @@ mmx_mulblend_loop:
     emms
   };
 #else // _MSC_VER, GCC asm
+  /* See remark before GCC asm block in mmx_avgblend_block() above. */
   __asm__ __volatile__ (
     "mov       %%eax, %[input]\n\t"
     "mov       %%edi, %[output]\n\t"
     "mov       %%ecx, %[l]\n\t"
     "shr       %%ecx, 2\n\t"
     ".align    16\n"
-    "mmx_mulblend_loop:\n\t"
+    "mmx_mulblend_loop%=:\n\t"
     "movd      %%mm0, [%%eax]\n\t"
     "movd      %%mm1, [%%edi]\n\t"
     "movd      %%mm2, [%%eax + 4]\n\t"
@@ -847,7 +857,7 @@ mmx_mulblend_loop:
     "movd      [%%edi + 4], %%mm2\n\t"
     "add       %%edi, 8\n\t"
     "dec       %%ecx\n\t"
-    "jnz       mmx_mulblend_loop\n\t"
+    "jnz       mmx_mulblend_loop%=\n\t"
     "emms\n\t"
     : /* no outputs */
     : [input]"m"(input), [output]"m"(output), [l]"m"(l),
@@ -930,6 +940,7 @@ _mmx_adjblend_loop:
     emms
   };
 #else // _MSC_VER, GCC asm
+  /* See remark before GCC asm block in mmx_avgblend_block() above. */
   __asm__ __volatile__ (
     "movd      %%mm3, [%[v]]\n\t"
     "mov       %%ecx, %[len]\n\t"
@@ -944,7 +955,7 @@ _mmx_adjblend_loop:
     "shr       %%ecx, 1\n\t"
     "psubw     %%mm4, %%mm3\n\t"
     ".align    16\n"
-    "_mmx_adjblend_loop:\n\t"
+    "_mmx_adjblend_loop%=:\n\t"
     "movd      %%mm0, [%%esi]\n\t"
     "movd      %%mm1, [%%edi]\n\t"
     "punpcklbw %%mm0, [%[mmx_blend4_zero]]\n\t"
@@ -969,7 +980,7 @@ _mmx_adjblend_loop:
     "movd      [%%edx + 4], %%mm6\n\t"
     "add       %%edx, 8\n\t"
     "dec       %%ecx\n\t"
-    "jnz       _mmx_adjblend_loop\n\t"
+    "jnz       _mmx_adjblend_loop%=\n\t"
     "emms     \n\t"
     : /* no outputs */
     : [v]"m"(v), [len]"m"(len), [o]"m"(o), [mmx_blend4_revn]"m"(mmx_blend4_revn),
