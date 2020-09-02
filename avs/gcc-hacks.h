@@ -2,8 +2,8 @@
 
 #ifdef __cplusplus
 extern "C" {
-
 #endif
+
 // Naked functions are emitted without prolog or epilog (e.g. for compiler
 // construction). GCC has no naked attribute for __declspec, but an
 // __attribute__.
