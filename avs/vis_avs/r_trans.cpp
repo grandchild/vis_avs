@@ -675,7 +675,11 @@ void C_THISCLASS::smp_render(int this_thread, int max_threads, char visdata[2][2
         inp++;
       }    
     #ifndef NO_MMX
+#ifdef _MSC_VER // MSVC asm
       __asm emms;
+#else // _MSC_VER, GCC asm
+      __asm__ __volatile__ ("emms");
+#endif // _MSC_VER
     #endif
     }
     else if (trans_tab_subpixel)
@@ -701,7 +705,11 @@ void C_THISCLASS::smp_render(int this_thread, int max_threads, char visdata[2][2
         transp++;
       }    
     #ifndef NO_MMX
+#ifdef _MSC_VER // MSVC asm
       __asm emms;
+#else // _MSC_VER, GCC asm
+      __asm__ __volatile__ ("emms");
+#endif // _MSC_VER
     #endif
     }
     else if (blend)

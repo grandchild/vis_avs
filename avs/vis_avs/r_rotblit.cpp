@@ -220,7 +220,11 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 		t = (tstart += dt_dy);
 	}
 #ifndef NO_MMX
+#ifdef _MSC_VER // MSVC asm
   __asm emms;
+#else // _MSC_VER, GCC asm
+  __asm__ __volatile__ ("emms");
+#endif // _MSC_VER
 #endif
  
   return 1;
