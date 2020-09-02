@@ -285,6 +285,7 @@ void C_THISCLASS::smp_render(int this_thread, int max_threads, char visdata[2][2
 		      *of++=_RGB(r,g,b);          
         }
 #else
+#ifdef _MSC_VER // MSVC asm
         __asm
         {
           mov esi, f
@@ -363,6 +364,66 @@ mmx_water_loop1:
           mov of, edi
           mov lfo, edx
         };
+#else // _MSC_VER, GCC asm
+        __asm__ __volatile__ (
+          "mov       %%esi, %[f]\n\t"
+          "mov       %%edi, %[of]\n\t"
+          "mov       %%edx, %[lfo]\n\t"
+          "mov       %%ecx, %[x]\n\t"
+          "mov       %%ebx, %[w]\n\t"
+          "shl       %%ebx, 2\n\t"
+          "shr       %%ecx, 1\n\t"
+          "sub       %%esi, %%ebx\n\t"
+          ".align    16\n\t"
+          "mmx_water_loop1:\n\t"
+          "movd      %%mm0, [%%esi + %%ebx + 4]\n\t"
+          "movd      %%mm1, [%%esi + %%ebx - 4]\n\t"
+          "punpcklbw %%mm0, [%[zero]]\n\t"
+          "movd      %%mm2, [%%esi + %%ebx * 2]\n\t"
+          "punpcklbw %%mm1, [%[zero]]\n\t"
+          "movd      %%mm3, [%%esi]\n\t"
+          "punpcklbw %%mm2, [%[zero]]\n\t"
+          "movd      %%mm4, [%%edx]\n\t"
+          "paddw     %%mm0, %%mm1\n\t"
+          "punpcklbw %%mm3, [%[zero]]\n\t"
+          "movd      %%mm7, [%%esi + %%ebx + 8]\n\t"
+          "punpcklbw %%mm4, [%[zero]]\n\t"
+          "paddw     %%mm2, %%mm3\n\t"
+          "movd      %%mm6, [%%esi + %%ebx] \n\t"
+          "paddw     %%mm0, %%mm2\n\t"
+          "psrlw     %%mm0, 1\n\t"
+          "punpcklbw %%mm7, [%[zero]]\n\t"
+          "movd      %%mm2, [%%esi + %%ebx * 2 + 4]\n\t"
+          "psubw     %%mm0, %%mm4\n\t"
+          "movd      %%mm3, [%%esi + 4]\n\t"
+          "packuswb  %%mm0, %%mm0\n\t"
+          "movd      [%%edi], %%mm0\n\t"
+          "punpcklbw %%mm6, [%[zero]]\n\t"
+          "movd      %%mm4, [%%edx + 4]\n\t"
+          "punpcklbw %%mm2, [%[zero]]\n\t"
+          "paddw     %%mm7, %%mm6\n\t"
+          "punpcklbw %%mm3, [%[zero]]\n\t"
+          "punpcklbw %%mm4, [%[zero]]\n\t"
+          "paddw     %%mm2, %%mm3\n\t"
+          "paddw     %%mm7, %%mm2\n\t"
+          "add       %%edx, 8\n\t"
+          "psrlw     %%mm7, 1\n\t"
+          "add       %%esi, 8\n\t"
+          "psubw     %%mm7, %%mm4\n\t"
+          "packuswb  %%mm7, %%mm7\n\t"
+          "movd      [%%edi + 4], %%mm7\n\t"
+          "add       %%edi, 8\n\t"
+          "dec       %%ecx\n\t"
+          "jnz       mmx_water_loop1\n\t"
+          "add       %%esi, %%ebx\n\t"
+          "mov       %[f], %%esi\n\t"
+          "mov       %[of], %%edi\n\t"
+          "mov       %[lfo], %%edx\n\t"
+          : [f]"+m"(f), [of]"+m"(of), [lfo]"+m"(lfo)
+          : [x]"m"(x), [w]"m"(w), [zero]"m"(zero)
+          : "ebx", "ecx", "edx", "edi", "esi"
+        );
+#endif // _MSC_VER
 #endif
         // right block
 	      {
@@ -455,7 +516,11 @@ mmx_water_loop1:
   memcpy(lastframe+skip_pix,framebuffer+skip_pix,w*outh*sizeof(int));
   
 #ifndef NO_MMX
+#ifdef _MSC_VER // MSVC asm
     __asm emms;
+#else // _MSC_VER, GCC asm
+    __asm__ __volatile__ ("emms");
+#endif // _MSC_VER
 #endif
 	timingLeave(0);
 }
