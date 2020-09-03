@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-cmake_policy(SET CMP0048 NEW) # allow setting VERSION directly in project() command
 
-# project name and version
 project(vis_avs VERSION 2.82)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -15,9 +13,8 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         -g
         # -Wall -Wextra
         -Wno-write-strings
-        # -fpermissive needed for MAKEINTRESOURCE macro, which casts LPSTR to
-        # WORD, a.k.a. char* to short unsigned int
-        -fpermissive
+        -fpermissive        # -fpermissive needed for MAKEINTRESOURCE macro, which casts
+                            # LPSTR to WORD, a.k.a. char* to short unsigned int
         -masm=intel
     )
 else() # TODO: Clang option
