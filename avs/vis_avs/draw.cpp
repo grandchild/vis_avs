@@ -474,7 +474,7 @@ void DD_CreateSurfaces(int w, int h, int fsh, int fs, int fsbpp, int flip, int d
           int e=COLOR_DESKTOP;
           unsigned long c=RGB(rv,gv,bv);
           SetSysColors(1, &e, &c);
-          SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, "", NULL);
+          SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (void*)"", NULL);
   
           // rewrite registry settings right now so we don't fuck the user desktop if avs crashes
           {

@@ -365,7 +365,7 @@ C_RBASE *C_RLibrary::CreateRenderer(int *which, int *has_r2)
   int r=*which;
   *which=UNKN_ID;
   C_UnknClass *p=new C_UnknClass();
-  p->SetID(r,(r >= DLLRENDERBASE)?(char*)r:"");
+  p->SetID(r,(r >= DLLRENDERBASE)?(char*)r:(char*)"");
   return (C_RBASE *)p;
 }
 

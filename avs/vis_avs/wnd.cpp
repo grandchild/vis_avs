@@ -1342,13 +1342,13 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
       else if (wParam == /* VK_F */ 0x52+'F'-'R')
       {
         cfg_fs_fps ^= 1;
-        DDraw_SetStatusText(cfg_fs_fps&1?"fullscreen fps on":"fullscreen fps off");
+        DDraw_SetStatusText(cfg_fs_fps&1?(char*)"fullscreen fps on":(char*)"fullscreen fps off");
       }
       else if (wParam == /* VK_R */ 0x52)
       {
         cfg_fs_rnd=!cfg_fs_rnd;
         g_rnd_cnt=0;
-        DDraw_SetStatusText(cfg_fs_rnd?"random presets on":"random presets off");
+        DDraw_SetStatusText(cfg_fs_rnd?(char*)"random presets on":(char*)"random presets off");
       }
       else if (wParam >= VK_F1 && wParam <= VK_F12)
       {
