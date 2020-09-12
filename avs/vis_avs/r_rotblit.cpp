@@ -39,7 +39,9 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef LASER
 
 #include <math.h>
+#ifdef _MSC_VER
 #define M_PI 3.1415926536
+#endif
 
 #define C_THISCLASS C_RotBlitClass
 #define MOD_NAME "Trans / Roto Blitter"

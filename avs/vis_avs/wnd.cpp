@@ -57,8 +57,9 @@ char g_title[2048];
 #include "ff_ipc.h"
 #endif
 
-#define WS_EX_LAYERED	0x80000
-#define LWA_ALPHA		2
+// TODO [cleanup]: These are defined in windows api headers -- remove them here.
+// #define WS_EX_LAYERED	0x80000
+// #define LWA_ALPHA		2
 
 #define ID_VIS_NEXT                     40382
 #define ID_VIS_PREV                     40383
