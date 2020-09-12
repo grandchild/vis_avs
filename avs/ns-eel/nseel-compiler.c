@@ -779,8 +779,8 @@ void NSEEL_code_execute(NSEEL_CODEHANDLE code)
     }
 #else
     __asm__ __volatile__ (
-      "  mov %%ebx, %0\n\t"
-      "  mov %%eax, %1\n\t"
+      "  mov %%ebx, %[baseptr]\n\t"
+      "  mov %%eax, %[startPoint]\n\t"
       "  pushad\n\t"
       "  add %%ebx, 31\n\t"
       "  add %%ebx, ~31\n\t"
@@ -788,7 +788,7 @@ void NSEEL_code_execute(NSEEL_CODEHANDLE code)
       "  call %%eax\n\t"
       "  popad\n\t"
       :
-      : "r"(baseptr), "r"(startPoint)
+      : [baseptr]"r"(baseptr), [startPoint]"r"(startPoint)
       : "eax", "ebx", "edi"
     );
 #endif
