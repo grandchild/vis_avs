@@ -997,7 +997,7 @@ skip:
     "fistp dword ptr [%%esi]\n\t"
     "mov %%ecx, [%%esi]\n\t"
     "cmp %%ecx, 1\n\t"
-    "jl skip"
+    "jl skip\n\t"
     "cmp %%ecx, %0\n\t"
     "jl again\n\t"
     "mov %%ecx, %0\n"
@@ -1012,7 +1012,7 @@ skip:
     "jnz again\n"
   "skip:\n"
     :
-    :"m"(NSEEL_LOOPFUNC_SUPPORT_MAXLEN)
+    :"i"(NSEEL_LOOPFUNC_SUPPORT_MAXLEN)
     :"eax", "ecx", "esi"
   );
 #endif
