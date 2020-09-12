@@ -8,6 +8,7 @@
 
 /build*/
 /cmake-build*/
+/*wine*/
 
 # IDEs
 .idea/
