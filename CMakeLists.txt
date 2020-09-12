@@ -11,12 +11,20 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     endif()
     add_compile_options(
         -g
+                            # directly into the root of the build dir.
+        -Wno-write-strings  # Don't complain when converting string literals to char*.
+        -masm=intel         # Use Intel instead of AT&T inline assembly syntax.
         # -Wall -Wextra
-        -Wno-write-strings
-        -fpermissive        # -fpermissive needed for MAKEINTRESOURCE macro, which casts
-                            # LPSTR to WORD, a.k.a. char* to short unsigned int
-        -masm=intel
+        # -save-temps         # Save intermediate assembly files created during
+                            # compilation for debugging. The .s files will be output
+                            # Facilitates translation from MSVC inline asm.
     )
+    set(CXX_COMPILE_FLAGS
+        -fpermissive        # -fpermissive needed for MAKEINTRESOURCE macro, which casts
+                            # LPSTR to WORD, a.k.a. char* to short unsigned int.
+    )
+    # C++-specific opitions (CMake generator expressions cannot be multiline)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${CXX_COMPILE_FLAGS}>)
 else() # TODO: Clang option
     message(SEND_ERROR "unsupported compiler ${CMAKE_CXX_COMPILER_ID}")
 endif()
@@ -34,11 +42,11 @@ else()
 endif()
 
 add_definitions(
-    -DAVS_MEGABUF_SUPPORT   # No reason to not enable this -> the #ifdefs should
-                            # probably be removed eventually.
-    # -DNO_MMX              # Use (usually slower) C equivalents for MMX assembly.
-                            # (Initially enabled for quick porting but should be
-                            # removed, now that all MMX sections are ported.)
+    -DAVS_MEGABUF_SUPPORT     # No reason to not enable this. Remove #ifdefs eventually.
+    -DNSEEL_LOOPFUNC_SUPPORT  # No reason to not enable this. Remove #ifdefs eventually.
+    # -DNO_MMX                # Use (usually slower) C equivalents for MMX assembly.
+                              # (Initially enabled for quick porting but should be
+                              # removed, now that all MMX sections are ported.)
 )
 
 file(GLOB SRC_FILES_NS_EEL
