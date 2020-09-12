@@ -243,7 +243,7 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPa
         int l=0,nl;
         for (x = 0; x < g_this->num_colors; x ++)
         {
-          int color=g_this->colors[x];
+          unsigned int color=g_this->colors[x];
           nl = (w*(x+1))/g_this->num_colors;
           color = ((color>>16)&0xff)|(color&0xff00)|((color<<16)&0xff0000);
 

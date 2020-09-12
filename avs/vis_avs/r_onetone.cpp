@@ -190,7 +190,7 @@ switch (uMsg)
 			if (di->CtlID == IDC_DEFCOL) // paint nifty color button
 			{
         int w=di->rcItem.right-di->rcItem.left;
-        int _color=g_ConfigThis->color;
+        unsigned int _color=g_ConfigThis->color;
           _color = ((_color>>16)&0xff)|(_color&0xff00)|((_color<<16)&0xff0000);
 
 	        HPEN hPen,hOldPen;
