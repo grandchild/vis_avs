@@ -126,7 +126,7 @@ typedef struct _VisInfo
 										// GetPrivateProfileString("my plugin", "brightness", "3", BrightnessBuffer, sizeof(BrightnessBuffer), FileName);
 } VisInfo;
 
-#pragma pack (pop, 8)
+#pragma pack (pop)
 
 
 // DLL exports this function - it should return a pointer to a static structure
