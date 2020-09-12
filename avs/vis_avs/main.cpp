@@ -275,15 +275,19 @@ static int render(struct winampVisModule *this_mod)
 		return 1;
 	}
 	if (g_visdata_pstat)
+    // TODO [bugfix][cleanup]:
+    //    The loop conditions are x<576*2, but spectrumData has size [2][576], so the
+    //    code probably relied on the two channel arrays lying consecutively in memory.
+    //    Make it explicit (fixes a warning), but investigate more later.
 		for (x = 0; x<  576*2; x ++)
-			g_visdata[0][0][x]=g_logtab[(unsigned char)this_mod->spectrumData[0][x]];
+			g_visdata[0][x/576][x%576]=g_logtab[(unsigned char)this_mod->spectrumData[x/576][x%576]];
 	else 
 	{
 		for (x = 0; x < 576*2; x ++)
 		{ 
-			int t=g_logtab[(unsigned char)this_mod->spectrumData[0][x]];
-			if (g_visdata[0][0][x] < t)
-				g_visdata[0][0][x] = t;
+			int t=g_logtab[(unsigned char)this_mod->spectrumData[x/576][x%576]];
+			if (g_visdata[0][x/576][x%576] < t)
+				g_visdata[0][x/576][x%576] = t;
 		}
 	}
 	memcpy(&g_visdata[1][0][0],this_mod->waveformData,576*2);
