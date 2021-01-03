@@ -783,7 +783,7 @@ void NSEEL_code_execute(NSEEL_CODEHANDLE code)
       "  mov %%eax, %[startPoint]\n\t"
       "  pushad\n\t"
       "  add %%ebx, 31\n\t"
-      "  add %%ebx, ~31\n\t"
+      "  and %%ebx, ~31\n\t"
       "  mov %%edi, %%ebx\n\t"
       "  call %%eax\n\t"
       "  popad\n\t"
