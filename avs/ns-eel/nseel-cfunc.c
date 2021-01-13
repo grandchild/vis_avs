@@ -204,7 +204,9 @@ NAKED void nseel_asm_exp(void)
 NAKED void nseel_asm_exp_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
+#if !defined(_MSC_VER) || _MSC_VER < 1928
 static double (*__floor)(double) = &floor;
+#endif
 NAKED void nseel_asm_floor(void)
 {
   FUNC1_ENTER
@@ -217,7 +219,9 @@ NAKED void nseel_asm_floor_end(void) {}
 
 
 //---------------------------------------------------------------------------------------------------------------
+#if !defined(_MSC_VER) || _MSC_VER < 1928
 static double (*__ceil)(double) = &ceil;
+#endif
 NAKED void nseel_asm_ceil(void)
 {
   FUNC1_ENTER
