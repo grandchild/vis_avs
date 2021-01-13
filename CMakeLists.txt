@@ -17,14 +17,16 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         # -Wall -Wextra
         # -save-temps         # Save intermediate assembly files created during
                             # compilation for debugging. The .s files will be output
-                            # Facilitates translation from MSVC inline asm.
+                            # into the base build directory.
     )
-    set(CXX_COMPILE_FLAGS
+    # C++-specific flags
+    set(AVS_CXX_COMPILER_FLAGS
         -fpermissive        # -fpermissive needed for MAKEINTRESOURCE macro, which casts
                             # LPSTR to WORD, a.k.a. char* to short unsigned int.
     )
-    # C++-specific opitions (CMake generator expressions cannot be multiline)
-    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${CXX_COMPILE_FLAGS}>)
+    # (CMake generator expressions cannot be multiline, hence the CXX_COMPILE_FLAGS
+    # variable workaround.)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${AVS_CXX_COMPILER_FLAGS}>)
 else() # TODO: Clang option
     message(SEND_ERROR "unsupported compiler ${CMAKE_CXX_COMPILER_ID}")
 endif()
