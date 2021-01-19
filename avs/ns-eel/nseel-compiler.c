@@ -254,7 +254,8 @@ static void *__newBlock(llBlock **start, int size)
 
   alloc_size=sizeof(llBlock);
   if ((int)size > LLB_DSIZE) alloc_size += size - LLB_DSIZE;
-  llb = (llBlock *)GlobalAlloc(GMEM_FIXED,alloc_size); // grab bigger block if absolutely necessary (heh)
+  // grab bigger block if absolutely necessary (heh)
+  llb = (llBlock *)VirtualAlloc(NULL, alloc_size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
   llb->sizeused=size;
   llb->next = *start;  
   *start = llb;
