@@ -42,7 +42,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 typedef struct {
 	char fname[MAX_PATH];
 	int	levels;
-} apeconfig;
+} colorReductionConfig;
 
 class C_THISCLASS : public C_RBASE 
 {
@@ -56,7 +56,7 @@ class C_THISCLASS : public C_RBASE
 		virtual void load_config(unsigned char *data, int len);
 		virtual int  save_config(unsigned char *data);
 
-		apeconfig config;
+		colorReductionConfig config;
 
 		HWND hwndDlg;
 };
@@ -114,7 +114,7 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 // set up default configuration 
 C_THISCLASS::C_THISCLASS() 
 {
-	memset(&config, 0, sizeof(apeconfig));
+	memset(&config, 0, sizeof(colorReductionConfig));
 	config.levels = 7;
 }
 
@@ -188,17 +188,17 @@ char *C_THISCLASS::get_desc(void)
 
 void C_THISCLASS::load_config(unsigned char *data, int len) 
 {
-	if (len == sizeof(apeconfig))
+	if (len == sizeof(colorReductionConfig))
 		memcpy(&this->config, data, len);
 	else
-		memset(&this->config, 0, sizeof(apeconfig));
+		memset(&this->config, 0, sizeof(colorReductionConfig));
 }
 
 
 int  C_THISCLASS::save_config(unsigned char *data) 
 {
-	memcpy(data, &this->config, sizeof(apeconfig));
-	return sizeof(apeconfig);
+	memcpy(data, &this->config, sizeof(colorReductionConfig));
+	return sizeof(colorReductionConfig);
 }
 
 C_RBASE *R_ColorReduction(char *desc) 

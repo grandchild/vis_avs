@@ -614,9 +614,9 @@ typedef struct
   char *point;
   char *frame;
   char *beat;
-} presetType;
+} dmovePresetType;
 
-static presetType presets[]=
+static dmovePresetType presets[]=
 {
   {"Random Rotate", 0, 1, 2, 2, "","r = r + dr;","","dr = (rand(100) / 100) * $PI;\r\nd = d * .95;"},
   {"Random Direction", 1, 1, 2, 2, "speed=.05;dr = (rand(200) / 100) * $PI;","x = x + dx;\r\ny = y + dy;","dx = cos(dr) * speed;\r\ndy = sin(dr) * speed;","dr = (rand(200) / 100) * $PI;"},

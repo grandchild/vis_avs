@@ -143,7 +143,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			mov edi, framebuffer
       shr edx, 3 // 8 pixels at a time
       align 16
-		_l1:
+		fastbright_l1:
 			movq mm0, [edi]
 			movq mm1, [edi+8]
 			movq mm2, [edi+16]
@@ -160,21 +160,21 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
       add edi, 32
 
 			dec edx
-			jnz _l1
+			jnz fastbright_l1
 
 			mov edx, l
 			and edx, 7
       shr edx, 1 // up the last 7 pixels (two at a time)
-			jz _l3
+			jz fastbright_l3
 
-		_l2:
+		fastbright_l2:
 			movq mm3, [edi]
       paddusb mm3, mm3
       movq [edi], mm3
 			add edi, 8
 			dec edx
-			jnz _l2
-		_l3:
+			jnz fastbright_l2
+		fastbright_l3:
 			emms
 		}
 #else // _MSC_VER, GCC asm
@@ -183,7 +183,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
       "mov     %%edi, %[framebuffer]\n\t"
       "shr     %%edx, 3\n\t"
       ".align  16\n"
-      "_l1:\n\t"
+      "fastbright_l1:\n\t"
       "movq    %%mm0, [%%edi]\n\t"
       "movq    %%mm1, [%%edi + 8]\n\t"
       "movq    %%mm2, [%%edi + 16]\n\t"
@@ -198,19 +198,19 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
       "movq    [%%edi + 24], %%mm3\n\t"
       "add     %%edi, 32\n\t"
       "dec     %%edx\n\t"
-      "jnz     _l1\n\t"
+      "jnz     fastbright_l1\n\t"
       "mov     %%edx, %[l]\n\t"
       "and     %%edx, 7\n\t"
       "shr     %%edx, 1\n\t"
-      "jz      _l3\n"
-      "_l2:\n\t"
+      "jz      fastbright_l3\n"
+      "fastbright_l2:\n\t"
       "movq    %%mm3, [%%edi]\n\t"
       "paddusb %%mm3, %%mm3\n\t"
       "movq    [%%edi], %%mm3\n\t"
       "add     %%edi, 8\n\t"
       "dec     %%edx\n\t"
-      "jnz     _l2\n"
-      "_l3:\n\t"
+      "jnz     fastbright_l2\n"
+      "fastbright_l3:\n\t"
       "emms\n\t"
       : /* no outputs */
       : [l]"m"(l), [framebuffer]"m"(framebuffer)

@@ -228,9 +228,9 @@ typedef struct
   char *frame;
   char *beat;
   int recompute;
-} presetType;
+} colormodPresetType;
 
-static presetType presets[]=
+static colormodPresetType presets[]=
 {
   // Name, Init, Level, Frame, Beat, Recalc
   {"4x Red Brightness, 2x Green, 1x Blue","","red=4*red; green=2*green;","","",0},

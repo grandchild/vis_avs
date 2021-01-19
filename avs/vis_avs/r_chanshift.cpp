@@ -44,7 +44,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 typedef struct {
 	int	mode;
 	int onbeat;
-} apeconfig;
+} channelShiftConfig;
 
 class C_THISCLASS : public C_RBASE 
 {
@@ -58,7 +58,7 @@ class C_THISCLASS : public C_RBASE
 		virtual void load_config(unsigned char *data, int len);
 		virtual int  save_config(unsigned char *data);
 
-		apeconfig config;
+		channelShiftConfig config;
 
 		HWND hwndDlg;
 };
@@ -103,7 +103,7 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 // set up default configuration 
 C_THISCLASS::C_THISCLASS() 
 {
-	memset(&config, 0, sizeof(apeconfig));
+	memset(&config, 0, sizeof(channelShiftConfig));
 	config.mode = IDC_RBG;
 	config.onbeat = 1;
 }
@@ -541,15 +541,15 @@ char *C_THISCLASS::get_desc(void)
 void C_THISCLASS::load_config(unsigned char *data, int len) 
 {
 	srand(time(0));
-	if (len <= sizeof(apeconfig))
+	if (len <= sizeof(channelShiftConfig))
 		memcpy(&this->config, data, len);
 }
 
 
 int  C_THISCLASS::save_config(unsigned char *data) 
 {
-	memcpy(data, &this->config, sizeof(apeconfig));
-	return sizeof(apeconfig);
+	memcpy(data, &this->config, sizeof(channelShiftConfig));
+	return sizeof(channelShiftConfig);
 }
 
 C_RBASE *R_ChannelShift(char *desc) 

@@ -155,7 +155,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			movq mm7, [fadj]
 			shr edx, 3
       align 16
-		_l1:
+		fadeout_l1:
 			movq mm0, [edi]
 
 			movq mm1, [edi+8]
@@ -179,7 +179,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			add edi, 8*4
 
 			dec edx
-			jnz _l1
+			jnz fadeout_l1
 
 			mov edx, l
 			sub eax, eax
@@ -191,7 +191,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			sub ecx, ecx
 
 			mov esi, t
-		_l2:
+		fadeout_l2:
 			mov al, [edi]
 			mov bl, [edi+1]
 			mov cl, [edi+2]
@@ -203,7 +203,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			mov [edi+2], cl
 			add edi, 4
 			dec edx
-			jnz _l2
+			jnz fadeout_l2
 		_l3:
 			emms
 		}
@@ -214,7 +214,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
             "movq    %%mm7, [%[fadj]]\n\t"
             "shr     %%edx, 3\n\t"
             ".align  16\n"
-            "_l1:\n\t"
+            "fadeout_l1:\n\t"
             "movq    %%mm0, [%%edi]\n\t"
             "movq    %%mm1, [%%edi + 8]\n\t"
             "movq    %%mm2, [%%edi + 16]\n\t"
@@ -229,7 +229,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
             "movq    [%%edi + 24], %%mm3\n\t"
             "add     %%edi, 8 * 4\n\t"
             "dec     %%edx\n\t"
-            "jnz     _l1\n\t"
+            "jnz     fadeout_l1\n\t"
             "mov     %%edx, %[l]\n\t"
             "sub     %%eax, %%eax\n\t"
             "and     %%edx, 7\n\t"
@@ -237,7 +237,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
             "sub     %%ebx, %%ebx\n\t"
             "sub     %%ecx, %%ecx\n\t"
             "mov     %%esi, %[t]\n"
-            "_l2:\n\t"
+            "fadeout_l2:\n\t"
             "mov     al, [%%edi]\n\t"
             "mov     bl, [%%edi + 1]\n\t"
             "mov     cl, [%%edi + 2]\n\t"
@@ -249,7 +249,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
             "mov     [%%edi + 2], %%cl\n\t"
             "add     %%edi, 4\n\t"
             "dec     %%edx\n\t"
-            "jnz     _l2\n"
+            "jnz     fadeout_l2\n"
             "_l3:\n\t"
             "emms\n\t"
             : /* no outputs */

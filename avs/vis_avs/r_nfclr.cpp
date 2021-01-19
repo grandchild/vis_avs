@@ -143,7 +143,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 						pand mm7, mm6
 						mov edx, i
 						mov edi, framebuffer
-						_l1:
+						onbeatclear_l1:
 						movq mm0, [edi]
 
 						movq mm1, [edi+8]
@@ -161,7 +161,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 						movq [edi+8], mm1
 						add edi, 16
 						dec edx
-						jnz _l1
+						jnz onbeatclear_l1
 						emms
 					}
 #else // _MSC_VER
@@ -172,7 +172,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 						"pand %%mm7, %%mm6\n\t"
 						"mov %%edx, %2\n\t"
 						"mov %%edi, %3\n"
-						"_l1:\n\t"
+						"onbeatclear_l1:\n\t"
 						"movq %%mm0, [%%edi]\n\t"
 
 						"movq %%mm1, [%%edi+8]\n\t"
@@ -190,7 +190,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 						"movq [%%edi + 8], %%mm1\n\t"
 						"add %%edi, 16\n\t"
 						"dec %%edx\n\t"
-						"jnz _l1\n\t"
+						"jnz onbeatclear_l1\n\t"
 						"emms\n\t"
 						:/* no outputs */
 						:"m"(vc), "m"(icolor), "m"(i), "m"(framebuffer)
