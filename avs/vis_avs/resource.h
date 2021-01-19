@@ -78,6 +78,7 @@
 #define IDD_CFG_MULT                    170
 #define IDD_CFG_MULTIDELAY              171
 #define IDD_CFG_VIDEODELAY              172
+#define IDD_CFG_CONVOLUTION             173
 #define IDC_EFFECTS                     1000
 #define IDC_ENABLED                     1001
 #define IDC_FBCLEAR                     1002
@@ -393,6 +394,67 @@
 #define IDC_STATIC_TRANS_NONE           1207
 #define IDC_THREADS                     1208
 #define IDC_THREADSBORDER               1209
+#define IDC_CONVOLUTION_CHECK1          1210
+#define IDC_CONVOLUTION_EDIT1           1211
+#define IDC_CONVOLUTION_EDIT2           1212
+#define IDC_CONVOLUTION_EDIT3           1213
+#define IDC_CONVOLUTION_EDIT4           1214
+#define IDC_CONVOLUTION_EDIT5           1215
+#define IDC_CONVOLUTION_EDIT6           1216
+#define IDC_CONVOLUTION_EDIT7           1217
+#define IDC_CONVOLUTION_EDIT8           1218
+#define IDC_CONVOLUTION_EDIT9           1219
+#define IDC_CONVOLUTION_EDIT10          1220
+#define IDC_CONVOLUTION_EDIT11          1221
+#define IDC_CONVOLUTION_EDIT12          1222
+#define IDC_CONVOLUTION_EDIT13          1223
+#define IDC_CONVOLUTION_EDIT14          1224
+#define IDC_CONVOLUTION_EDIT15          1225
+#define IDC_CONVOLUTION_EDIT16          1226
+#define IDC_CONVOLUTION_EDIT17          1227
+#define IDC_CONVOLUTION_EDIT18          1228
+#define IDC_CONVOLUTION_EDIT19          1229
+#define IDC_CONVOLUTION_EDIT20          1230
+#define IDC_CONVOLUTION_EDIT21          1231
+#define IDC_CONVOLUTION_EDIT22          1232
+#define IDC_CONVOLUTION_EDIT23          1233
+#define IDC_CONVOLUTION_EDIT24          1234
+#define IDC_CONVOLUTION_EDIT25          1235
+#define IDC_CONVOLUTION_EDIT26          1236
+#define IDC_CONVOLUTION_EDIT27          1237
+#define IDC_CONVOLUTION_EDIT28          1238
+#define IDC_CONVOLUTION_EDIT29          1239
+#define IDC_CONVOLUTION_EDIT30          1240
+#define IDC_CONVOLUTION_EDIT31          1241
+#define IDC_CONVOLUTION_EDIT32          1242
+#define IDC_CONVOLUTION_EDIT33          1243
+#define IDC_CONVOLUTION_EDIT34          1244
+#define IDC_CONVOLUTION_EDIT35          1245
+#define IDC_CONVOLUTION_EDIT36          1246
+#define IDC_CONVOLUTION_EDIT37          1247
+#define IDC_CONVOLUTION_EDIT38          1248
+#define IDC_CONVOLUTION_EDIT39          1249
+#define IDC_CONVOLUTION_EDIT40          1250
+#define IDC_CONVOLUTION_EDIT41          1251
+#define IDC_CONVOLUTION_EDIT42          1252
+#define IDC_CONVOLUTION_EDIT43          1253
+#define IDC_CONVOLUTION_EDIT44          1254
+#define IDC_CONVOLUTION_EDIT45          1255
+#define IDC_CONVOLUTION_EDIT46          1256
+#define IDC_CONVOLUTION_EDIT47          1257
+#define IDC_CONVOLUTION_EDIT48          1258
+#define IDC_CONVOLUTION_EDIT49          1259
+#define IDC_CONVOLUTION_EDIT50          1260
+#define IDC_CONVOLUTION_EDIT51          1261
+#define IDC_CONVOLUTION_EDIT52          1262
+#define IDC_CONVOLUTION_EDIT53          1263
+#define IDC_CONVOLUTION_CHECK2          1264
+#define IDC_CONVOLUTION_CHECK3          1265
+#define IDC_CONVOLUTION_CHECK4          1266
+#define IDC_CONVOLUTION_BUTTON1         1267
+#define IDC_CONVOLUTION_BUTTON2         1268
+#define IDC_CONVOLUTION_BUTTON3         1269
+#define IDC_CONVOLUTION_BUTTON4         1270
 #define IDM_DISPLAY                     40001
 #define IDM_PRESETS                     40002
 #define IDM_TRANS                       40003
@@ -408,9 +470,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        172
+#define _APS_NEXT_RESOURCE_VALUE        174
 #define _APS_NEXT_COMMAND_VALUE         40011
-#define _APS_NEXT_CONTROL_VALUE         1210
+#define _APS_NEXT_CONTROL_VALUE         1271
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -192,6 +192,7 @@ void C_RLibrary::initbuiltinape(void)
   ADD2(R_Multiplier,"Multiplier");
   ADD2(R_VideoDelay,"Holden04: Video Delay");
   ADD2(R_MultiDelay,"Holden05: Multi Delay");
+  ADD2(R_Convolution,"Holden03: Convolution Filter");
 #endif
 #undef ADD
 #undef ADD2
