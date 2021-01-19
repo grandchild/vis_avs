@@ -62,8 +62,8 @@ file(GLOB SRC_FILES_VIS_AVS
 # This file appears to be an older version of r_contrast.cpp left in the source tree.
 list(REMOVE_ITEM SRC_FILES_VIS_AVS "${CMAKE_SOURCE_DIR}/avs/vis_avs/r_colorreplace.cpp")
 
-set(CMAKE_SHARED_LIBRARY_PREFIX "")  # Removes "lib" prefix from output to achieve
-                                     # original filename "vis_avs.dll"
+set(CMAKE_SHARED_LIBRARY_PREFIX "")  # Remove "lib" prefix from output to get original
+                                     # filename "vis_avs.dll".
 add_library(vis_avs SHARED
     ${SRC_FILES_NS_EEL}
     ${SRC_FILES_VIS_AVS}
