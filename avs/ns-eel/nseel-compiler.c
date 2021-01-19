@@ -276,6 +276,10 @@ static void *__newBlock(llBlock **start, int size)
 
 #define X86_RET 0xC3
 
+#define X86_NEAR_JMP 0xEB
+#define SIZE_X86_NEAR_JMP_BYTES 2
+#define UD2_FIRST_BYTE 0x0F
+#define UD2_SECOND_BYTE 0x0B
 
 //---------------------------------------------------------------------------------------------------------------
 static int *findFBlock(char *p)
@@ -284,6 +288,43 @@ static int *findFBlock(char *p)
   return (int*)p;
 }
 
+#ifdef __GNUC__
+/* Naked functions in GCC have a UD2 instruction at the end, which is put there as a
+   safeguard by the compiler. But we need to execute several bits of code made from
+   naked functions one after the other. */
+
+/* Return the reverse offset in bytes from the end(!) of the function to the start of
+   the trap UD2 instruction that GCC generates at the end of naked functions. */
+static int rfind_ud2_trap_epilog_size(char* fn_end, char* fn_begin) {
+  char found_second_byte = 0;
+  for (char* p = fn_end; p >= fn_begin; p--) {
+    if (*p == UD2_SECOND_BYTE) {
+      found_second_byte = 1;
+    } else if (found_second_byte && *p == UD2_FIRST_BYTE) {
+      return fn_end - p;
+    } else{
+      found_second_byte = 0;
+    }
+  }
+  return 0;
+}
+
+/* Overwrite the UD2 trap instruction with a near-jump instruction (0xEB) to just after
+   the current code block. Execution continues at the start of the next code block or at
+   the final "ret" instruction and returns from NSEEL_code_execute. */
+void write_gcc_naked_function_trap_padding_jmp(unsigned char* code, int size2, int fn) {
+    int epilog_size = rfind_ud2_trap_epilog_size(code + size2, code);
+    if(epilog_size > 127) {
+      printf("epilog_size too large for relative jump: %d\n", epilog_size);
+      // TODO: better error handling here. Code generation should fail!
+      return;
+    } else if(epilog_size > 0) {
+      code[size2 - epilog_size] = X86_NEAR_JMP;
+      code[size2 - epilog_size + 1] = (unsigned char)epilog_size
+                                      - SIZE_X86_NEAR_JMP_BYTES;
+    }
+}
+#endif
 
 //---------------------------------------------------------------------------------------------------------------
 int nseel_createCompiledValue(compileContext *ctx, double value, double *addrValue)
@@ -424,6 +465,9 @@ int nseel_createCompiledFunction3(compileContext *ctx, int fntype, int fn, int c
     *outp++ = X86_POP_ECX;
 
     memcpy(outp,(void*)myfunc,size2);
+#ifdef __GNUC__
+    write_gcc_naked_function_trap_padding_jmp(outp, size2, fn);
+#endif
     if (preProc) preProc(outp,size2,ctx->userfunc_data);
 
     ctx->computTableTop++;
@@ -489,6 +533,9 @@ int nseel_createCompiledFunction2(compileContext *ctx, int fntype, int fn, int c
     *outp++ = X86_POP_EBX;
 
     memcpy(outp,(void*)myfunc,size2);
+#ifdef __GNUC__
+    write_gcc_naked_function_trap_padding_jmp(outp, size2, fn);
+#endif
     if (preProc) preProc(outp,size2,ctx->userfunc_data);
 
     ctx->computTableTop++;
@@ -517,6 +564,9 @@ int nseel_createCompiledFunction1(compileContext *ctx, int fntype, int fn, int c
 
   memcpy(block+4, func1, size);
   memcpy(block+size+4,(void*)myfunc,size2);
+#ifdef __GNUC__
+  write_gcc_naked_function_trap_padding_jmp(block + size + 4, size2, fn);
+#endif
   if (preProc) preProc(block+size+4,size2,ctx->userfunc_data);
 
   ctx->computTableTop++;
