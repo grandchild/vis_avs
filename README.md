@@ -25,13 +25,15 @@ make
 
 ### Current Status
 
-* Builds with MinGW-w64 GCC into a running `vis_avs.dll`, loadable with Winamp. 🎉
-* ConvolutionFilter integrated as a builtin-APE, thanks to a [donation to free software](https://github.com/tholden/AVSConvolutionFilter) by its author [Tom Holden](https://github.com/tholden). ❤️
-* Working on EELTrans compiler internals.
+* 🎉 Builds with MinGW-w64 GCC into a running `vis_avs.dll`, loadable with Winamp.
+* ❤️ ConvolutionFilter integrated as a builtin-APE thanks to a [donation to free software](
+  https://github.com/tholden/AVSConvolutionFilter) by its author [Tom Holden](
+  https://github.com/tholden).
+* 🥵 Working on EELTrans compiler internals.
   * `band()`, `bor()`, `sigmoid()` & `rand()` are buggy (no effect).
   * Many other builtin functions work fine.
-  * `megabuf()` & `gmegabuf()` works. 🥵
-  * Testing...
+  * `megabuf()` & `gmegabuf()` works.
+  * Testing to see if anything else is broken...
 
 ## Conventions
 
