@@ -322,9 +322,10 @@ static void gmegabuf_cleanup()
   }
 }
 
+/* compare ../ns-eel/megabuf.c:megabuf_() */
 static double * NSEEL_CGEN_CALL gmegabuf_(double *which)
 {
-  static double error;
+  static double error;  // TODO [bugfix]: uninitialized?
   int w=(int)(*which + 0.0001);
   int whichblock = w/MEGABUF_ITEMSPERBLOCK;
 

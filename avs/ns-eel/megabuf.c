@@ -62,9 +62,10 @@ void megabuf_cleanup(NSEEL_VMCTX ctx)
   }
 }
 
+/* compare ../vis_avs/avs_eelif.cpp:gmegabuf_() */
 static double * NSEEL_CGEN_CALL megabuf_(double ***blocks, double *which)
 {
-  static double error;
+  static double error;  // TODO [bugfix]: uninitialized?
   int w=(int)(*which + 0.0001);
   int whichblock = w/MEGABUF_ITEMSPERBLOCK;
 
