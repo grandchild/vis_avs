@@ -14,6 +14,8 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
                             # directly into the root of the build dir.
         -Wno-write-strings  # Don't complain when converting string literals to char*.
         -masm=intel         # Use Intel instead of AT&T inline assembly syntax.
+        -march=native       # Convolution-Filter uses inlined mmintrin.h functions, and
+                            # a pentium4 arch seems to be roughly the minimum for that.
         # -flto               # Link-time optimization. No performance gain seen so far.
         # -fprofile-generate  # Profile-guided optimization, pass 1
         # -fprofile-use       # Profile-guided optimization, pass 2
