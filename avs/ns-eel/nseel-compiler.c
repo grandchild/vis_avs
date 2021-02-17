@@ -186,6 +186,9 @@ int NSEEL_init() // returns 0 on success
   return 0;
 }
 
+/* Register a function by name, with number of parameters, code start address, length of
+   the code section in bytes, and optional preprocessing function. Pass 0 for pproc to
+   skip preprocessing. */
 void NSEEL_addfunctionex(char *name, int nparms, int code_startaddr, int code_len, NSEEL_PPPROC pproc)
 {
   if (!fnTableUser || !(fnTableUser_size&7))

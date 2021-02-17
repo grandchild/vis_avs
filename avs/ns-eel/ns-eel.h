@@ -35,6 +35,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern "C" {
 #endif
 
+/* Function type for preprocessing compiled code blocks. */
 typedef void (*NSEEL_PPPROC)(void *data, int data_size, void **userfunc_data);
 
 int NSEEL_init(); // returns 0 on success
