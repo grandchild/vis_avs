@@ -144,6 +144,7 @@ be sure to preserve edi, too.
 
 #ifdef _MSC_VER
 #define NSEEL_CGEN_CALL __fastcall
+#define GCC_INLINE
 #else
 #define NSEEL_CGEN_CALL __attribute__((fastcall))
 #define GCC_INLINE inline __attribute__((always_inline))
