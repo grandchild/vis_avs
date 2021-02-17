@@ -53,7 +53,7 @@ static char *g_evallib_visdata;
 
 
 
-static double NSEEL_CGEN_CALL getvis(unsigned char *visdata, int bc, int bw, int ch, int xorv)
+static GCC_INLINE double NSEEL_CGEN_CALL getvis(unsigned char *visdata, int bc, int bw, int ch, int xorv)
 {
   int x;
   int accum=0;
@@ -88,19 +88,19 @@ static double NSEEL_CGEN_CALL getvis(unsigned char *visdata, int bc, int bw, int
   }
 }
 
-static double NSEEL_CGEN_CALL  getspec_(double *band, double *bandw, double *chan)
+static GCC_INLINE double NSEEL_CGEN_CALL  getspec_(double *band, double *bandw, double *chan)
 {
   if (!g_evallib_visdata) return 0.0;
   return getvis((unsigned char *)g_evallib_visdata,(int)(*band*576.0),(int)(*bandw*576.0),(int)(*chan+0.5),0)*0.5;
 }
 
-static double NSEEL_CGEN_CALL getosc_(double *band, double *bandw, double *chan)
+static GCC_INLINE double NSEEL_CGEN_CALL getosc_(double *band, double *bandw, double *chan)
 {
   if (!g_evallib_visdata) return 0.0;
   return getvis((unsigned char *)g_evallib_visdata+576*2,(int)(*band*576.0),(int)(*bandw*576.0),(int)(*chan+0.5),128);
 }
 
-static double NSEEL_CGEN_CALL gettime_(double *sc)
+static GCC_INLINE double NSEEL_CGEN_CALL gettime_(double *sc)
 {
   int ispos;
   if ((ispos=(*sc > -1.001 && *sc < -0.999)) || (*sc > -2.001 && *sc < -1.999))
@@ -119,7 +119,7 @@ static double NSEEL_CGEN_CALL gettime_(double *sc)
   return GetTickCount()/1000.0 - *sc;
 }
 
-static double NSEEL_CGEN_CALL setmousepos_(double *x, double *y)
+static GCC_INLINE double NSEEL_CGEN_CALL setmousepos_(double *x, double *y)
 {
   //fucko: implement me
   return 0.0;
@@ -128,7 +128,7 @@ static double NSEEL_CGEN_CALL setmousepos_(double *x, double *y)
 
 extern double DDraw_translatePoint(POINT p, int isY);
 
-static double NSEEL_CGEN_CALL getmouse_(double *which)
+static GCC_INLINE double NSEEL_CGEN_CALL getmouse_(double *which)
 {
   int w=(int)(*which+0.5);
 

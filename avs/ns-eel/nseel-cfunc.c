@@ -49,26 +49,26 @@ static float onepointfive=1.5f;
 #define isnonzero(x) (fabs(x) > g_closefact)
 
 //---------------------------------------------------------------------------------------------------------------
-static double NSEEL_CGEN_CALL _rand(double *x)
+static GCC_INLINE double NSEEL_CGEN_CALL _rand(double *x)
 {
   if (*x < 1.0) *x=1.0;
   return (double)(rand()%(int)max(*x,1.0));
 }
 
 //---------------------------------------------------------------------------------------------------------------
-static double NSEEL_CGEN_CALL _band(double *var, double *var2)
+static GCC_INLINE double NSEEL_CGEN_CALL _band(double *var, double *var2)
 {
   return isnonzero(*var) && isnonzero(*var2) ? 1 : 0;
 }
 
 //---------------------------------------------------------------------------------------------------------------
-static double NSEEL_CGEN_CALL _bor(double *var, double *var2)
+static GCC_INLINE double NSEEL_CGEN_CALL _bor(double *var, double *var2)
 {
   return isnonzero(*var) || isnonzero(*var2) ? 1 : 0;
 }
 
 //---------------------------------------------------------------------------------------------------------------
-static double NSEEL_CGEN_CALL _sig(double *x, double *constraint)
+static GCC_INLINE double NSEEL_CGEN_CALL _sig(double *x, double *constraint)
 {
   double t = (1+exp(-*x * (*constraint)));
   return isnonzero(t) ? 1.0/t : 0;
@@ -161,7 +161,7 @@ NAKED void nseel_asm_band(void)
 {
   FUNC2_ENTER
 
-  *__nextBlock = __band(parm_b, parm_a);
+  *__nextBlock = _band(parm_b, parm_a);
 
   FUNC_LEAVE
 }
