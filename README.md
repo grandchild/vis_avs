@@ -2,7 +2,7 @@
 
 ## Modern Toolchain Build Effort
 
-This fork is currently (2020) trying to make AVS build with **MingW-w64 GCC** as well as
+This fork is currently (2021) trying to make AVS build with **MingW-w64 GCC** as well as
 a modern **MSVC**. The original source release needs an ancient MSVC 6<sup><sup>
 [citation needed] </sup></sup> to build. Consequently, towards the final years of AVS
 activity, there were only a perceived handful of people who could still get the code to
@@ -23,6 +23,15 @@ i686-w64-mingw32-cmake -D CMAKE_TOOLCHAIN_FILE=../CMake-MingWcross-toolchain.txt
 make
 ```
 
+### Current Status
+
+* Builds with MinGW-w64 GCC into a running `vis_avs.dll`, loadable with Winamp. 🎉
+* ConvolutionFilter integrated as a builtin-APE, thanks to a [donation to free software](https://github.com/tholden/AVSConvolutionFilter) by its author [Tom Holden](https://github.com/tholden). ❤️
+* Working on EELTrans compiler internals.
+  * `band()`, `bor()`, `sigmoid()` & `rand()` are buggy (no effect).
+  * Many other builtin functions work fine.
+  * `megabuf()` & `gmegabuf()` works. 🥵
+  * Testing...
 
 ## Conventions
 
