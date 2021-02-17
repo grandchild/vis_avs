@@ -28,6 +28,7 @@ General
 
     * Make AVS more multithreaded, so that the sound-data doesn't freeze when doing UI-stuff.
     * Include a version resource in the vis_avs.dll, so installers can easily check the AVS version (e.g. from an NSIS script).
+    * non-realtime output
 
 
 
