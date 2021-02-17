@@ -345,36 +345,24 @@ static double * NSEEL_CGEN_CALL gmegabuf_(double *which)
 static double * (NSEEL_CGEN_CALL *__gmegabuf)(double *) = &gmegabuf_;
 NAKED void _asm_gmegabuf(void)
 {
-  double *parm_a, *__nextBlock;
 #ifdef _MSC_VER
-  __asm { mov edx, 0xFFFFFFFF }
+  double *parm_a, *__nextBlock;
   __asm { mov ebp, esp }
   __asm { sub esp, __LOCAL_SIZE }
   __asm { mov dword ptr parm_a, eax }
-#else
-  __asm__ __volatile__ (
-    "mov %%edx, 0xffffffff\n\t"
-    "mov %%ebp, %%esp\n\t"
-    "sub %%esp, 0\n\t"  // TODO: Fix __LOCAL_SIZE
-    "mov dword ptr %0, %%eax\n"
-    :"=m"(parm_a)
-    :
-    :"eax", "edx" // ebp is written to but is an invalid clobber...
-  );
-#endif
-  
+
   __nextBlock = __gmegabuf(parm_a);
 
-#ifdef _MSC_VER
   __asm { mov eax, __nextBlock } // this is custom, returning pointer
   __asm { mov esp, ebp }
 #else
   __asm__ __volatile__ (
-    "mov %%eax, %0\n\t" // this is custom, returning pointer
-    "mov %%esp, %%ebp\n"
+    "mov  %%ecx, %%eax\n\t"         // index param to fastcall param 1 (ecx)
+    "mov  %%eax, %[gmegabuf_]\n\t"  // load gmegabuf_ function address
+    "call %%eax\n\t"                // call gmegabuf_(ecx)
     :
-    : "m"(__nextBlock)
-    :"eax"
+    :[gmegabuf_]"i"(gmegabuf_)
+    :"eax", "ecx"
   );
 #endif
 }

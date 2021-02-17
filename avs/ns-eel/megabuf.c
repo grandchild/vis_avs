@@ -33,6 +33,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../ns-eel/ns-eel-int.h"
 #include "megabuf.h"
 
+/* Preproccess megabuf acess code, namely insert block space pointer. */
 void megabuf_ppproc(void *data, int data_size, void **userfunc_data)
 {
   if (data_size > 5 && *(int*)((char *)data+1) == (int)0xFFFFFFFF)
@@ -90,38 +91,28 @@ static double * NSEEL_CGEN_CALL megabuf_(double ***blocks, double *which)
 static double * (NSEEL_CGEN_CALL *__megabuf)(double ***,double *) = &megabuf_;
 NAKED void _asm_megabuf(void)
 {
+#ifdef _MSC_VER
   double ***my_ctx;
   double *parm_a, *__nextBlock;
-#ifdef _MSC_VER
   __asm { mov edx, 0xFFFFFFFF }
   __asm { mov ebp, esp }
   __asm { sub esp, __LOCAL_SIZE }
   __asm { mov dword ptr my_ctx, edx }
   __asm { mov dword ptr parm_a, eax }
-#else
-  __asm__ __volatile__ (
-    "mov %%edx, 0xffffffff\n\t"
-    "mov %%ebp, %%esp\n\t"
-    "sub %%esp, 0\n\t"  // __LOCAL_SIZE = 0
-    "mov dword ptr %0, %%edx\n\t"
-    "mov dword ptr %1, %%eax\n\t"
-    :"=m"(my_ctx), "=m"(parm_a)
-    :
-    :"eax", "edx"
-  );
-#endif
+
   __nextBlock = __megabuf(my_ctx,parm_a);
 
-#ifdef _MSC_VER
   __asm { mov eax, __nextBlock } // this is custom, returning pointer
   __asm { mov esp, ebp }
 #else
   __asm__ __volatile__ (
-    "mov  %%eax, %0\n\t"
-    "mov  %%esp, %%ebp\n\t"
+    "mov  %%ecx, 0xffffffff\n\t"   // placeholder for blocks pointer
+    "mov  %%edx, %%eax\n\t"        // index param to fastcall param 2 (edx)
+    "mov  %%eax, %[megabuf_]\n\t"  // load function address
+    "call %%eax\n\t"               // call megabuf_(ecx, edx)
     :
-    :"m"(__nextBlock)
-    :"eax"
+    :[megabuf_]"i"(megabuf_)
+    :"eax", "ecx", "edx"
   );
 #endif
 
