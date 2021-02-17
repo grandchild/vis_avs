@@ -14,6 +14,9 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
                             # directly into the root of the build dir.
         -Wno-write-strings  # Don't complain when converting string literals to char*.
         -masm=intel         # Use Intel instead of AT&T inline assembly syntax.
+        # -flto               # Link-time optimization. No performance gain seen so far.
+        # -fprofile-generate  # Profile-guided optimization, pass 1
+        # -fprofile-use       # Profile-guided optimization, pass 2
         # -Wall -Wextra
         # -save-temps         # Save intermediate assembly files created during
                             # compilation for debugging. The .s files will be output
