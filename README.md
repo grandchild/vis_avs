@@ -12,22 +12,12 @@ So the primary concern today is getting a **v2.81d**-compliant *vis_avs.dll* ver
 that can be built with a modern toolchain. Any fixes or improvements to AVS will be held
 off until after that goal is achieved.
 
-On Linux, to see how far along we are, build with CMake:
-
-```shell
-mkdir build
-cd build
-# Use your cross-compile-toolchain cmake here,
-# and fill in your toolchain into CMake-MingWcross-toolchain.txt:
-i686-w64-mingw32-cmake -D CMAKE_TOOLCHAIN_FILE=../CMake-MingWcross-toolchain.txt ..
-make
-```
 
 ### Current Status
 
 * 🎉 Builds with MinGW-w64 GCC into a running `vis_avs.dll`, loadable with Winamp.
-* ❤️ ConvolutionFilter integrated as a builtin-APE thanks to a [donation to free software](
-  https://github.com/tholden/AVSConvolutionFilter) by its author [Tom Holden](
+* ❤️ ConvolutionFilter integrated as a builtin-APE thanks to a [donation to free software
+  ](https://github.com/tholden/AVSConvolutionFilter) by its author [Tom Holden](
   https://github.com/tholden).
 * 🥵 Working on EELTrans compiler internals.
   * `band()`, `bor()`, `sigmoid()` & `rand()` are buggy (no effect).
@@ -35,7 +25,37 @@ make
   * `megabuf()` & `gmegabuf()` works.
   * Testing to see if anything else is broken...
 
-## Conventions
+
+### Building on Linux
+
+First, install a 32bit MingW-w64 GCC (with C++ support) and and a cross-compiler CMake.
+
+```shell
+mkdir build
+cd build
+
+# Edit CMake-MingWcross-toolchain.txt with your cross-compile toolchain paths. On many
+# Linux distros these are the same or similar and nothing or not much needs to change.
+$EDITOR CMake-MingWcross-toolchain.txt
+
+# Use your cross-compile-toolchain cmake here. (The precise name for the cmake binary
+# might be different on your Linux distro.)
+i686-w64-mingw32-cmake -D CMAKE_TOOLCHAIN_FILE=../CMake-MingWcross-toolchain.txt ..
+
+# Compile
+make
+
+# Copy vis_avs.dll into a Winamp/Plugins/ folder and the rest of the DLLs mentioned in
+# CMake-MingWcross-toolchain.txt into the base Winamp/ folder.
+cp vis_avs.dll /my/path/to/Winamp/Plugins/
+cp lib*.dll /my/path/to/Winamp/  # <- You only need copy these this one the first time.
+
+# Run Winamp
+wine /my/path/to/Winamp/winamp.exe
+```
+
+
+### Conventions
 
 There is room for improvements in the code, but the first step should be replicating the
 behavior of v2.81d as well as possible. If going through the code reveals areas of
