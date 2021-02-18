@@ -81,6 +81,14 @@ target_link_libraries(vis_avs
            # https://docs.microsoft.com/en-us/windows/win32/multimedia/avifile-functions-and-macros
 )
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    # These dependent DLLs are introduced by mingw32 and should be next to winamp.exe.
+    configure_file(${CROSS_CC_PREFIX}/bin/libgcc_s_dw2-1.dll    . COPYONLY)
+    configure_file(${CROSS_CC_PREFIX}/bin/libssp-0.dll          . COPYONLY)
+    configure_file(${CROSS_CC_PREFIX}/bin/libstdc++-6.dll       . COPYONLY)
+    configure_file(${CROSS_CC_PREFIX}/bin/libwinpthread-1.dll   . COPYONLY)
+endif()
+
 if(NOT MSVC)
     # # tests
     # if(WIN32 AND NOT CMAKE_CROSSCOMPILING)
@@ -90,4 +98,5 @@ if(NOT MSVC)
     # endif()
     # file(GLOB test_src test/*.cpp test/*.hpp)
     # add_executable(test test/test.cpp)
+    # configure_file(${CROSS_CC_PREFIX}/bin/libgtest.dll . COPYONLY)
 endif()
