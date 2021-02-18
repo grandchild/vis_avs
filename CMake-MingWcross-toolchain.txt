@@ -1,6 +1,27 @@
+# Set the toolchain target-triplet (<arch>-<vendor>-<os>) and the path prefix for the
+# toolchain. We want to target 32bit Windows, and use MingW-w64 for this. For most
+# Linux distros MingW-w64 is the default Win32 cross-compiler toolchain.
+# 
+# Normally you'd only have to edit these two variables here, if at all. Refer to your
+# distros documentation on how to set up a Linux-to-Windows cross-compiler, and check
+# for their naming convention.
+#
+# Check if your CROSS_CC_NAME is correct by trying to directly
+# execute
+#     /usr/bin/CROSS_CC_NAME-gcc
+#     (e.g.: /usr/bin/i686-w64-mingw32-gcc)
+# If you get an error like "no input files, compilation terminated" then that's the
+# correct setting.
+#
+# Check if your CROSS_CC_PREFIX is correct by checking whether the file
+#     CROSS_CC_PREFIX/bin/libstdc++-6.dll
+#     (e.g.: /usr/i686-w64-ming32/bin/libstdc++-6.dll)
+# exists.
 SET(CROSS_CC_NAME i686-w64-mingw32)
 SET(CROSS_CC_PREFIX /usr/${CROSS_CC_NAME})
 
+# The tools "gcc", "g++" and "windres" are usually prefixed with the toolchain-triplet,
+# i.e. CROSS_CC_NAME, defined above.
 SET(CMAKE_SYSTEM_NAME Windows)
 SET(CMAKE_C_COMPILER ${CROSS_CC_NAME}-gcc)
 SET(CMAKE_CXX_COMPILER ${CROSS_CC_NAME}-g++)
