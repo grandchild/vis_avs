@@ -88,19 +88,19 @@ static GCC_INLINE double NSEEL_CGEN_CALL getvis(unsigned char *visdata, int bc, 
   }
 }
 
-static GCC_INLINE double NSEEL_CGEN_CALL  getspec_(double *band, double *bandw, double *chan)
+static GCC_INLINE double NSEEL_CGEN_CALL  getspec(double *band, double *bandw, double *chan)
 {
   if (!g_evallib_visdata) return 0.0;
   return getvis((unsigned char *)g_evallib_visdata,(int)(*band*576.0),(int)(*bandw*576.0),(int)(*chan+0.5),0)*0.5;
 }
 
-static GCC_INLINE double NSEEL_CGEN_CALL getosc_(double *band, double *bandw, double *chan)
+static GCC_INLINE double NSEEL_CGEN_CALL getosc(double *band, double *bandw, double *chan)
 {
   if (!g_evallib_visdata) return 0.0;
   return getvis((unsigned char *)g_evallib_visdata+576*2,(int)(*band*576.0),(int)(*bandw*576.0),(int)(*chan+0.5),128);
 }
 
-static GCC_INLINE double NSEEL_CGEN_CALL gettime_(double *sc)
+static GCC_INLINE double NSEEL_CGEN_CALL gettime(double *sc)
 {
   int ispos;
   if ((ispos=(*sc > -1.001 && *sc < -0.999)) || (*sc > -2.001 && *sc < -1.999))
@@ -119,7 +119,7 @@ static GCC_INLINE double NSEEL_CGEN_CALL gettime_(double *sc)
   return GetTickCount()/1000.0 - *sc;
 }
 
-static GCC_INLINE double NSEEL_CGEN_CALL setmousepos_(double *x, double *y)
+static GCC_INLINE double NSEEL_CGEN_CALL setmousepos(double *x, double *y)
 {
   //fucko: implement me
   return 0.0;
@@ -128,7 +128,7 @@ static GCC_INLINE double NSEEL_CGEN_CALL setmousepos_(double *x, double *y)
 
 extern double DDraw_translatePoint(POINT p, int isY);
 
-static GCC_INLINE double NSEEL_CGEN_CALL getmouse_(double *which)
+static GCC_INLINE double NSEEL_CGEN_CALL getmouse(double *which)
 {
   int w=(int)(*which+0.5);
 
@@ -147,61 +147,41 @@ static GCC_INLINE double NSEEL_CGEN_CALL getmouse_(double *which)
   return 0.0;
 }
 
-static double (NSEEL_CGEN_CALL *__getosc)(double *,double *,double *) = &getosc_;
+static double (NSEEL_CGEN_CALL *__getosc)(double *,double *,double *) = &getosc;
 NAKED void _asm_getosc(void)
 {
-  FUNC3_ENTER
-
-  *__nextBlock = __getosc(parm_c,parm_b,parm_a);
-
-  FUNC_LEAVE
+  CALL3_PFASTCALL(getosc);
 }
 NAKED void _asm_getosc_end(void) {}
 
 
-static double (NSEEL_CGEN_CALL *__getspec)(double *,double *,double *) = &getspec_;
+static double (NSEEL_CGEN_CALL *__getspec)(double *,double *,double *) = &getspec;
 NAKED void _asm_getspec(void)
 {
-  FUNC3_ENTER
-
-  *__nextBlock = __getspec(parm_c,parm_b,parm_a);
-
-  FUNC_LEAVE
+  CALL3_PFASTCALL(getspec);
 }
 NAKED void _asm_getspec_end(void) {}
 
-static double (NSEEL_CGEN_CALL *__gettime)(double *) = &gettime_;
+static double (NSEEL_CGEN_CALL *__gettime)(double *) = &gettime;
 NAKED void _asm_gettime(void)
 {
-  FUNC1_ENTER
-  
-  *__nextBlock = __gettime(parm_a);
-
-  FUNC_LEAVE
+  CALL1_PFASTCALL(gettime);
 }
 NAKED void _asm_gettime_end(void) {}
 
 
-static double (NSEEL_CGEN_CALL *__getmouse)(double *) = &getmouse_;
+static double (NSEEL_CGEN_CALL *__getmouse)(double *) = &getmouse;
 NAKED void _asm_getmouse(void)
 {
-  FUNC1_ENTER
-  
-  *__nextBlock = __getmouse(parm_a);
-
-  FUNC_LEAVE
+  CALL1_PFASTCALL(getmouse);
 }
 NAKED void _asm_getmouse_end(void) {}
 
 
-static double (NSEEL_CGEN_CALL *__setmousepos)(double *,double *) = &setmousepos_;
+static double (NSEEL_CGEN_CALL *__setmousepos)(double *,double *) = &setmousepos;
 NAKED void _asm_setmousepos(void)
 {
-  FUNC2_ENTER
-  
-  *__nextBlock = __setmousepos(parm_a,parm_b);
-
-  FUNC_LEAVE
+  CALL2_PFASTCALL(setmousepos);
 }
 NAKED void _asm_setmousepos_end(void) {}
 

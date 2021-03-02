@@ -49,26 +49,26 @@ static float onepointfive=1.5f;
 #define isnonzero(x) (fabs(x) > g_closefact)
 
 //---------------------------------------------------------------------------------------------------------------
-static GCC_INLINE double NSEEL_CGEN_CALL _rand(double *x)
+static GCC_INLINE double NSEEL_CGEN_CALL nseel_rand(double *x)
 {
   if (*x < 1.0) *x=1.0;
   return (double)(rand()%(int)max(*x,1.0));
 }
 
 //---------------------------------------------------------------------------------------------------------------
-static GCC_INLINE double NSEEL_CGEN_CALL _band(double *var, double *var2)
+static GCC_INLINE double NSEEL_CGEN_CALL nseel_band(double *var, double *var2)
 {
   return isnonzero(*var) && isnonzero(*var2) ? 1 : 0;
 }
 
 //---------------------------------------------------------------------------------------------------------------
-static GCC_INLINE double NSEEL_CGEN_CALL _bor(double *var, double *var2)
+static GCC_INLINE double NSEEL_CGEN_CALL nseel_bor(double *var, double *var2)
 {
   return isnonzero(*var) || isnonzero(*var2) ? 1 : 0;
 }
 
 //---------------------------------------------------------------------------------------------------------------
-static GCC_INLINE double NSEEL_CGEN_CALL _sig(double *x, double *constraint)
+static GCC_INLINE double NSEEL_CGEN_CALL nseel_sig(double *x, double *constraint)
 {
   double t = (1+exp(-*x * (*constraint)));
   return isnonzero(t) ? 1.0/t : 0;
@@ -86,11 +86,7 @@ static double (*__asin)(double) = &asin;
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_asin(void)
 {
-  FUNC1_ENTER
-
-  *__nextBlock = __asin(*parm_a);
-
-  FUNC_LEAVE
+  CALL1(asin);
 }
 NAKED void nseel_asm_asin_end(void) {}
 
@@ -98,11 +94,7 @@ static double (*__acos)(double) = &acos;
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_acos(void)
 {
-  FUNC1_ENTER
-
-  *__nextBlock = __acos(*parm_a);
-
-  FUNC_LEAVE
+  CALL1(acos);
 }
 NAKED void nseel_asm_acos_end(void) {}
 
@@ -110,11 +102,7 @@ NAKED void nseel_asm_acos_end(void) {}
 static double (*__atan)(double) = &atan;
 NAKED void nseel_asm_atan(void)
 {
-  FUNC1_ENTER
-
-  *__nextBlock = __atan(*parm_a);
-
-  FUNC_LEAVE
+  CALL1(atan);
 }
 NAKED void nseel_asm_atan_end(void) {}
 
@@ -122,60 +110,40 @@ NAKED void nseel_asm_atan_end(void) {}
 static double (*__atan2)(double,double) = &atan2;
 NAKED void nseel_asm_atan2(void)
 {
-  FUNC2_ENTER
-
-  *__nextBlock = __atan2(*parm_b, *parm_a);
-
-  FUNC_LEAVE
+  CALL2(atan2);
 }
 NAKED void nseel_asm_atan2_end(void) {}
 
 
 //---------------------------------------------------------------------------------------------------------------
-static double (NSEEL_CGEN_CALL  * __sig)(double *,double *) = &_sig;
+static double (NSEEL_CGEN_CALL  * __nseel_sig)(double *,double *) = &nseel_sig;
 NAKED void nseel_asm_sig(void)
 {
-  FUNC2_ENTER
-
-  *__nextBlock = __sig(parm_b, parm_a);
-
-  FUNC_LEAVE
+  CALL2_PFASTCALL(nseel_sig);
 }
 NAKED void nseel_asm_sig_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-static double (NSEEL_CGEN_CALL *__rand)(double *) = &_rand;
+static double (NSEEL_CGEN_CALL *__nseel_rand)(double *) = &nseel_rand;
 NAKED void nseel_asm_rand(void)
 {
-  FUNC1_ENTER
-
-  *__nextBlock = __rand(parm_a);
-
-  FUNC_LEAVE
+  CALL1_PFASTCALL(nseel_rand);
 }
 NAKED void nseel_asm_rand_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-static double (NSEEL_CGEN_CALL *__band)(double *,double *) = &_band;
+static double (NSEEL_CGEN_CALL *__nseel_band)(double *,double *) = &nseel_band;
 NAKED void nseel_asm_band(void)
 {
-  FUNC2_ENTER
-
-  *__nextBlock = _band(parm_b, parm_a);
-
-  FUNC_LEAVE
+  CALL2_PFASTCALL(nseel_band);
 }
 NAKED void nseel_asm_band_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-static double ( NSEEL_CGEN_CALL  *__bor)(double *,double *) = &_bor;
+static double ( NSEEL_CGEN_CALL  *__nseel_bor)(double *,double *) = &nseel_bor;
 NAKED void nseel_asm_bor(void)
 {
-  FUNC2_ENTER
-
-  *__nextBlock = __bor(parm_b, parm_a);
-
-  FUNC_LEAVE
+  CALL2_PFASTCALL(nseel_bor);
 }
 NAKED void nseel_asm_bor_end(void) {}
 
@@ -183,11 +151,7 @@ NAKED void nseel_asm_bor_end(void) {}
 static double (* __pow)(double,double) = &pow;
 NAKED void nseel_asm_pow(void)
 {
-  FUNC2_ENTER
-
-  *__nextBlock = __pow(*parm_b, *parm_a);
-
-  FUNC_LEAVE
+  CALL2(pow);
 }
 NAKED void nseel_asm_pow_end(void) {}
 
@@ -195,11 +159,7 @@ NAKED void nseel_asm_pow_end(void) {}
 static double (*__exp)(double) = &exp;
 NAKED void nseel_asm_exp(void)
 {
-  FUNC1_ENTER
-
-  *__nextBlock = __exp(*parm_a);
-
-  FUNC_LEAVE
+  CALL1(exp);
 }
 NAKED void nseel_asm_exp_end(void) {}
 
@@ -209,11 +169,7 @@ static double (*__floor)(double) = &floor;
 #endif
 NAKED void nseel_asm_floor(void)
 {
-  FUNC1_ENTER
-
-  *__nextBlock = __floor(*parm_a);
-
-  FUNC_LEAVE
+  CALL1(floor);
 }
 NAKED void nseel_asm_floor_end(void) {}
 
@@ -224,11 +180,7 @@ static double (*__ceil)(double) = &ceil;
 #endif
 NAKED void nseel_asm_ceil(void)
 {
-  FUNC1_ENTER
-
-  *__nextBlock = __ceil(*parm_a);
-
-  FUNC_LEAVE
+  CALL1(ceil);
 }
 NAKED void nseel_asm_ceil_end(void) {}
 

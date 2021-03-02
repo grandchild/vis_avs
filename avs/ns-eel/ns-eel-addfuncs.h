@@ -39,11 +39,7 @@ For example:
 static double (*__acos)(double) = &acos;
 NAKED void _asm_acos(void)
 {
-  FUNC1_ENTER
-
-  *__nextBlock = __acos(*parm_a);
-
-  FUNC_LEAVE
+  CALL1(acos);
 }
 NAKED void _asm_acos_end(void) {}
 
@@ -60,14 +56,14 @@ be sure to preserve edi, too.
 
 #ifdef _MSC_VER
 
-#define FUNC1_ENTER \
+#define _ARGS1 \
   double *parm_a, *__nextBlock; \
   __asm { mov ebp, esp } \
   __asm { sub esp, __LOCAL_SIZE } \
   __asm { mov dword ptr parm_a, eax } \
   __asm { mov __nextBlock, esi }
 
-#define FUNC2_ENTER \
+#define _ARGS2 \
   double *parm_a,*parm_b,*__nextBlock; \
   __asm { mov ebp, esp } \
   __asm { sub esp, __LOCAL_SIZE } \
@@ -75,7 +71,7 @@ be sure to preserve edi, too.
   __asm { mov dword ptr parm_b, ebx } \
   __asm { mov __nextBlock, esi }
 
-#define FUNC3_ENTER \
+#define _ARGS3 \
   double *parm_a,*parm_b,*parm_c,*__nextBlock; \
   __asm { mov ebp, esp } \
   __asm { sub esp, __LOCAL_SIZE } \
@@ -84,61 +80,104 @@ be sure to preserve edi, too.
   __asm { mov dword ptr parm_c, ecx } \
   __asm { mov __nextBlock, esi }
 
-#define FUNC_LEAVE \
+// Calls with double-typed parameters
+#define CALL1(FUNC) _ARGS1; *__nextBlock = __##FUNC(*parm_a); _LEAVE
+#define CALL2(FUNC) _ARGS2; *__nextBlock = __##FUNC(*parm_a, *parm_b); _LEAVE
+#define CALL3(FUNC) _ARGS3; *__nextBlock = __##FUNC(*parm_a, *parm_b, *parm_c); _LEAVE
+
+// Calls with pointer-to-double-typed parameters.
+// Coincidentally these functions use the fastcall calling convention.
+#define CALL1_PFASTCALL(FUNC) _ARGS1; *__nextBlock = __##FUNC(parm_a); _LEAVE
+#define CALL2_PFASTCALL(FUNC) _ARGS2; *__nextBlock = __##FUNC(parm_a, parm_b); _LEAVE
+#define CALL3_PFASTCALL(FUNC) _ARGS3; *__nextBlock = __##FUNC(parm_a, parm_b, parm_c); _LEAVE
+
+#define _LEAVE \
   __asm { mov eax, esi } \
   __asm { add esi, 8 }  \
   __asm { mov esp, ebp }
 
-#else
 
-// __LOCAL_SIZE = 0 ?
-#define FUNC1_ENTER \
-  double *parm_a, *__nextBlock; \
-    __asm__ __volatile__ ( \
-    "  mov  %%ebp, %%esp\n" \
-    "  sub  %%esp, 0\n" \
-    "  mov  dword ptr %0, %%eax\n" \
-    "  mov  %1, %%esi\n" \
-    :"=m"(parm_a), "=m"(__nextBlock) \
-    : \
-    :"esi", "eax" \
-  );
+#else  // GCC
 
-#define FUNC2_ENTER \
-  double *parm_a,*parm_b,*__nextBlock; \
-  __asm__ __volatile__ ( \
-    "  mov  %%ebp, %%esp\n" \
-    "  sub  %%esp, 0\n" \
-    "  mov  dword ptr %0, %%eax\n" \
-    "  mov  dword ptr %1, %%ebx\n" \
-    "  mov  dword ptr %2, %%esi\n" \
-    :"=m"(parm_a), "=m"(parm_b), "=m"(__nextBlock) \
-    : \
-    :"esi", "eax", "ebx" \
-  );
+#define CALL1(FUNC) _CALL(1, STDCALL, FUNC)
+#define CALL2(FUNC) _CALL(2, STDCALL, FUNC)
+#define CALL3(FUNC) _CALL(3, STDCALL, FUNC)
+#define CALL1_PFASTCALL(FUNC) _CALL(1, FASTCALL, FUNC)
+#define CALL2_PFASTCALL(FUNC) _CALL(2, FASTCALL, FUNC)
+#define CALL3_PFASTCALL(FUNC) _CALL(3, FASTCALL, FUNC)
 
-#define FUNC3_ENTER \
-  double *parm_a,*parm_b,*parm_c,*__nextBlock; \
-  __asm__ __volatile__ ( \
-    "  mov  %%ebp, %%esp\n" \
-    "  sub  %%esp, 0\n" \
-    "  mov  dword ptr %0, %%eax\n" \
-    "  mov  dword ptr %1, %%ebx\n" \
-    "  mov  dword ptr %2, %%ecx\n" \
-    "  mov  dword ptr %3, %%esi\n" \
-    :"=m"(parm_a), "=m"(parm_b), "=m"(parm_c), "=m"(__nextBlock) \
-    : \
-    :"esi", "eax", "ebx", "ecx" \
-  );
+#define _CALL(NARGS, CALLTYPE, FUNC) \
+  __asm__ __volatile__(              \
+                                     \
+    _ARGS##_##NARGS##_##CALLTYPE     \
+    "mov  %%eax, %[func_]\n\t"       \
+    "call %%eax\n\t"                 \
+                                     \
+    _LEAVE                           \
+    :                                \
+    : [func_]"i"(&FUNC)              \
+    : "esi", "eax")
 
-#define FUNC_LEAVE \
-  __asm__ __volatile__ ( \
-    "  mov  %%eax, %%esi\n" \
-    "  add  %%esi, 8\n" \
-    "  mov  %%esp, %%ebp\n" \
-    : : \
-    :"esi", "eax" \
-  );
+#define _ARGS_1_STDCALL                                    \
+  /* new stack frame */                                    \
+  "mov  %%ebp, %%esp\n\t"                                  \
+  /* make space for a 4-byte pointer param on the stack */ \
+  "sub  %%esp, 8\n\t"                                      \
+  /* put double-typed param 1 on the stack */              \
+  "fld  qword ptr [%%eax]\n\t"                             \
+  "fstp qword ptr [%%esp]\n\t"
+  /* The parameter is first pushed into an FPU register, and then popped back onto the
+     stack. There is no "mov [esp], [eax]" and x86 registers are only 32bit wide, hence
+     the FPU detour. */
+
+#define _ARGS_2_STDCALL                                     \
+  /* new stack frame */                                     \
+  "mov  %%ebp, %%esp\n\t"                                   \
+  /* make space for 2 4-byte pointer params on the stack */ \
+  "sub  %%esp, 16\n\t"                                      \
+  /* put double-typed params 1 & 2 on the stack */          \
+  "fld  qword ptr [%%eax]\n\t"                              \
+  "fstp qword ptr [%%esp + 8]\n\t"                          \
+  "fld  qword ptr [%%ebx]\n\t"                              \
+  "fstp qword ptr [%%esp]\n\t"
+
+#define _ARGS_3_STDCALL                                     \
+  /* new stack frame */                                     \
+  "mov  %%ebp, %%esp\n\t"                                   \
+  /* make space for 3 4-byte pointer params on the stack */ \
+  "sub  %%esp, 24\n\t"                                      \
+  /* put double-typed params 1, 2 & 3 on the stack */       \
+  "fld  qword ptr [%%eax]\n\t"                              \
+  "fstp qword ptr [%%esp + 16]\n\t"                         \
+  "fld  qword ptr [%%ebx]\n\t"                              \
+  "fstp qword ptr [%%esp + 8]\n\t"                          \
+  "fld  qword ptr [%%ecx]\n\t"                              \
+  "fstp qword ptr [%%esp]\n\t"
+
+#define _ARGS_1_FASTCALL  \
+  "mov  %%ebp, %%esp\n\t" \
+  "sub  %%esp, 12\n\t"    \
+  "mov  %%ecx, %%eax\n\t"
+
+#define _ARGS_2_FASTCALL  \
+  "mov  %%ebp, %%esp\n\t" \
+  "sub  %%esp, 12\n\t"    \
+  "mov  %%edx, %%ebx\n\t" \
+  "mov  %%ecx, %%eax\n\t"
+
+#define _ARGS_3_FASTCALL  \
+  "mov  %%ebp, %%esp\n\t" \
+  "sub  %%esp, 16\n\t"    \
+  "push %%eax\n\t"        \
+  "mov  %%edx, %%ebx\n\t"
+  /* The third NS-EEL parameter, passed in ecx, is already in place for fastcall
+     convention. */
+
+#define _LEAVE                 \
+  "fstp qword ptr [%%esi]\n\t" \
+  "mov  %%eax, %%esi\n\t"      \
+  "add  %%esi, 8\n\t"          \
+  "mov  %%esp, %%ebp\n\t"
 
 #endif
 
@@ -152,4 +191,3 @@ be sure to preserve edi, too.
 
 
 #endif//__NS_EEL_ADDFUNCS_H__
- 
