@@ -517,8 +517,12 @@ int nseel_createCompiledFunction2(compileContext *ctx, int fntype, int fn, int c
     memcpy(block+4,(char*)code1+4,sizes1);
     ptr=(int *)(block+4+sizes1);
     memcpy(ptr,func3,size);
+#ifdef __GNUC__
+    write_gcc_naked_function_trap_padding_jmp((unsigned char*)ptr, size, fn);
+#endif
 
-    ptr=findFBlock((char*)ptr); *ptr++=(int)newblock2;
+    ptr=findFBlock((char*)ptr);
+    *ptr++=(int)newblock2;
 
     ctx->computTableTop++;
     return (int)block;
