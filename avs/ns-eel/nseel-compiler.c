@@ -279,6 +279,7 @@ static void *__newBlock(llBlock **start, int size)
 
 #define X86_RET 0xC3
 
+#define X86_NOP 0x90
 #define X86_NEAR_JMP 0xEB
 #define SIZE_X86_NEAR_JMP_BYTES 2
 #define UD2_FIRST_BYTE 0x0F
@@ -321,10 +322,13 @@ void write_gcc_naked_function_trap_padding_jmp(unsigned char* code, int size2, i
       printf("epilog_size too large for relative jump: %d\n", epilog_size);
       // TODO: better error handling here. Code generation should fail!
       return;
-    } else if(epilog_size > 0) {
+    } else if(epilog_size > 2) {
       code[size2 - epilog_size] = X86_NEAR_JMP;
       code[size2 - epilog_size + 1] = (unsigned char)epilog_size
                                       - SIZE_X86_NEAR_JMP_BYTES;
+    } else if(epilog_size == 2) {
+      code[size2 - epilog_size] = X86_NOP;
+      code[size2 - epilog_size + 1] = X86_NOP;
     }
 }
 #endif
