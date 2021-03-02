@@ -947,19 +947,18 @@ NAKED void nseel_asm_if(void)
   }
 #else
   __asm__ __volatile__ (
-    "fld qword ptr [%%eax]\n\t"
+    "fld   qword ptr [%%eax]\n\t"
     "fabs\n\t"
-    "fcomp qword ptr [%0]\n\t"
+    "fcomp qword ptr [%[g_closefact]]\n\t"
     "fstsw %%ax\n\t"
-    "shr %%eax, 6\n\t"
-    "mov dword ptr [%%esi], 0xFFFFFFFF\n\t"
-    "mov dword ptr [%%esi+4], 0xFFFFFFFF\n\t"
-    "and %%eax, (1<<2)\n\t"
-    "mov %%eax, [%%esi + %%eax]\n\t"
-    "mov %%eax, %%esi\n\t"
-    "add %%esi, 8\n"
+    "shr   %%eax, 6\n\t"
+    "mov   dword ptr [%%esi], 0xFFFFFFFF\n\t"
+    "mov   dword ptr [%%esi+4], 0xFFFFFFFF\n\t"
+    "and   %%eax, (1<<2)\n\t"
+    "mov   %%eax, [%%esi + %%eax]\n\t"
+    "call  %%eax\n\t"
     :
-    : "m"(g_closefact), "m"(g_cmpaddtab)
+    : [g_closefact]"m"(g_closefact)
     : "eax", "esi"
   );
 #endif
