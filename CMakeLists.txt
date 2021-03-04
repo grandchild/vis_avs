@@ -32,6 +32,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # (CMake generator expressions cannot be multiline, hence the CXX_COMPILE_FLAGS
     # variable workaround.)
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${AVS_CXX_COMPILER_FLAGS}>)
+    add_link_options(-Wl,--subsystem,windows)
 else() # TODO: Clang option
     message(SEND_ERROR "unsupported compiler ${CMAKE_CXX_COMPILER_ID}")
 endif()
