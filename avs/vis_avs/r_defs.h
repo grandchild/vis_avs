@@ -348,7 +348,7 @@ static unsigned int __inline BLEND_ADJ(unsigned int a, unsigned int b, int v)
     "psrlw     %%mm0, 8\n\t"
     "packuswb  %%mm0, %%mm0\n\t"
     "movd      %[out], %%mm0\n\t"
-    : [out]"=m"(out)
+    : [out]"=r"(out)
     : [v]"m"(v), [a]"m"(a), [b]"m"(b), [mmx_blend4_revn]"m"(mmx_blend4_revn),
       [mmx_blend4_zero]"m"(mmx_blend4_zero), [mmx_blendadj_mask]"m"(mmx_blendadj_mask)
     :
@@ -477,7 +477,7 @@ static __inline unsigned int BLEND4(unsigned int *p1, unsigned int w, int xp, in
     "psrlw     %%mm0, 8\n\t"
     "packuswb  %%mm0, %%mm0\n\t"
     "movd      %[out], %%mm0\n\t"
-    : [out]"=m"(out)
+    : [out]"=r"(out)
     : [xp]"m"(xp), [p1]"m"(p1), [yp]"m"(yp), [w]"m"(w),
       [mmx_blend4_revn]"m"(mmx_blend4_revn), [mmx_blend4_zero]"m"(mmx_blend4_zero)
     : "eax"
@@ -613,7 +613,7 @@ static __inline unsigned int BLEND4_16(unsigned int *p1, unsigned int w, int xp,
     "psrlw     %%mm0, 8\n\t"
     "packuswb  %%mm0, %%mm0\n\t"
     "movd      %[out], %%mm0\n\t"
-    : [out]"=m"(out)
+    : [out]"=r"(out)
     : [xp]"m"(xp), [p1]"m"(p1), [yp]"m"(yp), [w]"m"(w),
       [mmx_blend4_revn]"m"(mmx_blend4_revn), [mmx_blend4_zero]"m"(mmx_blend4_zero)
     : "eax", "esi"
