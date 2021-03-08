@@ -49,28 +49,28 @@ static float onepointfive=1.5f;
 #define isnonzero(x) (fabs(x) > g_closefact)
 
 //---------------------------------------------------------------------------------------------------------------
-static GCC_INLINE double NSEEL_CGEN_CALL nseel_rand(double *x)
+static GCC_INLINE double nseel_rand(double x)
 {
-  if (*x < 1.0) *x=1.0;
-  return (double)(rand()%(int)max(*x,1.0));
+  if (x < 1.0) x=1.0;
+  return (double)(rand()%(int)max(x,1.0));
 }
 
 //---------------------------------------------------------------------------------------------------------------
-static GCC_INLINE double NSEEL_CGEN_CALL nseel_band(double *var, double *var2)
+static GCC_INLINE double nseel_band(double var, double var2)
 {
-  return isnonzero(*var) && isnonzero(*var2) ? 1 : 0;
+  return isnonzero(var) && isnonzero(var2) ? 1 : 0;
 }
 
 //---------------------------------------------------------------------------------------------------------------
-static GCC_INLINE double NSEEL_CGEN_CALL nseel_bor(double *var, double *var2)
+static GCC_INLINE double nseel_bor(double var, double var2)
 {
-  return isnonzero(*var) || isnonzero(*var2) ? 1 : 0;
+  return isnonzero(var) || isnonzero(var2) ? 1 : 0;
 }
 
 //---------------------------------------------------------------------------------------------------------------
-static GCC_INLINE double NSEEL_CGEN_CALL nseel_sig(double *x, double *constraint)
+static GCC_INLINE double nseel_sig(double x, double constraint)
 {
-  double t = (1+exp(-*x * (*constraint)));
+  double t = (1+exp(-x * (constraint)));
   return isnonzero(t) ? 1.0/t : 0;
 }
 
@@ -116,34 +116,34 @@ NAKED void nseel_asm_atan2_end(void) {}
 
 
 //---------------------------------------------------------------------------------------------------------------
-static double (NSEEL_CGEN_CALL  * __nseel_sig)(double *,double *) = &nseel_sig;
+static double (*__nseel_sig)(double,double) = &nseel_sig;
 NAKED void nseel_asm_sig(void)
 {
-  CALL2_PFASTCALL(nseel_sig);
+  CALL2(nseel_sig);
 }
 NAKED void nseel_asm_sig_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-static double (NSEEL_CGEN_CALL *__nseel_rand)(double *) = &nseel_rand;
+static double (*__nseel_rand)(double) = &nseel_rand;
 NAKED void nseel_asm_rand(void)
 {
-  CALL1_PFASTCALL(nseel_rand);
+  CALL1(nseel_rand);
 }
 NAKED void nseel_asm_rand_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-static double (NSEEL_CGEN_CALL *__nseel_band)(double *,double *) = &nseel_band;
+static double (*__nseel_band)(double,double) = &nseel_band;
 NAKED void nseel_asm_band(void)
 {
-  CALL2_PFASTCALL(nseel_band);
+  CALL2(nseel_band);
 }
 NAKED void nseel_asm_band_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-static double ( NSEEL_CGEN_CALL  *__nseel_bor)(double *,double *) = &nseel_bor;
+static double (*__nseel_bor)(double,double) = &nseel_bor;
 NAKED void nseel_asm_bor(void)
 {
-  CALL2_PFASTCALL(nseel_bor);
+  CALL2(nseel_bor);
 }
 NAKED void nseel_asm_bor_end(void) {}
 
