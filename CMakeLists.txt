@@ -11,6 +11,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     endif()
     add_compile_options(
         -g
+        -O2
         -Wno-write-strings  # Don't complain when converting string literals to char*.
         -masm=intel         # Use Intel instead of AT&T inline assembly syntax.
         -march=native       # Convolution-Filter uses inlined mmintrin.h functions, and
