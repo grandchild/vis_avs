@@ -49,26 +49,26 @@ static float onepointfive=1.5f;
 #define isnonzero(x) (fabs(x) > g_closefact)
 
 //---------------------------------------------------------------------------------------------------------------
-static GCC_INLINE double nseel_rand(double x)
+static double nseel_rand(double x)
 {
   if (x < 1.0) x=1.0;
   return (double)(rand()%(int)max(x,1.0));
 }
 
 //---------------------------------------------------------------------------------------------------------------
-static GCC_INLINE double nseel_band(double var, double var2)
+static double nseel_band(double var, double var2)
 {
   return isnonzero(var) && isnonzero(var2) ? 1 : 0;
 }
 
 //---------------------------------------------------------------------------------------------------------------
-static GCC_INLINE double nseel_bor(double var, double var2)
+static double nseel_bor(double var, double var2)
 {
   return isnonzero(var) || isnonzero(var2) ? 1 : 0;
 }
 
 //---------------------------------------------------------------------------------------------------------------
-static GCC_INLINE double nseel_sig(double x, double constraint)
+static double nseel_sig(double x, double constraint)
 {
   double t = (1+exp(-x * (constraint)));
   return isnonzero(t) ? 1.0/t : 0;

@@ -53,7 +53,7 @@ static char *g_evallib_visdata;
 
 
 
-static GCC_INLINE double getvis(unsigned char *visdata, int bc, int bw, int ch, int xorv)
+static double getvis(unsigned char *visdata, int bc, int bw, int ch, int xorv)
 {
   int x;
   int accum=0;
@@ -88,19 +88,19 @@ static GCC_INLINE double getvis(unsigned char *visdata, int bc, int bw, int ch, 
   }
 }
 
-static GCC_INLINE double getspec(double band, double bandw, double chan)
+static double getspec(double band, double bandw, double chan)
 {
   if (!g_evallib_visdata) return 0.0;
   return getvis((unsigned char *)g_evallib_visdata,(int)(band*576.0),(int)(bandw*576.0),(int)(chan+0.5),0)*0.5;
 }
 
-static GCC_INLINE double getosc(double band, double bandw, double chan)
+static double getosc(double band, double bandw, double chan)
 {
   if (!g_evallib_visdata) return 0.0;
   return getvis((unsigned char *)g_evallib_visdata+576*2,(int)(band*576.0),(int)(bandw*576.0),(int)(chan+0.5),128);
 }
 
-static GCC_INLINE double gettime(double sc)
+static double gettime(double sc)
 {
   int ispos;
   if ((ispos=(sc > -1.001 && sc < -0.999)) || (sc > -2.001 && sc < -1.999))
@@ -119,7 +119,7 @@ static GCC_INLINE double gettime(double sc)
   return GetTickCount()/1000.0 - sc;
 }
 
-static GCC_INLINE double setmousepos(double x, double y)
+static double setmousepos(double x, double y)
 {
   //fucko: implement me
   return 0.0;
@@ -128,7 +128,7 @@ static GCC_INLINE double setmousepos(double x, double y)
 
 extern double DDraw_translatePoint(POINT p, int isY);
 
-static GCC_INLINE double getmouse(double which)
+static double getmouse(double which)
 {
   int w=(int)(which+0.5);
 

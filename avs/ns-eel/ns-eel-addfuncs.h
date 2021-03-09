@@ -181,11 +181,5 @@ be sure to preserve edi, too.
 
 #endif
 
-#ifdef _MSC_VER
-#define GCC_INLINE
-#else
-#define GCC_INLINE inline __attribute__((always_inline))
-#endif
-
 
 #endif//__NS_EEL_ADDFUNCS_H__
