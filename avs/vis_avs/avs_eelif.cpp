@@ -304,10 +304,10 @@ static void gmegabuf_cleanup()
 }
 
 /* compare ../ns-eel/megabuf.c:megabuf_() */
-static double * NSEEL_CGEN_CALL gmegabuf_(double *which)
+static double * gmegabuf(double which)
 {
   static double error;  // TODO [bugfix]: uninitialized?
-  int w=(int)(*which + 0.0001);
+  int w=(int)(which + 0.0001);
   int whichblock = w/MEGABUF_ITEMSPERBLOCK;
 
   if (w >= 0 && whichblock >= 0 && whichblock < MEGABUF_BLOCKS)
@@ -324,7 +324,7 @@ static double * NSEEL_CGEN_CALL gmegabuf_(double *which)
   return &error;
 }
 
-static double * (NSEEL_CGEN_CALL *__gmegabuf)(double *) = &gmegabuf_;
+static double* (*__gmegabuf)(double) = &gmegabuf;
 NAKED void _asm_gmegabuf(void)
 {
 #ifdef _MSC_VER
@@ -333,18 +333,22 @@ NAKED void _asm_gmegabuf(void)
   __asm { sub esp, __LOCAL_SIZE }
   __asm { mov dword ptr parm_a, eax }
 
-  __nextBlock = __gmegabuf(parm_a);
+  __nextBlock = __gmegabuf(*parm_a);
 
   __asm { mov eax, __nextBlock } // this is custom, returning pointer
   __asm { mov esp, ebp }
 #else
   __asm__ __volatile__ (
-    "mov  %%ecx, %%eax\n\t"         // index param to fastcall param 1 (ecx)
-    "mov  %%eax, %[gmegabuf_]\n\t"  // load gmegabuf_ function address
-    "call %%eax\n\t"                // call gmegabuf_(ecx)
+    "mov  %%ebp, %%esp\n\t"         // new stack frame
+    "sub  %%esp, 8\n\t"             // stack space for a double argument
+    "fld  qword ptr [%%eax]\n\t"    // index parameter as first (and only) argument
+    "fstp qword ptr [%%esp]\n\t"
+    "mov  %%eax, %[gmegabuf]\n\t"   // load gmegabuf function address
+    "call %%eax\n\t"                // call gmegabuf(index)
+    "mov  %%esp, %%ebp\n\t"         // pop stack frame
     :
-    :[gmegabuf_]"i"(gmegabuf_)
-    :"eax", "ecx"
+    :[gmegabuf]"i"(gmegabuf)
+    :"eax"
   );
 #endif
 }

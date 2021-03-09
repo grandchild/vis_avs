@@ -63,10 +63,10 @@ void megabuf_cleanup(NSEEL_VMCTX ctx)
 }
 
 /* compare ../vis_avs/avs_eelif.cpp:gmegabuf_() */
-static double * NSEEL_CGEN_CALL megabuf_(double ***blocks, double *which)
+static double * megabuf(double ***blocks, double which)
 {
   static double error;  // TODO [bugfix]: uninitialized?
-  int w=(int)(*which + 0.0001);
+  int w=(int)(which + 0.0001);
   int whichblock = w/MEGABUF_ITEMSPERBLOCK;
 
   if (!*blocks)
@@ -89,7 +89,7 @@ static double * NSEEL_CGEN_CALL megabuf_(double ***blocks, double *which)
   return &error;
 }
 
-static double * (NSEEL_CGEN_CALL *__megabuf)(double ***,double *) = &megabuf_;
+static double * (*__megabuf)(double ***,double) = &megabuf;
 NAKED void _asm_megabuf(void)
 {
 #ifdef _MSC_VER
@@ -101,19 +101,26 @@ NAKED void _asm_megabuf(void)
   __asm { mov dword ptr my_ctx, edx }
   __asm { mov dword ptr parm_a, eax }
 
-  __nextBlock = __megabuf(my_ctx,parm_a);
+  __nextBlock = __megabuf(my_ctx,*parm_a);
 
   __asm { mov eax, __nextBlock } // this is custom, returning pointer
   __asm { mov esp, ebp }
 #else
   __asm__ __volatile__ (
-    "mov  %%ecx, 0xffffffff\n\t"   // placeholder for blocks pointer
-    "mov  %%edx, %%eax\n\t"        // index param to fastcall param 2 (edx)
-    "mov  %%eax, %[megabuf_]\n\t"  // load function address
-    "call %%eax\n\t"               // call megabuf_(ecx, edx)
+    "mov  %%edx, 0xffffffff\n\t"        // placeholder for blocks pointer (replaced
+                                        // later by megabuf_ppproc() above)
+    "mov  %%ebp, %%esp\n\t"             // new stack frame
+    "sub  %%esp, 12\n\t"                // stack space for one pointer (4bytes) and one
+                                        // double (8bytes) argument
+    "mov  dword ptr [%%esp], %%edx\n\t" // blocks pointer as first argument
+    "fld  qword ptr [%%eax]\n\t"        // index parameter as second argument
+    "fstp qword ptr [%%esp + 4]\n\t"
+    "mov  %%eax, %[megabuf]\n\t"        // load megabuf function address
+    "call %%eax\n\t"                    // call megabuf(blocks, index)
+    "mov  %%esp, %%ebp\n\t"             // pop stack frame
     :
-    :[megabuf_]"i"(megabuf_)
-    :"eax", "ecx", "edx"
+    :[megabuf]"i"(megabuf)
+    :"eax"
   );
 #endif
 
