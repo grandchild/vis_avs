@@ -40,6 +40,8 @@ $EDITOR CMake-MingWcross-toolchain.txt
 # Use your cross-compile-toolchain cmake here. (The precise name for the cmake binary
 # might be different on your Linux distro.)
 i686-w64-mingw32-cmake -D CMAKE_TOOLCHAIN_FILE=../CMake-MingWcross-toolchain.txt ..
+# in fedora:
+# mingw32-cmake -D CMAKE_TOOLCHAIN_FILE=../CMake-MingWcross-toolchain.txt ..
 
 # Compile
 make
