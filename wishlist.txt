@@ -11,7 +11,7 @@ AVS Language Extensions
     * A full blown AVS language including flow control operations (repeat..until, while..do, if..then..else, case..of), commenting (/*..*/, //..CRLF), sub-routine definitions (function cube(x)=x*x*x), additional unary and binary operators (div, mod, shl, shr, inc, dec, etc.).
     * Combine all the event boxes (OnInit, OnFrame, etc) into one large syntax highlighting editor in which one would write each part as a subroutine.
     * Built-in support for imaginary numbers (you have to write your code to explicitly calculate with the real and imaginary parts of a complex number)
-
+    * APE code errors in debug window
 
 
 Drawing Options
