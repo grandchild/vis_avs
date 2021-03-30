@@ -20,10 +20,12 @@ off until after that goal is achieved.
 * ❤️ ConvolutionFilter integrated as a builtin-APE thanks to a [donation to free software
   ](https://github.com/tholden/AVSConvolutionFilter) by its author [Tom Holden](
   https://github.com/tholden).
-* 🧨 Fyrewurx APE is crashing AVS -- disable by renaming the .ape file to something else
-  for now.
-* 🥵 Performance is not up to par with official build (about 25% slower). Looking into
+* 🥵 Performance is not up to par with official build (about 20% slower). Looking into
   that...
+* 🧨 APE files are crashing AVS or preventing it from starting. Disable these by
+  renaming .ape files to some other extension for now.
+  * Fyrewurx APE crashes AVS when loaded in a preset.
+  * Colormap APE prevents AVS from starting ("Plugin executed illegal operation")
 
 ### Building on Linux
 
