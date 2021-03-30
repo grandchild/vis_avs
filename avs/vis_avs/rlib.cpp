@@ -33,8 +33,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "r_list.h"
 #include "rlib.h"
 
-#include "ape.h"
-
 #include "avs_eelif.h"
 
 #define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255
@@ -176,10 +174,34 @@ static const struct
 	{"Winamp Interf APE v1", 41}
 };
 
+static APEinfo ext_info=
+{
+  3,
+  0,
+  &g_line_blend_mode,
+  NSEEL_VM_alloc,
+  AVS_EEL_IF_VM_free,
+  AVS_EEL_IF_resetvars,
+  NSEEL_VM_regvar,
+  NSEEL_code_compile,
+  AVS_EEL_IF_Execute,
+  NSEEL_code_free,
+  compilerfunctionlist,
+  getGlobalBuffer,
+};
+
 void C_RLibrary::initbuiltinape(void)
 {
-#define ADD(sym) extern C_RBASE * sym(char *desc); _add_dll(0,sym,"Builtin_" #sym, 0)  
-#define ADD2(sym,name) extern C_RBASE * sym(char *desc); _add_dll(0,sym,name, 0)  
+#define ADD(sym) \
+  extern C_RBASE * sym(char *desc); \
+  _add_dll(0, sym, "Builtin_" #sym, 0, NULL)
+#define ADD2(sym,name) \
+  extern C_RBASE * sym(char *desc); \
+  _add_dll(0, sym, name, 0, NULL)
+#define ADD_EXT(sym,name) \
+  extern C_RBASE * sym(char *desc); \
+  extern void sym##_SetExtInfo(APEinfo* ape_info); \
+  _add_dll(0, sym, name, 0, sym##_SetExtInfo)
 #ifdef LASER
   ADD(RLASER_Cone);
   ADD(RLASER_BeatHold);
@@ -193,13 +215,14 @@ void C_RLibrary::initbuiltinape(void)
   ADD2(R_VideoDelay,"Holden04: Video Delay");
   ADD2(R_MultiDelay,"Holden05: Multi Delay");
   ADD2(R_Convolution,"Holden03: Convolution Filter");
+  ADD_EXT(R_Texer2,"Acko.net: Texer II");
 #endif
 #undef ADD
 #undef ADD2
 }
 
 
-void C_RLibrary::_add_dll(HINSTANCE hlib,class C_RBASE *(__cdecl *cre)(char *),char *inf, int is_r2)
+void C_RLibrary::_add_dll(HINSTANCE hlib,class C_RBASE *(__cdecl *cre)(char *),char *inf, int is_r2, void (*set_info)(APEinfo*))
 {
   if ((NumDLLFuncs&7)==0||!DLLFuncs)
   {
@@ -222,30 +245,13 @@ void C_RLibrary::_add_dll(HINSTANCE hlib,class C_RBASE *(__cdecl *cre)(char *),c
   DLLFuncs[NumDLLFuncs].createfunc=cre;
   DLLFuncs[NumDLLFuncs].idstring=inf;
   DLLFuncs[NumDLLFuncs].is_r2=is_r2;
+  DLLFuncs[NumDLLFuncs].set_info_func=set_info;
   NumDLLFuncs++;
 }
 
 
-static APEinfo ext_info=
-{
-  3,
-  0,
-  &g_line_blend_mode,
-  NSEEL_VM_alloc,
-  AVS_EEL_IF_VM_free,
-  AVS_EEL_IF_resetvars,
-  NSEEL_VM_regvar,
-  NSEEL_code_compile,
-  AVS_EEL_IF_Execute,
-  NSEEL_code_free,
-  compilerfunctionlist,
-  getGlobalBuffer,
-};
-
 void C_RLibrary::initdll()
 {
-  ext_info.global_registers=NSEEL_getglobalregs();
-
   HANDLE h;
   WIN32_FIND_DATA d;
   char dirmask[MAX_PATH*2];
@@ -277,7 +283,7 @@ void C_RLibrary::initdll()
         retr = (int (*)(HINSTANCE, char ** ,int *, C_LineListBase*)) GetProcAddress(hlib,"_AVS_LPE_RetrFunc");
         if (retr && retr(hlib,&inf,&cre,g_laser_linelist))
         {
-          _add_dll(hlib,(class C_RBASE *(__cdecl *)(char *))cre,inf,0);
+          _add_dll(hlib,(class C_RBASE *(__cdecl *)(char *))cre,inf,0, NULL);
         }
         else FreeLibrary(hlib);
 #else
@@ -285,14 +291,14 @@ void C_RLibrary::initdll()
         retr = (int (*)(HINSTANCE, char ** ,int *)) GetProcAddress(hlib,"_AVS_APE_RetrFuncEXT2");
         if (retr && retr(hlib,&inf,&cre))
         {
-          _add_dll(hlib,(class C_RBASE *(__cdecl *)(char *))cre,inf,1);
+          _add_dll(hlib,(class C_RBASE *(__cdecl *)(char *))cre,inf,1, NULL);
         }
         else
         {
           retr = (int (*)(HINSTANCE, char ** ,int *)) GetProcAddress(hlib,"_AVS_APE_RetrFunc");
           if (retr && retr(hlib,&inf,&cre))
           {
-            _add_dll(hlib,(class C_RBASE *(__cdecl *)(char *))cre,inf,0);
+            _add_dll(hlib,(class C_RBASE *(__cdecl *)(char *))cre,inf,0, NULL);
           }
           else FreeLibrary(hlib);
         }
@@ -349,6 +355,9 @@ C_RBASE *C_RLibrary::CreateRenderer(int *which, int *has_r2)
         if (!strncmp(p,DLLFuncs[x].idstring,32))
         {
           *which=(int)DLLFuncs[x].idstring;
+          if (DLLFuncs[x].set_info_func) {
+            DLLFuncs[x].set_info_func(&ext_info);
+          }
           return DLLFuncs[x].createfunc(NULL);
         }
       }
@@ -376,6 +385,7 @@ C_RLibrary::C_RLibrary()
   NumDLLFuncs=0;
   RetrFuncs=0;
   NumRetrFuncs=0;
+  ext_info.global_registers=NSEEL_getglobalregs();
 
   initfx();
   initdll();
