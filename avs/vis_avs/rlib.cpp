@@ -176,10 +176,34 @@ static const struct
 	{"Winamp Interf APE v1", 41}
 };
 
+static APEinfo ext_info=
+{
+  3,
+  0,
+  &g_line_blend_mode,
+  NSEEL_VM_alloc,
+  AVS_EEL_IF_VM_free,
+  AVS_EEL_IF_resetvars,
+  NSEEL_VM_regvar,
+  NSEEL_code_compile,
+  AVS_EEL_IF_Execute,
+  NSEEL_code_free,
+  compilerfunctionlist,
+  getGlobalBuffer,
+};
+
 void C_RLibrary::initbuiltinape(void)
 {
-#define ADD(sym) extern C_RBASE * sym(char *desc); _add_dll(0,sym,"Builtin_" #sym, 0)  
-#define ADD2(sym,name) extern C_RBASE * sym(char *desc); _add_dll(0,sym,name, 0)  
+#define ADD(sym) \
+  extern C_RBASE * sym(char *desc); \
+  _add_dll(0, sym, "Builtin_" #sym, 0)
+#define ADD2(sym,name) \
+  extern C_RBASE * sym(char *desc); \
+  _add_dll(0, sym, name, 0)
+#define ADD_EXT(sym,name) \
+  extern C_RBASE * sym(char *desc); \
+  sym##_SetExtInfo(&ext_info); \
+  _add_dll(0, sym, name, 0)
 #ifdef LASER
   ADD(RLASER_Cone);
   ADD(RLASER_BeatHold);
@@ -193,6 +217,7 @@ void C_RLibrary::initbuiltinape(void)
   ADD2(R_VideoDelay,"Holden04: Video Delay");
   ADD2(R_MultiDelay,"Holden05: Multi Delay");
   ADD2(R_Convolution,"Holden03: Convolution Filter");
+  ADD2(R_Texer2,"Acko.net: Texer II");
 #endif
 #undef ADD
 #undef ADD2
@@ -226,26 +251,8 @@ void C_RLibrary::_add_dll(HINSTANCE hlib,class C_RBASE *(__cdecl *cre)(char *),c
 }
 
 
-static APEinfo ext_info=
-{
-  3,
-  0,
-  &g_line_blend_mode,
-  NSEEL_VM_alloc,
-  AVS_EEL_IF_VM_free,
-  AVS_EEL_IF_resetvars,
-  NSEEL_VM_regvar,
-  NSEEL_code_compile,
-  AVS_EEL_IF_Execute,
-  NSEEL_code_free,
-  compilerfunctionlist,
-  getGlobalBuffer,
-};
-
 void C_RLibrary::initdll()
 {
-  ext_info.global_registers=NSEEL_getglobalregs();
-
   HANDLE h;
   WIN32_FIND_DATA d;
   char dirmask[MAX_PATH*2];
@@ -376,6 +383,7 @@ C_RLibrary::C_RLibrary()
   NumDLLFuncs=0;
   RetrFuncs=0;
   NumRetrFuncs=0;
+  ext_info.global_registers=NSEEL_getglobalregs();
 
   initfx();
   initdll();
