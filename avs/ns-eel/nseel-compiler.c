@@ -29,6 +29,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <windows.h>
+#include <stdio.h>
 #include "ns-eel-int.h"
 
 #ifdef NSEEL_REENTRANT_EXECUTION
