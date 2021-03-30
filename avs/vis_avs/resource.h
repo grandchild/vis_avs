@@ -79,6 +79,7 @@
 #define IDD_CFG_MULTIDELAY              171
 #define IDD_CFG_VIDEODELAY              172
 #define IDD_CFG_CONVOLUTION             173
+#define IDD_CFG_TEXERII                 174
 #define IDC_EFFECTS                     1000
 #define IDC_ENABLED                     1001
 #define IDC_FBCLEAR                     1002
@@ -455,6 +456,17 @@
 #define IDC_CONVOLUTION_BUTTON2         1268
 #define IDC_CONVOLUTION_BUTTON3         1269
 #define IDC_CONVOLUTION_BUTTON4         1270
+#define IDC_TEXERII_TEXTURE             1271
+#define IDC_TEXERII_CINIT               1272
+#define IDC_TEXERII_CFRAME              1273
+#define IDC_TEXERII_CBEAT               1274
+#define IDC_TEXERII_CPOINT              1275
+#define IDC_TEXERII_OBILINEAR           1276
+#define IDC_TEXERII_OMASK               1277
+#define IDC_TEXERII_ORESIZE             1278
+#define IDC_TEXERII_ABOUT               1279
+#define IDC_TEXERII_EXAMPLE             1280
+#define IDC_TEXERII_URL                 1281
 #define IDM_DISPLAY                     40001
 #define IDM_PRESETS                     40002
 #define IDM_TRANS                       40003
@@ -470,9 +482,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        174
+#define _APS_NEXT_RESOURCE_VALUE        175
 #define _APS_NEXT_COMMAND_VALUE         40011
-#define _APS_NEXT_CONTROL_VALUE         1271
+#define _APS_NEXT_CONTROL_VALUE         1282
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
