@@ -39,6 +39,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <malloc.h>
 #endif
 
+#include <capstone/capstone.h>
+
 static int nseel_evallib_stats[5]; // source bytes, static code bytes, call code bytes, data bytes, segments
 int *NSEEL_getstats()
 {
@@ -691,6 +693,56 @@ static char *preprocessCode(compileContext *ctx, char *expression)
   return buf;
 }
 
+/* --------------------------- */
+#define CAPSTONE_INSN_BYTES_MAXLEN (sizeof ((cs_insn*) 0)->bytes)
+static size_t disassembly_max_bytes_count(cs_insn* instructions, size_t count) {
+  size_t max_bytes_count = 0;
+  for (size_t j = 0; j < count; j++)
+    for (size_t i = 0; i < CAPSTONE_INSN_BYTES_MAXLEN; i++)
+      if(instructions[j].bytes[i] > 0) {
+        if(i > max_bytes_count)
+          max_bytes_count = i;
+      }
+      else
+        break;
+  return max_bytes_count + 1;
+}
+
+static void print_disassembly(char* expression, unsigned char* code, size_t code_len) {
+  csh capstone_handle;
+  cs_insn *instructions;
+  size_t count;
+  if(cs_open(CS_ARCH_X86, CS_MODE_32, &capstone_handle) != CS_ERR_OK) {
+    return;
+  }
+  count = cs_disasm(capstone_handle, code, code_len, (unsigned int)code, 0, &instructions);
+  if(count > 0) {
+    char bytes[CAPSTONE_INSN_BYTES_MAXLEN * 3];
+    size_t max_bytes_count = disassembly_max_bytes_count(instructions, count);
+    puts("+++++ Section +++++\n");
+    printf("\n%s\n", expression);
+    puts("-------------------\n");
+    for (size_t j=0; j<count; j++) {
+      size_t k = 0;
+      for (;instructions[j].bytes[k] > 0; k++) {
+        sprintf(bytes + k * 3, "%02x ", instructions[j].bytes[k]);
+      }
+      for (;k < max_bytes_count; k++) {
+        sprintf(bytes + k * 3, "   ");
+      }
+      bytes[(sizeof bytes) - 1] = '\0';
+      printf(
+        "0x%" PRIx64 ":\t%s\t%s\t\t%s\n",
+        instructions[j].address,
+        bytes,
+        instructions[j].mnemonic,
+        instructions[j].op_str
+      );
+    }
+    printf("+++++++++++++++++++\n");
+  }
+}
+
 //------------------------------------------------------------------------------
 NSEEL_CODEHANDLE NSEEL_code_compile(NSEEL_VMCTX _ctx, char *_expression)
 {
@@ -796,6 +848,7 @@ NSEEL_CODEHANDLE NSEEL_code_compile(NSEEL_VMCTX _ctx, char *_expression)
       }
       *writeptr=X86_RET; // ret
       ctx->l_stats[1]=size;
+      // print_disassembly(_expression, (unsigned char*)handle->code, size);
     }
     handle->blocks = ctx->blocks_head;
     handle->workTablePtr_size=(computable_size) * sizeof(double);
