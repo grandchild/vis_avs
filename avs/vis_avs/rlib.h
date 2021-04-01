@@ -30,6 +30,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _RLIB_H_
 #define _RLIB_H_
 
+#include "ape.h"
+
 #define DLLRENDERBASE 16384
 
 class C_RLibrary {
@@ -49,6 +51,7 @@ class C_RLibrary {
       char *idstring;
       C_RBASE *(*createfunc)(char *desc);
       int is_r2;
+      void (*set_info_func)(APEinfo* ape_info);
 
     } DLLInfo; 
 
@@ -59,7 +62,13 @@ class C_RLibrary {
     void initfx(void);
     void initdll(void);
     void initbuiltinape(void);
-    void _add_dll(HINSTANCE,class C_RBASE *(__cdecl *)(char *),char *, int);
+    void _add_dll(
+      HINSTANCE,
+      class C_RBASE *(__cdecl *)(char *),
+      char *,
+      int,
+      void (*set_info)(APEinfo*)
+    );
   public:
     C_RLibrary();
     ~C_RLibrary();
