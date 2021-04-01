@@ -257,13 +257,13 @@ __forceinline double __stdcall Fractional(double f) {
 
 #define T2_NONSCALE_PUSH_ESI_EDI __asm { push esi; push edi; }
 
-#define T2_NONSCALE_MINMAX_MASK \
-    __asm {                     \
-        movd mm4, maxmask;      \
-        movd mm6, signmask;     \
+#define T2_NONSCALE_MINMAX_MASKS \
+    __asm {                      \
+        movd mm4, maxmask;       \
+        movd mm6, signmask;      \
     }
 
-#define T2_NONSCALE_BLENDFACT_ALPHA                    \
+#define T2_BLEND_AND_STORE_ALPHA                       \
     __asm {                                            \
         /* duplicate blend factor into all channels */ \
         mov eax, t;                                    \
@@ -309,9 +309,8 @@ __forceinline double __stdcall Fractional(double f) {
 // to-literal-string macro util
 #define _STR(x) #x      // x -> "x"
 #define STR(x) _STR(x)  // indirection needed to actually evaluate x argument
-
-
-
+// GCC extended-asm argument spec (memory location constraint)
+#define ASM_M_ARG(x) [x]"m"(x)
 
 #define T2_PREP_MASK_COLOR                 \
     __asm__ __volatile__ (                 \
@@ -321,7 +320,29 @@ __forceinline double __stdcall Fractional(double f) {
         : : [color]"m"(color)              \
         : "mm5", "mm7");
 
+#define T2_SCALE_MINMAX_SIGNMASK            \
+    __asm__ __volatile__(                   \
+        "movd       %%mm6, %[signmask]\n\t" \
+        : : [signmask]"r"(signmask) : "mm6" \
+    );
 
+#define T2_SCALE_BLEND_AND_STORE_ALPHA                        \
+    __asm__ __volatile__(                                     \
+        /* duplicate blend factor into all channels */        \
+        "mov      %%eax, %[t]\n\t"                            \
+        "mov      %%edx, %%eax\n\t"                           \
+        "shl      %%eax, 16\n\t"                              \
+        "or       %%eax, %%edx\n\t"                           \
+        "mov      [%[alpha]], %%eax\n\t"                      \
+        "mov      [%[alpha] + 4], %%eax\n\t"                  \
+                                                              \
+        /* store alpha and (256 - alpha) */                   \
+        "movq     %%mm6, qword ptr %[alpha]\n\t"              \
+        "movq     %%mm3, %[salpha]\n\t"                       \
+        "psubusw  %%mm3, %%mm6\n\t"                           \
+        : : [alpha]"m"(alpha), [salpha]"m"(salpha), [t]"r"(t) \
+        : "eax", "edx", "mm3", "mm6"                          \
+    );
 
 #define T2_SCALE_BLEND_ASM_ENTER(LOOP_LABEL)                                   \
     __asm__ __volatile__(                                                      \
@@ -420,7 +441,7 @@ __forceinline double __stdcall Fractional(double f) {
 
 /* blendmode-specific code in between here */
 
-#define T2_SCALE_BLEND_ASM_LEAVE(LOOP_LABEL)                                \
+#define T2_SCALE_BLEND_ASM_LEAVE(LOOP_LABEL, EXTRA_ARGS...)                 \
         "\n\t"                                                              \
         /* write pixel */                                                   \
         "movd       dword ptr [%%edi], %%mm0\n\t"                           \
@@ -440,7 +461,8 @@ __forceinline double __stdcall Fractional(double f) {
         : /* no outputs */                                                  \
         : [imagewidth]"m"(imagewidth), [sdx]"m"(sdx),                       \
           [cx0]"m"(cx0), [cy0]"m"(cy0), [mmxxor]"m"(mmxxor),                \
-          [outp]"m"(outp), [texdata]"m"(texdata), [tot]"m"(tot)             \
+          [outp]"m"(outp), [texdata]"m"(texdata), [tot]"m"(tot),            \
+          ##EXTRA_ARGS                                                      \
         : "eax", "ecx", "mm0", "mm1", "mm2", "mm3", "mm4", "mm5"            \
     );
 
@@ -452,7 +474,7 @@ __forceinline double __stdcall Fractional(double f) {
         : : :             \
     );
 
-#define T2_NONSCALE_MINMAX_MASK                            \
+#define T2_NONSCALE_MINMAX_MASKS                           \
     __asm__ __volatile__(                                  \
         "movd  %%mm4, %[maxmask]\n\t"                      \
         "movd  %%mm6, %[signmask]\n\t"                     \
@@ -460,7 +482,7 @@ __forceinline double __stdcall Fractional(double f) {
         : "mm4", "mm6"                                     \
     );
 
-#define T2_BLEND_AND_STORE_ALPHA                              \
+#define T2_NONSCALE_BLEND_AND_STORE_ALPHA                     \
     __asm__ __volatile__(                                     \
         /* duplicate blend factor into all channels */        \
         "mov      %%eax, %[t]\n\t"                            \
@@ -477,6 +499,7 @@ __forceinline double __stdcall Fractional(double f) {
         : : [alpha]"m"(alpha), [salpha]"m"(salpha), [t]"r"(t) \
         : "eax", "edx", "mm3", "mm6"                          \
     );
+
 
 #define T2_NONSCALE_BLEND_ASM_ENTER(LOOP_LABEL)           \
     __asm__ __volatile__(                                 \
