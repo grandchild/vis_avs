@@ -9,6 +9,11 @@
 #define OUT_XOR           8
 #define OUT_MINIMUM       9
 
+#define ID_TEXER2_EXAMPLE_COLOROSC 31337
+#define ID_TEXER2_EXAMPLE_FLUMMYSPEC 31338
+#define ID_TEXER2_EXAMPLE_BEATCIRCLE 31339
+#define ID_TEXER2_EXAMPLE_3DRINGS 31340
+
 // this will be the directory and APE name displayed in the AVS Editor
 #define MOD_NAME "Render / Texer II"
 

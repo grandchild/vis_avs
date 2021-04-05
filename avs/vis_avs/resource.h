@@ -464,9 +464,10 @@
 #define IDC_TEXERII_OBILINEAR           1276
 #define IDC_TEXERII_OMASK               1277
 #define IDC_TEXERII_ORESIZE             1278
-#define IDC_TEXERII_ABOUT               1279
-#define IDC_TEXERII_EXAMPLE             1280
-#define IDC_TEXERII_URL                 1281
+#define IDC_TEXERII_WRAP                1279
+#define IDC_TEXERII_ABOUT               1280
+#define IDC_TEXERII_EXAMPLE             1281
+#define IDC_TEXERII_URL                 1282
 #define IDM_DISPLAY                     40001
 #define IDM_PRESETS                     40002
 #define IDM_TRANS                       40003
@@ -484,7 +485,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        175
 #define _APS_NEXT_COMMAND_VALUE         40011
-#define _APS_NEXT_CONTROL_VALUE         1282
+#define _APS_NEXT_CONTROL_VALUE         1283
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
