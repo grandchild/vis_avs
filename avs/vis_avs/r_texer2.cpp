@@ -24,7 +24,7 @@ class C_Texer2 : public C_RBASE
         virtual void Recompile();
         virtual void Allocate(int n);
         virtual void DrawParticle(int *framebuffer, int w, int h, double x, double y, double sizex, double sizey, unsigned int color);
-        virtual void LoadExamples(HWND ctl);
+        virtual void LoadExamples(HWND button, HWND ctl, bool is_init);
         // Particle *particles;
         // int npart;
 
@@ -161,7 +161,7 @@ LRESULT CALLBACK URLProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     return RealProc(hwnd, uMsg, wParam, lParam);
 }
 
-void C_Texer2::LoadExamples(HWND ctl) {
+void C_Texer2::LoadExamples(HWND button, HWND ctl, bool is_init) {
     RECT r;
     GetWindowRect(ctl, &r);
 
@@ -180,6 +180,9 @@ void C_Texer2::LoadExamples(HWND ctl) {
             this->code.SetBeat("");
             this->code.SetPoint("x=(i*2-1)*2;y=v;\r\n"
                                 "red=1-y*2;green=abs(y)*2;blue=y*2-1;");
+            this->config.mask = 1;
+            this->config.resize = 0;
+            this->config.wrap = 0;
             break;
         case ID_TEXER2_EXAMPLE_FLUMMYSPEC:
             this->code.SetInit("// This example needs Maximum render mode");
@@ -190,6 +193,9 @@ void C_Texer2::LoadExamples(HWND ctl) {
                                 "vol=1.001-getspec(abs(x)*.5,.05,0)*min(1,abs(x)+.5)*2;\r\n"
                                 "sizex=vol;sizey=(1/vol)*2;\r\n"
                                 "j=abs(x);red=1-j;green=1-abs(.5-j);blue=j");
+            this->config.mask = 1;
+            this->config.resize = 1;
+            this->config.wrap = 0;
             break;
         case ID_TEXER2_EXAMPLE_BEATCIRCLE:
             this->code.SetInit("// This example needs Maximum render mode\r\n"
@@ -204,6 +210,9 @@ void C_Texer2::LoadExamples(HWND ctl) {
                                 "x=cos(angle)*radius*aspect;y=sin(angle)*radius;\r\n"
                                 "red=sin(i*$pi*2)*.5+.5;green=1-red;blue=.5;\r\n"
                                 "point=point+1;");
+            this->config.mask = 1;
+            this->config.resize = 0;
+            this->config.wrap = 0;
             break;
         case ID_TEXER2_EXAMPLE_3DRINGS:
             this->code.SetInit("// This shows how to use texer for 3D particles\r\n"
@@ -240,10 +249,24 @@ void C_Texer2::LoadExamples(HWND ctl) {
                                 "iz=1/(z3+2);\r\n"
                                 "x=x3*iz;y=y3*iz*asp;\r\n"
                                 "sizex=iz*2;sizey=iz*2;");
+            this->config.mask = 0;
+            this->config.resize = 1;
+            this->config.wrap = 0;
             break;
         default:
             break;
     }
+    CheckDlgButton(button, IDC_TEXERII_OWRAP, this->config.wrap ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(button, IDC_TEXERII_OMASK, this->config.mask ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(button, IDC_TEXERII_ORESIZE, this->config.resize ? BST_CHECKED : BST_UNCHECKED);
+    SetDlgItemTextA(button, IDC_TEXERII_CINIT, this->code.init);
+    SetDlgItemTextA(button, IDC_TEXERII_CFRAME, this->code.frame);
+    SetDlgItemTextA(button, IDC_TEXERII_CBEAT, this->code.beat);
+    SetDlgItemTextA(button, IDC_TEXERII_CPOINT, this->code.point);
+    // select the default texture image
+    SendDlgItemMessageA(this->hwndDlg, IDC_TEXERII_TEXTURE, CB_SETCURSEL, 0, 0);
+    this->Recompile();
+    this->InitTexture();
 }
 
 // this is where we deal with the configuration screen
@@ -273,7 +296,7 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     break;
                 }
             } else if (wNotifyCode == BN_CLICKED) {
-                g_ConfigThis->config.bilinear = IsDlgButtonChecked(hwndDlg, IDC_TEXERII_OBILINEAR) == BST_CHECKED;
+                g_ConfigThis->config.wrap = IsDlgButtonChecked(hwndDlg, IDC_TEXERII_OWRAP) == BST_CHECKED;
                 g_ConfigThis->config.resize = IsDlgButtonChecked(hwndDlg, IDC_TEXERII_ORESIZE) == BST_CHECKED;
                 g_ConfigThis->config.mask = IsDlgButtonChecked(hwndDlg, IDC_TEXERII_OMASK) == BST_CHECKED;
 
@@ -281,7 +304,8 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     MessageBox(hwndDlg,
                         "Texer II works like a dot-superscope, except it draws a bitmap instead of a dot at each location.\n\nVariables: n, i, x, y, w, h, v, sizex, sizey, red, green, blue.\n\n", "Texer II", MB_OK);
                 } else if (LOWORD(wParam) == IDC_TEXERII_EXAMPLE) {
-                    g_ConfigThis->LoadExamples(GetDlgItem(hwndDlg, IDC_TEXERII_EXAMPLE));
+                    HWND examplesButton = GetDlgItem(hwndDlg, IDC_TEXERII_EXAMPLE);
+                    g_ConfigThis->LoadExamples(hwndDlg, examplesButton, false);
                 }
             } else if (wNotifyCode == EN_CHANGE) {
                 char *buf;
@@ -358,7 +382,7 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             SetDlgItemText(hwndDlg, IDC_TEXERII_CBEAT, g_ConfigThis->code.beat);
             SetDlgItemText(hwndDlg, IDC_TEXERII_CPOINT, g_ConfigThis->code.point);
 
-            CheckDlgButton(hwndDlg, IDC_TEXERII_OBILINEAR, g_ConfigThis->config.bilinear ? BST_CHECKED : BST_UNCHECKED);
+            CheckDlgButton(hwndDlg, IDC_TEXERII_OWRAP, g_ConfigThis->config.wrap ? BST_CHECKED : BST_UNCHECKED);
             CheckDlgButton(hwndDlg, IDC_TEXERII_OMASK, g_ConfigThis->config.mask ? BST_CHECKED : BST_UNCHECKED);
             CheckDlgButton(hwndDlg, IDC_TEXERII_ORESIZE, g_ConfigThis->config.resize ? BST_CHECKED : BST_UNCHECKED);
 
@@ -585,8 +609,6 @@ struct RECTf {
 
 
 void C_Texer2::DrawParticle(int *framebuffer, int w, int h, double x, double y, double sizex, double sizey, unsigned int color) {
-    config.bilinear = 1;
-
     // Adjust width/height
     --w;
     --h;

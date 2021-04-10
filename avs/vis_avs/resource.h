@@ -464,7 +464,7 @@
 #define IDC_TEXERII_OBILINEAR           1276
 #define IDC_TEXERII_OMASK               1277
 #define IDC_TEXERII_ORESIZE             1278
-#define IDC_TEXERII_WRAP                1279
+#define IDC_TEXERII_OWRAP               1279
 #define IDC_TEXERII_ABOUT               1280
 #define IDC_TEXERII_EXAMPLE             1281
 #define IDC_TEXERII_URL                 1282

@@ -24,7 +24,7 @@ struct texer2_apeconfig {
     int mode;
     char img[MAX_PATH];
     int resize;
-    int bilinear;
+    int wrap;
     int mask;
     int d;
 };
