@@ -104,34 +104,35 @@ typedef struct
 } APEinfo;
 
 
-__forceinline int __stdcall DoubleToInt(double x) {
-    int    t;
+#ifdef _MSC_VER
+    #define INLINE inline __forceinline
+#else
+    #define INLINE inline __attribute__((always_inline))
+#endif
+
+// TODO [cleanup]: This should not be ASM
+INLINE int RoundToInt(double x) {
+    int t;
 #ifdef _MSC_VER
     __asm  fld   x
     __asm  fistp t
 #else  // GCC
-    // __asm__ __volatile__(
-    //     "fld   x\n\t"
-    //     "fistp t\n\t"
-    // );
+    __asm__ __volatile__(
+        "cvtsd2si  %[t], qword ptr %[x]\n\t"
+        : [t]"=r"(t)
+        : [x]"m"(x)
+        :
+    );
 #endif
     return t;
 }
 
-__forceinline int __stdcall FloorToInt(double f) {
-    static float Half = 0.5;
-    int i;
-#ifdef _MSC_VER
-    __asm fld [f]
-    __asm fsub [Half]
-    __asm fistp [i]
-#else  // GCC
-#endif
-    return i;
+INLINE int FloorToInt(double f) {
+    return (int)f;
 }
 
-__forceinline double __stdcall Fractional(double f) {
-    return f - FloorToInt(f);
+INLINE double Fractional(double f) {
+    return f - (int)f;
 }
 
 /* asm shorthands */
@@ -151,13 +152,8 @@ __forceinline double __stdcall Fractional(double f) {
         push edi;                                                              \
         push edx;                                                              \
         /* esi = texture width */                                              \
-        mov esi, imagewidth;                                                   \
+        mov esi, iw;                                                           \
         inc esi;                                                               \
-        pxor mm5, mm5;                                                         \
-                                                                               \
-        /* bilinear */                                                         \
-        push ebx;                                                              \
-                                                                               \
         pxor mm5, mm5;                                                         \
                                                                                \
         /* calculate dy coefficient for this scanline */                       \
@@ -183,7 +179,7 @@ __forceinline double __stdcall Fractional(double f) {
         shr eax, 16;                                                           \
         imul eax, esi;                                                         \
         shl eax, 2;                                                            \
-        mov edx, texdata;                                                      \
+        mov edx, texture;                                                      \
         add edx, eax;                                                          \
                                                                                \
         /* begin loop */                                                       \
@@ -310,10 +306,14 @@ __forceinline double __stdcall Fractional(double f) {
 
 #else  // GCC
 
+// some asm parts (i.e. register saves) are not necessary in GCC because the clobber
+// list takes care of saving registers.
+#define NO_OP
 
 // to-literal-string macro util
-#define _STR(x) #x      // x -> "x"
-#define STR(x) _STR(x)  // indirection needed to actually evaluate x argument
+#define _STRINGIFY(x) #x      // x -> "x"
+#define STR(x) _STRINGIFY(x)  // indirection needed to actually evaluate x argument
+
 // GCC extended-asm argument spec (memory location constraint)
 #define ASM_M_ARG(x) [x]"m"(x)
 
@@ -323,12 +323,12 @@ __forceinline double __stdcall Fractional(double f) {
         "movd       %%mm7, %[color]\n\t"   \
         "punpcklbw  %%mm7, %%mm5\n\t"      \
         : : [color]"m"(color)              \
-        : "mm5", "mm7");
+        : "mm5");
 
 #define T2_SCALE_MINMAX_SIGNMASK            \
     __asm__ __volatile__(                   \
         "movd       %%mm6, %[signmask]\n\t" \
-        : : [signmask]"r"(signmask) : "mm6" \
+        : : [signmask]"r"(signmask) :       \
     );
 
 #define T2_SCALE_BLEND_AND_STORE_ALPHA                        \
@@ -351,17 +351,9 @@ __forceinline double __stdcall Fractional(double f) {
 
 #define T2_SCALE_BLEND_ASM_ENTER(LOOP_LABEL)                                   \
     __asm__ __volatile__(                                                      \
-        "push       %%esi\n\t"                                                 \
-        "push       %%edi\n\t"                                                 \
-        "push       %%edx\n\t"                                                 \
         /* esi = texture width */                                              \
-        "mov        %%esi, %[imagewidth]\n\t"                                  \
+        "mov        %%esi, %[iw]\n\t"                                          \
         "inc        %%esi\n\t"                                                 \
-        "pxor       %%mm5, %%mm5\n\t"                                          \
-                                                                               \
-        /* bilinear */                                                         \
-        "push       %%ebx\n\t"                                                 \
-                                                                               \
         "pxor       %%mm5, %%mm5\n\t"                                          \
                                                                                \
         /* calculate dy coefficient for this scanline */                       \
@@ -387,7 +379,7 @@ __forceinline double __stdcall Fractional(double f) {
         "shr        %%eax, 16\n\t"                                             \
         "imul       %%eax, %%esi\n\t"                                          \
         "shl        %%eax, 2\n\t"                                              \
-        "mov        %%edx, %[texdata]\n\t"                                     \
+        "mov        %%edx, %[texture]\n\t"                                     \
         "add        %%edx, %%eax\n\t"                                          \
                                                                                \
         /* begin loop */                                                       \
@@ -416,7 +408,6 @@ __forceinline double __stdcall Fractional(double f) {
         "pmullw     %%mm1, %%mm3\n\t"                                          \
         "psrlw      %%mm1, 8\n\t"                                              \
         "paddw      %%mm0, %%mm1\n\t"                                          \
-                                                                               \
         /* mm1 = c*(1-dx) */                                                   \
         "movd       %%mm1, dword ptr [%%eax + %%esi * 4]\n\t" /* c */          \
         "punpcklbw  %%mm1, %%mm5\n\t"                                          \
@@ -446,38 +437,29 @@ __forceinline double __stdcall Fractional(double f) {
 
 /* blendmode-specific code in between here */
 
-#define T2_SCALE_BLEND_ASM_LEAVE(LOOP_LABEL, EXTRA_ARGS...)                 \
-        "\n\t"                                                              \
-        /* write pixel */                                                   \
-        "movd       dword ptr [%%edi], %%mm0\n\t"                           \
-        "add        %%edi, 4\n\t"                                           \
-                                                                            \
-        /* advance tex coords, cx += sdx */                                 \
-        "add        %%ebx, %[sdx]\n\t"                                      \
-                                                                            \
-        "dec        %%ecx\n\t"                                              \
-        "jnz        " STR(LOOP_LABEL) "\n\t"                                \
-                                                                            \
-        "pop        %%ebx\n\t"                                              \
-                                                                            \
-        "pop        %%edx\n\t"                                              \
-        "pop        %%edi\n\t"                                              \
-        "pop        %%esi\n\t"                                              \
-        : /* no outputs */                                                  \
-        : [imagewidth]"m"(imagewidth), [sdx]"m"(sdx),                       \
-          [cx0]"m"(cx0), [cy0]"m"(cy0), [mmxxor]"m"(mmxxor),                \
-          [outp]"m"(outp), [texdata]"m"(texdata), [tot]"m"(tot),            \
-          ##EXTRA_ARGS                                                      \
-        : "eax", "ecx", "mm0", "mm1", "mm2", "mm3", "mm4", "mm5"            \
+#define T2_SCALE_BLEND_ASM_LEAVE(LOOP_LABEL, EXTRA_ARGS...)         \
+        "\n\t"                                                      \
+        /* write pixel */                                           \
+        "movd       dword ptr [%%edi], %%mm0\n\t"                   \
+        "add        %%edi, 4\n\t"                                   \
+                                                                    \
+        /* advance tex coords, cx += sdx */                         \
+        "add        %%ebx, %[sdx]\n\t"                              \
+                                                                    \
+        "dec        %%ecx\n\t"                                      \
+        "jnz        " STR(LOOP_LABEL) "\n\t"                        \
+        :                                                           \
+        : [iw]"rm"(iw), [sdx]"rm"(sdx),                             \
+          [cx0]"rm"(cx0), [cy0]"rm"(cy0), [mmxxor]"m"(mmxxor),      \
+          [texture]"rm"(texture), [tot]"rm"(tot), [outp]"rm"(outp), \
+          ##EXTRA_ARGS                                              \
+        : "eax", "ebx", "ecx", "edx", "esi", "edi",                 \
+          "mm0", "mm1", "mm2", "mm3", "mm4", "mm5",                 \
+          "memory"                                                  \
     );
 
 
-#define T2_NONSCALE_PUSH_ESI_EDI   \
-    __asm__ __volatile__( \
-        "push  %%esi\n\t" \
-        "push  %%edi\n\t" \
-        : : :             \
-    );
+#define T2_NONSCALE_PUSH_ESI_EDI NO_OP
 
 #define T2_NONSCALE_MINMAX_MASKS                           \
     __asm__ __volatile__(                                  \
@@ -516,21 +498,18 @@ __forceinline double __stdcall Fractional(double f) {
 
 /* blendmode-specific code in between here */
 
-#define T2_NONSCALE_BLEND_ASM_LEAVE(LOOP_LABEL)           \
-        "add   %%esi, 4\n\t"                              \
-        "add   %%edi, 4\n\t"                              \
-        "dec   %%ecx\n\t"                                 \
-        "jnz   " STR(LOOP_LABEL) "\n\t"                   \
-        : : [tot]"r"(tot), [outp]"m"(outp), [inp]"m"(inp) \
-        : "ecx", "esi", "edi", "mm0", "mm1", "mm2", "mm3" \
+#define T2_NONSCALE_BLEND_ASM_LEAVE(LOOP_LABEL)            \
+        "add   %%esi, 4\n\t"                               \
+        "add   %%edi, 4\n\t"                               \
+        "dec   %%ecx\n\t"                                  \
+        "jnz   " STR(LOOP_LABEL) "\n\t"                    \
+        :                                                  \
+        : [tot]"rm"(tot), [inp]"rm"(inp), [outp]"rm"(outp) \
+        : "ecx", "esi", "edi", "mm0", "mm1", "mm2", "mm3", \
+          "memory"                                         \
     );
 
-#define T2_NONSCALE_POP_EDI_ESI \
-    __asm__ __volatile__(       \
-        "pop   %%edi\n\t"       \
-        "pop   %%esi\n\t"       \
-        : : : "edi", "esi"      \
-    );
+#define T2_NONSCALE_POP_EDI_ESI NO_OP
 
 #define T2_ZERO_MM5 __asm__ __volatile__("pxor mm5, mm5");
 

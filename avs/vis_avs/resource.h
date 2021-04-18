@@ -456,11 +456,11 @@
 #define IDC_CONVOLUTION_BUTTON2         1268
 #define IDC_CONVOLUTION_BUTTON3         1269
 #define IDC_CONVOLUTION_BUTTON4         1270
-#define IDC_TEXERII_TEXTURE             1271
-#define IDC_TEXERII_CINIT               1272
-#define IDC_TEXERII_CFRAME              1273
-#define IDC_TEXERII_CBEAT               1274
-#define IDC_TEXERII_CPOINT              1275
+#define IDC_TEXERII_CINIT               1271
+#define IDC_TEXERII_CFRAME              1272
+#define IDC_TEXERII_CBEAT               1273
+#define IDC_TEXERII_CPOINT              1274
+#define IDC_TEXERII_TEXTURE             1275
 #define IDC_TEXERII_OBILINEAR           1276
 #define IDC_TEXERII_OMASK               1277
 #define IDC_TEXERII_ORESIZE             1278
