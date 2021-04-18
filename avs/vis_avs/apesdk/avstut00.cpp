@@ -49,7 +49,15 @@ class C_THISCLASS : public C_RBASE
 		virtual ~C_THISCLASS();
 
 		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-		
+
+		// visdata contains 
+		// [0][L,R][...] left/right oscilloscope data with 576 samples each
+		// [1][L,R][...] left/right spectrograph data with 576 samples each	
+		// isBeat is either 0 or 1 depending whether a beat was detected
+		// *framebuffer
+		// *fbout - "frame buffer out"?
+		// width and height of framebuffer
+
 		virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
 		virtual char *get_desc();
 
