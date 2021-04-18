@@ -101,6 +101,8 @@ typedef struct
     // free a code block
     void (*freeCode)(VM_CODEHANDLE);
 
+    // requires ver >= 2
+    void (*doscripthelp)(HWND hwndDlg,char *mytext); // mytext can be NULL for no custom page
 } APEinfo;
 
 

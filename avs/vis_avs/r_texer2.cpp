@@ -51,7 +51,8 @@ class C_Texer2 : public C_RBASE
         CRITICAL_SECTION imageload;
         CRITICAL_SECTION codestuff;
         
-        char* help_text = "Texer II is a rendering component that draws what is commonly known as particles.\r\n"
+        char* help_text = "Texer II\0"
+            "Texer II is a rendering component that draws what is commonly known as particles.\r\n"
             "At specified positions on screen, a copy of the source image is placed and blended in various ways.\r\n"
             "\r\n"
             "\r\n"
@@ -341,7 +342,7 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 g_ConfigThis->config.mask = IsDlgButtonChecked(hwndDlg, IDC_TEXERII_OMASK) == BST_CHECKED;
 
                 if (LOWORD(wParam) == IDC_TEXERII_ABOUT) {
-                    MessageBox(hwndDlg, g_ConfigThis->help_text, "Texer II", MB_OK);
+                    g_extinfo->doscripthelp(hwndDlg, g_ConfigThis->help_text);
                 } else if (LOWORD(wParam) == IDC_TEXERII_EXAMPLE) {
                     HWND examplesButton = GetDlgItem(hwndDlg, IDC_TEXERII_EXAMPLE);
                     g_ConfigThis->LoadExamples(hwndDlg, examplesButton, false);
