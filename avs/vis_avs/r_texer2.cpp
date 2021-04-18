@@ -101,106 +101,6 @@ APEinfo *g_extinfo = 0;
 
 // global configuration dialog pointer
 static C_Texer2 *g_ConfigThis;
-static HINSTANCE g_hDllInstance;
-
-typedef LRESULT CALLBACK WINDOWPROC(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK URLProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    WINDOWPROC *RealProc;
-    char buffer[32];
-    static int hovered = 0;
-
-    RealProc = (WINDOWPROC *)GetWindowLong(hwnd, GWL_USERDATA);
-
-    switch (uMsg) {
-        case WM_TIMER:
-        {
-            POINT p;
-            RECT r;
-            GetCursorPos(&p);
-            ScreenToClient(hwnd, &p);
-            GetClientRect(hwnd, &r);
-            if ((p.x < 0) || (p.x >= r.right) || (p.y < 0) || (p.y >= r.bottom)) {
-                KillTimer(hwnd, 1);
-                hovered = 0;
-                InvalidateRect(hwnd, NULL, FALSE);
-                UpdateWindow(hwnd);
-                HCURSOR c = LoadCursor(NULL, IDC_ARROW);
-                SetCursor(c);
-            }
-        }
-        return 1;
-
-        case WM_RBUTTONUP:
-        case WM_MBUTTONUP:
-        case WM_LBUTTONUP:
-        case WM_RBUTTONDOWN:
-        case WM_MBUTTONDOWN:
-        {
-            HCURSOR c = LoadCursor(NULL, IDC_HAND);
-            SetCursor(c);
-        }
-        return 1;
-
-        case WM_LBUTTONDOWN:
-        {
-            HCURSOR c = LoadCursor(NULL, IDC_HAND);
-            SetCursor(c);
-            ShellExecute(NULL, "open", "http://avs.acko.net/", NULL, "", SW_SHOW);
-        }
-        return 1;
-
-        case WM_MOUSEMOVE:
-        {
-            hovered = 1;
-            HCURSOR c = LoadCursor(NULL, IDC_HAND);
-            SetCursor(c);
-            SetTimer(hwnd, 1, 50, NULL);
-            InvalidateRect(hwnd, NULL, TRUE);
-            UpdateWindow(hwnd);
-        }
-        return 1;
-
-        case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            HDC hdc;
-            RECT r;
-            HFONT font;
-            SIZE size;
-            HPEN pen, penold;
-            HBRUSH br;
-
-            hdc = BeginPaint(hwnd, &ps);
-
-            GetWindowText(hwnd, buffer, 32);
-
-            GetClientRect(hwnd, &r);
-            br = CreateSolidBrush(GetSysColor(COLOR_3DFACE));
-            FillRect(hdc, &r, br);
-            DeleteObject(br);
-
-            font = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-            SelectObject(hdc, font);
-            SetTextColor(hdc, (COLORREF)0xFF0000);
-            SetBkMode(hdc, TRANSPARENT);
-            DrawText(hdc, buffer, strlen(buffer), &r, DT_LEFT);
-
-            if (hovered) {
-                GetTextExtentPoint32(hdc, buffer, strlen(buffer), &size);
-                pen = CreatePen(PS_SOLID, 1, (COLORREF)0xFF0000);
-                penold = (HPEN)SelectObject(hdc, pen);
-                MoveToEx(hdc, 1, size.cy-1, NULL);
-                LineTo(hdc, size.cx+1, size.cy-1);
-                SelectObject(hdc, penold);
-                DeleteObject(pen);
-            }
-
-            EndPaint(hwnd, &ps);
-        }
-        return 1;
-    }
-    return RealProc(hwnd, uMsg, wParam, lParam);
-}
 
 void C_Texer2::LoadExamples(HWND button, HWND ctl, bool is_init) {
     RECT r;
@@ -406,14 +306,6 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
                 if (!found)
                     SendDlgItemMessage(hwndDlg, IDC_TEXERII_TEXTURE, CB_SETCURSEL, 0, 0);
-            }
-
-            {
-                long gwl;
-                HWND url = GetDlgItem(hwndDlg, IDC_TEXERII_URL);
-                gwl = GetWindowLong(url, GWL_WNDPROC);
-                SetWindowLong(url, GWL_USERDATA, gwl);
-                SetWindowLong(url, GWL_WNDPROC, (long)URLProc);
             }
 
             SetDlgItemText(hwndDlg, IDC_TEXERII_CINIT, g_ConfigThis->code.init);
