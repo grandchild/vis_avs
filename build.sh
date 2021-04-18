@@ -3,7 +3,7 @@
 if [ ! -d build ]; then
     (mkdir -p build \
         && cd build \
-        && mingw32-cmake \
+        && i686-w64-mingw32-cmake \
             -D CMAKE_TOOLCHAIN_FILE=../CMake-MingWcross-toolchain.txt \
             .. \
         && make
