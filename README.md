@@ -31,6 +31,33 @@ off until after that goal is achieved.
 
 First, install a 32bit MingW-w64 GCC (with C++ support) and and a cross-compiler CMake.
 
+Choose your Linux distro, and run the respective commands to install the build dependencies and cross-compile AVS:
+
+<details><summary><em>Fedora / RedHat</em></summary>
+
+```shell
+sudo dnf install mingw32-gcc-c++ mingw32-gcc
+mkdir -p build
+cd build
+mingw32-cmake ..
+make
+```
+    
+ </details>
+
+<details><summary><em>Archlinux</em></summary>
+
+```shell
+sudo pacman -S --needed mingw-w64-gcc mingw-w64-cmake
+mkdir -p build
+cd build
+i686-w64-mingw32-cmake ..
+make
+```
+
+ </details>
+
+
 ```shell
 mkdir build
 cd build
