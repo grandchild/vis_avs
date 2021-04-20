@@ -140,170 +140,175 @@ INLINE double Fractional(double f) {
 /* asm shorthands */
 #ifdef _MSC_VER
 
-#define T2_PREP_MASK_COLOR  \
-    __asm {                 \
-        pxor mm5, mm5;      \
-        movd mm7, color;    \
-        punpcklbw mm7, mm5; \
-    }
+#define T2_PREP_MASK_COLOR     \
+    __asm pxor      mm5, mm5   \
+    __asm movd      mm7, color \
+    __asm punpcklbw mm7, mm5
 
+#define T2_SCALE_MINMAX_SIGNMASK __asm movd mm6, signmask
 
-#define T2_SCALE_BLEND_ASM_ENTER(LOOP_LABEL)                                   \
-    __asm {                                                                    \
-        push esi;                                                              \
-        push edi;                                                              \
-        push edx;                                                              \
-        /* esi = texture width */                                              \
-        mov esi, iw;                                                           \
-        inc esi;                                                               \
-        pxor mm5, mm5;                                                         \
-                                                                               \
-        /* calculate dy coefficient for this scanline */                       \
-        /* store in mm4 = dy cloned into all bytes */                          \
-        movd mm4, cy0;                                                         \
-        psrlw mm4, 8;                                                          \
-        punpcklwd mm4, mm4;                                                    \
-        punpckldq mm4, mm4;                                                    \
-                                                                               \
-        /* loop counter */                                                     \
-        mov ecx, tot;                                                          \
-        inc ecx;                                                               \
-                                                                               \
-        /* set output pointer */                                               \
-        mov edi, outp;                                                         \
-                                                                               \
-        /* beginning x tex coordinate */                                       \
-        mov ebx, cx0;                                                          \
-                                                                               \
-        /* calculate y combined address for first point a for this scanline */ \
-        /* store in ebp = texture start address for this scanline */           \
-        mov eax, cy0;                                                          \
-        shr eax, 16;                                                           \
-        imul eax, esi;                                                         \
-        shl eax, 2;                                                            \
-        mov edx, texture;                                                      \
-        add edx, eax;                                                          \
-                                                                               \
-        /* begin loop */                                                       \
-        LOOP_LABEL:                                                            \
-                                                                               \
-        /* calculate dx, fractional part of tex coord */                       \
-        movd mm3, ebx;                                                         \
-        psrlw mm3, 8;                                                          \
-        punpcklwd mm3, mm3;                                                    \
-        punpckldq mm3, mm3;                                                    \
-                                                                               \
-        /* convert fixed point into floor and load pixel address */            \
-        mov eax, ebx;                                                          \
-        shr eax, 16;                                                           \
-        lea eax, dword ptr [edx+eax*4];                                        \
-                                                                               \
-        /* mm0 = b*dx */                                                       \
-        movd mm0, dword ptr [eax+4]; /* b */                                   \
-        punpcklbw mm0, mm5;                                                    \
-        pmullw mm0, mm3;                                                       \
-        psrlw mm0, 8;                                                          \
-        /* mm1 = a*(1-dx) */                                                   \
-        movd mm1, dword ptr [eax]; /* a */                                     \
-        pxor mm3, mmxxor;                                                      \
-        punpcklbw mm1, mm5;                                                    \
-        pmullw mm1, mm3;                                                       \
-        psrlw mm1, 8;                                                          \
-        paddw mm0, mm1;                                                        \
-                                                                               \
-        /* mm1 = c*(1-dx) */                                                   \
-        movd mm1, dword ptr [eax+esi*4]; /* c */                               \
-        punpcklbw mm1, mm5;                                                    \
-        pmullw mm1, mm3;                                                       \
-        psrlw mm1, 8;                                                          \
-        /* mm2 = d*dx */                                                       \
-        movd mm2, dword ptr [eax+esi*4+4]; /* d */                             \
-        pxor mm3, mmxxor;                                                      \
-        punpcklbw mm2, mm5;                                                    \
-        pmullw mm2, mm3;                                                       \
-        psrlw mm2, 8;                                                          \
-        paddw mm1, mm2;                                                        \
-                                                                               \
-        /* combine */                                                          \
-        pmullw mm1, mm4;                                                       \
-        psrlw mm1, 8;                                                          \
-        pxor mm4, mmxxor;                                                      \
-        pmullw mm0, mm4;                                                       \
-        psrlw mm0, 8;                                                          \
-        paddw mm0, mm1;                                                        \
-        pxor mm4, mmxxor;                                                      \
-                                                                               \
-        /* filter color */                                                     \
-        /* (already unpacked) punpcklbw mm0, mm5; */                           \
-        pmullw mm0, mm7;
+#define T2_SCALE_BLEND_AND_STORE_ALPHA             \
+    /* duplicate blend factor into all channels */ \
+    __asm mov       eax, t                         \
+    __asm mov       edx, eax                       \
+    __asm shl       eax, 16                        \
+    __asm or        eax, edx                       \
+    __asm mov       [alpha], eax                   \
+    __asm mov       [alpha + 4], eax               \
+                                                   \
+    /* store alpha and (256 - alpha) */            \
+    __asm movq      mm6, qword ptr alpha           \
+    __asm movq      mm3, salpha                    \
+    __asm psubusw   mm3, mm6
+
+#define T2_SCALE_BLEND_ASM_ENTER(LOOP_LABEL)                               \
+    __asm push      esi                                                    \
+    __asm push      edi                                                    \
+    __asm push      edx                                                    \
+    /* esi = texture width */                                              \
+    __asm mov       esi, iw                                                \
+    __asm inc       esi                                                    \
+    __asm pxor      mm5, mm5                                               \
+                                                                           \
+    /* calculate dy coefficient for this scanline */                       \
+    /* store in mm4 = dy cloned into all bytes */                          \
+    __asm movd      mm4, cy0                                               \
+    __asm psrlw     mm4, 8                                                 \
+    __asm punpcklwd mm4, mm4                                               \
+    __asm punpckldq mm4, mm4                                               \
+                                                                           \
+    /* loop counter */                                                     \
+    __asm mov       ecx, tot                                               \
+    __asm inc       ecx                                                    \
+                                                                           \
+    /* set output pointer */                                               \
+    __asm mov       edi, outp                                              \
+                                                                           \
+    /* beginning x tex coordinate */                                       \
+    __asm mov       ebx, cx0                                               \
+                                                                           \
+    /* calculate y combined address for first point a for this scanline */ \
+    /* store in ebp = texture start address for this scanline */           \
+    __asm mov       eax, cy0                                               \
+    __asm shr       eax, 16                                                \
+    __asm imul      eax, esi                                               \
+    __asm shl       eax, 2                                                 \
+    __asm mov       edx, texture                                           \
+    __asm add       edx, eax                                               \
+                                                                           \
+    /* begin loop */                                                       \
+    __asm LOOP_LABEL:                                                      \
+                                                                           \
+    /* calculate dx, fractional part of tex coord */                       \
+    __asm movd      mm3, ebx                                               \
+    __asm psrlw     mm3, 8                                                 \
+    __asm punpcklwd mm3, mm3                                               \
+    __asm punpckldq mm3, mm3                                               \
+                                                                           \
+    /* convert fixed point into floor and load pixel address */            \
+    __asm mov       eax, ebx                                               \
+    __asm shr       eax, 16                                                \
+    __asm lea       eax, dword ptr [edx+eax*4]                             \
+                                                                           \
+    /* mm0 = b*dx */                                                       \
+    __asm movd      mm0, dword ptr [eax+4] /* b */                         \
+    __asm punpcklbw mm0, mm5                                               \
+    __asm pmullw    mm0, mm3                                               \
+    __asm psrlw     mm0, 8                                                 \
+    /* mm1 = a*(1-dx) */                                                   \
+    __asm movd      mm1, dword ptr [eax] /* a */                           \
+    __asm pxor      mm3, mmxxor                                            \
+    __asm punpcklbw mm1, mm5                                               \
+    __asm pmullw    mm1, mm3                                               \
+    __asm psrlw     mm1, 8                                                 \
+    __asm paddw     mm0, mm1                                               \
+                                                                           \
+    /* mm1 = c*(1-dx) */                                                   \
+    __asm movd      mm1, dword ptr [eax+esi*4] /* c */                     \
+    __asm punpcklbw mm1, mm5                                               \
+    __asm pmullw    mm1, mm3                                               \
+    __asm psrlw     mm1, 8                                                 \
+    /* mm2 = d*dx */                                                       \
+    __asm movd      mm2, dword ptr [eax+esi*4+4] /* d */                   \
+    __asm pxor      mm3, mmxxor                                            \
+    __asm punpcklbw mm2, mm5                                               \
+    __asm pmullw    mm2, mm3                                               \
+    __asm psrlw     mm2, 8                                                 \
+    __asm paddw     mm1, mm2                                               \
+                                                                           \
+    /* combine */                                                          \
+    __asm pmullw    mm1, mm4                                               \
+    __asm psrlw     mm1, 8                                                 \
+    __asm pxor      mm4, mmxxor                                            \
+    __asm pmullw    mm0, mm4                                               \
+    __asm psrlw     mm0, 8                                                 \
+    __asm paddw     mm0, mm1                                               \
+    __asm pxor      mm4, mmxxor                                            \
+                                                                           \
+    /* filter color */                                                     \
+    /* (already unpacked) punpcklbw mm0, mm5 */                            \
+    __asm pmullw    mm0, mm7
 
 /* blendmode-specific code in between here */
 
 #define T2_SCALE_BLEND_ASM_LEAVE(LOOP_LABEL) \
-        /* write pixel */                    \
-        movd dword ptr [edi], mm0;           \
-        add edi, 4;                          \
+    /* write pixel */                        \
+    __asm movd      dword ptr [edi], mm0     \
+    __asm add       edi, 4                   \
                                              \
-        /* advance tex coords, cx += sdx; */ \
-        add ebx, sdx;                        \
+    /* advance tex coords, cx += sdx */      \
+    __asm add       ebx, sdx                 \
                                              \
-        dec ecx;                             \
-        jnz LOOP_LABEL;                      \
+    __asm dec       ecx                      \
+    __asm jnz       LOOP_LABEL               \
                                              \
-        pop ebx;                             \
-        pop edx;                             \
-        pop edi;                             \
-        pop esi;                             \
-    }
+    __asm pop       ebx                      \
+    __asm pop       edx                      \
+    __asm pop       edi                      \
+    __asm pop       esi
 
 
 
-#define T2_NONSCALE_PUSH_ESI_EDI __asm { push esi; push edi; }
+#define T2_NONSCALE_PUSH_ESI_EDI __asm push esi  __asm push edi
 
 #define T2_NONSCALE_MINMAX_MASKS \
-    __asm {                      \
-        movd mm4, maxmask;       \
-        movd mm6, signmask;      \
-    }
+    __asm movd      mm4, maxmask \
+    __asm movd      mm6, signmask
 
-#define T2_BLEND_AND_STORE_ALPHA                       \
-    __asm {                                            \
-        /* duplicate blend factor into all channels */ \
-        mov eax, t;                                    \
-        mov edx, eax;                                  \
-        shl eax, 16;                                   \
-        or  eax, edx;                                  \
-        mov [alpha], eax;                              \
-        mov [alpha+4], eax;                            \
-                                                       \
-        /* store alpha and (256 - alpha) */            \
-        movq mm2, alpha;                               \
-        movq mm3, salpha;                              \
-        psubusw mm3, alpha;                            \
-    }
+#define T2_NONSCALE_BLEND_AND_STORE_ALPHA          \
+    /* duplicate blend factor into all channels */ \
+    __asm mov       eax, t                         \
+    __asm mov       edx, eax                       \
+    __asm shl       eax, 16                        \
+    __asm or        eax, edx                       \
+    __asm mov       [alpha], eax                   \
+    __asm mov       [alpha+4], eax                 \
+                                                   \
+    /* store alpha and (256 - alpha) */            \
+    __asm movq      mm2, alpha                     \
+    __asm movq      mm3, salpha                    \
+    __asm psubusw   mm3, alpha
 
 #define T2_NONSCALE_BLEND_ASM_ENTER(LOOP_LABEL) \
-    __asm {                                     \
-        mov ecx, tot;                           \
-        inc ecx;                                \
-        mov edi, outp;                          \
-        mov esi, inp;                           \
-        LOOP_LABEL:
+    __asm mov       ecx, tot                    \
+    __asm inc       ecx                         \
+    __asm mov       edi, outp                   \
+    __asm mov       esi, inp                    \
+    __asm LOOP_LABEL:
 
 /* blendmode-specific code in between here */
 
 #define T2_NONSCALE_BLEND_ASM_LEAVE(LOOP_LABEL) \
-        add esi, 4;                             \
-        add edi, 4;                             \
-        dec ecx;                                \
-        jnz LOOP_LABEL;                         \
-    }
+    __asm add       esi, 4                      \
+    __asm add       edi, 4                      \
+    __asm dec       ecx                         \
+    __asm jnz       LOOP_LABEL
 
-#define T2_NONSCALE_POP_EDI_ESI __asm { pop edi; pop esi; }
+#define T2_NONSCALE_POP_EDI_ESI __asm pop edi  __asm pop esi
 
-#define T2_ZERO_MM5 __asm pxor mm5, mm5;
+#define T2_ZERO_MM5 __asm pxor mm5, mm5
 
-#define EMMS __asm emms;
+#define EMMS __asm emms
 
 
 #else  // GCC

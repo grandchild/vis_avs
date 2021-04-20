@@ -636,8 +636,10 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_rep)
 #ifdef _MSC_VER
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
+                        __asm {
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
+                        }
 #else  // GCC
                             "psrlw     %%mm0, 8\n\t"
                             "packuswb  %%mm0, %%mm0\n\t"
@@ -658,11 +660,13 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_add)
 #ifdef _MSC_VER
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
+                        __asm {
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
 
                             // save
-                            paddusb mm0, qword ptr [edi];
+                            paddusb mm0, qword ptr [edi]
+                        }
 #else  // GCC
                             "psrlw      %%mm0, 8\n\t"
                             "packuswb   %%mm0, %%mm0\n\t"
@@ -687,25 +691,27 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_max)
 #ifdef _MSC_VER
+                        __asm {
                             // movd mm6, signmask;
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
 
                             // save
-                            movd mm1, dword ptr [edi];
-                            pxor mm0, mm6;
-                            mov eax, 0xFFFFFF;
-                            pxor mm1, mm6;
-                            movd mm5, eax;
-                            movq mm2, mm1;
-                            pcmpgtb mm2, mm0;
-                            movq mm3, mm2;
-                            pxor mm3, mm5;
-                            pxor mm5, mm5;
-                            pand mm0, mm3;
-                            pand mm1, mm2;
-                            por mm0, mm1;
-                            pxor mm0, mm6;
+                            movd mm1, dword ptr [edi]
+                            pxor mm0, mm6
+                            mov eax, 0xFFFFFF
+                            pxor mm1, mm6
+                            movd mm5, eax
+                            movq mm2, mm1
+                            pcmpgtb mm2, mm0
+                            movq mm3, mm2
+                            pxor mm3, mm5
+                            pxor mm5, mm5
+                            pand mm0, mm3
+                            pand mm1, mm2
+                            por mm0, mm1
+                            pxor mm0, mm6
+                        }
 #else  // GCC
                             /*"movd      %%mm6, %[signmask]\n\t"*/
                             "psrlw     %%mm0, 8\n\t"
@@ -743,14 +749,16 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_50)
 #ifdef _MSC_VER
+                        __asm {
 
                             // save
-                            movd mm1, dword ptr [edi];
-                            psrlw mm0, 8;
-                            punpcklbw mm1, mm5;
-                            paddusw mm0, mm1;
-                            psrlw mm0, 1;
-                            packuswb mm0, mm0;
+                            movd mm1, dword ptr [edi]
+                            psrlw mm0, 8
+                            punpcklbw mm1, mm5
+                            paddusw mm0, mm1
+                            psrlw mm0, 1
+                            packuswb mm0, mm0
+                        }
 #else  // GCC
                             "movd       %%mm1, dword ptr [%%edi]\n\t"
                             "psrlw      %%mm0, 8\n\t"
@@ -775,12 +783,14 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_sub1)
 #ifdef _MSC_VER
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
+                        __asm {
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
 
                             // save
-                            movd mm1, dword ptr [edi];
-                            psubusb mm1, mm0;
+                            movd mm1, dword ptr [edi]
+                            psubusb mm1, mm0
+                        }
 #else  // GCC
                             "psrlw mm0, 8\n\t"
                             "packuswb mm0, mm0\n\t"
@@ -805,11 +815,13 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_sub2)
 #ifdef _MSC_VER
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
+                        __asm {
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
 
                             // save
-                            psubusb mm0, qword ptr [edi];
+                            psubusb mm0, qword ptr [edi]
+                        }
 #else  // GCC
                             "psrlw mm0, 8\n\t"
                             "packuswb mm0, mm0\n\t"
@@ -833,14 +845,16 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_mul)
 #ifdef _MSC_VER
-                            psrlw mm0, 8;
+                        __asm {
+                            psrlw mm0, 8
 
                             // save
-                            movd mm1, dword ptr [edi];
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm0;
-                            psrlw mm1, 8;
-                            packuswb mm1, mm1;
+                            movd mm1, dword ptr [edi]
+                            punpcklbw mm1, mm5
+                            pmullw mm1, mm0
+                            psrlw mm1, 8
+                            packuswb mm1, mm1
+                        }
 #else  // GCC
                             "psrlw mm0, 8\n\t"
 
@@ -874,18 +888,20 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_adj)
 #ifdef _MSC_VER
-                            psrlw mm0, 8;
+                        __asm {
+                            psrlw mm0, 8
 
                             // Merged filter/alpha
                             // save
-                            movd mm1, dword ptr [edi];
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm6;
-                            psrlw mm1, 8;
-                            pmullw mm0, alpha;
-                            psrlw mm0, 8;
-                            paddusw mm0, mm1;
-                            packuswb mm0, mm0;
+                            movd mm1, dword ptr [edi]
+                            punpcklbw mm1, mm5
+                            pmullw mm1, mm6
+                            psrlw mm1, 8
+                            pmullw mm0, alpha
+                            psrlw mm0, 8
+                            paddusw mm0, mm1
+                            packuswb mm0, mm0
+                        }
 #else  // GCC
                             "psrlw      %%mm0, 8\n\t"
 
@@ -916,10 +932,12 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_xor)
 #ifdef _MSC_VER
-                            psrlw mm0, 8;
+                        __asm {
+                            psrlw mm0, 8
 
                             // save
-                            pxor mm0, qword ptr [edi];
+                            pxor mm0, qword ptr [edi]
+                        }
 #else  // GCC
                             "psrlw  %%mm0, 8\n\t"
 
@@ -944,25 +962,27 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_min)
 #ifdef _MSC_VER
-                            movd mm6, signmask;
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
+                        __asm {
+                            movd mm6, signmask
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
 
                             // save
-                            movd mm1, dword ptr [edi];
-                            pxor mm0, mm6;
-                            mov eax, 0xFFFFFF;
-                            pxor mm1, mm6;
-                            movd mm5, eax;
-                            movq mm2, mm1;
-                            pcmpgtb mm2, mm0;
-                            movq mm3, mm2;
-                            pxor mm3, mm5;
-                            pxor mm5, mm5;
-                            pand mm0, mm2;
-                            pand mm1, mm3;
-                            por mm0, mm1;
-                            pxor mm0, mm6;
+                            movd mm1, dword ptr [edi]
+                            pxor mm0, mm6
+                            mov eax, 0xFFFFFF
+                            pxor mm1, mm6
+                            movd mm5, eax
+                            movq mm2, mm1
+                            pcmpgtb mm2, mm0
+                            movq mm3, mm2
+                            pxor mm3, mm5
+                            pxor mm5, mm5
+                            pand mm0, mm2
+                            pand mm1, mm3
+                            por mm0, mm1
+                            pxor mm0, mm6
+                        }
 #else  // GCC
                             "movd      %%mm6, %[signmask]\n\t"
                             "psrlw     %%mm0, 8\n\t"
@@ -1053,14 +1073,16 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_rep)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [esi];
+                        __asm {
+                            movd mm0, dword ptr [esi]
 
-                            punpcklbw mm0, mm5;
-                            pmullw mm0, mm7;
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
+                            punpcklbw mm0, mm5
+                            pmullw mm0, mm7
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
 
-                            movd dword ptr [edi], mm0;
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd       %%mm0, dword ptr [%%esi]\n\t"
 
@@ -1087,16 +1109,18 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_add)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
+                        __asm {
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
 
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm7;
-                            psrlw mm1, 8;
-                            packuswb mm1, mm1;
+                            punpcklbw mm1, mm5
+                            pmullw mm1, mm7
+                            psrlw mm1, 8
+                            packuswb mm1, mm1
 
-                            paddusb mm0, mm1;
-                            movd dword ptr [edi], mm0;
+                            paddusb mm0, mm1
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd       %%mm0, dword ptr [%%edi]\n\t"
                             "movd       %%mm1, dword ptr [%%esi]\n\t"
@@ -1128,25 +1152,27 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_max)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
+                        __asm {
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
 
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm7;
-                            psrlw mm1, 8;
-                            packuswb mm1, mm1;
+                            punpcklbw mm1, mm5
+                            pmullw mm1, mm7
+                            psrlw mm1, 8
+                            packuswb mm1, mm1
 
-                            pxor mm0, mm6;
-                            pxor mm1, mm6;
-                            movq mm2, mm1;
-                            pcmpgtb mm2, mm0;
-                            movq mm3, mm2;
-                            pxor mm3, mm4;
-                            pand mm0, mm3;
-                            pand mm1, mm2;
-                            por mm0, mm1;
-                            pxor mm0, mm6;
-                            movd dword ptr [edi], mm0;
+                            pxor mm0, mm6
+                            pxor mm1, mm6
+                            movq mm2, mm1
+                            pcmpgtb mm2, mm0
+                            movq mm3, mm2
+                            pxor mm3, mm4
+                            pand mm0, mm3
+                            pand mm1, mm2
+                            por mm0, mm1
+                            pxor mm0, mm6
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd       %%mm0, dword ptr [%%edi]\n\t"
                             "movd       %%mm1, dword ptr [%%esi]\n\t"
@@ -1184,20 +1210,22 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_50)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
+                        __asm {
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
 
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm7;
-                            psrlw mm1, 8;
-                            packuswb mm1, mm1;
+                            punpcklbw mm1, mm5
+                            pmullw mm1, mm7
+                            psrlw mm1, 8
+                            packuswb mm1, mm1
 
-                            punpcklbw mm0, mm5;
-                            punpcklbw mm1, mm5;
-                            paddusw mm0, mm1;
-                            psrlw mm0, 1;
-                            packuswb mm0, mm0;
-                            movd dword ptr [edi], mm0;
+                            punpcklbw mm0, mm5
+                            punpcklbw mm1, mm5
+                            paddusw mm0, mm1
+                            psrlw mm0, 1
+                            packuswb mm0, mm0
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd       %%mm0, dword ptr [%%edi]\n\t"
                             "movd       %%mm1, dword ptr [%%esi]\n\t"
@@ -1230,16 +1258,18 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_sub1)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
+                        __asm {
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
 
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm7;
-                            psrlw mm1, 8;
-                            packuswb mm1, mm1;
+                            punpcklbw mm1, mm5
+                            pmullw mm1, mm7
+                            psrlw mm1, 8
+                            packuswb mm1, mm1
 
-                            psubusb mm0, mm1;
-                            movd dword ptr [edi], mm0;
+                            psubusb mm0, mm1
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd       %%mm0, dword ptr [%%edi]\n\t"
                             "movd       %%mm1, dword ptr [%%esi]\n\t"
@@ -1268,15 +1298,17 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_sub2)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [esi];
+                        __asm {
+                            movd mm0, dword ptr [esi]
 
-                            punpcklbw mm0, mm5;
-                            pmullw mm0, mm7;
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
+                            punpcklbw mm0, mm5
+                            pmullw mm0, mm7
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
 
-                            psubusb mm0, qword ptr [edi];
-                            movd dword ptr [edi], mm0;
+                            psubusb mm0, qword ptr [edi]
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd       %%mm0, dword ptr [%%esi]\n\t"
 
@@ -1304,18 +1336,20 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_mul)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
+                        __asm {
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
 
-                            punpcklbw mm0, mm5;
-                            punpcklbw mm1, mm5;
-                            pmullw mm0, mm1;
-                            psrlw mm0, 8;
+                            punpcklbw mm0, mm5
+                            punpcklbw mm1, mm5
+                            pmullw mm0, mm1
+                            psrlw mm0, 8
                             // Merged filter/mul
-                            pmullw mm0, mm7;
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
-                            movd dword ptr [edi], mm0;
+                            pmullw mm0, mm7
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd       %%mm0, dword ptr [%%edi]\n\t"
                             "movd       %%mm1, dword ptr [%%esi]\n\t"
@@ -1352,22 +1386,24 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_adj)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
+                        __asm {
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
 
-                            punpcklbw mm0, mm5;
-                            punpcklbw mm1, mm5;
+                            punpcklbw mm0, mm5
+                            punpcklbw mm1, mm5
                             // Merged filter/alpha
-                            pmullw    mm1, mm7;
-                            psrlw     mm1, 8;
+                            pmullw    mm1, mm7
+                            psrlw     mm1, 8
 
-                            pmullw    mm0, mm6; // * alpha
-                            pmullw    mm1, mm3; // * 256 - alpha
+                            pmullw    mm0, mm6; // * alph
+                            pmullw    mm1, mm3; // * 256 - alph
 
-                            paddusw   mm0, mm1;
-                            psrlw     mm0, 8;
-                            packuswb  mm0, mm0;
-                            movd dword ptr [edi], mm0;
+                            paddusw   mm0, mm1
+                            psrlw     mm0, 8
+                            packuswb  mm0, mm0
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd       %%mm0, dword ptr [%%edi]\n\t"
                             "movd       %%mm1, dword ptr [%%esi]\n\t"
@@ -1402,16 +1438,18 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_xor)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
+                        __asm {
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
 
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm7;
-                            psrlw mm1, 8;
-                            packuswb mm1, mm1;
+                            punpcklbw mm1, mm5
+                            pmullw mm1, mm7
+                            psrlw mm1, 8
+                            packuswb mm1, mm1
 
-                            pxor mm0, mm1;
-                            movd dword ptr [edi], mm0;
+                            pxor mm0, mm1
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd       %%mm0, dword ptr [%%edi]\n\t"
                             "movd       %%mm1, dword ptr [%%esi]\n\t"
@@ -1443,25 +1481,27 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_min)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
+                        __asm {
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
 
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm7;
-                            psrlw mm1, 8;
-                            packuswb mm1, mm1;
+                            punpcklbw mm1, mm5
+                            pmullw mm1, mm7
+                            psrlw mm1, 8
+                            packuswb mm1, mm1
 
-                            pxor mm0, mm6;
-                            pxor mm1, mm6;
-                            movq mm2, mm1;
-                            pcmpgtb mm2, mm0;
-                            movq mm3, mm2;
-                            pxor mm3, mm4;
-                            pand mm0, mm2;
-                            pand mm1, mm3;
-                            por mm0, mm1;
-                            pxor mm0, mm6;
-                            movd dword ptr [edi], mm0;
+                            pxor mm0, mm6
+                            pxor mm1, mm6
+                            movq mm2, mm1
+                            pcmpgtb mm2, mm0
+                            movq mm3, mm2
+                            pxor mm3, mm4
+                            pand mm0, mm2
+                            pand mm1, mm3
+                            por mm0, mm1
+                            pxor mm0, mm6
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd       %%mm0, dword ptr [%%edi]\n\t"
                             "movd       %%mm1, dword ptr [%%esi]\n\t"
@@ -1505,8 +1545,10 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_rep)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [esi];
-                            movd dword ptr [edi], mm0;
+                        __asm {
+                            movd mm0, dword ptr [esi]
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd  %%mm0, dword ptr [%%esi]\n\t"
                             "movd  dword ptr [%%edi], %%mm0\n\t"
@@ -1527,9 +1569,11 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_add)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [edi];
-                            paddusb mm0, qword ptr [esi];
-                            movd dword ptr [edi], mm0;
+                        __asm {
+                            movd mm0, dword ptr [edi]
+                            paddusb mm0, qword ptr [esi]
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd     %%mm0, dword ptr [%%edi]\n\t"
                             "paddusb  %%mm0, qword ptr [%%esi]\n\t"
@@ -1554,19 +1598,21 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_max)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
-                            pxor mm0, mm6;
-                            pxor mm1, mm6;
-                            movq mm2, mm1;
-                            pcmpgtb mm2, mm0;
-                            movq mm3, mm2;
-                            pxor mm3, mm4;
-                            pand mm0, mm3;
-                            pand mm1, mm2;
-                            por mm0, mm1;
-                            pxor mm0, mm6;
-                            movd dword ptr [edi], mm0;
+                        __asm {
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
+                            pxor mm0, mm6
+                            pxor mm1, mm6
+                            movq mm2, mm1
+                            pcmpgtb mm2, mm0
+                            movq mm3, mm2
+                            pxor mm3, mm4
+                            pand mm0, mm3
+                            pand mm1, mm2
+                            por mm0, mm1
+                            pxor mm0, mm6
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd     %%mm0, dword ptr [%%edi]\n\t"
                             "movd     %%mm1, dword ptr [%%esi]\n\t"
@@ -1598,14 +1644,16 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_50)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
-                            punpcklbw mm0, mm5;
-                            punpcklbw mm1, mm5;
-                            paddusw mm0, mm1;
-                            psrlw mm0, 1;
-                            packuswb mm0, mm0;
-                            movd dword ptr [edi], mm0;
+                        __asm {
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
+                            punpcklbw mm0, mm5
+                            punpcklbw mm1, mm5
+                            paddusw mm0, mm1
+                            psrlw mm0, 1
+                            packuswb mm0, mm0
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd       %%mm0, dword ptr [%%edi]\n\t"
                             "movd       %%mm1, dword ptr [%%esi]\n\t"
@@ -1632,9 +1680,11 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_sub1)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [edi];
-                            psubusb mm0, qword ptr [esi];
-                            movd dword ptr [edi], mm0;
+                        __asm {
+                            movd mm0, dword ptr [edi]
+                            psubusb mm0, qword ptr [esi]
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd     %%mm0, dword ptr [%%edi]\n\t"
                             "psubusb  %%mm0, qword ptr [%%esi]\n\t"
@@ -1656,9 +1706,11 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_sub2)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [esi];
-                            psubusb mm0, qword ptr [edi];
-                            movd dword ptr [edi], mm0;
+                        __asm {
+                            movd mm0, dword ptr [esi]
+                            psubusb mm0, qword ptr [edi]
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd     %%mm0, dword ptr [%%esi]\n\t"
                             "psubusb  %%mm0, qword ptr [%%edi]\n\t"
@@ -1680,14 +1732,16 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_mul)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
-                            punpcklbw mm0, mm5;
-                            punpcklbw mm1, mm5;
-                            pmullw mm0, mm1;
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
-                            movd dword ptr [edi], mm0;
+                        __asm {
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
+                            punpcklbw mm0, mm5
+                            punpcklbw mm1, mm5
+                            pmullw mm0, mm1
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd       %%mm0, dword ptr [%%edi]\n\t"
                             "movd       %%mm1, dword ptr [%%esi]\n\t"
@@ -1721,19 +1775,21 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_adj)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
+                        __asm {
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
 
-                            punpcklbw mm0, mm5;
-                            punpcklbw mm1, mm5;
+                            punpcklbw mm0, mm5
+                            punpcklbw mm1, mm5
 
-                            pmullw    mm0, mm3; // * alpha
-                            pmullw    mm1, mm6; // * 256 - alpha
+                            pmullw    mm0, mm3; // * alph
+                            pmullw    mm1, mm6; // * 256 - alph
 
-                            paddusw   mm0, mm1;
-                            psrlw     mm0, 8;
-                            packuswb  mm0, mm0;
-                            movd dword ptr [edi], mm0;
+                            paddusw   mm0, mm1
+                            psrlw     mm0, 8
+                            packuswb  mm0, mm0
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd       %%mm0, dword ptr [%%edi]\n\t"
                             "movd       %%mm1, dword ptr [%%esi]\n\t"
@@ -1765,9 +1821,11 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_xor)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [edi];
-                            pxor mm0, qword ptr [esi];
-                            movd dword ptr [edi], mm0;
+                        __asm {
+                            movd mm0, dword ptr [edi]
+                            pxor mm0, qword ptr [esi]
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd  %%mm0, dword ptr [%%edi]\n\t"
                             "pxor  %%mm0, qword ptr [%%esi]\n\t"
@@ -1792,19 +1850,21 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_min)
 #ifdef _MSC_VER
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
-                            pxor mm0, mm6;
-                            pxor mm1, mm6;
-                            movq mm2, mm1;
-                            pcmpgtb mm2, mm0;
-                            movq mm3, mm2;
-                            pxor mm3, mm4;
-                            pand mm0, mm2;
-                            pand mm1, mm3;
-                            por mm0, mm1;
-                            pxor mm0, mm6;
-                            movd dword ptr [edi], mm0;
+                        __asm {
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
+                            pxor mm0, mm6
+                            pxor mm1, mm6
+                            movq mm2, mm1
+                            pcmpgtb mm2, mm0
+                            movq mm3, mm2
+                            pxor mm3, mm4
+                            pand mm0, mm2
+                            pand mm1, mm3
+                            por mm0, mm1
+                            pxor mm0, mm6
+                            movd dword ptr [edi], mm0
+                        }
 #else  // GCC
                             "movd     %%mm0, dword ptr [%%edi]\n\t"
                             "movd     %%mm1, dword ptr [%%esi]\n\t"
