@@ -144,3 +144,10 @@ Trans / Movement
 
     * An option to alternatively mirror movements in both the X and Y direction. Like the alternate buffer save/restore. Preferably separate for X and Y.
     * Even better: allow 'n' movements to be entered and let the presetter write an expression that sets a var to a value in the range 0 - (n-1) selecting the correct movement table.
+
+
+Render / TexerII
+
+    * Rotate sprites. ("r" per-point variable?)
+    * Why not "rz" right away, and add "rx" & "ry" to skew the image? Which perspective to use?
+    * Bug: image filenames starting with "_" are buggy (because they are sorted before the default image).
