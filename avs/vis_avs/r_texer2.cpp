@@ -1902,12 +1902,12 @@ inline double wrap_diff_to_plusminus1(double x) {
     return round(x / 2.0) * 2.0;
 }
 
-bool overlaps_edge(double coord, double img_size, int img_size_px, int screen_size_px) {
-    double abs_coord = fabs(coord);
+bool overlaps_edge(double wrapped_coord, double img_size, int img_size_px, int screen_size_px) {
+    double abs_wrapped_coord = fabs(wrapped_coord);
     // a /2 seems missing, but screen has size 2, hence /2(half) *2(screen size) => *1
     // image pixel size needs reduction by one pixel
     double rel_size_half = img_size * (img_size_px - 1) / screen_size_px;
-    return ((abs_coord + rel_size_half) > 1.0) && ((abs_coord - rel_size_half) < 1.0);
+    return ((abs_wrapped_coord + rel_size_half) > 1.0) && ((abs_wrapped_coord - rel_size_half) < 1.0);
 }
 
 int C_Texer2::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
@@ -1975,24 +1975,26 @@ int C_Texer2::render(char visdata[2][2][576], int isBeat, int *framebuffer, int 
                 // TODO [cleanup]: put more of the above into this if-case, or invert to if+continue
                 // TODO [bugfix]: really large images would be clipped while still potentially visible, should be relative to image size
                 if ((szx > .01) && (szy > .01)) {
-                    double wrap_diff_x = 0.0;
-                    double wrap_diff_y = 0.0;
+                    double x = *vars.x;
+                    double y = *vars.y;
                     if (config.wrap != 0) {
-                        wrap_diff_x = wrap_diff_to_plusminus1(*vars.x);
-                        wrap_diff_y = wrap_diff_to_plusminus1(*vars.y);
-                        bool overlaps_x = overlaps_edge(*vars.x, szx, this->iw, w);
-                        bool overlaps_y = overlaps_edge(*vars.y, szy, this->ih, h);
+                        x = *vars.x - wrap_diff_to_plusminus1(*vars.x);
+                        y = *vars.y - wrap_diff_to_plusminus1(*vars.y);
+                        double sign_x2 = x > 0 ? 2.0 : -2.0;
+                        double sign_y2 = y > 0 ? 2.0 : -2.0;
+                        bool overlaps_x = overlaps_edge(x, szx, this->iw, w);
+                        bool overlaps_y = overlaps_edge(y, szy, this->ih, h);
                         if (overlaps_x) {
-                            DrawParticle(framebuffer, texture, w, h, *vars.x, *vars.y - wrap_diff_y, szx, szy, color);
+                            DrawParticle(framebuffer, texture, w, h, x - sign_x2, y, szx, szy, color);
                         }
                         if (overlaps_y) {
-                            DrawParticle(framebuffer, texture, w, h, *vars.x - wrap_diff_x, *vars.y, szx, szy, color);
+                            DrawParticle(framebuffer, texture, w, h, x, y - sign_y2, szx, szy, color);
                         }
                         if (overlaps_x && overlaps_y) {
-                            DrawParticle(framebuffer, texture, w, h, *vars.x, *vars.y, szx, szy, color);
+                            DrawParticle(framebuffer, texture, w, h, x - sign_x2, y - sign_y2, szx, szy, color);
                         }
                     }
-                    DrawParticle(framebuffer, texture, w, h, *vars.x - wrap_diff_x, *vars.y - wrap_diff_y, szx, szy, color);
+                    DrawParticle(framebuffer, texture, w, h, x, y, szx, szy, color);
                 }
             }
         }
