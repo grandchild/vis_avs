@@ -17,9 +17,12 @@ off until after that goal is achieved.
 
 * 🎉 Builds with MinGW-w64 GCC into a running `vis_avs.dll`, loadable with Winamp.
 * 💃 Runs most Winamp2 newpicks! (See below.)
-* ❤️ ConvolutionFilter integrated as a builtin-APE thanks to a [donation to free software
-  ](https://github.com/tholden/AVSConvolutionFilter) by its author [Tom Holden](
-  https://github.com/tholden).
+* ❤️ Sources of original effects integrated as builtin-APEs, thanks to donations to free
+  software by their authors:
+  * _ConvolutionFilter_, by [Tom Holden](https://github.com/tholden). Original
+    [here](https://github.com/tholden/AVSConvolutionFilter).
+  * _TexerII_, by [Steven Wittens](https://acko.net). Original committed to this repo
+    [here](https://github.com/grandchild/vis_avs/commit/ddd97ba7).
 * 🥵 Performance is not up to par with official build (about 20% slower). Looking into
   that...
 * 🧨 APE files are crashing AVS or preventing it from starting. Disable these by
