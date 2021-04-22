@@ -1,17 +1,18 @@
-#define WINVER 0x5000
 #include <windows.h>
 #include <math.h>
 #include <stdio.h>
+#include "r_defs.h"
 #include "r_texer2.h"
-#include "r_texer2_resource.h"
+#include "resource.h"
+#include "../gcc-hacks.h"
 
-class C_THISCLASS : public C_RBASE 
+class C_Texer2 : public C_RBASE
 {
     protected:
     public:
-        C_THISCLASS();
-        virtual ~C_THISCLASS();
-        virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);        
+        C_Texer2();
+        virtual ~C_Texer2();
+        virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
         virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
         virtual char *get_desc();
         virtual void load_config(unsigned char *data, int len);
@@ -21,14 +22,10 @@ class C_THISCLASS : public C_RBASE
         virtual void DeleteTexture();
 
         virtual void Recompile();
-        virtual void Allocate(int n);
+        virtual void DrawParticle(int *framebuffer, int *texture, int w, int h, double x, double y, double sizex, double sizey, unsigned int color);
+        virtual void LoadExamples(HWND button, HWND ctl, bool is_init);
 
-        virtual void DrawParticle(int *framebuffer, int w, int h, double x, double y, double sizex, double sizey, unsigned int color);
-
-//      Particle *particles;
-//      int npart;
-
-        apeconfig config;
+        texer2_apeconfig config;
 
         VM_CONTEXT context;
         VM_CODEHANDLE codeinit;
@@ -45,138 +42,172 @@ class C_THISCLASS : public C_RBASE
         HBITMAP bmpold;
         int iw;
         int ih;
-        int *texbits;
+        int *texbits_normal;
+        int *texbits_flipped;
+        int *texbits_mirrored;
+        int *texbits_rot180;
         bool init;
 
         CRITICAL_SECTION imageload;
         CRITICAL_SECTION codestuff;
+        
+        char* help_text = "Texer II\0"
+            "Texer II is a rendering component that draws what is commonly known as particles.\r\n"
+            "At specified positions on screen, a copy of the source image is placed and blended in various ways.\r\n"
+            "\r\n"
+            "\r\n"
+            "The usage is similar to that of a dot-superscope.\r\n"
+            "The following variables are available:\r\n"
+            "\r\n"
+            "* n: Contains the amount of particles to draw. Usually set in the init code or the frame code.\r\n"
+            "\r\n"
+            "* w,h: Contain the width and height of the window in pixels.\r\n"
+            "\r\n"
+            "* i: Contains the percentage of progress of particles drawn. Varies from 0 (first particle) to 1 (last particle).\r\n"
+            "\r\n"
+            "* x,y: Specify the position of the center of the particle. Range -1 to 1.\r\n"
+            "\r\n"
+            "* v: Contains the i'th sample of the oscilloscope waveform. Use getspec(...) or getosc(...) for other data (check the function reference for their usage).\r\n"
+            "\r\n"
+            "* b: Contains 1 if a beat is occuring, 0 otherwise.\r\n"
+            "\r\n"
+            "* iw, ih: Contain the width and height of the Texer bitmap in pixels\r\n"
+            "\r\n"
+            "* sizex, sizey: Contain the relative horizontal and vertical size of the current particle. Use 1.0 for original size. Negative values cause the image to be mirrored or flipped. Changing size only works if Resizing is on; mirroring/flipping works in all modes.\r\n"
+            "\r\n"
+            "* red, green, blue: Set the color of the current particle in terms of its red, green and blue component. Only works if color filtering is on.\r\n"
+            "\r\n"
+            "* skip: Default is 0. If set to 1, indicates that the current particle should not be drawn.\r\n"
+            "\r\n"
+            "\r\n"
+            "\r\n"
+            "The options available are:\r\n"
+            "\r\n"
+            "* Color filtering: blends the image multiplicatively with the color specified by the red, green and blue variables.\r\n"
+            "\r\n"
+            "* Resizing: resizes the image according to the variables sizex and sizey.\r\n"
+            "\r\n"
+            "* Wrap around: wraps any image data that falls off the border of the screen around to the other side. Useful for making tiled patterns.\r\n"
+            "\r\n"
+            "\r\n"
+            "\r\n"
+            "Texer II supports the standard AVS blend modes. Just place a Misc / Set Render Mode before the Texer II and choose the appropriate setting. You will most likely use Additive or Maximum blend.\r\n"
+            "\r\n"
+            "Texer II was written by Steven Wittens. Thanks to everyone at the Winamp.com forums for feedback, especially Deamon and gaekwad2 for providing the examples and Tuggummi for providing the default image.\r\n";
 };
 
 // extended APE api support
 APEinfo *g_extinfo = 0;
-extern "C"
-{
-  void __declspec(dllexport) _AVS_APE_SetExtInfo(HINSTANCE hDllInstance, APEinfo *ptr)
-  {
-    g_extinfo = ptr;
-  }
-}
 
-// global configuration dialog pointer 
-static C_THISCLASS *g_ConfigThis; 
-static HINSTANCE g_hDllInstance; 
+// global configuration dialog pointer
+static C_Texer2 *g_ConfigThis;
 
-typedef LRESULT CALLBACK WINDOWPROC(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK URLProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    WINDOWPROC *RealProc;
-    char buffer[32];
-    static int hovered = 0;
-
-    RealProc = (WINDOWPROC *)GetWindowLong(hwnd, GWL_USERDATA);
-
-    switch (uMsg) {
-        case WM_TIMER:
-        {
-            POINT p;
-            RECT r;
-            GetCursorPos(&p);
-            ScreenToClient(hwnd, &p);
-            GetClientRect(hwnd, &r);
-            if ((p.x < 0) || (p.x >= r.right) || (p.y < 0) || (p.y >= r.bottom)) {
-                KillTimer(hwnd, 1);
-                hovered = 0;
-                InvalidateRect(hwnd, NULL, FALSE);
-                UpdateWindow(hwnd);
-                HCURSOR c = LoadCursor(NULL, IDC_ARROW);
-                SetCursor(c);
-            }
-        }
-        return 1;
-
-        case WM_RBUTTONUP:
-        case WM_MBUTTONUP:
-        case WM_LBUTTONUP:
-        case WM_RBUTTONDOWN:
-        case WM_MBUTTONDOWN:
-        {
-            HCURSOR c = LoadCursor(NULL, IDC_HAND);
-            SetCursor(c);
-        }
-        return 1;
-        
-        case WM_LBUTTONDOWN:
-        {
-            HCURSOR c = LoadCursor(NULL, IDC_HAND);
-            SetCursor(c);
-            ShellExecute(NULL, "open", "http://avs.acko.net/", NULL, "", SW_SHOW);
-        }
-        return 1;
-
-        case WM_MOUSEMOVE:
-        {
-            hovered = 1;
-            HCURSOR c = LoadCursor(NULL, IDC_HAND);
-            SetCursor(c);
-            SetTimer(hwnd, 1, 50, NULL);
-            InvalidateRect(hwnd, NULL, TRUE);
-            UpdateWindow(hwnd);
-        }
-        return 1;
-
-        case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            HDC hdc;
-            RECT r;
-            HFONT font;
-            SIZE size;
-            HPEN pen, penold;
-            HBRUSH br;
-        
-            hdc = BeginPaint(hwnd, &ps);
-
-            GetWindowText(hwnd, buffer, 32);
-            
-            GetClientRect(hwnd, &r);
-            br = CreateSolidBrush(GetSysColor(COLOR_3DFACE));
-            FillRect(hdc, &r, br);
-            DeleteObject(br);
-
-            font = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-            SelectObject(hdc, font);
-            SetTextColor(hdc, (COLORREF)0xFF0000);
-            SetBkMode(hdc, TRANSPARENT);
-            DrawText(hdc, buffer, strlen(buffer), &r, DT_LEFT);
-
-            if (hovered) {
-                GetTextExtentPoint32(hdc, buffer, strlen(buffer), &size);
-                pen = CreatePen(PS_SOLID, 1, (COLORREF)0xFF0000);
-                penold = (HPEN)SelectObject(hdc, pen);
-                MoveToEx(hdc, 1, size.cy-1, NULL);
-                LineTo(hdc, size.cx+1, size.cy-1);
-                SelectObject(hdc, penold);
-                DeleteObject(pen);
-            }
-
-            EndPaint(hwnd, &ps);
-        }
-        return 1;
-    }
-    return RealProc(hwnd, uMsg, wParam, lParam);
-}
-
-#define ID_EX_1  31337
-void DoExamples(HWND ctl) {
+void C_Texer2::LoadExamples(HWND button, HWND ctl, bool is_init) {
     RECT r;
     GetWindowRect(ctl, &r);
 
     HMENU m = CreatePopupMenu();
-    AppendMenu(m, MF_STRING, ID_EX_1, "(no examples)");
-    
-    int ret = TrackPopupMenu(m, TPM_RETURNCMD, r.left+1, r.bottom+1, 0, ctl, 0);
+    AppendMenu(m, MF_STRING, ID_TEXER2_EXAMPLE_COLOROSC, "Colored Oscilloscope");
+    AppendMenu(m, MF_STRING, ID_TEXER2_EXAMPLE_FLUMMYSPEC, "Flummy Spectrum");
+    AppendMenu(m, MF_STRING, ID_TEXER2_EXAMPLE_BEATCIRCLE, "Beat-responsive Circle");
+    AppendMenu(m, MF_STRING, ID_TEXER2_EXAMPLE_3DRINGS, "3D Beat Rings");
 
-    if (ret == ID_EX_1) {
+    int ret = TrackPopupMenu(m, TPM_RETURNCMD, r.left+1, r.bottom+1, 0, ctl, 0);
+    switch(ret) {
+        case ID_TEXER2_EXAMPLE_COLOROSC:
+            this->code.SetInit("// This example needs Maximum render mode\r\n"
+                               "n=300;");
+            this->code.SetFrame("");
+            this->code.SetBeat("");
+            this->code.SetPoint("x=(i*2-1)*2;y=v;\r\n"
+                                "red=1-y*2;green=abs(y)*2;blue=y*2-1;");
+            this->config.mask = 1;
+            this->config.resize = 0;
+            this->config.wrap = 0;
+            break;
+        case ID_TEXER2_EXAMPLE_FLUMMYSPEC:
+            this->code.SetInit("// This example needs Maximum render mode");
+            this->code.SetFrame("");
+            this->code.SetBeat("");
+            this->code.SetPoint("x=i*1.8-.9;\r\n"
+                                "y=0;\r\n"
+                                "vol=1.001-getspec(abs(x)*.5,.05,0)*min(1,abs(x)+.5)*2;\r\n"
+                                "sizex=vol;sizey=(1/vol)*2;\r\n"
+                                "j=abs(x);red=1-j;green=1-abs(.5-j);blue=j");
+            this->config.mask = 1;
+            this->config.resize = 1;
+            this->config.wrap = 0;
+            break;
+        case ID_TEXER2_EXAMPLE_BEATCIRCLE:
+            this->code.SetInit("// This example needs Maximum render mode\r\n"
+                               "n=30;newradius=.5;");
+            this->code.SetFrame("rotation=rotation+step;step=step*.9;\r\n"
+                                "radius=radius*.9+newradius*.1;\r\n"
+                                "point=0;\r\n"
+                                "aspect=h/w;");
+            this->code.SetBeat("step=.05;\r\n"
+                               "newradius=rand(100)*.005+.5;");
+            this->code.SetPoint("angle=rotation+point/n*$pi*2;\r\n"
+                                "x=cos(angle)*radius*aspect;y=sin(angle)*radius;\r\n"
+                                "red=sin(i*$pi*2)*.5+.5;green=1-red;blue=.5;\r\n"
+                                "point=point+1;");
+            this->config.mask = 1;
+            this->config.resize = 0;
+            this->config.wrap = 0;
+            break;
+        case ID_TEXER2_EXAMPLE_3DRINGS:
+            this->code.SetInit("// This shows how to use texer for 3D particles\r\n"
+                               "// Additive or maximum blend mode should be used\r\n"
+                               "xr=(rand(50)/500)-0.05;\r\n"
+                               "yr=(rand(50)/500)-0.05;\r\n"
+                               "zr=(rand(50)/500)-0.05;");
+            this->code.SetFrame("// Rotation along x/y/z axes\r\n"
+                                "xt=xt+xr;yt=yt+yr;zt=zt+zr;\r\n"
+                                "// Shrink rings\r\n"
+                                "bt=max(0,bt*.95+.01);\r\n"
+                                "// Aspect correction\r\n"
+                                "asp=w/h;\r\n"
+                                "// Dynamically adjust particle count based on ring size\r\n"
+                                "n=((bt*40)|0)*3;");
+            this->code.SetBeat("// New rotation speeds\r\n"
+                               "xr=(rand(50)/500)-0.05;\r\n"
+                               "yr=(rand(50)/500)-0.05;\r\n"
+                               "zr=(rand(50)/500)-0.05;\r\n"
+                               "// Ring size\r\n"
+                               "bt=1.2;\r\n"
+                               "n=((bt*40)|0)*3;");
+            this->code.SetPoint("// 3D object\r\n"
+                                "x1=sin(i*$pi*6)/2*bt;\r\n"
+                                "y1=above(i,.66)-below(i,.33);\r\n"
+                                "z1=cos(i*$pi*6)/2*bt;\r\n"
+                                "\r\n"
+                                "// 3D rotations\r\n"
+                                "x2=x1*sin(zt)-y1*cos(zt);y2=x1*cos(zt)+y1*sin(zt);\r\n"
+                                "z2=x2*cos(yt)+z1*sin(yt);x3=x2*sin(yt)-z1*cos(yt);\r\n"
+                                "y3=y2*sin(xt)-z2*cos(xt);z3=y2*cos(xt)+z2 *sin(xt);\r\n"
+                                "\r\n"
+                                "// 2D Projection\r\n"
+                                "iz=1/(z3+2);\r\n"
+                                "x=x3*iz;y=y3*iz*asp;\r\n"
+                                "sizex=iz*2;sizey=iz*2;");
+            this->config.mask = 0;
+            this->config.resize = 1;
+            this->config.wrap = 0;
+            break;
+        default:
+            break;
     }
+    CheckDlgButton(button, IDC_TEXERII_OWRAP, this->config.wrap ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(button, IDC_TEXERII_OMASK, this->config.mask ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(button, IDC_TEXERII_ORESIZE, this->config.resize ? BST_CHECKED : BST_UNCHECKED);
+    SetDlgItemTextA(button, IDC_TEXERII_CINIT, this->code.init);
+    SetDlgItemTextA(button, IDC_TEXERII_CFRAME, this->code.frame);
+    SetDlgItemTextA(button, IDC_TEXERII_CBEAT, this->code.beat);
+    SetDlgItemTextA(button, IDC_TEXERII_CPOINT, this->code.point);
+    // select the default texture image
+    SendDlgItemMessageA(this->hwndDlg, IDC_TEXERII_TEXTURE, CB_SETCURSEL, 0, 0);
+    this->Recompile();
+    this->InitTexture();
 }
 
 // this is where we deal with the configuration screen
@@ -193,7 +224,7 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
             if (wNotifyCode == CBN_SELCHANGE) {
                 switch (LOWORD(wParam)) {
-                case IDC_TEXTURE:
+                case IDC_TEXERII_TEXTURE:
                     HWND h = (HWND)lParam;
                     int p = SendMessage(h, CB_GETCURSEL, 0, 0);
                     if (p >= 1) {
@@ -206,15 +237,15 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     break;
                 }
             } else if (wNotifyCode == BN_CLICKED) {
-                g_ConfigThis->config.bilinear = IsDlgButtonChecked(hwndDlg, IDC_OBILINEAR) == BST_CHECKED;
-                g_ConfigThis->config.resize = IsDlgButtonChecked(hwndDlg, IDC_ORESIZE) == BST_CHECKED;
-                g_ConfigThis->config.mask = IsDlgButtonChecked(hwndDlg, IDC_OMASK) == BST_CHECKED;
+                g_ConfigThis->config.wrap = IsDlgButtonChecked(hwndDlg, IDC_TEXERII_OWRAP) == BST_CHECKED;
+                g_ConfigThis->config.resize = IsDlgButtonChecked(hwndDlg, IDC_TEXERII_ORESIZE) == BST_CHECKED;
+                g_ConfigThis->config.mask = IsDlgButtonChecked(hwndDlg, IDC_TEXERII_OMASK) == BST_CHECKED;
 
-                if (LOWORD(wParam) == IDC_ABOUT) {
-                    MessageBox(hwndDlg,
-                        "Texer II works like a dot-superscope, except it draws a bitmap instead of a dot at each location.\n\nVariables: n, i, x, y, w, h, v, sizex, sizey, red, green, blue.\n\n", "Texer II", MB_OK);
-                } else if (LOWORD(wParam) == IDC_EXAMPLE) {
-                    DoExamples(GetDlgItem(hwndDlg, IDC_EXAMPLE));
+                if (LOWORD(wParam) == IDC_TEXERII_ABOUT) {
+                    g_extinfo->doscripthelp(hwndDlg, g_ConfigThis->help_text);
+                } else if (LOWORD(wParam) == IDC_TEXERII_EXAMPLE) {
+                    HWND examplesButton = GetDlgItem(hwndDlg, IDC_TEXERII_EXAMPLE);
+                    g_ConfigThis->LoadExamples(hwndDlg, examplesButton, false);
                 }
             } else if (wNotifyCode == EN_CHANGE) {
                 char *buf;
@@ -223,19 +254,19 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 GetWindowText(h, buf, l+1);
 
                 switch (LOWORD(wParam)) {
-                case IDC_CINIT:
+                case IDC_TEXERII_CINIT:
                     g_ConfigThis->code.SetInit(buf);
                     g_ConfigThis->Recompile();
                     break;
-                case IDC_CFRAME:
+                case IDC_TEXERII_CFRAME:
                     g_ConfigThis->code.SetFrame(buf);
                     g_ConfigThis->Recompile();
                     break;
-                case IDC_CBEAT:
+                case IDC_TEXERII_CBEAT:
                     g_ConfigThis->code.SetBeat(buf);
                     g_ConfigThis->Recompile();
                     break;
-                case IDC_CPOINT:
+                case IDC_TEXERII_CPOINT:
                     g_ConfigThis->code.SetPoint(buf);
                     g_ConfigThis->Recompile();
                     break;
@@ -246,7 +277,7 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             }
             return 1;
         }
-                
+
         case WM_INITDIALOG:
             g_ConfigThis->hwndDlg = hwndDlg;
 
@@ -254,18 +285,17 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 WIN32_FIND_DATA wfd;
                 HANDLE h;
 
-                GetModuleFileName(g_hDllInstance, buf, MAX_PATH);
-                strcpy(strrchr(buf, '\\') + 1, "*.bmp");
+                wsprintf(buf,"%s\\*.bmp",g_path);
 
                 bool found = false;
-                SendDlgItemMessage(hwndDlg, IDC_TEXTURE, CB_ADDSTRING, 0, (LPARAM)"(default image)");
+                SendDlgItemMessage(hwndDlg, IDC_TEXERII_TEXTURE, CB_ADDSTRING, 0, (LPARAM)"(default image)");
                 h = FindFirstFile(buf, &wfd);
                 if (h != INVALID_HANDLE_VALUE) {
                     bool rep = true;
                     while (rep) {
-                        int p = SendDlgItemMessage(hwndDlg, IDC_TEXTURE, CB_ADDSTRING, 0, (LPARAM)wfd.cFileName);
+                        int p = SendDlgItemMessage(hwndDlg, IDC_TEXERII_TEXTURE, CB_ADDSTRING, 0, (LPARAM)wfd.cFileName);
                         if (stricmp(wfd.cFileName, g_ConfigThis->config.img) == 0) {
-                            SendDlgItemMessage(hwndDlg, IDC_TEXTURE, CB_SETCURSEL, p, 0);
+                            SendDlgItemMessage(hwndDlg, IDC_TEXERII_TEXTURE, CB_SETCURSEL, p, 0);
                             found = true;
                         }
                         if (!FindNextFile(h, &wfd)) {
@@ -275,25 +305,17 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     FindClose(h);
                 }
                 if (!found)
-                    SendDlgItemMessage(hwndDlg, IDC_TEXTURE, CB_SETCURSEL, 0, 0);
+                    SendDlgItemMessage(hwndDlg, IDC_TEXERII_TEXTURE, CB_SETCURSEL, 0, 0);
             }
 
-            {
-                long gwl;
-                HWND url = GetDlgItem(hwndDlg, IDC_URL);
-                gwl = GetWindowLong(url, GWL_WNDPROC);
-                SetWindowLong(url, GWL_USERDATA, gwl);
-                SetWindowLong(url, GWL_WNDPROC, (long)URLProc);
-            }
+            SetDlgItemText(hwndDlg, IDC_TEXERII_CINIT, g_ConfigThis->code.init);
+            SetDlgItemText(hwndDlg, IDC_TEXERII_CFRAME, g_ConfigThis->code.frame);
+            SetDlgItemText(hwndDlg, IDC_TEXERII_CBEAT, g_ConfigThis->code.beat);
+            SetDlgItemText(hwndDlg, IDC_TEXERII_CPOINT, g_ConfigThis->code.point);
 
-            SetDlgItemText(hwndDlg, IDC_CINIT, g_ConfigThis->code.init);
-            SetDlgItemText(hwndDlg, IDC_CFRAME, g_ConfigThis->code.frame);
-            SetDlgItemText(hwndDlg, IDC_CBEAT, g_ConfigThis->code.beat);
-            SetDlgItemText(hwndDlg, IDC_CPOINT, g_ConfigThis->code.point);
-
-            CheckDlgButton(hwndDlg, IDC_OBILINEAR, g_ConfigThis->config.bilinear ? BST_CHECKED : BST_UNCHECKED);
-            CheckDlgButton(hwndDlg, IDC_OMASK, g_ConfigThis->config.mask ? BST_CHECKED : BST_UNCHECKED);
-            CheckDlgButton(hwndDlg, IDC_ORESIZE, g_ConfigThis->config.resize ? BST_CHECKED : BST_UNCHECKED);
+            CheckDlgButton(hwndDlg, IDC_TEXERII_OWRAP, g_ConfigThis->config.wrap ? BST_CHECKED : BST_UNCHECKED);
+            CheckDlgButton(hwndDlg, IDC_TEXERII_OMASK, g_ConfigThis->config.mask ? BST_CHECKED : BST_UNCHECKED);
+            CheckDlgButton(hwndDlg, IDC_TEXERII_ORESIZE, g_ConfigThis->config.resize ? BST_CHECKED : BST_UNCHECKED);
 
             return 1;
 
@@ -303,20 +325,8 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
     return 0;
 }
 
-void C_THISCLASS::Allocate(int n) {
-/*  if (n <= npart) return;
-    Particle *p = new Particle[n];
-    if (npart > 0) {
-        memcpy(p, particles, npart*sizeof(Particle));
-    }
-    memset(p + npart, 0, sizeof(Particle)*(n - npart));
-    if (particles) {
-        delete particles;
-    }
-    particles = p;*/
-}
 
-void C_THISCLASS::Recompile() {
+void C_Texer2::Recompile() {
     EnterCriticalSection(&codestuff);
 
     init = true;
@@ -353,25 +363,24 @@ void C_THISCLASS::Recompile() {
     LeaveCriticalSection(&codestuff);
 }
 
-// set up default configuration 
-C_THISCLASS::C_THISCLASS() 
+// set up default configuration
+C_Texer2::C_Texer2()
 {
-    memset(&config, 0, sizeof(apeconfig));
+    memset(&config, 0, sizeof(texer2_apeconfig));
     hwndDlg = 0;
     bmp = 0;
     iw = 0;
     ih = 0;
-    texbits = 0;
+    texbits_normal = 0;
+    texbits_flipped = 0;
+    texbits_mirrored = 0;
+    texbits_rot180 = 0;
     init = true;
-//  npart = 0;
-//  particles = 0;
 
-    char DEVMSG[] = "/* This a development alpha version.\r\nDo not distribute */";
-    char *DEVVER = new char[strlen(DEVMSG)+1];
-    strcpy(DEVVER, DEVMSG);
-    code.SetInit(DEVVER);
-
-    Allocate(10);
+    // char DEVMSG[] = "/* This a development alpha version.\r\nDo not distribute */";
+    // char *DEVVER = new char[strlen(DEVMSG)+1];
+    // strcpy(DEVVER, DEVMSG);
+    // code.SetInit(DEVVER);
 
     InitializeCriticalSection(&imageload);
     InitializeCriticalSection(&codestuff);
@@ -384,7 +393,7 @@ C_THISCLASS::C_THISCLASS()
 }
 
 // virtual destructor
-C_THISCLASS::~C_THISCLASS() 
+C_Texer2::~C_Texer2()
 {
     if (bmp)
         DeleteTexture();
@@ -403,7 +412,7 @@ C_THISCLASS::~C_THISCLASS()
     g_extinfo->freeVM(context);
 }
 
-void C_THISCLASS::DeleteTexture()
+void C_Texer2::DeleteTexture()
 {
     EnterCriticalSection(&imageload);
     if (bmp) {
@@ -411,14 +420,17 @@ void C_THISCLASS::DeleteTexture()
         DeleteObject(bmp);
         DeleteDC(bmpdc);
         iw = ih = 0;
-        delete texbits;
+        delete this->texbits_normal;
+        delete this->texbits_flipped;
+        delete this->texbits_mirrored;
+        delete this->texbits_rot180;
     }
-    bmp = 0;
+    bmp = NULL;
     LeaveCriticalSection(&imageload);
 }
 
 extern unsigned char rawData[1323]; // example pic
-void C_THISCLASS::InitTexture()
+void C_Texer2::InitTexture()
 {
     EnterCriticalSection(&imageload);
     if (bmp)
@@ -426,9 +438,8 @@ void C_THISCLASS::InitTexture()
     bool loaddefault = false;
     if (strlen(config.img)) {
         char buf[MAX_PATH];
-        
-        GetModuleFileName(g_hDllInstance, buf, MAX_PATH);
-        strcpy(strrchr(buf, '\\') + 1, config.img);
+
+        wsprintf(buf, "%s\\%s", g_path, config.img);
 
         HANDLE f = CreateFile(buf, 0, FILE_SHARE_READ|FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
         if (f != INVALID_HANDLE_VALUE) {
@@ -439,39 +450,68 @@ void C_THISCLASS::InitTexture()
             BITMAPINFO bi;
 
             GetObject(bmp, sizeof(dib), &dib);
-            
+
+            if(dib.dsBmih.biWidth < 2) {
+                dib.dsBmih.biWidth = 2;
+            }
             iw = dib.dsBmih.biWidth;
+            if(dib.dsBmih.biHeight < 2) {
+                dib.dsBmih.biHeight = 2;
+            }
             ih = dib.dsBmih.biHeight;
 
             bmpdc = CreateCompatibleDC(NULL);
             bmpold = (HBITMAP)SelectObject(bmpdc, bmp);
 
-            bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-            bi.bmiHeader.biWidth = iw;
+            bi.bmiHeader.biSizeImage = iw*ih*4;
             bi.bmiHeader.biHeight = -ih;
+            bi.bmiHeader.biWidth = iw;
+            bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
             bi.bmiHeader.biPlanes = 1;
             bi.bmiHeader.biBitCount = 32;
             bi.bmiHeader.biCompression = BI_RGB;
-            bi.bmiHeader.biSizeImage = iw*ih*4;
             bi.bmiHeader.biXPelsPerMeter = 0;
             bi.bmiHeader.biYPelsPerMeter = 0;
-            bi.bmiHeader.biClrUsed = 16777215;
-            bi.bmiHeader.biClrImportant = 16777215;
-            
-            texbits = (int *)new unsigned char[bi.bmiHeader.biSizeImage];
-            GetDIBits(bmpdc, bmp, 0, ih, texbits, &bi, DIB_RGB_COLORS);
+            bi.bmiHeader.biClrUsed = 0xffffff;
+            bi.bmiHeader.biClrImportant = 0xffffff;
+
+            this->texbits_normal = (int *)new unsigned char[bi.bmiHeader.biSizeImage];
+            this->texbits_flipped = (int *)new unsigned char[bi.bmiHeader.biSizeImage];
+            this->texbits_mirrored = (int *)new unsigned char[bi.bmiHeader.biSizeImage];
+            this->texbits_rot180 = (int *)new unsigned char[bi.bmiHeader.biSizeImage];
+            GetDIBits(bmpdc, bmp, 0, ih, texbits_normal, &bi, DIB_RGB_COLORS);
+
+            int y = 0;
+            while (y < ih) {
+                int x = 0;
+                while (x < iw) {
+                    int value = texbits_normal[y * iw + x];
+                    texbits_flipped[(ih - y - 1) * iw + x] = value;
+                    texbits_mirrored[(y + 1) * iw - x - 1] = value;
+                    texbits_rot180[(ih - y) * iw - x - 1] = value;
+                    x++;
+                }
+                y++;
+            }
         } else {
             loaddefault = true;
         }
     } else {
-            loaddefault = true;
+        loaddefault = true;
     }
     if (loaddefault) {
         iw = 21;
         ih = 21;
-        texbits = (int *)new unsigned char[iw*ih*4];
+        this->texbits_normal = (int *)new unsigned char[iw * ih * 4];
+        this->texbits_flipped = (int *)new unsigned char[iw * ih * 4];
+        this->texbits_mirrored = (int *)new unsigned char[iw * ih * 4];
+        this->texbits_rot180 = (int *)new unsigned char[iw * ih * 4];
         for (int i = 0; i < iw*ih; ++i) {
-            texbits[i] = *(int *)&rawData[i*3];
+            // the default image is symmetrical in all directions
+            texbits_normal[i] = *(int *)&rawData[i * 3];
+            texbits_flipped[i] = *(int *)&rawData[i * 3];
+            texbits_mirrored[i] = *(int *)&rawData[i * 3];
+            texbits_rot180[i] = *(int *)&rawData[i * 3];
         }
         bmp = (HBITMAP)0xcdcdcdcd;
     }
@@ -485,9 +525,8 @@ struct RECTf {
     double bottom;
 };
 
-void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double y, double sizex, double sizey, unsigned int color) {
-    config.bilinear = 1;
 
+void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double x, double y, double sizex, double sizey, unsigned int color) {
     // Adjust width/height
     --w;
     --h;
@@ -497,6 +536,10 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
     // Texture Coordinates
     double x0 = 0.0;
     double y0 = 0.0;
+    
+    if (config.wrap) {
+        
+    }
 
 /***************************************************************************/
 /***************************************************************************/
@@ -513,10 +556,10 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
         r.bottom = (ih-1)*.5*sizey + 0.5 + (y *.5 + .5)*h;
 
         RECT r2;
-        r2.left = DoubleToInt(r.left);
-        r2.top = DoubleToInt(r.top);
-        r2.right = DoubleToInt(r.right);
-        r2.bottom = DoubleToInt(r.bottom);
+        r2.left = RoundToInt(r.left);
+        r2.top = RoundToInt(r.top);
+        r2.right = RoundToInt(r.right);
+        r2.bottom = RoundToInt(r.bottom);
 
         // Visiblity culling
         if ((r2.right < 0.0f) || (r2.left > w) || (r2.bottom < 0.0f) || (r2.top > h)) {
@@ -547,8 +590,8 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
             double fx0 = x0*iw;
             double fy0 = y0*ih;
 
-            int cx0 = DoubleToInt(fx0);
-            int cy0 = DoubleToInt(fy0);
+            int cx0 = RoundToInt(fx0);
+            int cy0 = RoundToInt(fy0);
 
             // fixed point fractional part of first coordinate
             int dx = 65535 - FloorToInt((.5f-(fx0 - cx0))*65536.0);
@@ -579,14 +622,9 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
             }
 
             int imagewidth = iw;
-            int texdata = *(int *)&texbits;
 
             // Prepare filter color
-            __asm {
-                pxor mm5, mm5;
-                movd mm7, color;
-                punpcklbw mm7, mm5;
-            }
+            T2_PREP_MASK_COLOR
 
             switch (*(g_extinfo->lineblendmode) & 0xFF) {
                 case OUT_REPLACE:
@@ -596,125 +634,23 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
+                        T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_rep)
+#ifdef _MSC_VER
                         __asm {
-                            push esi;
-                            push edi;
-                            push edx;
-                            // esi = texture width
-                            mov esi, imagewidth;
-                            inc esi;
-                            pxor mm5, mm5;
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
                         }
-                        __asm {
-                            // bilinear
-                            push ebx;
-
-                            pxor mm5, mm5;
-
-                            // calculate dy coefficient for this scanline
-                            // store in mm4 = dy cloned into all bytes
-                            movd mm4, cy0;
-                            psrlw mm4, 8;
-                            punpcklwd mm4, mm4;
-                            punpckldq mm4, mm4;
-
-                            // loop counter
-                            mov ecx, tot;
-                            inc ecx;
-
-                            // set output pointer
-                            mov edi, outp;
-
-                            // beginning x tex coordinate
-                            mov ebx, cx0;
-
-                            // calculate y combined address for first point a for this scanline
-                            // store in ebp = texture start address for this scanline
-                            mov eax, cy0;
-                            shr eax, 16;
-                            imul eax, esi;
-                            shl eax, 2;
-                            mov edx, texdata;
-                            add edx, eax;
-
-                            // begin loop
-                            p0looprep:
-
-                            // calculate dx, fractional part of tex coord
-                            movd mm3, ebx;
-                            psrlw mm3, 8;
-                            punpcklwd mm3, mm3;
-                            punpckldq mm3, mm3;
-
-                            // convert fixed point into floor and load pixel address
-                            mov eax, ebx;
-                            shr eax, 16;
-                            lea eax, dword ptr [edx+eax*4];
-
-                            // mm0 = b*dx
-                            movd mm0, dword ptr [eax+4]; //b
-                            punpcklbw mm0, mm5;
-                            pmullw mm0, mm3;
-                            psrlw mm0, 8;
-                            // mm1 = a*(1-dx)
-                            movd mm1, dword ptr [eax]; //a
-                            pxor mm3, mmxxor;
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            paddw mm0, mm1;
-
-                            // mm1 = c*(1-dx)
-                            movd mm1, dword ptr [eax+esi*4]; //c
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            // mm2 = d*dx
-                            movd mm2, dword ptr [eax+esi*4+4]; //d
-                            pxor mm3, mmxxor;
-                            punpcklbw mm2, mm5;
-                            pmullw mm2, mm3;
-                            psrlw mm2, 8;
-                            paddw mm1, mm2;
-
-                            // combine
-                            pmullw mm1, mm4;
-                            psrlw mm1, 8;
-                            pxor mm4, mmxxor;
-                            pmullw mm0, mm4;
-                            psrlw mm0, 8;
-                            paddw mm0, mm1;
-                            pxor mm4, mmxxor;
-
-                            // filter color
-                            // (already unpacked) punpcklbw mm0, mm5;
-                            pmullw mm0, mm7;
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
-
-                            // save
-                            movd dword ptr [edi], mm0;
-                            add edi, 4;
-                            
-                            // advance tex coords, cx += sdx;
-                            add ebx, sdx;
-
-                            dec ecx;
-                            jnz p0looprep;
-
-                            pop ebx;
-                        }
-                        __asm {
-                            pop edx;
-                            pop edi;
-                            pop esi;
-                        }
+#else  // GCC
+                            "psrlw     %%mm0, 8\n\t"
+                            "packuswb  %%mm0, %%mm0\n\t"
+#endif
+                        T2_SCALE_BLEND_ASM_LEAVE(t2_scale_loop_rep)
                         cy0 += sdy;
                         outp += w+1;
                     }
                     break;
                 }
-            
+
                 case OUT_ADDITIVE:
                 {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
@@ -722,269 +658,88 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
+                        T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_add)
+#ifdef _MSC_VER
                         __asm {
-                            push esi;
-                            push edi;
-                            push edx;
-                            // esi = texture width
-                            mov esi, imagewidth;
-                            inc esi;
-                            pxor mm5, mm5;
-                        }
-                        __asm {
-                            // bilinear
-                            push ebx;
-
-                            pxor mm5, mm5;
-
-                            // calculate dy coefficient for this scanline
-                            // store in mm4 = dy cloned into all bytes
-                            movd mm4, cy0;
-                            psrlw mm4, 8;
-                            punpcklwd mm4, mm4;
-                            punpckldq mm4, mm4;
-
-                            // loop counter
-                            mov ecx, tot;
-                            inc ecx;
-
-                            // set output pointer
-                            mov edi, outp;
-
-                            // beginning x tex coordinate
-                            mov ebx, cx0;
-
-                            // calculate y combined address for first point a for this scanline
-                            // store in ebp = texture start address for this scanline
-                            mov eax, cy0;
-                            shr eax, 16;
-                            imul eax, esi;
-                            shl eax, 2;
-                            mov edx, texdata;
-                            add edx, eax;
-
-                            // begin loop
-                            p0loopadd:
-
-                            // calculate dx, fractional part of tex coord
-                            movd mm3, ebx;
-                            psrlw mm3, 8;
-                            punpcklwd mm3, mm3;
-                            punpckldq mm3, mm3;
-
-                            // convert fixed point into floor and load pixel address
-                            mov eax, ebx;
-                            shr eax, 16;
-                            lea eax, dword ptr [edx+eax*4];
-
-                            // mm0 = b*dx
-                            movd mm0, dword ptr [eax+4]; //b
-                            punpcklbw mm0, mm5;
-                            pmullw mm0, mm3;
-                            psrlw mm0, 8;
-                            // mm1 = a*(1-dx)
-                            movd mm1, dword ptr [eax]; //a
-                            pxor mm3, mmxxor;
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            paddw mm0, mm1;
-
-                            // mm1 = c*(1-dx)
-                            movd mm1, dword ptr [eax+esi*4]; //c
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            // mm2 = d*dx
-                            movd mm2, dword ptr [eax+esi*4+4]; //d
-                            pxor mm3, mmxxor;
-                            punpcklbw mm2, mm5;
-                            pmullw mm2, mm3;
-                            psrlw mm2, 8;
-                            paddw mm1, mm2;
-
-                            // combine
-                            pmullw mm1, mm4;
-                            psrlw mm1, 8;
-                            pxor mm4, mmxxor;
-                            pmullw mm0, mm4;
-                            psrlw mm0, 8;
-                            paddw mm0, mm1;
-                            pxor mm4, mmxxor;
-
-                            // filter color
-                            // (already unpacked) punpcklbw mm0, mm5;
-                            pmullw mm0, mm7;
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
 
                             // save
-                            paddusb mm0, dword ptr [edi];
-                            movd dword ptr [edi], mm0;
-                            add edi, 4;
-                            
-                            // advance tex coords, cx += sdx;
-                            add ebx, sdx;
-
-                            dec ecx;
-                            jnz p0loopadd;
-
-                            pop ebx;
+                            paddusb mm0, qword ptr [edi]
                         }
-                        __asm {
-                            pop edx;
-                            pop edi;
-                            pop esi;
-                        }
+#else  // GCC
+                            "psrlw      %%mm0, 8\n\t"
+                            "packuswb   %%mm0, %%mm0\n\t"
+                            "paddusb    %%mm0, qword ptr [%%edi]\n\t"
+#endif
+                        T2_SCALE_BLEND_ASM_LEAVE(t2_scale_loop_add)
                         cy0 += sdy;
                         outp += w+1;
                     }
                     break;
                 }
-            
+
                 case OUT_MAXIMUM:
                 {
                     int maxmask = 0xFFFFFF;
                     int signmask = 0x808080;
+                    T2_SCALE_MINMAX_SIGNMASK
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
                     __int64 *p = &mmxxor;
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
+                        T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_max)
+#ifdef _MSC_VER
                         __asm {
-                            push esi;
-                            push edi;
-                            push edx;
-                            // esi = texture width
-                            mov esi, imagewidth;
-                            inc esi;
-                            pxor mm5, mm5;
-                            movd mm6, signmask;
-                        }
-                        __asm {
-                            // bilinear
-                            push ebx;
-
-                            pxor mm5, mm5;
-
-                            // calculate dy coefficient for this scanline
-                            // store in mm4 = dy cloned into all bytes
-                            movd mm4, cy0;
-                            psrlw mm4, 8;
-                            punpcklwd mm4, mm4;
-                            punpckldq mm4, mm4;
-
-                            // loop counter
-                            mov ecx, tot;
-                            inc ecx;
-
-                            // set output pointer
-                            mov edi, outp;
-
-                            // beginning x tex coordinate
-                            mov ebx, cx0;
-
-                            // calculate y combined address for first point a for this scanline
-                            // store in ebp = texture start address for this scanline
-                            mov eax, cy0;
-                            shr eax, 16;
-                            imul eax, esi;
-                            shl eax, 2;
-                            mov edx, texdata;
-                            add edx, eax;
-
-                            // begin loop
-                            p0loopmax:
-
-                            // calculate dx, fractional part of tex coord
-                            movd mm3, ebx;
-                            psrlw mm3, 8;
-                            punpcklwd mm3, mm3;
-                            punpckldq mm3, mm3;
-
-                            // convert fixed point into floor and load pixel address
-                            mov eax, ebx;
-                            shr eax, 16;
-                            lea eax, dword ptr [edx+eax*4];
-
-                            // mm0 = b*dx
-                            movd mm0, dword ptr [eax+4]; //b
-                            punpcklbw mm0, mm5;
-                            pmullw mm0, mm3;
-                            psrlw mm0, 8;
-                            // mm1 = a*(1-dx)
-                            movd mm1, dword ptr [eax]; //a
-                            pxor mm3, mmxxor;
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            paddw mm0, mm1;
-
-                            // mm1 = c*(1-dx)
-                            movd mm1, dword ptr [eax+esi*4]; //c
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            // mm2 = d*dx
-                            movd mm2, dword ptr [eax+esi*4+4]; //d
-                            pxor mm3, mmxxor;
-                            punpcklbw mm2, mm5;
-                            pmullw mm2, mm3;
-                            psrlw mm2, 8;
-                            paddw mm1, mm2;
-
-                            // combine
-                            pmullw mm1, mm4;
-                            psrlw mm1, 8;
-                            pxor mm4, mmxxor;
-                            pmullw mm0, mm4;
-                            psrlw mm0, 8;
-                            paddw mm0, mm1;
-                            pxor mm4, mmxxor;
-
-                            // filter color
-                            // (already unpacked) punpcklbw mm0, mm5;
-                            pmullw mm0, mm7;
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
+                            // movd mm6, signmask;
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
 
                             // save
-                            movd mm1, dword ptr [edi];
-                            pxor mm0, mm6;
-                            mov eax, 0xFFFFFF;
-                            pxor mm1, mm6;
-                            movd mm5, eax;
-                            movq mm2, mm1;
-                            pcmpgtb mm2, mm0;
-                            movq mm3, mm2;
-                            pxor mm3, mm5;
-                            pxor mm5, mm5;
-                            pand mm0, mm3;
-                            pand mm1, mm2;
-                            por mm0, mm1;
-                            pxor mm0, mm6;
-                            movd dword ptr [edi], mm0;
-                            add edi, 4;
-                            
-                            // advance tex coords, cx += sdx;
-                            add ebx, sdx;
-
-                            dec ecx;
-                            jnz p0loopmax;
-
-                            pop ebx;
+                            movd mm1, dword ptr [edi]
+                            pxor mm0, mm6
+                            mov eax, 0xFFFFFF
+                            pxor mm1, mm6
+                            movd mm5, eax
+                            movq mm2, mm1
+                            pcmpgtb mm2, mm0
+                            movq mm3, mm2
+                            pxor mm3, mm5
+                            pxor mm5, mm5
+                            pand mm0, mm3
+                            pand mm1, mm2
+                            por mm0, mm1
+                            pxor mm0, mm6
                         }
-                        __asm {
-                            pop edx;
-                            pop edi;
-                            pop esi;
-                        }
+#else  // GCC
+                            /*"movd      %%mm6, %[signmask]\n\t"*/
+                            "psrlw     %%mm0, 8\n\t"
+                            "packuswb  %%mm0, %%mm0\n\t"
+
+                            // save
+                            "movd      %%mm1, dword ptr [%%edi]\n\t"
+                            "pxor      %%mm0, %%mm6\n\t"
+                            "mov       %%eax, 0xFFFFFF\n\t"
+                            "pxor      %%mm1, %%mm6\n\t"
+                            "movd      %%mm5, %%eax\n\t"
+                            "movq      %%mm2, %%mm1\n\t"
+                            "pcmpgtb   %%mm2, %%mm0\n\t"
+                            "movq      %%mm3, %%mm2\n\t"
+                            "pxor      %%mm3, %%mm5\n\t"
+                            "pxor      %%mm5, %%mm5\n\t"
+                            "pand      %%mm0, %%mm3\n\t"
+                            "pand      %%mm1, %%mm2\n\t"
+                            "por       %%mm0, %%mm1\n\t"
+                            "pxor      %%mm0, %%mm6\n\t"
+#endif
+                        T2_SCALE_BLEND_ASM_LEAVE(t2_scale_loop_max)
                         cy0 += sdy;
                         outp += w+1;
                     }
                     break;
                 }
-            
+
                 case OUT_5050:
                 {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
@@ -992,129 +747,33 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
+                        T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_50)
+#ifdef _MSC_VER
                         __asm {
-                            push esi;
-                            push edi;
-                            push edx;
-                            // esi = texture width
-                            mov esi, imagewidth;
-                            inc esi;
-                            pxor mm5, mm5;
-                        }
-                        __asm {
-                            // bilinear
-                            push ebx;
-
-                            pxor mm5, mm5;
-
-                            // calculate dy coefficient for this scanline
-                            // store in mm4 = dy cloned into all bytes
-                            movd mm4, cy0;
-                            psrlw mm4, 8;
-                            punpcklwd mm4, mm4;
-                            punpckldq mm4, mm4;
-
-                            // loop counter
-                            mov ecx, tot;
-                            inc ecx;
-
-                            // set output pointer
-                            mov edi, outp;
-
-                            // beginning x tex coordinate
-                            mov ebx, cx0;
-
-                            // calculate y combined address for first point a for this scanline
-                            // store in ebp = texture start address for this scanline
-                            mov eax, cy0;
-                            shr eax, 16;
-                            imul eax, esi;
-                            shl eax, 2;
-                            mov edx, texdata;
-                            add edx, eax;
-
-                            // begin loop
-                            p0loop50:
-
-                            // calculate dx, fractional part of tex coord
-                            movd mm3, ebx;
-                            psrlw mm3, 8;
-                            punpcklwd mm3, mm3;
-                            punpckldq mm3, mm3;
-
-                            // convert fixed point into floor and load pixel address
-                            mov eax, ebx;
-                            shr eax, 16;
-                            lea eax, dword ptr [edx+eax*4];
-
-                            // mm0 = b*dx
-                            movd mm0, dword ptr [eax+4]; //b
-                            punpcklbw mm0, mm5;
-                            pmullw mm0, mm3;
-                            psrlw mm0, 8;
-                            // mm1 = a*(1-dx)
-                            movd mm1, dword ptr [eax]; //a
-                            pxor mm3, mmxxor;
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            paddw mm0, mm1;
-
-                            // mm1 = c*(1-dx)
-                            movd mm1, dword ptr [eax+esi*4]; //c
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            // mm2 = d*dx
-                            movd mm2, dword ptr [eax+esi*4+4]; //d
-                            pxor mm3, mmxxor;
-                            punpcklbw mm2, mm5;
-                            pmullw mm2, mm3;
-                            psrlw mm2, 8;
-                            paddw mm1, mm2;
-
-                            // combine
-                            pmullw mm1, mm4;
-                            psrlw mm1, 8;
-                            pxor mm4, mmxxor;
-                            pmullw mm0, mm4;
-                            psrlw mm0, 8;
-                            paddw mm0, mm1;
-                            pxor mm4, mmxxor;
-
-                            // filter color
-                            // (already unpacked) punpcklbw mm0, mm5;
-                            pmullw mm0, mm7;
 
                             // save
-                            movd mm1, dword ptr [edi];
-                            psrlw mm0, 8;
-                            punpcklbw mm1, mm5;
-                            paddusw mm0, mm1;
-                            psrlw mm0, 1;
-                            packuswb mm0, mm0;
-                            movd dword ptr [edi], mm0;
-                            add edi, 4;
-                            
-                            // advance tex coords, cx += sdx;
-                            add ebx, sdx;
-
-                            dec ecx;
-                            jnz p0loop50;
-
-                            pop ebx;
+                            movd mm1, dword ptr [edi]
+                            psrlw mm0, 8
+                            punpcklbw mm1, mm5
+                            paddusw mm0, mm1
+                            psrlw mm0, 1
+                            packuswb mm0, mm0
                         }
-                        __asm {
-                            pop edx;
-                            pop edi;
-                            pop esi;
-                        }
+#else  // GCC
+                            "movd       %%mm1, dword ptr [%%edi]\n\t"
+                            "psrlw      %%mm0, 8\n\t"
+                            "punpcklbw  %%mm1, %%mm5\n\t"
+                            "paddusw    %%mm0, %%mm1\n\t"
+                            "psrlw      %%mm0, 1\n\t"
+                            "packuswb   %%mm0, %%mm0\n\t"
+#endif
+                        T2_SCALE_BLEND_ASM_LEAVE(t2_scale_loop_50)
                         cy0 += sdy;
                         outp += w+1;
                     }
                     break;
                 }
-            
+
                 case OUT_SUB1:
                 {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
@@ -1122,127 +781,31 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
+                        T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_sub1)
+#ifdef _MSC_VER
                         __asm {
-                            push esi;
-                            push edi;
-                            push edx;
-                            // esi = texture width
-                            mov esi, imagewidth;
-                            inc esi;
-                            pxor mm5, mm5;
-                        }
-                        __asm {
-                            // bilinear
-                            push ebx;
-
-                            pxor mm5, mm5;
-
-                            // calculate dy coefficient for this scanline
-                            // store in mm4 = dy cloned into all bytes
-                            movd mm4, cy0;
-                            psrlw mm4, 8;
-                            punpcklwd mm4, mm4;
-                            punpckldq mm4, mm4;
-
-                            // loop counter
-                            mov ecx, tot;
-                            inc ecx;
-
-                            // set output pointer
-                            mov edi, outp;
-
-                            // beginning x tex coordinate
-                            mov ebx, cx0;
-
-                            // calculate y combined address for first point a for this scanline
-                            // store in ebp = texture start address for this scanline
-                            mov eax, cy0;
-                            shr eax, 16;
-                            imul eax, esi;
-                            shl eax, 2;
-                            mov edx, texdata;
-                            add edx, eax;
-
-                            // begin loop
-                            p0loopsub1:
-
-                            // calculate dx, fractional part of tex coord
-                            movd mm3, ebx;
-                            psrlw mm3, 8;
-                            punpcklwd mm3, mm3;
-                            punpckldq mm3, mm3;
-
-                            // convert fixed point into floor and load pixel address
-                            mov eax, ebx;
-                            shr eax, 16;
-                            lea eax, dword ptr [edx+eax*4];
-
-                            // mm0 = b*dx
-                            movd mm0, dword ptr [eax+4]; //b
-                            punpcklbw mm0, mm5;
-                            pmullw mm0, mm3;
-                            psrlw mm0, 8;
-                            // mm1 = a*(1-dx)
-                            movd mm1, dword ptr [eax]; //a
-                            pxor mm3, mmxxor;
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            paddw mm0, mm1;
-
-                            // mm1 = c*(1-dx)
-                            movd mm1, dword ptr [eax+esi*4]; //c
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            // mm2 = d*dx
-                            movd mm2, dword ptr [eax+esi*4+4]; //d
-                            pxor mm3, mmxxor;
-                            punpcklbw mm2, mm5;
-                            pmullw mm2, mm3;
-                            psrlw mm2, 8;
-                            paddw mm1, mm2;
-
-                            // combine
-                            pmullw mm1, mm4;
-                            psrlw mm1, 8;
-                            pxor mm4, mmxxor;
-                            pmullw mm0, mm4;
-                            psrlw mm0, 8;
-                            paddw mm0, mm1;
-                            pxor mm4, mmxxor;
-
-                            // filter color
-                            // (already unpacked) punpcklbw mm0, mm5;
-                            pmullw mm0, mm7;
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
 
                             // save
-                            movd mm1, dword ptr [edi];
-                            psubusb mm1, mm0;
-                            movd dword ptr [edi], mm1;
-                            add edi, 4;
-                            
-                            // advance tex coords, cx += sdx;
-                            add ebx, sdx;
-
-                            dec ecx;
-                            jnz p0loopsub1;
-
-                            pop ebx;
+                            movd mm1, dword ptr [edi]
+                            psubusb mm1, mm0
                         }
-                        __asm {
-                            pop edx;
-                            pop edi;
-                            pop esi;
-                        }
+#else  // GCC
+                            "psrlw mm0, 8\n\t"
+                            "packuswb mm0, mm0\n\t"
+
+                            // save
+                            "movd mm1, dword ptr [edi]\n\t"
+                            "psubusb mm1, mm0\n\t"
+#endif
+                        T2_SCALE_BLEND_ASM_LEAVE(t2_scale_loop_sub1)
                         cy0 += sdy;
                         outp += w+1;
                     }
                     break;
                 }
-            
+
                 case OUT_SUB2:
                 {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
@@ -1250,126 +813,29 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
+                        T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_sub2)
+#ifdef _MSC_VER
                         __asm {
-                            push esi;
-                            push edi;
-                            push edx;
-                            // esi = texture width
-                            mov esi, imagewidth;
-                            inc esi;
-                            pxor mm5, mm5;
-                        }
-                        __asm {
-                            // bilinear
-                            push ebx;
-
-                            pxor mm5, mm5;
-
-                            // calculate dy coefficient for this scanline
-                            // store in mm4 = dy cloned into all bytes
-                            movd mm4, cy0;
-                            psrlw mm4, 8;
-                            punpcklwd mm4, mm4;
-                            punpckldq mm4, mm4;
-
-                            // loop counter
-                            mov ecx, tot;
-                            inc ecx;
-
-                            // set output pointer
-                            mov edi, outp;
-
-                            // beginning x tex coordinate
-                            mov ebx, cx0;
-
-                            // calculate y combined address for first point a for this scanline
-                            // store in ebp = texture start address for this scanline
-                            mov eax, cy0;
-                            shr eax, 16;
-                            imul eax, esi;
-                            shl eax, 2;
-                            mov edx, texdata;
-                            add edx, eax;
-
-                            // begin loop
-                            p0loopsub2:
-
-                            // calculate dx, fractional part of tex coord
-                            movd mm3, ebx;
-                            psrlw mm3, 8;
-                            punpcklwd mm3, mm3;
-                            punpckldq mm3, mm3;
-
-                            // convert fixed point into floor and load pixel address
-                            mov eax, ebx;
-                            shr eax, 16;
-                            lea eax, dword ptr [edx+eax*4];
-
-                            // mm0 = b*dx
-                            movd mm0, dword ptr [eax+4]; //b
-                            punpcklbw mm0, mm5;
-                            pmullw mm0, mm3;
-                            psrlw mm0, 8;
-                            // mm1 = a*(1-dx)
-                            movd mm1, dword ptr [eax]; //a
-                            pxor mm3, mmxxor;
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            paddw mm0, mm1;
-
-                            // mm1 = c*(1-dx)
-                            movd mm1, dword ptr [eax+esi*4]; //c
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            // mm2 = d*dx
-                            movd mm2, dword ptr [eax+esi*4+4]; //d
-                            pxor mm3, mmxxor;
-                            punpcklbw mm2, mm5;
-                            pmullw mm2, mm3;
-                            psrlw mm2, 8;
-                            paddw mm1, mm2;
-
-                            // combine
-                            pmullw mm1, mm4;
-                            psrlw mm1, 8;
-                            pxor mm4, mmxxor;
-                            pmullw mm0, mm4;
-                            psrlw mm0, 8;
-                            paddw mm0, mm1;
-                            pxor mm4, mmxxor;
-
-                            // filter color
-                            // (already unpacked) punpcklbw mm0, mm5;
-                            pmullw mm0, mm7;
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
 
                             // save
-                            psubusb mm0, dword ptr [edi];
-                            movd dword ptr [edi], mm0;
-                            add edi, 4;
-                            
-                            // advance tex coords, cx += sdx;
-                            add ebx, sdx;
-
-                            dec ecx;
-                            jnz p0loopsub2;
-
-                            pop ebx;
+                            psubusb mm0, qword ptr [edi]
                         }
-                        __asm {
-                            pop edx;
-                            pop edi;
-                            pop esi;
-                        }
+#else  // GCC
+                            "psrlw mm0, 8\n\t"
+                            "packuswb mm0, mm0\n\t"
+
+                            // save
+                            "psubusb mm0, qword ptr [edi]\n\t"
+#endif
+                        T2_SCALE_BLEND_ASM_LEAVE(t2_scale_loop_sub2)
                         cy0 += sdy;
                         outp += w+1;
                     }
                     break;
                 }
-            
+
                 case OUT_MULTIPLY:
                 {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
@@ -1377,280 +843,86 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
+                        T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_mul)
+#ifdef _MSC_VER
                         __asm {
-                            push esi;
-                            push edi;
-                            push edx;
-                            // esi = texture width
-                            mov esi, imagewidth;
-                            inc esi;
-                            pxor mm5, mm5;
-                        }
-                        __asm {
-                            // bilinear
-                            push ebx;
-
-                            pxor mm5, mm5;
-
-                            // calculate dy coefficient for this scanline
-                            // store in mm4 = dy cloned into all bytes
-                            movd mm4, cy0;
-                            psrlw mm4, 8;
-                            punpcklwd mm4, mm4;
-                            punpckldq mm4, mm4;
-
-                            // loop counter
-                            mov ecx, tot;
-                            inc ecx;
-
-                            // set output pointer
-                            mov edi, outp;
-
-                            // beginning x tex coordinate
-                            mov ebx, cx0;
-
-                            // calculate y combined address for first point a for this scanline
-                            // store in ebp = texture start address for this scanline
-                            mov eax, cy0;
-                            shr eax, 16;
-                            imul eax, esi;
-                            shl eax, 2;
-                            mov edx, texdata;
-                            add edx, eax;
-
-                            // begin loop
-                            p0loopmul:
-
-                            // calculate dx, fractional part of tex coord
-                            movd mm3, ebx;
-                            psrlw mm3, 8;
-                            punpcklwd mm3, mm3;
-                            punpckldq mm3, mm3;
-
-                            // convert fixed point into floor and load pixel address
-                            mov eax, ebx;
-                            shr eax, 16;
-                            lea eax, dword ptr [edx+eax*4];
-
-                            // mm0 = b*dx
-                            movd mm0, dword ptr [eax+4]; //b
-                            punpcklbw mm0, mm5;
-                            pmullw mm0, mm3;
-                            psrlw mm0, 8;
-                            // mm1 = a*(1-dx)
-                            movd mm1, dword ptr [eax]; //a
-                            pxor mm3, mmxxor;
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            paddw mm0, mm1;
-
-                            // mm1 = c*(1-dx)
-                            movd mm1, dword ptr [eax+esi*4]; //c
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            // mm2 = d*dx
-                            movd mm2, dword ptr [eax+esi*4+4]; //d
-                            pxor mm3, mmxxor;
-                            punpcklbw mm2, mm5;
-                            pmullw mm2, mm3;
-                            psrlw mm2, 8;
-                            paddw mm1, mm2;
-
-                            // combine
-                            pmullw mm1, mm4;
-                            psrlw mm1, 8;
-                            pxor mm4, mmxxor;
-                            pmullw mm0, mm4;
-                            psrlw mm0, 8;
-                            paddw mm0, mm1;
-                            pxor mm4, mmxxor;
-
-                            // filter color
-                            // (already unpacked) punpcklbw mm0, mm5;
-                            pmullw mm0, mm7;
-                            psrlw mm0, 8;
+                            psrlw mm0, 8
 
                             // save
-                            movd mm1, dword ptr [edi];
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm0;
-                            psrlw mm1, 8;
-                            packuswb mm1, mm1;
-                            movd dword ptr [edi], mm1;
-                            add edi, 4;
-                            
-                            // advance tex coords, cx += sdx;
-                            add ebx, sdx;
-
-                            dec ecx;
-                            jnz p0loopmul;
-
-                            pop ebx;
+                            movd mm1, dword ptr [edi]
+                            punpcklbw mm1, mm5
+                            pmullw mm1, mm0
+                            psrlw mm1, 8
+                            packuswb mm1, mm1
                         }
-                        __asm {
-                            pop edx;
-                            pop edi;
-                            pop esi;
-                        }
+#else  // GCC
+                            "psrlw mm0, 8\n\t"
+
+                            // save
+                            "movd mm1, dword ptr [edi]\n\t"
+                            "punpcklbw mm1, mm5\n\t"
+                            "pmullw mm1, mm0\n\t"
+                            "psrlw mm1, 8\n\t"
+                            "packuswb mm1, mm1\n\t"
+#endif
+                        T2_SCALE_BLEND_ASM_LEAVE(t2_scale_loop_mul)
                         cy0 += sdy;
                         outp += w+1;
                     }
                     break;
                 }
-            
+
                 case OUT_ADJUSTABLE:
                 {
                     __int64 alphavalue = 0x0;
                     __int64 *alpha = &alphavalue;
+                    // TODO [bugfix]: shouldn't salpha be 255, not 256?
+                    // it's used to calculate 256 - alpha, and if max_alpha = 255, then...
                     __int64 salpha = 0x0100010001000100;
                     int t = ((*g_extinfo->lineblendmode) & 0xFF00)>>8;
-                    __asm {
-                        // duplicate blend factor into all channels
-                        mov eax, t;
-                        mov edx, eax;
-                        shl eax, 16;
-                        or  eax, edx;
-                        mov [alpha], eax;
-                        mov [alpha+4], eax;
-
-                        // store alpha and (256 - alpha)
-                        movq mm6, salpha;
-                        psubusw mm6, alpha;
-                    }
+                    T2_SCALE_BLEND_AND_STORE_ALPHA
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
                     __int64 *p = &mmxxor;
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
+                        T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_adj)
+#ifdef _MSC_VER
                         __asm {
-                            push esi;
-                            push edi;
-                            push edx;
-                            // esi = texture width
-                            mov esi, imagewidth;
-                            inc esi;
-                            pxor mm5, mm5;
-                        }
-                        __asm {
-                            // bilinear
-                            push ebx;
-
-                            pxor mm5, mm5;
-
-                            // calculate dy coefficient for this scanline
-                            // store in mm4 = dy cloned into all bytes
-                            movd mm4, cy0;
-                            psrlw mm4, 8;
-                            punpcklwd mm4, mm4;
-                            punpckldq mm4, mm4;
-
-                            // loop counter
-                            mov ecx, tot;
-                            inc ecx;
-
-                            // set output pointer
-                            mov edi, outp;
-
-                            // beginning x tex coordinate
-                            mov ebx, cx0;
-
-                            // calculate y combined address for first point a for this scanline
-                            // store in ebp = texture start address for this scanline
-                            mov eax, cy0;
-                            shr eax, 16;
-                            imul eax, esi;
-                            shl eax, 2;
-                            mov edx, texdata;
-                            add edx, eax;
-
-                            // begin loop
-                            p0loopadj:
-
-                            // calculate dx, fractional part of tex coord
-                            movd mm3, ebx;
-                            psrlw mm3, 8;
-                            punpcklwd mm3, mm3;
-                            punpckldq mm3, mm3;
-
-                            // convert fixed point into floor and load pixel address
-                            mov eax, ebx;
-                            shr eax, 16;
-                            lea eax, dword ptr [edx+eax*4];
-
-                            // mm0 = b*dx
-                            movd mm0, dword ptr [eax+4]; //b
-                            punpcklbw mm0, mm5;
-                            pmullw mm0, mm3;
-                            psrlw mm0, 8;
-                            // mm1 = a*(1-dx)
-                            movd mm1, dword ptr [eax]; //a
-                            pxor mm3, mmxxor;
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            paddw mm0, mm1;
-
-                            // mm1 = c*(1-dx)
-                            movd mm1, dword ptr [eax+esi*4]; //c
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            // mm2 = d*dx
-                            movd mm2, dword ptr [eax+esi*4+4]; //d
-                            pxor mm3, mmxxor;
-                            punpcklbw mm2, mm5;
-                            pmullw mm2, mm3;
-                            psrlw mm2, 8;
-                            paddw mm1, mm2;
-
-                            // combine
-                            pmullw mm1, mm4;
-                            psrlw mm1, 8;
-                            pxor mm4, mmxxor;
-                            pmullw mm0, mm4;
-                            psrlw mm0, 8;
-                            paddw mm0, mm1;
-                            pxor mm4, mmxxor;
-
-                            // filter color
-                            // (already unpacked) punpcklbw mm0, mm5;
-                            pmullw mm0, mm7;
-                            psrlw mm0, 8;
+                            psrlw mm0, 8
 
                             // Merged filter/alpha
                             // save
-                            movd mm1, dword ptr [edi];
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm6;
-                            psrlw mm1, 8;
-                            pmullw mm0, alpha;
-                            psrlw mm0, 8;
-                            paddusw mm0, mm1;
-                            packuswb mm0, mm0;
-                            movd dword ptr [edi], mm0;
-                            add edi, 4;
-                            
-                            // advance tex coords, cx += sdx;
-                            add ebx, sdx;
-
-                            dec ecx;
-                            jnz p0loopadj;
-
-                            pop ebx;
+                            movd mm1, dword ptr [edi]
+                            punpcklbw mm1, mm5
+                            pmullw mm1, mm6
+                            psrlw mm1, 8
+                            pmullw mm0, alpha
+                            psrlw mm0, 8
+                            paddusw mm0, mm1
+                            packuswb mm0, mm0
                         }
-                        __asm {
-                            pop edx;
-                            pop edi;
-                            pop esi;
-                        }
+#else  // GCC
+                            "psrlw      %%mm0, 8\n\t"
+
+                            // Merged filter/alpha
+                            // save
+                            "movd       %%mm1, dword ptr [edi]\n\t"
+                            "punpcklbw  %%mm1, %%mm5\n\t"
+                            "pmullw     %%mm1, %%mm6\n\t"
+                            "psrlw      %%mm1, 8\n\t"
+                            "pmullw     %%mm0, qword ptr %[alpha]\n\t"
+                            "psrlw      %%mm0, 8\n\t"
+                            "paddusw    %%mm0, %%mm1\n\t"
+                            "packuswb   %%mm0, %%mm0\n\t"
+#endif
+                        T2_SCALE_BLEND_ASM_LEAVE(t2_scale_loop_adj, ASM_M_ARG(alpha))
                         cy0 += sdy;
                         outp += w+1;
                     }
                     break;
                 }
-                        
+
                 case OUT_XOR:
                 {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
@@ -1658,125 +930,27 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
+                        T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_xor)
+#ifdef _MSC_VER
                         __asm {
-                            push esi;
-                            push edi;
-                            push edx;
-                            // esi = texture width
-                            mov esi, imagewidth;
-                            inc esi;
-                            pxor mm5, mm5;
-                        }
-                        __asm {
-                            // bilinear
-                            push ebx;
-
-                            pxor mm5, mm5;
-
-                            // calculate dy coefficient for this scanline
-                            // store in mm4 = dy cloned into all bytes
-                            movd mm4, cy0;
-                            psrlw mm4, 8;
-                            punpcklwd mm4, mm4;
-                            punpckldq mm4, mm4;
-
-                            // loop counter
-                            mov ecx, tot;
-                            inc ecx;
-
-                            // set output pointer
-                            mov edi, outp;
-
-                            // beginning x tex coordinate
-                            mov ebx, cx0;
-
-                            // calculate y combined address for first point a for this scanline
-                            // store in ebp = texture start address for this scanline
-                            mov eax, cy0;
-                            shr eax, 16;
-                            imul eax, esi;
-                            shl eax, 2;
-                            mov edx, texdata;
-                            add edx, eax;
-
-                            // begin loop
-                            p0loopxor:
-
-                            // calculate dx, fractional part of tex coord
-                            movd mm3, ebx;
-                            psrlw mm3, 8;
-                            punpcklwd mm3, mm3;
-                            punpckldq mm3, mm3;
-
-                            // convert fixed point into floor and load pixel address
-                            mov eax, ebx;
-                            shr eax, 16;
-                            lea eax, dword ptr [edx+eax*4];
-
-                            // mm0 = b*dx
-                            movd mm0, dword ptr [eax+4]; //b
-                            punpcklbw mm0, mm5;
-                            pmullw mm0, mm3;
-                            psrlw mm0, 8;
-                            // mm1 = a*(1-dx)
-                            movd mm1, dword ptr [eax]; //a
-                            pxor mm3, mmxxor;
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            paddw mm0, mm1;
-
-                            // mm1 = c*(1-dx)
-                            movd mm1, dword ptr [eax+esi*4]; //c
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            // mm2 = d*dx
-                            movd mm2, dword ptr [eax+esi*4+4]; //d
-                            pxor mm3, mmxxor;
-                            punpcklbw mm2, mm5;
-                            pmullw mm2, mm3;
-                            psrlw mm2, 8;
-                            paddw mm1, mm2;
-
-                            // combine
-                            pmullw mm1, mm4;
-                            psrlw mm1, 8;
-                            pxor mm4, mmxxor;
-                            pmullw mm0, mm4;
-                            psrlw mm0, 8;
-                            paddw mm0, mm1;
-                            pxor mm4, mmxxor;
-
-                            // filter color
-                            // (already unpacked) punpcklbw mm0, mm5;
-                            pmullw mm0, mm7;
-                            psrlw mm0, 8;
+                            psrlw mm0, 8
 
                             // save
-                            pxor mm0, dword ptr [edi];
-                            movd dword ptr [edi], mm0;
-                            add edi, 4;
-                            
-                            // advance tex coords, cx += sdx;
-                            add ebx, sdx;
-
-                            dec ecx;
-                            jnz p0loopxor;
-
-                            pop ebx;
+                            pxor mm0, qword ptr [edi]
                         }
-                        __asm {
-                            pop edx;
-                            pop edi;
-                            pop esi;
-                        }
+#else  // GCC
+                            "psrlw  %%mm0, 8\n\t"
+
+                            // save
+                            "pxor   %%mm0, qword ptr [%%edi]\n\t"
+#endif
+                        T2_SCALE_BLEND_ASM_LEAVE(t2_scale_loop_xor)
                         cy0 += sdy;
                         outp += w+1;
                     }
                     break;
                 }
-            
+
                 case OUT_MINIMUM:
                 {
                     int maxmask = 0xFFFFFF;
@@ -1786,140 +960,57 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
+                        T2_SCALE_BLEND_ASM_ENTER(t2_scale_loop_min)
+#ifdef _MSC_VER
                         __asm {
-                            push esi;
-                            push edi;
-                            push edx;
-                            // esi = texture width
-                            mov esi, imagewidth;
-                            inc esi;
-                            pxor mm5, mm5;
-                            movd mm6, signmask;
-                        }
-                        __asm {
-                            // bilinear
-                            push ebx;
-
-                            pxor mm5, mm5;
-
-                            // calculate dy coefficient for this scanline
-                            // store in mm4 = dy cloned into all bytes
-                            movd mm4, cy0;
-                            psrlw mm4, 8;
-                            punpcklwd mm4, mm4;
-                            punpckldq mm4, mm4;
-
-                            // loop counter
-                            mov ecx, tot;
-                            inc ecx;
-
-                            // set output pointer
-                            mov edi, outp;
-
-                            // beginning x tex coordinate
-                            mov ebx, cx0;
-
-                            // calculate y combined address for first point a for this scanline
-                            // store in ebp = texture start address for this scanline
-                            mov eax, cy0;
-                            shr eax, 16;
-                            imul eax, esi;
-                            shl eax, 2;
-                            mov edx, texdata;
-                            add edx, eax;
-
-                            // begin loop
-                            p0loopmin:
-
-                            // calculate dx, fractional part of tex coord
-                            movd mm3, ebx;
-                            psrlw mm3, 8;
-                            punpcklwd mm3, mm3;
-                            punpckldq mm3, mm3;
-
-                            // convert fixed point into floor and load pixel address
-                            mov eax, ebx;
-                            shr eax, 16;
-                            lea eax, dword ptr [edx+eax*4];
-
-                            // mm0 = b*dx
-                            movd mm0, dword ptr [eax+4]; //b
-                            punpcklbw mm0, mm5;
-                            pmullw mm0, mm3;
-                            psrlw mm0, 8;
-                            // mm1 = a*(1-dx)
-                            movd mm1, dword ptr [eax]; //a
-                            pxor mm3, mmxxor;
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            paddw mm0, mm1;
-
-                            // mm1 = c*(1-dx)
-                            movd mm1, dword ptr [eax+esi*4]; //c
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm3;
-                            psrlw mm1, 8;
-                            // mm2 = d*dx
-                            movd mm2, dword ptr [eax+esi*4+4]; //d
-                            pxor mm3, mmxxor;
-                            punpcklbw mm2, mm5;
-                            pmullw mm2, mm3;
-                            psrlw mm2, 8;
-                            paddw mm1, mm2;
-
-                            // combine
-                            pmullw mm1, mm4;
-                            psrlw mm1, 8;
-                            pxor mm4, mmxxor;
-                            pmullw mm0, mm4;
-                            psrlw mm0, 8;
-                            paddw mm0, mm1;
-                            pxor mm4, mmxxor;
-
-                            // filter color
-                            // (already unpacked) punpcklbw mm0, mm5;
-                            pmullw mm0, mm7;
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
+                            movd mm6, signmask
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
 
                             // save
-                            movd mm1, dword ptr [edi];
-                            pxor mm0, mm6;
-                            mov eax, 0xFFFFFF;
-                            pxor mm1, mm6;
-                            movd mm5, eax;
-                            movq mm2, mm1;
-                            pcmpgtb mm2, mm0;
-                            movq mm3, mm2;
-                            pxor mm3, mm5;
-                            pxor mm5, mm5;
-                            pand mm0, mm2;
-                            pand mm1, mm3;
-                            por mm0, mm1;
-                            pxor mm0, mm6;
-                            movd dword ptr [edi], mm0;
-                            add edi, 4;
-                            
-                            // advance tex coords, cx += sdx;
-                            add ebx, sdx;
-
-                            dec ecx;
-                            jnz p0loopmin;
-
-                            pop ebx;
+                            movd mm1, dword ptr [edi]
+                            pxor mm0, mm6
+                            mov eax, 0xFFFFFF
+                            pxor mm1, mm6
+                            movd mm5, eax
+                            movq mm2, mm1
+                            pcmpgtb mm2, mm0
+                            movq mm3, mm2
+                            pxor mm3, mm5
+                            pxor mm5, mm5
+                            pand mm0, mm2
+                            pand mm1, mm3
+                            por mm0, mm1
+                            pxor mm0, mm6
                         }
-                        __asm {
-                            pop edx;
-                            pop edi;
-                            pop esi;
-                        }
+#else  // GCC
+                            "movd      %%mm6, %[signmask]\n\t"
+                            "psrlw     %%mm0, 8\n\t"
+                            "packuswb  %%mm0, %%mm0\n\t"
+
+                            // save
+                            "movd      %%mm1, dword ptr [%%edi]\n\t"
+                            "pxor      %%mm0, %%mm6\n\t"
+                            "mov       %%eax, 0xFFFFFF\n\t"
+                            "pxor      %%mm1, %%mm6\n\t"
+                            "movd      %%mm5, %%eax\n\t"
+                            "movq      %%mm2, %%mm1\n\t"
+                            "pcmpgtb   %%mm2, %%mm0\n\t"
+                            "movq      %%mm3, %%mm2\n\t"
+                            "pxor      %%mm3, %%mm5\n\t"
+                            "pxor      %%mm5, %%mm5\n\t"
+                            "pand      %%mm0, %%mm2\n\t"
+                            "pand      %%mm1, %%mm3\n\t"
+                            "por       %%mm0, %%mm1\n\t"
+                            "pxor      %%mm0, %%mm6\n\t"
+#endif
+                        T2_SCALE_BLEND_ASM_LEAVE(t2_scale_loop_min, ASM_M_ARG(signmask))
                         cy0 += sdy;
                         outp += w+1;
                     }
                     break;
                 }
-            
+
             }
         }
     } else {
@@ -1931,8 +1022,8 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
 
         RECT r;
         // Determine exact position, original size
-        r.left = (DoubleToInt((x *.5f + .5f)*w) - iw/2);
-        r.top = (DoubleToInt((y *.5f + .5f)*h) - ih/2);
+        r.left = (RoundToInt((x *.5f + .5f)*w) - iw/2);
+        r.top = (RoundToInt((y *.5f + .5f)*h) - ih/2);
         r.right = r.left + iw - 1;
         r.bottom = r.top + ih - 1;
 
@@ -1964,325 +1055,318 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
             goto skippart;
         }
 
-        int cx0 = DoubleToInt(x0*iw);
-        int cy0 = DoubleToInt(y0*ih);
+        int cx0 = RoundToInt(x0*iw);
+        int cy0 = RoundToInt(y0*ih);
 
         int ty = cy0;
 
         if (config.mask) {
             // Second easiest path, masking, but no scaling
-            __asm {
-                pxor mm5, mm5;
-                movd mm7, color;
-                punpcklbw mm7, mm5;
-            }
+            T2_PREP_MASK_COLOR
             switch (*(g_extinfo->lineblendmode) & 0xFF) {
                 case OUT_REPLACE:
                 {
-                    __asm {
-                        push esi;
-                        push edi;
-                    }
+                    T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_rep)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
+                            movd mm0, dword ptr [esi]
 
-                            p2looprep:
-                            movd mm0, dword ptr [esi];
+                            punpcklbw mm0, mm5
+                            pmullw mm0, mm7
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
 
-                            punpcklbw mm0, mm5;
-                            pmullw mm0, mm7;
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
-
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
-
-                            dec ecx;
-                            jnz p2looprep;
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd       %%mm0, dword ptr [%%esi]\n\t"
+
+                            "punpcklbw  %%mm0, %%mm5\n\t"
+                            "pmullw     %%mm0, %%mm7\n\t"
+                            "psrlw      %%mm0, 8\n\t"
+                            "packuswb   %%mm0, %%mm0\n\t"
+
+                            "movd       dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_mask_loop_rep)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
 
                 case OUT_ADDITIVE:
                 {
-                    __asm {
-                        push esi;
-                        push edi;
-                    }
+                    T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_add)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
 
-                            p2loopadd:
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
-                            
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm7;
-                            psrlw mm1, 8;
-                            packuswb mm1, mm1;
-                            
-                            paddusb mm0, mm1;
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
+                            punpcklbw mm1, mm5
+                            pmullw mm1, mm7
+                            psrlw mm1, 8
+                            packuswb mm1, mm1
 
-                            dec ecx;
-                            jnz p2loopadd;
+                            paddusb mm0, mm1
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd       %%mm0, dword ptr [%%edi]\n\t"
+                            "movd       %%mm1, dword ptr [%%esi]\n\t"
+
+                            "punpcklbw  %%mm1, %%mm5\n\t"
+                            "pmullw     %%mm1, %%mm7\n\t"
+                            "psrlw      %%mm1, 8\n\t"
+                            "packuswb   %%mm1, %%mm1\n\t"
+
+                            "paddusb    %%mm0, %%mm1\n\t"
+                            "movd       dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_mask_loop_add)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
 
                 case OUT_MAXIMUM:
                 {
-                    int maxmask = 0xFFFFFF;
-                    int signmask = 0x808080;
-                    __asm {
-                        push esi;
-                        push edi;
-                        movd mm4, maxmask;
-                        movd mm6, signmask;
-                    }
+                    int maxmask = 0xFFFFFF;  // -> mm4
+                    int signmask = 0x808080;  // -> mm6
+                    T2_NONSCALE_PUSH_ESI_EDI
+                    T2_NONSCALE_MINMAX_MASKS
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_max)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
 
-                            p2loopmax:
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
-                            
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm7;
-                            psrlw mm1, 8;
-                            packuswb mm1, mm1;
-                            
-                            pxor mm0, mm6;
-                            pxor mm1, mm6;
-                            movq mm2, mm1;
-                            pcmpgtb mm2, mm0;
-                            movq mm3, mm2;
-                            pxor mm3, mm4;
-                            pand mm0, mm3;
-                            pand mm1, mm2;
-                            por mm0, mm1;
-                            pxor mm0, mm6;
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
+                            punpcklbw mm1, mm5
+                            pmullw mm1, mm7
+                            psrlw mm1, 8
+                            packuswb mm1, mm1
 
-                            dec ecx;
-                            jnz p2loopmax;
+                            pxor mm0, mm6
+                            pxor mm1, mm6
+                            movq mm2, mm1
+                            pcmpgtb mm2, mm0
+                            movq mm3, mm2
+                            pxor mm3, mm4
+                            pand mm0, mm3
+                            pand mm1, mm2
+                            por mm0, mm1
+                            pxor mm0, mm6
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd       %%mm0, dword ptr [%%edi]\n\t"
+                            "movd       %%mm1, dword ptr [%%esi]\n\t"
+
+                            "punpcklbw  %%mm1, %%mm5\n\t"
+                            "pmullw     %%mm1, %%mm7\n\t"
+                            "psrlw      %%mm1, 8\n\t"
+                            "packuswb   %%mm1, %%mm1\n\t"
+
+                            "pxor       %%mm0, %%mm6\n\t"
+                            "pxor       %%mm1, %%mm6\n\t"
+                            "movq       %%mm2, %%mm1\n\t"
+                            "pcmpgtb    %%mm2, %%mm0\n\t"
+                            "movq       %%mm3, %%mm2\n\t"
+                            "pxor       %%mm3, %%mm4\n\t"
+                            "pand       %%mm0, %%mm3\n\t"
+                            "pand       %%mm1, %%mm2\n\t"
+                            "por        %%mm0, %%mm1\n\t"
+                            "pxor       %%mm0, %%mm6\n\t"
+                            "movd       dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_mask_loop_max)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
 
                 case OUT_5050:
                 {
-                    __asm {
-                        push esi;
-                        push edi;
-                    }
+                    T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_50)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
 
-                            p2loop50:
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
-                            
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm7;
-                            psrlw mm1, 8;
-                            packuswb mm1, mm1;
-                            
-                            punpcklbw mm0, mm5;
-                            punpcklbw mm1, mm5;
-                            paddusw mm0, mm1;
-                            psrlw mm0, 1;
-                            packuswb mm0, mm0;
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
+                            punpcklbw mm1, mm5
+                            pmullw mm1, mm7
+                            psrlw mm1, 8
+                            packuswb mm1, mm1
 
-                            dec ecx;
-                            jnz p2loop50;
+                            punpcklbw mm0, mm5
+                            punpcklbw mm1, mm5
+                            paddusw mm0, mm1
+                            psrlw mm0, 1
+                            packuswb mm0, mm0
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd       %%mm0, dword ptr [%%edi]\n\t"
+                            "movd       %%mm1, dword ptr [%%esi]\n\t"
+
+                            "punpcklbw  %%mm1, %%mm5\n\t"
+                            "pmullw     %%mm1, %%mm7\n\t"
+                            "psrlw      %%mm1, 8\n\t"
+                            "packuswb   %%mm1, %%mm1\n\t"
+
+                            "punpcklbw  %%mm0, %%mm5\n\t"
+                            "punpcklbw  %%mm1, %%mm5\n\t"
+                            "paddusw    %%mm0, %%mm1\n\t"
+                            "psrlw      %%mm0, 1\n\t"
+                            "packuswb   %%mm0, %%mm0\n\t"
+                            "movd       dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_mask_loop_50)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
 
                 case OUT_SUB1:
                 {
-                    __asm {
-                        push esi;
-                        push edi;
-                    }
+                    T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_sub1)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
 
-                            p2loopsub1:
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
+                            punpcklbw mm1, mm5
+                            pmullw mm1, mm7
+                            psrlw mm1, 8
+                            packuswb mm1, mm1
 
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm7;
-                            psrlw mm1, 8;
-                            packuswb mm1, mm1;
-
-                            psubusb mm0, mm1;
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
-
-                            dec ecx;
-                            jnz p2loopsub1;
+                            psubusb mm0, mm1
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd       %%mm0, dword ptr [%%edi]\n\t"
+                            "movd       %%mm1, dword ptr [%%esi]\n\t"
+
+                            "punpcklbw  %%mm1, %%mm5\n\t"
+                            "pmullw     %%mm1, %%mm7\n\t"
+                            "psrlw      %%mm1, 8\n\t"
+                            "packuswb   %%mm1, %%mm1\n\t"
+
+                            "psubusb    %%mm0, %%mm1\n\t"
+                            "movd       dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_mask_loop_sub1)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
 
                 case OUT_SUB2:
                 {
-                    __asm {
-                        push esi;
-                        push edi;
-                    }
+                    T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_sub2)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
+                            movd mm0, dword ptr [esi]
 
-                            p2loopsub2:
-                            movd mm0, dword ptr [esi];
-                            
-                            punpcklbw mm0, mm5;
-                            pmullw mm0, mm7;
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
-                            
-                            psubusb mm0, dword ptr [edi];
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
+                            punpcklbw mm0, mm5
+                            pmullw mm0, mm7
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
 
-                            dec ecx;
-                            jnz p2loopsub2;
+                            psubusb mm0, qword ptr [edi]
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd       %%mm0, dword ptr [%%esi]\n\t"
+
+                            "punpcklbw  %%mm0, %%mm5\n\t"
+                            "pmullw     %%mm0, %%mm7\n\t"
+                            "psrlw      %%mm0, 8\n\t"
+                            "packuswb   %%mm0, %%mm0\n\t"
+
+                            "psubusb    %%mm0, qword ptr [%%edi]\n\t"
+                            "movd       dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_mask_loop_sub2)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
 
                 case OUT_MULTIPLY:
                 {
-                    __asm {
-                        push esi;
-                        push edi;
-                    }
+                    T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_mul)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
 
-                            p2loopmul:
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
-                            punpcklbw mm0, mm5;
-                            punpcklbw mm1, mm5;
-                            pmullw mm0, mm1;
-                            psrlw mm0, 8;
+                            punpcklbw mm0, mm5
+                            punpcklbw mm1, mm5
+                            pmullw mm0, mm1
+                            psrlw mm0, 8
                             // Merged filter/mul
-                            pmullw mm0, mm7;
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
-
-                            dec ecx;
-                            jnz p2loopmul;
+                            pmullw mm0, mm7
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd       %%mm0, dword ptr [%%edi]\n\t"
+                            "movd       %%mm1, dword ptr [%%esi]\n\t"
+                            "punpcklbw  %%mm0, %%mm5\n\t"
+                            "punpcklbw  %%mm1, %%mm5\n\t"
+                            "pmullw     %%mm0, %%mm1\n\t"
+                            "psrlw      %%mm0, 8\n\t"
+                            // Merged filter/mul
+                            "pmullw     %%mm0, %%mm7\n\t"
+                            "psrlw      %%mm0, 8\n\t"
+                            "packuswb   %%mm0, %%mm0\n\t"
+                            "movd       dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_mask_loop_mul)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
 
@@ -2290,106 +1374,98 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
                 {
                     __int64 alphavalue = 0x0;
                     __int64 *alpha = &alphavalue;
+                    // TODO [bugfix]: shouldn't salpha be 255, not 256?
+                    // it's used to calculate 256 - alpha, and if max_alpha = 255, then...
                     __int64 salpha = 0x0100010001000100;
                     int t = ((*g_extinfo->lineblendmode) & 0xFF00)>>8;
-                    __asm {
-                        // duplicate blend factor into all channels
-                        mov eax, t;
-                        mov edx, eax;
-                        shl eax, 16;
-                        or  eax, edx;
-                        mov [alpha], eax;
-                        mov [alpha+4], eax;
-
-                        // store alpha and (256 - alpha)
-                        movq mm2, alpha;
-                        movq mm3, salpha;
-                        psubusw mm3, alpha;
-                
-                        push esi;
-                        push edi;
-                    }
+                    T2_NONSCALE_BLEND_AND_STORE_ALPHA
+                    T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_adj)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
 
-                            p2loopadj:
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
-
-                            punpcklbw mm0, mm5;
-                            punpcklbw mm1, mm5;
+                            punpcklbw mm0, mm5
+                            punpcklbw mm1, mm5
                             // Merged filter/alpha
-                            pmullw    mm1, mm7;
-                            psrlw     mm1, 8;
+                            pmullw    mm1, mm7
+                            psrlw     mm1, 8
 
-                            pmullw    mm0, mm2;
-                            pmullw    mm1, mm3;
+                            pmullw    mm0, mm6; // * alph
+                            pmullw    mm1, mm3; // * 256 - alph
 
-                            paddusw   mm0, mm1;
-                            psrlw     mm0, 8;
-                            packuswb  mm0, mm0;
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
-
-                            dec ecx;
-                            jnz p2loopadj;
+                            paddusw   mm0, mm1
+                            psrlw     mm0, 8
+                            packuswb  mm0, mm0
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd       %%mm0, dword ptr [%%edi]\n\t"
+                            "movd       %%mm1, dword ptr [%%esi]\n\t"
+
+                            "punpcklbw  %%mm0, %%mm5\n\t"
+                            "punpcklbw  %%mm1, %%mm5\n\t"
+                            // Merged filter/alpha
+                            "pmullw     %%mm1, %%mm7\n\t"
+                            "psrlw      %%mm1, 8\n\t"
+
+                            "pmullw     %%mm0, %%mm6\n\t" // * alpha
+                            "pmullw     %%mm1, %%mm3\n\t" // * 256 - alpha
+
+                            "paddusw    %%mm0, %%mm1\n\t"
+                            "psrlw      %%mm0, 8\n\t"
+                            "packuswb   %%mm0, %%mm0\n\t"
+                            "movd       dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_mask_loop_adj)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
-                
+
                 case OUT_XOR:
                 {
-                    __asm {
-                        push esi;
-                        push edi;
-                    }
+                    T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_xor)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
 
-                            p2loopxor:
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
+                            punpcklbw mm1, mm5
+                            pmullw mm1, mm7
+                            psrlw mm1, 8
+                            packuswb mm1, mm1
 
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm7;
-                            psrlw mm1, 8;
-                            packuswb mm1, mm1;
-
-                            pxor mm0, mm1;
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
-
-                            dec ecx;
-                            jnz p2loopxor;
+                            pxor mm0, mm1
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd       %%mm0, dword ptr [%%edi]\n\t"
+                            "movd       %%mm1, dword ptr [%%esi]\n\t"
+
+                            "punpcklbw  %%mm1, %%mm5\n\t"
+                            "pmullw     %%mm1, %%mm7\n\t"
+                            "psrlw      %%mm1, 8\n\t"
+                            "packuswb   %%mm1, %%mm1\n\t"
+
+                            "pxor       %%mm0, %%mm1\n\t"
+                            "movd       dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_mask_loop_xor)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
 
@@ -2397,127 +1473,116 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
                 {
                     int maxmask = 0xFFFFFF;
                     int signmask = 0x808080;
-                    __asm {
-                        push esi;
-                        push edi;
-                        movd mm4, maxmask;
-                        movd mm6, signmask;
-                    }
+                    T2_NONSCALE_PUSH_ESI_EDI
+                    T2_NONSCALE_MINMAX_MASKS
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_min)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
 
-                            p2loopmin:
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
+                            punpcklbw mm1, mm5
+                            pmullw mm1, mm7
+                            psrlw mm1, 8
+                            packuswb mm1, mm1
 
-                            punpcklbw mm1, mm5;
-                            pmullw mm1, mm7;
-                            psrlw mm1, 8;
-                            packuswb mm1, mm1;
-
-                            pxor mm0, mm6;
-                            pxor mm1, mm6;
-                            movq mm2, mm1;
-                            pcmpgtb mm2, mm0;
-                            movq mm3, mm2;
-                            pxor mm3, mm4;
-                            pand mm0, mm2;
-                            pand mm1, mm3;
-                            por mm0, mm1;
-                            pxor mm0, mm6;
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
-
-                            dec ecx;
-                            jnz p2loopmin;
+                            pxor mm0, mm6
+                            pxor mm1, mm6
+                            movq mm2, mm1
+                            pcmpgtb mm2, mm0
+                            movq mm3, mm2
+                            pxor mm3, mm4
+                            pand mm0, mm2
+                            pand mm1, mm3
+                            por mm0, mm1
+                            pxor mm0, mm6
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd       %%mm0, dword ptr [%%edi]\n\t"
+                            "movd       %%mm1, dword ptr [%%esi]\n\t"
+
+                            "punpcklbw  %%mm1, %%mm5\n\t"
+                            "pmullw     %%mm1, %%mm7\n\t"
+                            "psrlw      %%mm1, 8\n\t"
+                            "packuswb   %%mm1, %%mm1\n\t"
+
+                            "pxor       %%mm0, %%mm6\n\t"
+                            "pxor       %%mm1, %%mm6\n\t"
+                            "movq       %%mm2, %%mm1\n\t"
+                            "pcmpgtb    %%mm2, %%mm0\n\t"
+                            "movq       %%mm3, %%mm2\n\t"
+                            "pxor       %%mm3, %%mm4\n\t"
+                            "pand       %%mm0, %%mm2\n\t"
+                            "pand       %%mm1, %%mm3\n\t"
+                            "por        %%mm0, %%mm1\n\t"
+                            "pxor       %%mm0, %%mm6\n\t"
+                            "movd       dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_mask_loop_min)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
             }
         } else {
             // Most basic path, no scaling or masking
-            __asm pxor mm5, mm5
+            T2_ZERO_MM5
             switch (*(g_extinfo->lineblendmode) & 0xFF) {
                 case OUT_REPLACE:
                 {
-                    __asm {
-                        push edi;
-                        push esi;
-                    }
+                    // the push order was reversed (edi, esi) in the original code here
+                    // (and only here) -- i assume that was not intentional...
+                    T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_rep)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
-
-                            p3looprep:
-                            movd mm0, dword ptr [esi];
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
-
-                            dec ecx;
-                            jnz p3looprep;
+                            movd mm0, dword ptr [esi]
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd  %%mm0, dword ptr [%%esi]\n\t"
+                            "movd  dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_nonmask_loop_rep)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
 
                 case OUT_ADDITIVE:
                 {
-                    __asm {
-                        push esi;
-                        push edi;
-                    }
+                    T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_add)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
-
-                            p3loopadd:
-                            movd mm0, dword ptr [edi];
-                            paddusb mm0, dword ptr [esi];
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
-
-                            dec ecx;
-                            jnz p3loopadd;
+                            movd mm0, dword ptr [edi]
+                            paddusb mm0, qword ptr [esi]
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd     %%mm0, dword ptr [%%edi]\n\t"
+                            "paddusb  %%mm0, qword ptr [%%esi]\n\t"
+                            "movd     dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_nonmask_loop_add)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
 
@@ -2525,198 +1590,172 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
                 {
                     int maxmask = 0xFFFFFF;
                     int signmask = 0x808080;
-                    __asm {
-                        push esi;
-                        push edi;
-                        movd mm4, maxmask;
-                        movd mm6, signmask;
-                    }
+                    T2_NONSCALE_PUSH_ESI_EDI
+                    T2_NONSCALE_MINMAX_MASKS
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_max)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
-
-                            p3loopmax:
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
-                            pxor mm0, mm6;
-                            pxor mm1, mm6;
-                            movq mm2, mm1;
-                            pcmpgtb mm2, mm0;
-                            movq mm3, mm2;
-                            pxor mm3, mm4;
-                            pand mm0, mm3;
-                            pand mm1, mm2;
-                            por mm0, mm1;
-                            pxor mm0, mm6;
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
-
-                            dec ecx;
-                            jnz p3loopmax;
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
+                            pxor mm0, mm6
+                            pxor mm1, mm6
+                            movq mm2, mm1
+                            pcmpgtb mm2, mm0
+                            movq mm3, mm2
+                            pxor mm3, mm4
+                            pand mm0, mm3
+                            pand mm1, mm2
+                            por mm0, mm1
+                            pxor mm0, mm6
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd     %%mm0, dword ptr [%%edi]\n\t"
+                            "movd     %%mm1, dword ptr [%%esi]\n\t"
+                            "pxor     %%mm0, %%mm6\n\t"
+                            "pxor     %%mm1, %%mm6\n\t"
+                            "movq     %%mm2, %%mm1\n\t"
+                            "pcmpgtb  %%mm2, %%mm0\n\t"
+                            "movq     %%mm3, %%mm2\n\t"
+                            "pxor     %%mm3, %%mm4\n\t"
+                            "pand     %%mm0, %%mm3\n\t"
+                            "pand     %%mm1, %%mm2\n\t"
+                            "por      %%mm0, %%mm1\n\t"
+                            "pxor     %%mm0, %%mm6\n\t"
+                            "movd     dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_nonmask_loop_max)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
 
                 case OUT_5050:
                 {
-                    __asm {
-                        push esi;
-                        push edi;
-                    }
+                    T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_50)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
-
-                            p3loop50:
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
-                            punpcklbw mm0, mm5;
-                            punpcklbw mm1, mm5;
-                            paddusw mm0, mm1;
-                            psrlw mm0, 1;
-                            packuswb mm0, mm0;
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
-
-                            dec ecx;
-                            jnz p3loop50;
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
+                            punpcklbw mm0, mm5
+                            punpcklbw mm1, mm5
+                            paddusw mm0, mm1
+                            psrlw mm0, 1
+                            packuswb mm0, mm0
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd       %%mm0, dword ptr [%%edi]\n\t"
+                            "movd       %%mm1, dword ptr [%%esi]\n\t"
+                            "punpcklbw  %%mm0, %%mm5\n\t"
+                            "punpcklbw  %%mm1, %%mm5\n\t"
+                            "paddusw    %%mm0, %%mm1\n\t"
+                            "psrlw      %%mm0, 1\n\t"
+                            "packuswb   %%mm0, %%mm0\n\t"
+                            "movd       dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_nonmask_loop_50)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
 
                 case OUT_SUB1:
                 {
-                    __asm {
-                        push esi;
-                        push edi;
-                    }
+                    T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_sub1)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
-
-                            p3loopsub1:
-                            movd mm0, dword ptr [edi];
-                            psubusb mm0, dword ptr [esi];
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
-
-                            dec ecx;
-                            jnz p3loopsub1;
+                            movd mm0, dword ptr [edi]
+                            psubusb mm0, qword ptr [esi]
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd     %%mm0, dword ptr [%%edi]\n\t"
+                            "psubusb  %%mm0, qword ptr [%%esi]\n\t"
+                            "movd     dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_nonmask_loop_sub1)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
 
                 case OUT_SUB2:
                 {
-                    __asm {
-                        push esi;
-                        push edi;
-                    }
+                    T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_sub2)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
-
-                            p3loopsub2:
-                            movd mm0, dword ptr [esi];
-                            psubusb mm0, dword ptr [edi];
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
-
-                            dec ecx;
-                            jnz p3loopsub2;
+                            movd mm0, dword ptr [esi]
+                            psubusb mm0, qword ptr [edi]
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd     %%mm0, dword ptr [%%esi]\n\t"
+                            "psubusb  %%mm0, qword ptr [%%edi]\n\t"
+                            "movd     dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_nonmask_loop_sub2)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
 
                 case OUT_MULTIPLY:
                 {
-                    __asm {
-                        push esi;
-                        push edi;
-                    }
+                    T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_mul)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
-
-                            p3loopmul:
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
-                            punpcklbw mm0, mm5;
-                            punpcklbw mm1, mm5;
-                            pmullw mm0, mm1;
-                            psrlw mm0, 8;
-                            packuswb mm0, mm0;
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
-
-                            dec ecx;
-                            jnz p3loopmul;
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
+                            punpcklbw mm0, mm5
+                            punpcklbw mm1, mm5
+                            pmullw mm0, mm1
+                            psrlw mm0, 8
+                            packuswb mm0, mm0
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd       %%mm0, dword ptr [%%edi]\n\t"
+                            "movd       %%mm1, dword ptr [%%esi]\n\t"
+                            "punpcklbw  %%mm0, %%mm5\n\t"
+                            "punpcklbw  %%mm1, %%mm5\n\t"
+                            "pmullw     %%mm0, %%mm1\n\t"
+                            "psrlw      %%mm0, 8\n\t"
+                            "packuswb   %%mm0, %%mm0\n\t"
+                            "movd       dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_nonmask_loop_mul)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
 
@@ -2724,96 +1763,78 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
                 {
                     __int64 alphavalue = 0x0;
                     __int64 *alpha = &alphavalue;
+                    // TODO [bugfix]: shouldn't salpha be 255, not 256?
+                    // it's used to calculate 256 - alpha, and if max_alpha = 255, then...
                     __int64 salpha = 0x0100010001000100;
                     int t = ((*g_extinfo->lineblendmode) & 0xFF00)>>8;
-                    __asm {
-                        // duplicate blend factor into all channels
-                        mov eax, t;
-                        mov edx, eax;
-                        shl eax, 16;
-                        or  eax, edx;
-                        mov [alpha], eax;
-                        mov [alpha+4], eax;
-
-                        // store alpha and (256 - alpha)
-                        movq mm2, alpha;
-                        movq mm3, salpha;
-                        psubusw mm3, alpha;
-                
-                        push esi;
-                        push edi;
-                    }
+                    T2_NONSCALE_BLEND_AND_STORE_ALPHA
+                    T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_adj)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
 
-                            p3loopadj:
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
+                            punpcklbw mm0, mm5
+                            punpcklbw mm1, mm5
 
-                            punpcklbw mm0, mm5;
-                            punpcklbw mm1, mm5;
+                            pmullw    mm0, mm3; // * alph
+                            pmullw    mm1, mm6; // * 256 - alph
 
-                            pmullw    mm0, mm2;
-                            pmullw    mm1, mm3;
-
-                            paddusw   mm0, mm1;
-                            psrlw     mm0, 8;
-                            packuswb  mm0, mm0;
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
-
-                            dec ecx;
-                            jnz p3loopadj;
+                            paddusw   mm0, mm1
+                            psrlw     mm0, 8
+                            packuswb  mm0, mm0
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd       %%mm0, dword ptr [%%edi]\n\t"
+                            "movd       %%mm1, dword ptr [%%esi]\n\t"
+
+                            "punpcklbw  %%mm0, %%mm5\n\t"
+                            "punpcklbw  %%mm1, %%mm5\n\t"
+
+                            "pmullw     %%mm0, %%mm3\n\t" // * alpha
+                            "pmullw     %%mm1, %%mm6\n\t" // * 256 - alpha
+
+                            "paddusw    %%mm0, %%mm1\n\t"
+                            "psrlw      %%mm0, 8\n\t"
+                            "packuswb   %%mm0, %%mm0\n\t"
+                            "movd       dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_nonmask_loop_adj)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
-                
+
                 case OUT_XOR:
                 {
-                    __asm {
-                        push esi;
-                        push edi;
-                    }
+                    T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_xor)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
-
-                            p3loopxor:
-                            movd mm0, dword ptr [edi];
-                            pxor mm0, dword ptr [esi];
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
-
-                            dec ecx;
-                            jnz p3loopxor;
+                            movd mm0, dword ptr [edi]
+                            pxor mm0, qword ptr [esi]
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd  %%mm0, dword ptr [%%edi]\n\t"
+                            "pxor  %%mm0, qword ptr [%%esi]\n\t"
+                            "movd  dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_nonmask_loop_xor)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
 
@@ -2821,48 +1842,48 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
                 {
                     int maxmask = 0xFFFFFF;
                     int signmask = 0x808080;
-                    __asm {
-                        push esi;
-                        push edi;
-                        movd mm4, maxmask;
-                        movd mm6, signmask;
-                    }
+                    T2_NONSCALE_PUSH_ESI_EDI
+                    T2_NONSCALE_MINMAX_MASKS
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int *outp = &framebuffer[y*(w+1)+r2.left];
-                        int *inp = (int *)&texbits[ty*(iw+1)+cx0];
+                        int *inp = &texture[ty*(iw+1)+cx0];
                         int tot = (r2.right - r2.left);
+                        T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_min)
+#ifdef _MSC_VER
                         __asm {
-                            mov ecx, tot;
-                            inc ecx;
-                            mov edi, outp;
-                            mov esi, inp;
-
-                            p3loopmin:
-                            movd mm0, dword ptr [edi];
-                            movd mm1, dword ptr [esi];
-                            pxor mm0, mm6;
-                            pxor mm1, mm6;
-                            movq mm2, mm1;
-                            pcmpgtb mm2, mm0;
-                            movq mm3, mm2;
-                            pxor mm3, mm4;
-                            pand mm0, mm2;
-                            pand mm1, mm3;
-                            por mm0, mm1;
-                            pxor mm0, mm6;
-                            movd dword ptr [edi], mm0;
-                            add esi, 4;
-                            add edi, 4;
-
-                            dec ecx;
-                            jnz p3loopmin;
+                            movd mm0, dword ptr [edi]
+                            movd mm1, dword ptr [esi]
+                            pxor mm0, mm6
+                            pxor mm1, mm6
+                            movq mm2, mm1
+                            pcmpgtb mm2, mm0
+                            movq mm3, mm2
+                            pxor mm3, mm4
+                            pand mm0, mm2
+                            pand mm1, mm3
+                            por mm0, mm1
+                            pxor mm0, mm6
+                            movd dword ptr [edi], mm0
                         }
+#else  // GCC
+                            "movd     %%mm0, dword ptr [%%edi]\n\t"
+                            "movd     %%mm1, dword ptr [%%esi]\n\t"
+                            "pxor     %%mm0, %%mm6\n\t"
+                            "pxor     %%mm1, %%mm6\n\t"
+                            "movq     %%mm2, %%mm1\n\t"
+                            "pcmpgtb  %%mm2, %%mm0\n\t"
+                            "movq     %%mm3, %%mm2\n\t"
+                            "pxor     %%mm3, %%mm4\n\t"
+                            "pand     %%mm0, %%mm2\n\t"
+                            "pand     %%mm1, %%mm3\n\t"
+                            "por      %%mm0, %%mm1\n\t"
+                            "pxor     %%mm0, %%mm6\n\t"
+                            "movd     dword ptr [%%edi], %%mm0\n\t"
+#endif
+                        T2_NONSCALE_BLEND_ASM_LEAVE(t2_nonscale_nonmask_loop_min)
                         ++ty;
                     }
-                    __asm {
-                        pop edi;
-                        pop esi;
-                    }
+                    T2_NONSCALE_POP_EDI_ESI
                     break;
                 }
             }
@@ -2874,11 +1895,22 @@ void C_THISCLASS::DrawParticle(int *framebuffer, int w, int h, double x, double 
     ++(this->ih);
 
     // Perhaps removing all fpu stuff here and doing one emms globally would be better?
-    __asm emms;
+    EMMS
 }
 
+inline double wrap_diff_to_plusminus1(double x) {
+    return round(x / 2.0) * 2.0;
+}
 
-int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+bool overlaps_edge(double wrapped_coord, double img_size, int img_size_px, int screen_size_px) {
+    double abs_wrapped_coord = fabs(wrapped_coord);
+    // a /2 seems missing, but screen has size 2, hence /2(half) *2(screen size) => *1
+    // image pixel size needs reduction by one pixel
+    double rel_size_half = img_size * (img_size_px - 1) / screen_size_px;
+    return ((abs_wrapped_coord + rel_size_half) > 1.0) && ((abs_wrapped_coord - rel_size_half) < 1.0);
+}
+
+int C_Texer2::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
 {
     EnterCriticalSection(&codestuff);
 
@@ -2903,9 +1935,8 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
         g_extinfo->executeCode(codebeat, visdata);
     }
 
-    int n = DoubleToInt((double)*vars.n);   
+    int n = RoundToInt((double)*vars.n);
     n = max(0, min(65536, n));
-    Allocate(n);
 
     EnterCriticalSection(&imageload);
     if (n) {
@@ -2919,19 +1950,52 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 
             g_extinfo->executeCode(codepoint, visdata);
 
+            // TODO [cleanup]: invert to if+continue
             if (*vars.skip == 0.0) {
-                unsigned int color = min(255, max(0, DoubleToInt(255.0f*(double)*vars.blue)));
-                color |= min(255, max(0, DoubleToInt(255.0f*(double)*vars.green))) << 8;
-                color |= min(255, max(0, DoubleToInt(255.0f*(double)*vars.red))) << 16;
+                unsigned int color = min(255, max(0, RoundToInt(255.0f*(double)*vars.blue)));
+                color |= min(255, max(0, RoundToInt(255.0f*(double)*vars.green))) << 8;
+                color |= min(255, max(0, RoundToInt(255.0f*(double)*vars.red))) << 16;
 
                 if (config.mask == 0) color = 0xFFFFFF;
+
+                int* texture = this->texbits_normal;
+                if (*vars.sizex < 0 && *vars.sizey > 0) {
+                    texture = this->texbits_mirrored;
+                } else if(*vars.sizex > 0 && *vars.sizey < 0) {
+                    texture = this->texbits_flipped;
+                } else if(*vars.sizex < 0 && *vars.sizey < 0) {
+                    texture = this->texbits_rot180;
+                }
 
                 double szx = (double)*vars.sizex;
                 szx = fabs(szx);
                 double szy = (double)*vars.sizey;
                 szy = fabs(szy);
-                if ((szx > .01) && (szy > .01))
-                    DrawParticle(framebuffer, w, h, (double)*vars.x, (double)*vars.y, (double)szx, (double)szy, color);
+
+                // TODO [cleanup]: put more of the above into this if-case, or invert to if+continue
+                // TODO [bugfix]: really large images would be clipped while still potentially visible, should be relative to image size
+                if ((szx > .01) && (szy > .01)) {
+                    double x = *vars.x;
+                    double y = *vars.y;
+                    if (config.wrap != 0) {
+                        x = *vars.x - wrap_diff_to_plusminus1(*vars.x);
+                        y = *vars.y - wrap_diff_to_plusminus1(*vars.y);
+                        double sign_x2 = x > 0 ? 2.0 : -2.0;
+                        double sign_y2 = y > 0 ? 2.0 : -2.0;
+                        bool overlaps_x = overlaps_edge(x, szx, this->iw, w);
+                        bool overlaps_y = overlaps_edge(y, szy, this->ih, h);
+                        if (overlaps_x) {
+                            DrawParticle(framebuffer, texture, w, h, x - sign_x2, y, szx, szy, color);
+                        }
+                        if (overlaps_y) {
+                            DrawParticle(framebuffer, texture, w, h, x, y - sign_y2, szx, szy, color);
+                        }
+                        if (overlaps_x && overlaps_y) {
+                            DrawParticle(framebuffer, texture, w, h, x - sign_x2, y - sign_y2, szx, szy, color);
+                        }
+                    }
+                    DrawParticle(framebuffer, texture, w, h, x, y, szx, szy, color);
+                }
             }
         }
     }
@@ -2941,24 +2005,24 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
     return 0;
 }
 
-HWND C_THISCLASS::conf(HINSTANCE hInstance, HWND hwndParent) 
+HWND C_Texer2::conf(HINSTANCE hInstance, HWND hwndParent)
 {
     g_ConfigThis = this;
-    return CreateDialog(hInstance, MAKEINTRESOURCE(IDD_CONFIG), hwndParent, (DLGPROC)g_DlgProc);
+    return CreateDialog(hInstance, MAKEINTRESOURCE(IDD_CFG_TEXERII), hwndParent, (DLGPROC)g_DlgProc);
 }
 
 
-char *C_THISCLASS::get_desc(void)
-{ 
-    return MOD_NAME; 
-}
-
-void C_THISCLASS::load_config(unsigned char *data, int len) 
+char *C_Texer2::get_desc(void)
 {
-    if (len >= sizeof(apeconfig))
-        memcpy(&this->config, data, sizeof(apeconfig));
-    
-    unsigned char *p = &data[sizeof(apeconfig)];
+    return MOD_NAME;
+}
+
+void C_Texer2::load_config(unsigned char *data, int len)
+{
+    if (len >= sizeof(texer2_apeconfig))
+        memcpy(&this->config, data, sizeof(texer2_apeconfig));
+
+    unsigned char *p = &data[sizeof(texer2_apeconfig)];
     char *buf;
 
     // Check size
@@ -3009,11 +2073,11 @@ void C_THISCLASS::load_config(unsigned char *data, int len)
 }
 
 
-int  C_THISCLASS::save_config(unsigned char *data) 
+int  C_Texer2::save_config(unsigned char *data)
 {
-    memcpy(data, &this->config, sizeof(apeconfig));
-    int l = 0, size = sizeof(apeconfig);
-    char *p = (char *)(data+sizeof(apeconfig));
+    memcpy(data, &this->config, sizeof(texer2_apeconfig));
+    int l = 0, size = sizeof(texer2_apeconfig);
+    char *p = (char *)(data+sizeof(texer2_apeconfig));
     int tot = 16;
 
     // Init
@@ -3048,26 +2112,20 @@ int  C_THISCLASS::save_config(unsigned char *data)
     strncpy(p, code.point, l);
     p+=l;
 
-    return sizeof(apeconfig) + tot;
+    return sizeof(texer2_apeconfig) + tot;
 }
 
-C_RBASE *R_RetrFunc(char *desc) 
+
+/* APE interface */
+C_RBASE *R_Texer2(char *desc)
 {
-    if (desc) { 
-        strcpy(desc,MOD_NAME); 
-        return NULL; 
+    if (desc) {
+        strcpy(desc,MOD_NAME);
+        return NULL;
     }
-    return (C_RBASE *) new C_THISCLASS();
+    return (C_RBASE *) new C_Texer2();
 }
 
-extern "C"
-{
-    __declspec (dllexport) int _AVS_APE_RetrFunc(HINSTANCE hDllInstance, char **info, int *create)
-    {
-        g_hDllInstance=hDllInstance;
-        *info=UNIQUEIDSTRING;
-        *create=(int)(void*)R_RetrFunc;
-        return 1;
-    }
-};
-
+void R_Texer2_SetExtInfo(APEinfo *ptr) {
+    g_extinfo = ptr;
+}
