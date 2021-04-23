@@ -1926,6 +1926,14 @@ BEGIN
     PUSHBUTTON      "Load Example...",IDC_TEXERII_EXAMPLE,130,195,63,15
 END
 
+IDD_CFG_NORMALISE DIALOG DISCARDABLE  0, 0, 137, 137
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Enable Normalise filter",IDC_NORMALISE_ENABLED,"Button",
+                    BS_AUTOCHECKBOX | BS_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+                    7, 7, 95, 22
+END
 
 
 

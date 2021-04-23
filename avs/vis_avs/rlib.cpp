@@ -216,6 +216,7 @@ void C_RLibrary::initbuiltinape(void)
   ADD2(R_MultiDelay,"Holden05: Multi Delay");
   ADD2(R_Convolution,"Holden03: Convolution Filter");
   ADD_EXT(R_Texer2,"Acko.net: Texer II");
+  ADD2(R_Normalise,"Trans: Normalise");
 #endif
 #undef ADD
 #undef ADD2

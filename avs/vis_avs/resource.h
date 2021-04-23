@@ -80,6 +80,7 @@
 #define IDD_CFG_VIDEODELAY              172
 #define IDD_CFG_CONVOLUTION             173
 #define IDD_CFG_TEXERII                 174
+#define IDD_CFG_NORMALISE               175
 #define IDC_EFFECTS                     1000
 #define IDC_ENABLED                     1001
 #define IDC_FBCLEAR                     1002
@@ -468,6 +469,7 @@
 #define IDC_TEXERII_ABOUT               1280
 #define IDC_TEXERII_EXAMPLE             1281
 #define IDC_TEXERII_URL                 1282
+#define IDC_NORMALISE_ENABLED           1283
 #define IDM_DISPLAY                     40001
 #define IDM_PRESETS                     40002
 #define IDM_TRANS                       40003
@@ -483,9 +485,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        175
+#define _APS_NEXT_RESOURCE_VALUE        176
 #define _APS_NEXT_COMMAND_VALUE         40011
-#define _APS_NEXT_CONTROL_VALUE         1283
+#define _APS_NEXT_CONTROL_VALUE         1284
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
