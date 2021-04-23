@@ -98,6 +98,10 @@ Render / Superscope
     * Built-in 3D abilities, makes 3D SSC calculations faster. Allow for camera positioning and rotation, perhaps with z-buffer support.
     * A wrap feature that maps points outside (-1, 1) into this interval. When in line-mode, make sure that lines go around the edge too and don't cross the entire window.
     * Add a checkbox that turns on a more intuitive colorspace such as HSV (Hue, Saturation, Luminance).
+    * Anti-aliased line rendering.
+    
+    * Bug: Full-white is not white. (251 instead of 255)
+    * Bug: Does not render all the way to the edges (the right edge only?)
 
 
 
