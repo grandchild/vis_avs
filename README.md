@@ -34,7 +34,8 @@ off until after that goal is achieved.
 
 First, install a 32bit MingW-w64 GCC (with C++ support) and and a cross-compiler CMake.
 
-Choose your Linux distro, and run the respective commands to install the build dependencies and cross-compile AVS:
+Choose your Linux distro, and run the respective commands to install the build
+dependencies and cross-compile AVS:
 
 <details><summary><em>Fedora / RedHat</em></summary>
 
