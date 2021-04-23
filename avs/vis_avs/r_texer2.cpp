@@ -377,11 +377,6 @@ C_Texer2::C_Texer2()
     texbits_rot180 = 0;
     init = true;
 
-    // char DEVMSG[] = "/* This a development alpha version.\r\nDo not distribute */";
-    // char *DEVVER = new char[strlen(DEVMSG)+1];
-    // strcpy(DEVVER, DEVMSG);
-    // code.SetInit(DEVVER);
-
     InitializeCriticalSection(&imageload);
     InitializeCriticalSection(&codestuff);
 
@@ -536,10 +531,6 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
     // Texture Coordinates
     double x0 = 0.0;
     double y0 = 0.0;
-    
-    if (config.wrap) {
-        
-    }
 
 /***************************************************************************/
 /***************************************************************************/
