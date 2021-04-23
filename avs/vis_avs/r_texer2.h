@@ -20,8 +20,13 @@
 // this is how WVS will recognize this APE internally
 #define UNIQUEIDSTRING "Acko.net: Texer II"
 
+#define TEXER_II_VERSION_V2_81D 0
+#define TEXER_II_VERSION_V2_81D_UPGRADE_HELP \
+    "Saved version wraps x/y only once. Upgrade to wrap around forever."
+#define TEXER_II_VERSION_CURRENT 1
+
 struct texer2_apeconfig {
-    int mode;
+    int version;  /* formerly "mode", which was unused. */
     char img[MAX_PATH];
     int resize;
     int wrap;

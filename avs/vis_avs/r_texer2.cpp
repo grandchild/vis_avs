@@ -10,7 +10,7 @@ class C_Texer2 : public C_RBASE
 {
     protected:
     public:
-        C_Texer2();
+        C_Texer2(int default_version);
         virtual ~C_Texer2();
         virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
         virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
@@ -364,7 +364,7 @@ void C_Texer2::Recompile() {
 }
 
 // set up default configuration
-C_Texer2::C_Texer2()
+C_Texer2::C_Texer2(int default_version)
 {
     memset(&config, 0, sizeof(texer2_apeconfig));
     hwndDlg = 0;
@@ -376,6 +376,7 @@ C_Texer2::C_Texer2()
     texbits_mirrored = 0;
     texbits_rot180 = 0;
     init = true;
+    config.version = default_version;
 
     InitializeCriticalSection(&imageload);
     InitializeCriticalSection(&codestuff);
@@ -1893,6 +1894,11 @@ inline double wrap_diff_to_plusminus1(double x) {
     return round(x / 2.0) * 2.0;
 }
 
+/* For AVS 2.81d compatibility. TexerII v1.0 only wrapped once. */
+inline double wrap_once_diff_to_plusminus1(double x) {
+    return (x > 1.0) ? +2.0 : (x < -1.0 ? -2.0 : 0.0);
+}
+
 bool overlaps_edge(double wrapped_coord, double img_size, int img_size_px, int screen_size_px) {
     double abs_wrapped_coord = fabs(wrapped_coord);
     // a /2 seems missing, but screen has size 2, hence /2(half) *2(screen size) => *1
@@ -1969,12 +1975,21 @@ int C_Texer2::render(char visdata[2][2][576], int isBeat, int *framebuffer, int 
                     double x = *vars.x;
                     double y = *vars.y;
                     if (config.wrap != 0) {
-                        x = *vars.x - wrap_diff_to_plusminus1(*vars.x);
-                        y = *vars.y - wrap_diff_to_plusminus1(*vars.y);
+                        bool overlaps_x, overlaps_y;
+                        if(this->config.version == TEXER_II_VERSION_V2_81D) {
+                            /* Wrap only once (when crossing +/-1, not when crossing +/-3 etc. */
+                            x -= wrap_once_diff_to_plusminus1(*vars.x);
+                            y -= wrap_once_diff_to_plusminus1(*vars.y);
+                            overlaps_x = overlaps_edge(*vars.x, szx, this->iw, w);
+                            overlaps_y = overlaps_edge(*vars.y, szy, this->ih, h);
+                        } else {
+                            x = *vars.x - wrap_diff_to_plusminus1(*vars.x);
+                            y = *vars.y - wrap_diff_to_plusminus1(*vars.y);
+                            overlaps_x = overlaps_edge(x, szx, this->iw, w);
+                            overlaps_y = overlaps_edge(y, szy, this->ih, h);
+                        }
                         double sign_x2 = x > 0 ? 2.0 : -2.0;
                         double sign_y2 = y > 0 ? 2.0 : -2.0;
-                        bool overlaps_x = overlaps_edge(x, szx, this->iw, w);
-                        bool overlaps_y = overlaps_edge(y, szy, this->ih, h);
                         if (overlaps_x) {
                             DrawParticle(framebuffer, texture, w, h, x - sign_x2, y, szx, szy, color);
                         }
@@ -2012,6 +2027,11 @@ void C_Texer2::load_config(unsigned char *data, int len)
 {
     if (len >= sizeof(texer2_apeconfig))
         memcpy(&this->config, data, sizeof(texer2_apeconfig));
+    if (this->config.version < TEXER_II_VERSION_V2_81D
+        || this->config.version > TEXER_II_VERSION_CURRENT) {
+        // If the version value is not in the known set, assume an old preset version.
+        this->config.version = TEXER_II_VERSION_V2_81D;
+    }
 
     unsigned char *p = &data[sizeof(texer2_apeconfig)];
     char *buf;
@@ -2114,7 +2134,7 @@ C_RBASE *R_Texer2(char *desc)
         strcpy(desc,MOD_NAME);
         return NULL;
     }
-    return (C_RBASE *) new C_Texer2();
+    return (C_RBASE *) new C_Texer2(TEXER_II_VERSION_CURRENT);
 }
 
 void R_Texer2_SetExtInfo(APEinfo *ptr) {
