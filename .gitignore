@@ -9,10 +9,18 @@
 /build*/
 /cmake-build*/
 /*wine*/
+/dist/
 
 # IDEs
 .idea/
 
+# test files
+.gdb_history
+winedbg_history
+/*.c
+/ResourceHacker*
+/*.exe
+/*test*
 
 # syncthing
 .stfolder/
