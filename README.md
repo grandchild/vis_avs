@@ -23,6 +23,8 @@ off until after that goal is achieved.
     [here](https://github.com/tholden/AVSConvolutionFilter).
   * _TexerII_, by [Steven Wittens](https://acko.net). Original committed to this repo
     [here](https://github.com/grandchild/vis_avs/commit/ddd97ba7).
+* 🎂 Former plugin effects rewritten as builtin-APEs:
+  * Normalise
 * 🥵 Performance is not up to par with official build (about 20% slower). Looking into
   that...
 * 🧨 APE files are crashing AVS or preventing it from starting. Disable these by
