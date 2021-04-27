@@ -1935,6 +1935,60 @@ BEGIN
                     7, 7, 95, 22
 END
 
+IDD_CFG_COLORMAP DIALOG DISCARDABLE  0, 0, 231, 216
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+   CONTROL          "Map", IDC_STATIC, "Button", BS_GROUPBOX, 5, 5, 220, 80
+   CONTROL          "", IDC_COLORMAP_MAPVIEW, "PaletteClass", WS_TABSTOP,
+                    10, 15, 210, 26
+   CONTROL          "Key", IDC_STATIC, "Button", BS_GROUPBOX, 5, 90, 105, 30
+   COMBOBOX         IDC_COLORMAP_KEY_SELECT, CBS_DROPDOWNLIST  | WS_VSCROLL |
+                    WS_TABSTOP, 10, 101, 95, 80
+   CONTROL          "Output Mode", IDC_STATIC, "Button", BS_GROUPBOX, 120, 90, 105, 45
+   COMBOBOX         IDC_COLORMAP_OUT_BLENDMODE, CBS_DROPDOWNLIST  | WS_VSCROLL |
+                    WS_TABSTOP, 125, 101, 95, 103
+   LTEXT            IDC_COLORMAP_FILENAME_VIEW, SS_LEFT | SS_SUNKEN | WS_GROUP,
+                    10, 68, 140, 10
+   CONTROL          "Load", IDC_COLORMAP_FILE_LOAD, "Button", BS_PUSHBUTTON |
+                    WS_TABSTOP, 155, 65, 30, 15
+   CONTROL          "Save", IDC_COLORMAP_FILE_SAVE, "Button", BS_PUSHBUTTON |
+                    WS_TABSTOP, 190, 65, 30, 15
+   CONTROL          "?", IDC_COLORMAP_HELP, "Button", BS_PUSHBUTTON | WS_TABSTOP,
+                    205, 45, 15, 15
+   COMBOBOX         IDC_COLORMAP_MAP_SELECT, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,
+                    10, 46, 40, 85
+   CONTROL          "Enabled", IDC_COLORMAP_MAP_ENABLE, "Button", BS_AUTOCHECKBOX |
+                    WS_TABSTOP, 60, 45, 44, 15
+   CONTROL          "", IDC_COLORMAP_ADJUSTABLE_SLIDER, "msctls_trackbar32", TBS_HORZ |
+                    TBS_BOTH | TBS_NOTICKS | WS_TABSTOP, 125, 120, 95, 10
+   COMBOBOX         IDC_COLORMAP_MAP_CYCLING_SELECT, CBS_DROPDOWNLIST | WS_VSCROLL |
+                    WS_TABSTOP, 10, 136, 80, 91
+   CONTROL          "Map Cycling", IDC_STATIC, "Button", BS_GROUPBOX, 5, 125, 105, 60
+   CONTROL          "Flip", IDC_COLORMAP_FLIP_MAP, "Button", BS_PUSHBUTTON | WS_TABSTOP,
+                    145, 45, 25, 15
+   CONTROL          "Clear", IDC_COLORMAP_CLEAR_MAP, "Button", BS_PUSHBUTTON |
+                    WS_TABSTOP, 175, 45, 25, 15
+   CONTROL          "Don't skip for fast beats", IDC_COLORMAP_NO_SKIP_FAST_BEATS,
+                    "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 13, 169, 88, 10
+   LTEXT            "Speed", IDC_STATIC, SS_LEFT | WS_GROUP, 12, 155, 22, 10
+   CONTROL          "", IDC_COLORMAP_MAP_CYCLE_SPEED, "msctls_trackbar32", TBS_HORZ |
+                    TBS_BOTH | TBS_NOTICKS | WS_TABSTOP, 37, 155, 68, 10
+   CONTROL          "?", IDC_COLORMAP_CYCLE_INFO, "Button", BS_PUSHBUTTON | WS_TABSTOP,
+                    90, 135, 15, 15
+END
+
+IDD_CFG_COLORMAP_COLOR_POSITION DIALOGEX 0, 0, 142, 41
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Color position"
+FONT 8, "MS Sans Serif"
+BEGIN
+   DEFPUSHBUTTON    "OK", IDOK | WS_CHILD | WS_TABSTOP, 85, 20, 50, 14
+   LTEXT            "Please specify the color's position (0-255):", IDC_STATIC,
+                    SS_LEFT | WS_CHILD | WS_GROUP, 5, 5, 135, 10
+   EDITTEXT         IDC_COLORMAP_COLOR_POSITION | ES_NUMBER | WS_CHILD | WS_TABSTOP,
+                    5, 20, 30, 13
+END
 
 
 /////////////////////////////////////////////////////////////////////////////

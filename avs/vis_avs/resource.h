@@ -81,6 +81,8 @@
 #define IDD_CFG_CONVOLUTION             173
 #define IDD_CFG_TEXERII                 174
 #define IDD_CFG_NORMALISE               175
+#define IDD_CFG_COLORMAP                176
+#define IDD_CFG_COLORMAP_COLOR_POSITION 177
 #define IDC_EFFECTS                     1000
 #define IDC_ENABLED                     1001
 #define IDC_FBCLEAR                     1002
@@ -470,6 +472,23 @@
 #define IDC_TEXERII_EXAMPLE             1281
 #define IDC_TEXERII_URL                 1282
 #define IDC_NORMALISE_ENABLED           1283
+#define IDC_COLORMAP_MAPVIEW            1284
+#define IDC_COLORMAP_KEY_SELECT         1285
+#define IDC_COLORMAP_OUT_BLENDMODE      1286
+#define IDC_COLORMAP_FILENAME_VIEW      1287
+#define IDC_COLORMAP_FILE_LOAD          1288
+#define IDC_COLORMAP_FILE_SAVE          1289
+#define IDC_COLORMAP_HELP               1290
+#define IDC_COLORMAP_MAP_SELECT         1291
+#define IDC_COLORMAP_MAP_ENABLE         1292
+#define IDC_COLORMAP_ADJUSTABLE_SLIDER  1293
+#define IDC_COLORMAP_MAP_CYCLING_SELECT 1294
+#define IDC_COLORMAP_FLIP_MAP           1295
+#define IDC_COLORMAP_CLEAR_MAP          1296
+#define IDC_COLORMAP_NO_SKIP_FAST_BEATS 1297
+#define IDC_COLORMAP_MAP_CYCLE_SPEED    1298
+#define IDC_COLORMAP_CYCLE_INFO         1299
+#define IDC_COLORMAP_COLOR_POSITION     1300
 #define IDM_DISPLAY                     40001
 #define IDM_PRESETS                     40002
 #define IDM_TRANS                       40003
@@ -485,9 +504,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        176
+#define _APS_NEXT_RESOURCE_VALUE        178
 #define _APS_NEXT_COMMAND_VALUE         40011
-#define _APS_NEXT_CONTROL_VALUE         1284
+#define _APS_NEXT_CONTROL_VALUE         1301
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
