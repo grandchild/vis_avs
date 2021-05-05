@@ -217,6 +217,7 @@ void C_RLibrary::initbuiltinape(void)
   ADD2(R_Convolution,"Holden03: Convolution Filter");
   ADD_EXT(R_Texer2,"Acko.net: Texer II");
   ADD2(R_Normalise,"Trans: Normalise");
+  ADD2(R_ColorMap,"Color Map");
 #endif
 #undef ADD
 #undef ADD2
