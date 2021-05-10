@@ -1,61 +1,14 @@
-/*
-
-Reconstructed from scratch, with the help of Ghidra and the original binary colormap.ape
-(version 1.3.0.0). Most of the code deals with handling the UI interactions, and the
-actual mapping code is fairly straightforward. All the Win32 UI API calls are thankfully
-plainly visible in the decompiled binary and for that reason most of the credit still
-goes to the original author Steven Wittens (a.k.a. "Unconed") @ https://acko.net -- I
-mostly just transcribed what Ghidra gave me.
-
-*/
-#include <windows.h>
+/* Reconstructed from scratch, with the help of Ghidra and the original binary
+ * colormap.ape (version 1.3.0.0). Most of the code deals with handling the UI
+ * interactions, and the actual mapping code is fairly straightforward. All the Win32 UI
+ * API calls are thankfully plainly visible in the decompiled binary and for that reason
+ * most of the credit still goes to the original author Steven Wittens (a.k.a.
+ * "Unconed") @ https://acko.net -- I mostly just transcribed what Ghidra showed me. */
+#include "r_colormap.h"
 #include <commctrl.h>
 #include <time.h>
-#include "r_defs.h"
-#include "resource.h"
-#include <xmmintrin.h>
-#include <emmintrin.h>
-#include <tmmintrin.h>
+#include <immintrin.h>
 
-#include <stdio.h>
-
-
-#define MOD_NAME "Trans / ColorMap"
-#define UNIQUEIDSTRING "Color Map"
-
-#define NUM_COLOR_VALUES 256  // 2 ^ BITS_PER_CHANNEL (i.e. 8)
-#define COLORMAP_NUM_MAPS 8
-#define COLORMAP_MAP_FILENAME_MAXLEN 48
-#define COLORMAP_SAVE_MAP_HEADER_SIZE (sizeof(map) - sizeof(map_color*))
-
-#define COLORMAP_COLOR_KEY_RED          0
-#define COLORMAP_COLOR_KEY_GREEN        1
-#define COLORMAP_COLOR_KEY_BLUE         2
-#define COLORMAP_COLOR_KEY_RGB_SUM_HALF 3
-#define COLORMAP_COLOR_KEY_MAX          4
-#define COLORMAP_COLOR_KEY_RGB_AVERAGE  5
-
-#define COLORMAP_MAP_CYCLE_NONE            0
-#define COLORMAP_MAP_CYCLE_BEAT_RANDOM     1
-#define COLORMAP_MAP_CYCLE_BEAT_SEQUENTIAL 2
-
-#define COLORMAP_MAP_CYCLE_TIMER_ID 1
-#define COLORMAP_MAP_CYCLE_SPEED_MIN 1
-#define COLORMAP_MAP_CYCLE_SPEED_MAX 64
-#define COLORMAP_MAP_CYCLE_ANIMATION_STEPS NUM_COLOR_VALUES
-
-#define COLORMAP_BLENDMODE_REPLACE    0
-#define COLORMAP_BLENDMODE_ADDITIVE   1
-#define COLORMAP_BLENDMODE_MAXIMUM    2
-#define COLORMAP_BLENDMODE_MINIMUM    3
-#define COLORMAP_BLENDMODE_5050       4
-#define COLORMAP_BLENDMODE_SUB1       5
-#define COLORMAP_BLENDMODE_SUB2       6
-#define COLORMAP_BLENDMODE_MULTIPLY   7
-#define COLORMAP_BLENDMODE_XOR        8
-#define COLORMAP_BLENDMODE_ADJUSTABLE 9
-
-#define COLORMAP_ADJUSTABLE_BLEND_MAX 255
 
 #define RGB_TO_BGR(color) (((color) & 0xff0000) >> 16 | ((color) & 0xff00) | ((color) & 0xff) << 16)
 #define BGR_TO_RGB(color) RGB_TO_BGR(color)  // is its own inverse
@@ -66,13 +19,11 @@ mostly just transcribed what Ghidra gave me.
                    data[pos+2] = ((y) >> 16) & 0xff; \
                    data[pos+3] = ((y) >> 24) & 0xff
 
-#define COLORMAP_NUM_CYCLEMODES 3
 static char colormap_labels_map_cycle_mode[COLORMAP_NUM_CYCLEMODES][19] = {
     "None (single map)",
     "On-beat random",
     "On-beat sequential"
 };
-#define COLORMAP_NUM_KEYMODES 6
 static char colormap_labels_color_key[COLORMAP_NUM_KEYMODES][16] = {
     "Red Channel",
     "Green Channel",
@@ -81,7 +32,6 @@ static char colormap_labels_color_key[COLORMAP_NUM_KEYMODES][16] = {
     "Maximal Channel",
     "(R+G+B)/3"
 };
-#define COLORMAP_NUM_BLENDMODES 10
 static char colormap_labels_blendmodes[COLORMAP_NUM_BLENDMODES][14] = {
     "Replace",
     "Additive",
@@ -93,82 +43,6 @@ static char colormap_labels_blendmodes[COLORMAP_NUM_BLENDMODES][14] = {
     "Multiply",
     "XOR",
     "Adjustable"
-};
-
-typedef struct {
-    unsigned int position;
-    unsigned int color;
-    unsigned int color_id;
-} map_color;
-
-typedef struct {
-    int enabled;
-    unsigned int length;
-    int map_id;
-    char filename[COLORMAP_MAP_FILENAME_MAXLEN];
-    map_color* colors;
-} map;
-
-typedef struct {
-    unsigned int color_key;
-    unsigned int blendmode;
-    unsigned int map_cycle_mode;
-    unsigned char adjustable_alpha;
-    unsigned char _unused;
-    unsigned char dont_skip_fast_beats;
-    unsigned char map_cycle_speed; // 1 to 64
-} colormap_apeconfig;
-
-typedef struct {
-    int colors[NUM_COLOR_VALUES];
-} map_cache;
-
-typedef struct {
-    RECT window_rect;
-    HDC context;
-    HBITMAP bitmap;
-    LPRECT region;
-} ui_map;
-
-class C_ColorMap : public C_RBASE {
-    public:
-        C_ColorMap();
-        virtual ~C_ColorMap();
-
-        /* APE interface */
-        virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int);
-        virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
-        virtual char *get_desc();
-        virtual void load_config(unsigned char *data, int len);
-        virtual int  save_config(unsigned char *data);
-
-        /* Other utilities */
-        void load_map_file(int map_index);
-        void save_map_file(int map_index);
-        void make_default_map(int map_index);
-        void make_map_cache(int map_index);
-        void add_map_color(int map_index, int position, int color);
-        void remove_map_color(int map_index, int index);
-        void sort_colors(int map_index);
-
-        colormap_apeconfig config;
-        map maps[COLORMAP_NUM_MAPS];
-        map_cache map_caches[COLORMAP_NUM_MAPS];
-        map_cache tween_map_cache;
-        int current_map = 0;
-        int next_map = 0;
-        HWND dialog = NULL;
-        int change_animation_step;
-        int disable_map_change;
-
-    protected:
-        int next_id = 1337;
-        int get_new_id();
-        int get_key(int color);
-        int get_key_ssse3(__m128i color4);
-        void animation_step();
-        bool load_map_header(unsigned char *data, int len, int map_index, int pos);
-        bool load_map_colors(unsigned char *data, int len, int map_index, int pos);
 };
 
 static C_ColorMap* g_ColormapThis;
@@ -254,10 +128,11 @@ static LRESULT CALLBACK dialog_handler(HWND hwndDlg, UINT uMsg, WPARAM wParam,LP
                     case IDC_COLORMAP_FLIP_MAP:
                         if (g_ColormapThis->maps[current_map].length > 0) {
                             for(int i=0; i<g_ColormapThis->maps[current_map].length; i++) {
-                                map_color color = g_ColormapThis->maps[current_map].colors[i];
-                                color.position = NUM_COLOR_VALUES - 1 - color.position;
+                                map_color* color = &g_ColormapThis->maps[current_map].colors[i];
+                                color->position = NUM_COLOR_VALUES - 1 - color->position;
                             }
                         }
+                        g_ColormapThis->sort_colors(current_map);
                         g_ColormapThis->make_map_cache(current_map);
                         InvalidateRect(GetDlgItem(hwndDlg,IDC_COLORMAP_MAPVIEW), 0, 0);
                         return 0;
@@ -270,7 +145,7 @@ static LRESULT CALLBACK dialog_handler(HWND hwndDlg, UINT uMsg, WPARAM wParam,LP
                         }
                         return 0;
                     case IDC_COLORMAP_NO_SKIP_FAST_BEATS:
-                        g_ColormapThis->config.dont_skip_fast_beats = SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0);
+                        g_ColormapThis->config.dont_skip_fast_beats = IsDlgButtonChecked(hwndDlg, IDC_COLORMAP_NO_SKIP_FAST_BEATS) == BST_CHECKED;
                         return 0;
                 }
             }
@@ -376,7 +251,6 @@ static LRESULT CALLBACK set_color_position_handler(HWND hwndDlg, UINT uMsg, WPAR
 }
 
 static LRESULT CALLBACK colormap_edit_handler(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    printf("> Colormap: palette dialog 0x%x\n", uMsg);
     if (g_ColormapThis == NULL) {
         return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
     }
@@ -458,16 +332,12 @@ static LRESULT CALLBACK colormap_edit_handler(HWND hwndDlg, UINT uMsg, WPARAM wP
             for(int i = 0; i < NUM_COLOR_VALUES; i++) {
                 int w = map_rect.right - map_rect.left;
                 // The disassembled code from the original reads:
-                //   CDQ  (i * w)              ; all bits in edx are x's sign-bit
+                //   CDQ  (i * w)              ; all bits in edx are (i * w)'s sign-bit
                 //   AND  edx, 0xff            ; offset = (i * w) < 0 ? 255 : 0
                 //   ADD  eax, edx             ; i * w + offset
-                //   SAR  eax, 8               ; / 256
-                //   ADD  eax, map_rect.left
-                //   MOV  draw_rect.left, eax
-                // This seems like some sort of weird branchless negative modulo catch
-                // for negative x's (but with an off-by-one?), which seems unneccessary
-                // unless you'd expect (map_rect.right - map_rect.left) to be negative.
-                // The following should be sufficient:
+                // This seems like what MSVC might emit for modulo, which seems
+                // unneccessary unless you'd expect (map_rect.right - map_rect.left) to
+                // be negative. The following should be sufficient:
                 draw_rect.left = i * w / NUM_COLOR_VALUES + map_rect.left;
                 draw_rect.right = (i + 1) * w / NUM_COLOR_VALUES + map_rect.left;
                 int color = g_ColormapThis->map_caches[current_map].colors[i];
@@ -624,6 +494,7 @@ static LRESULT CALLBACK colormap_edit_handler(HWND hwndDlg, UINT uMsg, WPARAM wP
                         g_ColormapThis->maps[current_map].colors[selected_color_index].position = g_ColorSetValue;
                         break;
                 }
+                g_ColormapThis->sort_colors(current_map);
                 g_ColormapThis->make_map_cache(current_map);
             }
             InvalidateRect(hwndDlg, NULL, 0);
@@ -633,10 +504,15 @@ static LRESULT CALLBACK colormap_edit_handler(HWND hwndDlg, UINT uMsg, WPARAM wP
 }
 
 C_ColorMap::C_ColorMap() {
+    this->current_map = 0;
+    this->next_map = 0;
+    this->change_animation_step = COLORMAP_MAP_CYCLE_ANIMATION_STEPS;
+    this->disable_map_change = 0;
     for(int i = 0; i < COLORMAP_NUM_MAPS; i++) {
         this->maps[i].enabled = i == 0;
         this->maps[i].length = 2;
         this->maps[i].map_id = this->get_new_id();
+        this->maps[i].colors = NULL;
         this->make_default_map(i);
     }
 }
@@ -744,7 +620,7 @@ inline int C_ColorMap::get_key(int color) {
         case COLORMAP_COLOR_KEY_BLUE:
             return color >> 16 & 0xff;
         case COLORMAP_COLOR_KEY_RGB_SUM_HALF:
-            return ((color & 0xff) + (color >> 8 & 0xff) + (color >> 16 & 0xff)) / 2;
+            return min(((color & 0xff) + (color >> 8 & 0xff) + (color >> 16 & 0xff)) / 2, NUM_COLOR_VALUES - 1);
         case COLORMAP_COLOR_KEY_MAX:
             r = color & 0xff;
             g = (color & 0xff00) >> 8;
@@ -756,21 +632,20 @@ inline int C_ColorMap::get_key(int color) {
 }
 
 inline int C_ColorMap::get_key_ssse3(__m128i color4) {
-    int output;
-    int avg_tmp[4];
-    // Gather uint8s from the certain source locations. (0xff => dest will be zero.)
-    // Collect the respective channels into the lower 32bits, so they can be returned as
-    // a single 32bit (4-packed-uint8) int value.
+    // Gather uint8s from certain source locations. (0xff => dest will be zero.) Collect
+    // the respective channels into the lower 32bits, so they can be returned as a
+    // single 32bit (4-packed-uint8) int value.
     __m128i gather_red_into_p8 =    _mm_set_epi32(0xffffffff, 0xffffffff, 0xffffffff, 0x0c080400);
     __m128i gather_green_into_p8 =  _mm_set_epi32(0xffffffff, 0xffffffff, 0xffffffff, 0x0d090501);
     __m128i gather_blue_into_p8 =   _mm_set_epi32(0xffffffff, 0xffffffff, 0xffffffff, 0x0e0a0602);
-    // For the (r+g+b)/2 and /3 operations we need overflow capabilities.
+    // For the (r+g+b)/2 and /3 operations we need overflow capabilities, hence 16-bit values.
     __m128i gather_red_into_p16 =   _mm_set_epi32(0xffffffff, 0xffffffff, 0xff0cff08, 0xff04ff00);
     __m128i gather_green_into_p16 = _mm_set_epi32(0xffffffff, 0xffffffff, 0xff0dff09, 0xff05ff01);
     __m128i gather_blue_into_p16 =  _mm_set_epi32(0xffffffff, 0xffffffff, 0xff0eff0a, 0xff06ff02);
-    __m128i max_channel_value_p16 = _mm_set_epi32(0xffffffff, 0xffffffff, 0x00ff00ff, 0x00ff00ff);
-    __m128i gather_p16_into_p8 = _mm_set_epi32(0xffffffff, 0xffffffff, 0xffffffff, 0x06040200);
+    __m128i max_channel_value_p16 = _mm_set_epi32(0x00000000, 0x00000000, 0x00ff00ff, 0x00ff00ff);
+    __m128i gather_p16_into_p8 =    _mm_set_epi32(0xffffffff, 0xffffffff, 0xffffffff, 0x06040200);
     __m128i r, g;
+    int out;
     switch(this->config.color_key) {
         case COLORMAP_COLOR_KEY_RED:
             color4 = _mm_shuffle_epi8(color4, gather_red_into_p8);
@@ -782,7 +657,6 @@ inline int C_ColorMap::get_key_ssse3(__m128i color4) {
             color4 = _mm_shuffle_epi8(color4, gather_blue_into_p8);
             break;
         case COLORMAP_COLOR_KEY_RGB_SUM_HALF:
-            // ((color & 0xff) + ((color & 0xff00) >> 8) + ((color & 0xff0000) >> 16)) / 2;
             r = _mm_shuffle_epi8(color4, gather_red_into_p16);
             g = _mm_shuffle_epi8(color4, gather_green_into_p16);
             color4 = _mm_shuffle_epi8(color4, gather_blue_into_p16);
@@ -807,18 +681,40 @@ inline int C_ColorMap::get_key_ssse3(__m128i color4) {
             g = _mm_shuffle_epi8(color4, gather_green_into_p16);
             color4 = _mm_shuffle_epi8(color4, gather_blue_into_p16);
             color4 = _mm_add_epi16(color4, r);
-            color4 = _mm_avg_epi16(color4, g);
-            // ((color & 0xff) + ((color & 0xff00) >> 8) + ((color & 0xff0000) >> 16)) / 3;
-            _mm_storeu_si32();
-            
-            return output;
+            color4 = _mm_add_epi16(color4, g);
+            color4 = _mm_shuffle_epi8(color4, gather_p16_into_p8);
+            out = _mm_cvtsi128_si32(color4);
+            for(int i = 0; i < 4; i++) {
+                ((unsigned char*)&out)[i] = ((unsigned char*)&out)[i] / 3;
+            }
+            return out;
     }
-    _mm_storeu_si32(&output, color4);
-    return output;
+    return _mm_cvtsi128_si32(color4);
 }
 
-void C_ColorMap::animation_step() {
+inline void C_ColorMap::animation_step() {
+    for(int i = 0; i < NUM_COLOR_VALUES; i++) {
+        this->tween_map_cache.colors[i] = BLEND_ADJ_NOMMX(
+            this->map_caches[this->next_map].colors[i],
+            this->map_caches[this->current_map].colors[i],
+            this->change_animation_step
+        );
+    }
     return;
+}
+
+inline void C_ColorMap::animation_step_sse2() {
+    for(int i = 0; i < NUM_COLOR_VALUES; i += 4) {
+        __m128i four_current_values = _mm_loadu_si128((__m128i*)&(this->map_caches[this->current_map].colors[i]));
+        __m128i four_next_values = _mm_loadu_si128((__m128i*)&(this->map_caches[this->next_map].colors[i]));
+        __m128i blend_lerp = _mm_set1_epi8((unsigned char)this->change_animation_step);
+        /* TODO */
+    }
+    return;
+}
+
+inline void C_ColorMap::reset_tween_map_cache() {
+    memcpy(&this->tween_map_cache, &this->map_caches[this->current_map], sizeof(map_cache));
 }
 
 int C_ColorMap::render(char visdata[2][2][576], int is_beat, int *framebuffer, int *fbout, int w, int h) {
@@ -828,7 +724,8 @@ int C_ColorMap::render(char visdata[2][2][576], int is_beat, int *framebuffer, i
         this->change_animation_step = 0;
         blend_map_cache = &this->map_caches[this->current_map];
     } else {
-        this->change_animation_step = max(this->change_animation_step + this->config.map_cycle_speed, COLORMAP_MAP_CYCLE_ANIMATION_STEPS);
+        this->change_animation_step += this->config.map_cycle_speed;
+        this->change_animation_step = min(this->change_animation_step, COLORMAP_MAP_CYCLE_ANIMATION_STEPS);
         if(is_beat && (!this->config.dont_skip_fast_beats || this->change_animation_step == COLORMAP_MAP_CYCLE_ANIMATION_STEPS)) {
             int i;
             bool any_maps_enabled = false;
@@ -838,90 +735,90 @@ int C_ColorMap::render(char visdata[2][2][576], int is_beat, int *framebuffer, i
                     break;
                 }
             }
-            while(any_maps_enabled && !this->maps[this->next_map].enabled) {
-                if(this->config.map_cycle_mode == COLORMAP_MAP_CYCLE_BEAT_RANDOM) {
-                    this->next_map = rand() % COLORMAP_NUM_MAPS;
-                } else{
-                    this->next_map = ++this->next_map % COLORMAP_NUM_MAPS;
-                }
+            if(any_maps_enabled) {
+                do {
+                    if(this->config.map_cycle_mode == COLORMAP_MAP_CYCLE_BEAT_RANDOM) {
+                        this->next_map = rand() % COLORMAP_NUM_MAPS;
+                    } else{
+                        this->next_map = ++this->next_map % COLORMAP_NUM_MAPS;
+                    }
+                } while(!this->maps[this->next_map].enabled);
             }
             this->change_animation_step = 0;
         }
-        if(this->change_animation_step == COLORMAP_MAP_CYCLE_ANIMATION_STEPS) {
+        if(this->change_animation_step == 0) {
+            this->reset_tween_map_cache();
+        } else if(this->change_animation_step == COLORMAP_MAP_CYCLE_ANIMATION_STEPS) {
             this->current_map = this->next_map;
+            this->reset_tween_map_cache();
         } else {
-            if(this->change_animation_step == 0) {
-                memcpy(&this->tween_map_cache, &this->map_caches[this->current_map], sizeof(map_cache));
-                blend_map_cache = &this->tween_map_cache;
+            if(this->current_map != this->next_map) {
+                this->animation_step();
             } else {
-                if(this->current_map != this->next_map) {
-                    this->animation_step();
-                } else {
-                    memcpy(&this->tween_map_cache, &this->map_caches[this->current_map], sizeof(map_cache));
-                    blend_map_cache = &this->tween_map_cache;
-                }
+                this->reset_tween_map_cache();
             }
         }
+        blend_map_cache = &this->tween_map_cache;
     }
     switch(this->config.blendmode) {
         case COLORMAP_BLENDMODE_REPLACE:
             for(int i = 0; i < w * h; i++) {
                 int key = this->get_key(framebuffer[i]);
-                framebuffer[i] = this->map_caches[this->current_map].colors[key];
+                framebuffer[i] = blend_map_cache->colors[key];
             }
             break;
         case COLORMAP_BLENDMODE_ADDITIVE:
             for(int i = 0; i < w * h; i++) {
                 int key = this->get_key(framebuffer[i]);
-                framebuffer[i] = this->map_caches[this->current_map].colors[key];
+                framebuffer[i] = BLEND(framebuffer[i], blend_map_cache->colors[key]);
             }
             break;
         case COLORMAP_BLENDMODE_MAXIMUM:
             for(int i = 0; i < w * h; i++) {
                 int key = this->get_key(framebuffer[i]);
-                framebuffer[i] = this->map_caches[this->current_map].colors[key];
+                framebuffer[i] = BLEND_MAX(framebuffer[i], blend_map_cache->colors[key]);
             }
             break;
         case COLORMAP_BLENDMODE_MINIMUM:
             for(int i = 0; i < w * h; i++) {
                 int key = this->get_key(framebuffer[i]);
-                framebuffer[i] = this->map_caches[this->current_map].colors[key];
+                framebuffer[i] = BLEND_MIN(framebuffer[i], blend_map_cache->colors[key]);
             }
             break;
         case COLORMAP_BLENDMODE_5050:
             for(int i = 0; i < w * h; i++) {
                 int key = this->get_key(framebuffer[i]);
-                framebuffer[i] = this->map_caches[this->current_map].colors[key];
+                framebuffer[i] = BLEND_AVG(framebuffer[i], blend_map_cache->colors[key]);
             }
             break;
         case COLORMAP_BLENDMODE_SUB1:
             for(int i = 0; i < w * h; i++) {
                 int key = this->get_key(framebuffer[i]);
-                framebuffer[i] = this->map_caches[this->current_map].colors[key];
+                framebuffer[i] = BLEND_SUB(framebuffer[i], blend_map_cache->colors[key]);
             }
             break;
         case COLORMAP_BLENDMODE_SUB2:
             for(int i = 0; i < w * h; i++) {
                 int key = this->get_key(framebuffer[i]);
-                framebuffer[i] = this->map_caches[this->current_map].colors[key];
+                framebuffer[i] = BLEND_SUB(blend_map_cache->colors[key], framebuffer[i]);
             }
             break;
         case COLORMAP_BLENDMODE_MULTIPLY:
             for(int i = 0; i < w * h; i++) {
                 int key = this->get_key(framebuffer[i]);
-                framebuffer[i] = this->map_caches[this->current_map].colors[key];
+                framebuffer[i] = BLEND_MUL(framebuffer[i], blend_map_cache->colors[key]);
             }
             break;
         case COLORMAP_BLENDMODE_XOR:
             for(int i = 0; i < w * h; i++) {
                 int key = this->get_key(framebuffer[i]);
-                framebuffer[i] = this->map_caches[this->current_map].colors[key];
+                framebuffer[i] ^= blend_map_cache->colors[key];
             }
             break;
         case COLORMAP_BLENDMODE_ADJUSTABLE:
             for(int i = 0; i < w * h; i++) {
                 int key = this->get_key(framebuffer[i]);
-                framebuffer[i] = this->map_caches[this->current_map].colors[key];
+                framebuffer[i] = BLEND_ADJ_NOMMX(blend_map_cache->colors[key], framebuffer[i], this->config.adjustable_alpha);
             }
             break;
         
@@ -940,9 +837,8 @@ HWND C_ColorMap::conf(HINSTANCE hInstance, HWND hwndParent) {
     mapview.hInstance = hInstance;
     mapview.hCursor = LoadCursor(0, MAKEINTRESOURCE(IDC_ARROW));
     mapview.lpszClassName = "ColormapEdit";
-    if(!RegisterClassEx(&mapview)) {
-        printf("RegisterClassEx failed with %ld\n", GetLastError());
-    }
+    RegisterClassEx(&mapview);
+
     g_ColormapThis = this;
     return CreateDialog(hInstance, MAKEINTRESOURCE(IDD_CFG_COLORMAP), hwndParent, (DLGPROC)dialog_handler);
 }
@@ -953,7 +849,6 @@ char *C_ColorMap::get_desc(void) {
 
 bool C_ColorMap::load_map_header(unsigned char *data, int len, int map_index, int pos) {
     if(len - pos < COLORMAP_SAVE_MAP_HEADER_SIZE) {
-        printf("len: %d, pos: %d\n", len, pos);
         return false;
     }
     int start = pos;
@@ -995,16 +890,11 @@ void C_ColorMap::load_config(unsigned char *data, int len) {
     unsigned int pos = sizeof(colormap_apeconfig);
     for(int map_index = 0; map_index < COLORMAP_NUM_MAPS; map_index++) {
         success = this->load_map_header(data, len, map_index, pos);
-        if(!success) {
-            printf("Saved Colormap config header is incomplete.\n");
-            break;
-        }
         pos += COLORMAP_SAVE_MAP_HEADER_SIZE;
     }
     for(int map_index = 0; map_index < COLORMAP_NUM_MAPS; map_index++) {
         success = this->load_map_colors(data, len, map_index, pos);
         if(!success) {
-            printf("Saved Colormap config color list is incomplete.\n");
             break;
         }
         pos += this->maps[map_index].length * sizeof(map_color);
