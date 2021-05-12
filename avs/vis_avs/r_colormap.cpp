@@ -1,13 +1,13 @@
-/* Reconstructed from scratch, with the help of Ghidra and the original binary
- * colormap.ape (version 1.3.0.0). Most of the code deals with handling the UI
- * interactions, and the actual mapping code is fairly straightforward. All the Win32 UI
- * API calls are thankfully plainly visible in the decompiled binary and for that reason
- * most of the credit still goes to the original author Steven Wittens (a.k.a.
- * "Unconed") @ https://acko.net -- I mostly just transcribed what Ghidra showed me. */
+/* This is a reconstructed version of colormap.ape.
+ * Credit goes to the original author of colormap.ape, Steven Wittens (a.k.a. "Unconed",
+ * https://acko.net) and the authors of Ghidra.
+ * Reconstructed from the original APE (version 1.3.0.0) binary with the help of Ghidra.
+ * Most of the code deals with handling the UI interactions (all the Win32 UI API calls
+ * were thankfully plainly visible in the decompiled binary), and the actual mapping
+ * code is fairly straightforward. */
 #include "r_colormap.h"
 #include <commctrl.h>
 #include <time.h>
-#include <immintrin.h>
 
 
 #define RGB_TO_BGR(color) (((color) & 0xff0000) >> 16 | ((color) & 0xff00) | ((color) & 0xff) << 16)
@@ -627,7 +627,7 @@ inline int C_ColorMap::get_key(int color) {
             b = (color & 0xff0000) >> 16;
             return r > g ? (r > b ? r : b) : (g > b ? g : b);
         default:  // COLORMAP_COLOR_KEY_RGB_AVERAGE:
-            return ((color & 0xff) + (color >> 8 & 0xff00) + (color >> 16 & 0xff)) / 3;
+            return ((color & 0xff) + (color >> 8 & 0xff) + (color >> 16 & 0xff)) / 3;
     }
 }
 

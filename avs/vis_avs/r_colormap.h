@@ -1,6 +1,8 @@
+/* See r_colormap.cpp for credits. */
 #pragma once
 
 #include <windows.h>
+#include <immintrin.h>
 #include "r_defs.h"
 #include "resource.h"
 
