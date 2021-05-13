@@ -119,10 +119,12 @@ class C_ColorMap : public C_RBASE {
         int next_id = 1337;
         int get_new_id();
         int get_key(int color);
-        int get_key_ssse3(__m128i color4);
+        __m128i get_key_ssse3(__m128i color4);
         void animation_step();
         void animation_step_sse2();
         void reset_tween_map_cache();
+        map_cache* animate_map_frame(int is_beat);
+        void blend(map_cache* blend_map_cache, int* framebuffer, int w, int h);
         bool load_map_header(unsigned char *data, int len, int map_index, int pos);
         bool load_map_colors(unsigned char *data, int len, int map_index, int pos);
 };
