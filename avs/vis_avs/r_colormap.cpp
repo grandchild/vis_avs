@@ -888,10 +888,10 @@ void C_ColorMap::blend(map_cache* blend_map_cache, int *framebuffer, int w, int 
                 framebuffer_2_px[1] = _mm_shuffle_epi8(framebuffer_4px, extend_hi_p8_to_p16);
                 colors_2_px[0] = _mm_shuffle_epi8(colors_4px, extend_lo_p8_to_p16);
                 colors_2_px[1] = _mm_shuffle_epi8(colors_4px, extend_hi_p8_to_p16);
-                framebuffer_2_px[0] = _mm_mullo_epi16(framebuffer_2_px[0], v);
-                framebuffer_2_px[1] = _mm_mullo_epi16(framebuffer_2_px[1], v);
-                colors_2_px[0] = _mm_mullo_epi16(colors_2_px[0], i_v);
-                colors_2_px[1] = _mm_mullo_epi16(colors_2_px[1], i_v);
+                framebuffer_2_px[0] = _mm_mullo_epi16(framebuffer_2_px[0], i_v);
+                framebuffer_2_px[1] = _mm_mullo_epi16(framebuffer_2_px[1], i_v);
+                colors_2_px[0] = _mm_mullo_epi16(colors_2_px[0], v);
+                colors_2_px[1] = _mm_mullo_epi16(colors_2_px[1], v);
                 framebuffer_2_px[0] = _mm_adds_epu16(framebuffer_2_px[0], colors_2_px[0]);
                 framebuffer_2_px[1] = _mm_adds_epu16(framebuffer_2_px[1], colors_2_px[1]);
                 framebuffer_2_px[0] = _mm_srli_epi16(framebuffer_2_px[0], 8);
