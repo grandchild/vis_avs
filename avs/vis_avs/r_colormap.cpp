@@ -53,7 +53,7 @@ static int g_currently_selected_color_id = -1;
 int compare_colors(const void* color1, const void* color2) {
     int diff = ((map_color*)color1)->position - ((map_color*)color2)->position;
     if (diff == 0) {
-        // TODO [bugfix,feature]: If color positions are the same, he brighter color
+        // TODO [bugfix,feature]: If color positions are the same, the brighter color
         // gets sorted higher. This is somewhat arbitrary. We should try and sort by
         // previous position, so that when dragging a color, it does not flip until its
         // position actually becomes less than the other.
@@ -969,8 +969,8 @@ void C_ColorMap::blend_ssse3(map_cache* blend_map_cache, int *framebuffer, int w
                 // 16 bits of the 32bit result.
                 framebuffer_2_px[0] = _mm_mullo_epi16(framebuffer_2_px[0], colors_2_px[0]);
                 framebuffer_2_px[1] = _mm_mullo_epi16(framebuffer_2_px[1], colors_2_px[1]);
-                // Divide by 256 again, to normalize. This loses accuracy, because 0xff
-                // * 0xff = 0xfe, but it's the way the original Colormap does it too.
+                // Divide by 256 again, to normalize. This loses accuracy, because
+                // 0xff * 0xff => 0xfe, but it's the way Multiply works throughout AVS.
                 framebuffer_2_px[0] = _mm_srli_epi16(framebuffer_2_px[0], 8);
                 framebuffer_2_px[1] = _mm_srli_epi16(framebuffer_2_px[1], 8);
                 // Pack the expanded 16bit values back into 8bit values.
