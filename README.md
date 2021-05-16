@@ -23,8 +23,9 @@ off until after that goal is achieved.
     [here](https://github.com/tholden/AVSConvolutionFilter).
   * _TexerII_, by [Steven Wittens](https://acko.net). Original committed to this repo
     [here](https://github.com/grandchild/vis_avs/commit/ddd97ba7).
-* 🎂 Former plugin effects rewritten as builtin-APEs:
-  * Normalise
+* 🎂 Former plugin effects rewritten from scratch as builtin-APEs:
+  * _Normalise_, originally by [TomyLobo](https://github.com/TomyLobo), [here](https://www.deviantart.com/tomylobo/art/Normalise-APE-10334263).
+  * _Colormap_, originally by [Steven Wittens](https://acko.net).
 * 🥵 Performance is not up to par with official build (about 20% slower). Looking into
   that...
 * 🧨 APE files are crashing AVS or preventing it from starting. Disable these by
