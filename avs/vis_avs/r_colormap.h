@@ -125,6 +125,7 @@ class C_ColorMap : public C_RBASE {
         void reset_tween_map_cache();
         map_cache* animate_map_frame(int is_beat);
         void blend(map_cache* blend_map_cache, int* framebuffer, int w, int h);
+        void blend_ssse3(map_cache* blend_map_cache, int* framebuffer, int w, int h);
         bool load_map_header(unsigned char *data, int len, int map_index, int pos);
         bool load_map_colors(unsigned char *data, int len, int map_index, int pos);
 };
