@@ -1024,7 +1024,7 @@ void C_ColorMap::blend_ssse3(map_cache* blend_map_cache, int *framebuffer, int w
 
 int C_ColorMap::render(char visdata[2][2][576], int is_beat, int *framebuffer, int *fbout, int w, int h) {
     map_cache* blend_map_cache = this->animate_map_frame(is_beat);
-    this->blend(blend_map_cache, framebuffer, w, h);
+    this->blend_ssse3(blend_map_cache, framebuffer, w, h);
     return 0;
 }
 
