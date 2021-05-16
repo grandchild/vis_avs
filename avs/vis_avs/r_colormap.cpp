@@ -503,18 +503,29 @@ static LRESULT CALLBACK colormap_edit_handler(HWND hwndDlg, UINT uMsg, WPARAM wP
     return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
 }
 
-C_ColorMap::C_ColorMap() {
-    this->current_map = 0;
-    this->next_map = 0;
-    this->change_animation_step = COLORMAP_MAP_CYCLE_ANIMATION_STEPS;
-    this->disable_map_change = 0;
-    for(int i = 0; i < COLORMAP_NUM_MAPS; i++) {
+C_ColorMap::C_ColorMap() :
+    current_map{0},
+    next_map{0},
+    change_animation_step{COLORMAP_MAP_CYCLE_ANIMATION_STEPS},
+    disable_map_change{0},
+    config{
+        COLORMAP_COLOR_KEY_RED,
+        COLORMAP_BLENDMODE_REPLACE,
+        COLORMAP_MAP_CYCLE_NONE,
+        0,   // adjustable alpha
+        0,   // [unused]
+        0,   // don't-skip-fast-beats is unchecked
+        11,  // default map cycle speed
+    } {
+    for (int i = 0; i < COLORMAP_NUM_MAPS; i++) {
         this->maps[i].enabled = i == 0;
         this->maps[i].length = 2;
         this->maps[i].map_id = this->get_new_id();
         this->maps[i].colors = NULL;
+        memset(this->maps[i].filename, 0, COLORMAP_MAP_FILENAME_MAXLEN);
         this->make_default_map(i);
     }
+    g_ColormapThis = this;
 }
 
 C_ColorMap::~C_ColorMap() {
