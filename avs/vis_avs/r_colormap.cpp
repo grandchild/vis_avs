@@ -846,16 +846,26 @@ void C_ColorMap::blend(map_cache* blend_map_cache, int *framebuffer, int w, int 
                                            blend_map_cache->colors[four_keys[2]],
                                            blend_map_cache->colors[four_keys[1]],
                                            blend_map_cache->colors[four_keys[0]]);
+                // Unfortunately intel CPUs do not have a packed unsigned 8bit multiply.
                 __m128i framebuffer_2_px[2];
                 __m128i colors_2_px[2];
+                // So the calculation becomes a matter of extending both sides of the
+                // multiplication to 16 bits, which doubles the size, resulting in 2
+                // packed 128bit values.
                 framebuffer_2_px[0] = _mm_shuffle_epi8(framebuffer_4px, extend_lo_p8_to_p16);
                 framebuffer_2_px[1] = _mm_shuffle_epi8(framebuffer_4px, extend_hi_p8_to_p16);
                 colors_2_px[0] = _mm_shuffle_epi8(colors_4px, extend_lo_p8_to_p16);
                 colors_2_px[1] = _mm_shuffle_epi8(colors_4px, extend_hi_p8_to_p16);
+                // We can then packed-multiply the half-filled 16bit (only the lower 8
+                // bits are non-zero) values. Thus we are interested only in the lower
+                // 16 bits of the 32bit result.
                 framebuffer_2_px[0] = _mm_mullo_epi16(framebuffer_2_px[0], colors_2_px[0]);
                 framebuffer_2_px[1] = _mm_mullo_epi16(framebuffer_2_px[1], colors_2_px[1]);
+                // Divide by 256 again, to normalize. This loses accuracy, because 0xff
+                // * 0xff = 0xfe, but it's the way the original Colormap does it too.
                 framebuffer_2_px[0] = _mm_srli_epi16(framebuffer_2_px[0], 8);
                 framebuffer_2_px[1] = _mm_srli_epi16(framebuffer_2_px[1], 8);
+                // Pack the expanded 16bit values back into 8bit values.
                 framebuffer_4px = _mm_packus_epi16(framebuffer_2_px[0], framebuffer_2_px[1]);
                 _mm_store_si128((__m128i*)&framebuffer[i], framebuffer_4px);
             }
@@ -882,6 +892,9 @@ void C_ColorMap::blend(map_cache* blend_map_cache, int *framebuffer, int w, int 
                                            blend_map_cache->colors[four_keys[0]]);
                 __m128i v = _mm_set1_epi16((unsigned char)this->config.adjustable_alpha);
                 __m128i i_v = _mm_set1_epi16(COLORMAP_ADJUSTABLE_BLEND_MAX - this->config.adjustable_alpha);
+                // See Multiply blend case for details. This is basically the same
+                // thing, except that each side gets multiplied with v and 1-v
+                // respectively and then added together.
                 __m128i framebuffer_2_px[2];
                 __m128i colors_2_px[2];
                 framebuffer_2_px[0] = _mm_shuffle_epi8(framebuffer_4px, extend_lo_p8_to_p16);
