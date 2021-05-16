@@ -607,6 +607,17 @@ void C_ColorMap::sort_colors(int map_index) {
     qsort(this->maps[map_index].colors, this->maps[map_index].length, sizeof(map_color), compare_colors);
 }
 
+bool C_ColorMap::any_maps_enabled() {
+    bool any_maps_enabled = false;
+    for(int i = 0; i < COLORMAP_NUM_MAPS; i++) {
+        if(this->maps[i].enabled) {
+            any_maps_enabled = true;
+            break;
+        }
+    }
+    return any_maps_enabled;
+}
+
 map_cache* C_ColorMap::animate_map_frame(int is_beat) {
     map_cache* blend_map_cache;
     this->next_map %= COLORMAP_NUM_MAPS;
@@ -617,15 +628,7 @@ map_cache* C_ColorMap::animate_map_frame(int is_beat) {
         this->change_animation_step += this->config.map_cycle_speed;
         this->change_animation_step = min(this->change_animation_step, COLORMAP_MAP_CYCLE_ANIMATION_STEPS);
         if(is_beat && (!this->config.dont_skip_fast_beats || this->change_animation_step == COLORMAP_MAP_CYCLE_ANIMATION_STEPS)) {
-            int i;
-            bool any_maps_enabled = false;
-            for(i = 0; i < COLORMAP_NUM_MAPS; i++) {
-                if(this->maps[i].enabled) {
-                    any_maps_enabled = true;
-                    break;
-                }
-            }
-            if(any_maps_enabled) {
+            if(this->any_maps_enabled()) {
                 do {
                     if(this->config.map_cycle_mode == COLORMAP_MAP_CYCLE_BEAT_RANDOM) {
                         this->next_map = rand() % COLORMAP_NUM_MAPS;
