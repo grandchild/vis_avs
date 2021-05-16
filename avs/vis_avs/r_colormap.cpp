@@ -132,8 +132,7 @@ static LRESULT CALLBACK dialog_handler(HWND hwndDlg, UINT uMsg, WPARAM wParam,LP
                                 color->position = NUM_COLOR_VALUES - 1 - color->position;
                             }
                         }
-                        g_ColormapThis->sort_colors(current_map);
-                        g_ColormapThis->make_map_cache(current_map);
+                        g_ColormapThis->bake_full_map(current_map);
                         InvalidateRect(GetDlgItem(hwndDlg,IDC_COLORMAP_MAPVIEW), 0, 0);
                         return 0;
                     case IDC_COLORMAP_CLEAR_MAP:
@@ -340,7 +339,7 @@ static LRESULT CALLBACK colormap_edit_handler(HWND hwndDlg, UINT uMsg, WPARAM wP
                 // be negative. The following should be sufficient:
                 draw_rect.left = i * w / NUM_COLOR_VALUES + map_rect.left;
                 draw_rect.right = (i + 1) * w / NUM_COLOR_VALUES + map_rect.left;
-                int color = g_ColormapThis->map_caches[current_map].colors[i];
+                int color = g_ColormapThis->baked_maps[current_map].colors[i];
                 brush = CreateSolidBrush(RGB_TO_BGR(color));
                 FillRect(map->context, &draw_rect, brush);
                 DeleteObject(brush);
@@ -400,11 +399,9 @@ static LRESULT CALLBACK colormap_edit_handler(HWND hwndDlg, UINT uMsg, WPARAM wP
                     map_color* color = &g_ColormapThis->maps[current_map].colors[i];
                     if(color->color_id == g_currently_selected_color_id) {
                         color->position = (x - draw_rect.left) * NUM_COLOR_VALUES / (draw_rect.right - draw_rect.left);
-                        g_ColormapThis->sort_colors(current_map);
-                        
+                        g_ColormapThis->bake_full_map(current_map);
                     }
                 }
-                g_ColormapThis->make_map_cache(current_map);
                 InvalidateRect(hwndDlg, 0, 0);
             }
             return 0;
@@ -466,7 +463,7 @@ static LRESULT CALLBACK colormap_edit_handler(HWND hwndDlg, UINT uMsg, WPARAM wP
                     case IDM_COLORMAP_MENU_ADD:
                         choosecolor.lStructSize = sizeof(CHOOSECOLOR);
                         choosecolor.hwndOwner = hwndDlg;
-                        choosecolor.rgbResult = RGB_TO_BGR(g_ColormapThis->map_caches[current_map].colors[color_position]);
+                        choosecolor.rgbResult = RGB_TO_BGR(g_ColormapThis->baked_maps[current_map].colors[color_position]);
                         choosecolor.lpCustColors = custcolors;
                         choosecolor.Flags = CC_RGBINIT | CC_FULLOPEN | CC_ANYCOLOR;
                         has_chosen_color = ChooseColor(&choosecolor);
@@ -494,8 +491,7 @@ static LRESULT CALLBACK colormap_edit_handler(HWND hwndDlg, UINT uMsg, WPARAM wP
                         g_ColormapThis->maps[current_map].colors[selected_color_index].position = g_ColorSetValue;
                         break;
                 }
-                g_ColormapThis->sort_colors(current_map);
-                g_ColormapThis->make_map_cache(current_map);
+                g_ColormapThis->bake_full_map(current_map);
             }
             InvalidateRect(hwndDlg, NULL, 0);
             return 0;
@@ -547,17 +543,18 @@ void C_ColorMap::make_default_map(int map_index) {
     this->maps[map_index].colors[1].position = 255;
     this->maps[map_index].colors[1].color = 0xffffff;
     this->maps[map_index].colors[1].color_id = this->get_new_id();
-    this->make_map_cache(map_index);
+    this->bake_full_map(map_index);
 }
 
-void C_ColorMap::make_map_cache(int map_index) {
+void C_ColorMap::bake_full_map(int map_index) {
     int cache_index = 0, color_index = 0;
-    if(this->maps[map_index].length <= 1) {
+    if(this->maps[map_index].length < 1) {
         return;
     }
+    this->sort_colors(map_index);
     map_color first = this->maps[map_index].colors[0];
     for(; cache_index < first.position; cache_index++) {
-        this->map_caches[map_index].colors[cache_index] = first.color;
+        this->baked_maps[map_index].colors[cache_index] = first.color;
     }
     for(; color_index < this->maps[map_index].length - 1; color_index++) {
         map_color from = this->maps[map_index].colors[color_index];
@@ -566,12 +563,12 @@ void C_ColorMap::make_map_cache(int map_index) {
             int rel_i = cache_index - from.position;
             int w = to.position - from.position;
             int lerp = NUM_COLOR_VALUES * (float)(cache_index - from.position) / (float)((to.position - from.position));
-            this->map_caches[map_index].colors[cache_index] = BLEND_ADJ_NOMMX(to.color, from.color, lerp);
+            this->baked_maps[map_index].colors[cache_index] = BLEND_ADJ_NOMMX(to.color, from.color, lerp);
         }
     }
     map_color last = this->maps[map_index].colors[color_index];
     for(; cache_index < NUM_COLOR_VALUES; cache_index++) {
-        this->map_caches[map_index].colors[cache_index] = last.color;
+        this->baked_maps[map_index].colors[cache_index] = last.color;
     }
 }
 
@@ -629,12 +626,11 @@ bool C_ColorMap::any_maps_enabled() {
     return any_maps_enabled;
 }
 
-map_cache* C_ColorMap::animate_map_frame(int is_beat) {
-    map_cache* blend_map_cache;
+baked_map* C_ColorMap::animate_map_frame(int is_beat) {
     this->next_map %= COLORMAP_NUM_MAPS;
     if(this->config.map_cycle_mode == COLORMAP_MAP_CYCLE_NONE || this->disable_map_change) {
         this->change_animation_step = 0;
-        return &this->map_caches[this->current_map];
+        return &this->baked_maps[this->current_map];
     } else {
         this->change_animation_step += this->config.map_cycle_speed;
         this->change_animation_step = min(this->change_animation_step, COLORMAP_MAP_CYCLE_ANIMATION_STEPS);
@@ -651,26 +647,26 @@ map_cache* C_ColorMap::animate_map_frame(int is_beat) {
             this->change_animation_step = 0;
         }
         if(this->change_animation_step == 0) {
-            this->reset_tween_map_cache();
+            this->reset_tween_map();
         } else if(this->change_animation_step == COLORMAP_MAP_CYCLE_ANIMATION_STEPS) {
             this->current_map = this->next_map;
-            this->reset_tween_map_cache();
+            this->reset_tween_map();
         } else {
             if(this->current_map != this->next_map) {
                 this->animation_step();
             } else {
-                this->reset_tween_map_cache();
+                this->reset_tween_map();
             }
         }
-        return &this->tween_map_cache;
+        return &this->tween_map;
     }
 }
 
 inline void C_ColorMap::animation_step() {
     for(int i = 0; i < NUM_COLOR_VALUES; i++) {
-        this->tween_map_cache.colors[i] = BLEND_ADJ_NOMMX(
-            this->map_caches[this->next_map].colors[i],
-            this->map_caches[this->current_map].colors[i],
+        this->tween_map.colors[i] = BLEND_ADJ_NOMMX(
+            this->baked_maps[this->next_map].colors[i],
+            this->baked_maps[this->current_map].colors[i],
             this->change_animation_step
         );
     }
@@ -679,16 +675,16 @@ inline void C_ColorMap::animation_step() {
 
 inline void C_ColorMap::animation_step_sse2() {
     for(int i = 0; i < NUM_COLOR_VALUES; i += 4) {
-        __m128i four_current_values = _mm_loadu_si128((__m128i*)&(this->map_caches[this->current_map].colors[i]));
-        __m128i four_next_values = _mm_loadu_si128((__m128i*)&(this->map_caches[this->next_map].colors[i]));
+        __m128i four_current_values = _mm_loadu_si128((__m128i*)&(this->baked_maps[this->current_map].colors[i]));
+        __m128i four_next_values = _mm_loadu_si128((__m128i*)&(this->baked_maps[this->next_map].colors[i]));
         __m128i blend_lerp = _mm_set1_epi8((unsigned char)this->change_animation_step);
         /* TODO */
     }
     return;
 }
 
-inline void C_ColorMap::reset_tween_map_cache() {
-    memcpy(&this->tween_map_cache, &this->map_caches[this->current_map], sizeof(map_cache));
+inline void C_ColorMap::reset_tween_map() {
+    memcpy(&this->tween_map, &this->baked_maps[this->current_map], sizeof(baked_map));
 }
 
 inline int C_ColorMap::get_key(int color) {
@@ -714,7 +710,7 @@ inline int C_ColorMap::get_key(int color) {
     }
 }
 
-void C_ColorMap::blend(map_cache* blend_map_cache, int *framebuffer, int w, int h) {
+void C_ColorMap::blend(baked_map* blend_map, int *framebuffer, int w, int h) {
     int four_px_colors[4];
     int four_keys[4];
     switch(this->config.blendmode) {
@@ -722,7 +718,7 @@ void C_ColorMap::blend(map_cache* blend_map_cache, int *framebuffer, int w, int 
             for(int i = 0; i < w * h; i += 4) {
                 for(int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
-                    framebuffer[i + k] = blend_map_cache->colors[four_keys[k]];
+                    framebuffer[i + k] = blend_map->colors[four_keys[k]];
                 }
             }
             break;
@@ -730,7 +726,7 @@ void C_ColorMap::blend(map_cache* blend_map_cache, int *framebuffer, int w, int 
             for(int i = 0; i < w * h; i += 4) {
                 for(int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
-                    four_px_colors[k] = blend_map_cache->colors[four_keys[k]];
+                    four_px_colors[k] = blend_map->colors[four_keys[k]];
                     framebuffer[i + k] = BLEND(framebuffer[i + k], four_px_colors[k]);
                 }
             }
@@ -739,7 +735,7 @@ void C_ColorMap::blend(map_cache* blend_map_cache, int *framebuffer, int w, int 
             for(int i = 0; i < w * h; i += 4) {
                 for(int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
-                    four_px_colors[k] = blend_map_cache->colors[four_keys[k]];
+                    four_px_colors[k] = blend_map->colors[four_keys[k]];
                     framebuffer[i + k] = BLEND_MAX(framebuffer[i + k], four_px_colors[k]);
                 }
             }
@@ -748,7 +744,7 @@ void C_ColorMap::blend(map_cache* blend_map_cache, int *framebuffer, int w, int 
             for(int i = 0; i < w * h; i += 4) {
                 for(int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
-                    four_px_colors[k] = blend_map_cache->colors[four_keys[k]];
+                    four_px_colors[k] = blend_map->colors[four_keys[k]];
                     framebuffer[i + k] = BLEND_MIN(framebuffer[i + k], four_px_colors[k]);
                 }
             }
@@ -757,7 +753,7 @@ void C_ColorMap::blend(map_cache* blend_map_cache, int *framebuffer, int w, int 
             for(int i = 0; i < w * h; i += 4) {
                 for(int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
-                    four_px_colors[k] = blend_map_cache->colors[four_keys[k]];
+                    four_px_colors[k] = blend_map->colors[four_keys[k]];
                     framebuffer[i + k] = BLEND_AVG(framebuffer[i + k], four_px_colors[k]);
                 }
             }
@@ -766,7 +762,7 @@ void C_ColorMap::blend(map_cache* blend_map_cache, int *framebuffer, int w, int 
             for(int i = 0; i < w * h; i += 4) {
                 for(int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
-                    four_px_colors[k] = blend_map_cache->colors[four_keys[k]];
+                    four_px_colors[k] = blend_map->colors[four_keys[k]];
                     framebuffer[i + k] = BLEND_SUB(framebuffer[i + k], four_px_colors[k]);
                 }
             }
@@ -775,7 +771,7 @@ void C_ColorMap::blend(map_cache* blend_map_cache, int *framebuffer, int w, int 
             for(int i = 0; i < w * h; i += 4) {
                 for(int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
-                    four_px_colors[k] = blend_map_cache->colors[four_keys[k]];
+                    four_px_colors[k] = blend_map->colors[four_keys[k]];
                     framebuffer[i + k] = BLEND_SUB(four_px_colors[k], framebuffer[i + k]);
                 }
             }
@@ -784,7 +780,7 @@ void C_ColorMap::blend(map_cache* blend_map_cache, int *framebuffer, int w, int 
             for(int i = 0; i < w * h; i += 4) {
                 for(int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
-                    four_px_colors[k] = blend_map_cache->colors[four_keys[k]];
+                    four_px_colors[k] = blend_map->colors[four_keys[k]];
                     framebuffer[i + k] = BLEND_MUL(framebuffer[i + k], four_px_colors[k]);
                 }
             }
@@ -793,7 +789,7 @@ void C_ColorMap::blend(map_cache* blend_map_cache, int *framebuffer, int w, int 
             for(int i = 0; i < w * h; i += 4) {
                 for(int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
-                    four_px_colors[k] = blend_map_cache->colors[four_keys[k]];
+                    four_px_colors[k] = blend_map->colors[four_keys[k]];
                     framebuffer[i + k] ^= four_px_colors[k];
                 }
             }
@@ -802,7 +798,7 @@ void C_ColorMap::blend(map_cache* blend_map_cache, int *framebuffer, int w, int 
             for(int i = 0; i < w * h; i += 4) {
                 for(int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
-                    four_px_colors[k] = blend_map_cache->colors[four_keys[k]];
+                    four_px_colors[k] = blend_map->colors[four_keys[k]];
                     framebuffer[i + k] = BLEND_ADJ_NOMMX(four_px_colors[k], framebuffer[i + k], this->config.adjustable_alpha);
                 }
             }
@@ -858,7 +854,7 @@ inline __m128i C_ColorMap::get_key_ssse3(__m128i color4) {
     }
 }
 
-void C_ColorMap::blend_ssse3(map_cache* blend_map_cache, int *framebuffer, int w, int h) {
+void C_ColorMap::blend_ssse3(baked_map* blend_map, int *framebuffer, int w, int h) {
     __m128i framebuffer_4px;
     int four_keys[4];
     __m128i colors_4px;
@@ -872,7 +868,7 @@ void C_ColorMap::blend_ssse3(map_cache* blend_map_cache, int *framebuffer, int w
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
                 _mm_store_si128((__m128i*)four_keys, this->get_key_ssse3(framebuffer_4px));
                 for(int k = 0; k < 4; k++) {
-                    framebuffer[i + k] = blend_map_cache->colors[four_keys[k]];
+                    framebuffer[i + k] = blend_map->colors[four_keys[k]];
                 }
             }
             break;
@@ -880,10 +876,10 @@ void C_ColorMap::blend_ssse3(map_cache* blend_map_cache, int *framebuffer, int w
             for(int i = 0; i < w * h; i += 4) {
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
                 _mm_store_si128((__m128i*)four_keys, this->get_key_ssse3(framebuffer_4px));
-                colors_4px = _mm_set_epi32(blend_map_cache->colors[four_keys[3]],
-                                           blend_map_cache->colors[four_keys[2]],
-                                           blend_map_cache->colors[four_keys[1]],
-                                           blend_map_cache->colors[four_keys[0]]);
+                colors_4px = _mm_set_epi32(blend_map->colors[four_keys[3]],
+                                           blend_map->colors[four_keys[2]],
+                                           blend_map->colors[four_keys[1]],
+                                           blend_map->colors[four_keys[0]]);
                 framebuffer_4px = _mm_adds_epu8(framebuffer_4px, colors_4px);
                 _mm_store_si128((__m128i*)&framebuffer[i], framebuffer_4px);
             }
@@ -892,10 +888,10 @@ void C_ColorMap::blend_ssse3(map_cache* blend_map_cache, int *framebuffer, int w
             for(int i = 0; i < w * h; i += 4) {
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
                 _mm_store_si128((__m128i*)four_keys, this->get_key_ssse3(framebuffer_4px));
-                colors_4px = _mm_set_epi32(blend_map_cache->colors[four_keys[3]],
-                                           blend_map_cache->colors[four_keys[2]],
-                                           blend_map_cache->colors[four_keys[1]],
-                                           blend_map_cache->colors[four_keys[0]]);
+                colors_4px = _mm_set_epi32(blend_map->colors[four_keys[3]],
+                                           blend_map->colors[four_keys[2]],
+                                           blend_map->colors[four_keys[1]],
+                                           blend_map->colors[four_keys[0]]);
                 framebuffer_4px = _mm_max_epu8(framebuffer_4px, colors_4px);
                 _mm_store_si128((__m128i*)&framebuffer[i], framebuffer_4px);
             }
@@ -904,10 +900,10 @@ void C_ColorMap::blend_ssse3(map_cache* blend_map_cache, int *framebuffer, int w
             for(int i = 0; i < w * h; i += 4) {
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
                 _mm_store_si128((__m128i*)four_keys, this->get_key_ssse3(framebuffer_4px));
-                colors_4px = _mm_set_epi32(blend_map_cache->colors[four_keys[3]],
-                                           blend_map_cache->colors[four_keys[2]],
-                                           blend_map_cache->colors[four_keys[1]],
-                                           blend_map_cache->colors[four_keys[0]]);
+                colors_4px = _mm_set_epi32(blend_map->colors[four_keys[3]],
+                                           blend_map->colors[four_keys[2]],
+                                           blend_map->colors[four_keys[1]],
+                                           blend_map->colors[four_keys[0]]);
                 framebuffer_4px = _mm_min_epu8(framebuffer_4px, colors_4px);
                 _mm_store_si128((__m128i*)&framebuffer[i], framebuffer_4px);
             }
@@ -916,10 +912,10 @@ void C_ColorMap::blend_ssse3(map_cache* blend_map_cache, int *framebuffer, int w
             for(int i = 0; i < w * h; i += 4) {
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
                 _mm_store_si128((__m128i*)four_keys, this->get_key_ssse3(framebuffer_4px));
-                colors_4px = _mm_set_epi32(blend_map_cache->colors[four_keys[3]],
-                                           blend_map_cache->colors[four_keys[2]],
-                                           blend_map_cache->colors[four_keys[1]],
-                                           blend_map_cache->colors[four_keys[0]]);
+                colors_4px = _mm_set_epi32(blend_map->colors[four_keys[3]],
+                                           blend_map->colors[four_keys[2]],
+                                           blend_map->colors[four_keys[1]],
+                                           blend_map->colors[four_keys[0]]);
                 framebuffer_4px = _mm_avg_epu8(framebuffer_4px, colors_4px);
                 _mm_store_si128((__m128i*)&framebuffer[i], framebuffer_4px);
             }
@@ -928,10 +924,10 @@ void C_ColorMap::blend_ssse3(map_cache* blend_map_cache, int *framebuffer, int w
             for(int i = 0; i < w * h; i += 4) {
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
                 _mm_store_si128((__m128i*)four_keys, this->get_key_ssse3(framebuffer_4px));
-                colors_4px = _mm_set_epi32(blend_map_cache->colors[four_keys[3]],
-                                           blend_map_cache->colors[four_keys[2]],
-                                           blend_map_cache->colors[four_keys[1]],
-                                           blend_map_cache->colors[four_keys[0]]);
+                colors_4px = _mm_set_epi32(blend_map->colors[four_keys[3]],
+                                           blend_map->colors[four_keys[2]],
+                                           blend_map->colors[four_keys[1]],
+                                           blend_map->colors[four_keys[0]]);
                 framebuffer_4px = _mm_subs_epu8(framebuffer_4px, colors_4px);
                 _mm_store_si128((__m128i*)&framebuffer[i], framebuffer_4px);
             }
@@ -940,10 +936,10 @@ void C_ColorMap::blend_ssse3(map_cache* blend_map_cache, int *framebuffer, int w
             for(int i = 0; i < w * h; i += 4) {
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
                 _mm_store_si128((__m128i*)four_keys, this->get_key_ssse3(framebuffer_4px));
-                colors_4px = _mm_set_epi32(blend_map_cache->colors[four_keys[3]],
-                                           blend_map_cache->colors[four_keys[2]],
-                                           blend_map_cache->colors[four_keys[1]],
-                                           blend_map_cache->colors[four_keys[0]]);
+                colors_4px = _mm_set_epi32(blend_map->colors[four_keys[3]],
+                                           blend_map->colors[four_keys[2]],
+                                           blend_map->colors[four_keys[1]],
+                                           blend_map->colors[four_keys[0]]);
                 framebuffer_4px = _mm_subs_epu8(colors_4px, framebuffer_4px);
                 _mm_store_si128((__m128i*)&framebuffer[i], framebuffer_4px);
             }
@@ -952,10 +948,10 @@ void C_ColorMap::blend_ssse3(map_cache* blend_map_cache, int *framebuffer, int w
             for(int i = 0; i < w * h; i += 4) {
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
                 _mm_store_si128((__m128i*)four_keys, this->get_key_ssse3(framebuffer_4px));
-                colors_4px = _mm_set_epi32(blend_map_cache->colors[four_keys[3]],
-                                           blend_map_cache->colors[four_keys[2]],
-                                           blend_map_cache->colors[four_keys[1]],
-                                           blend_map_cache->colors[four_keys[0]]);
+                colors_4px = _mm_set_epi32(blend_map->colors[four_keys[3]],
+                                           blend_map->colors[four_keys[2]],
+                                           blend_map->colors[four_keys[1]],
+                                           blend_map->colors[four_keys[0]]);
                 // Unfortunately intel CPUs do not have a packed unsigned 8bit multiply.
                 // So the calculation becomes a matter of extending both sides of the
                 // multiplication to 16 bits, which doubles the size, resulting in 2
@@ -982,10 +978,10 @@ void C_ColorMap::blend_ssse3(map_cache* blend_map_cache, int *framebuffer, int w
             for(int i = 0; i < w * h; i += 4) {
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
                 _mm_store_si128((__m128i*)four_keys, this->get_key_ssse3(framebuffer_4px));
-                colors_4px = _mm_set_epi32(blend_map_cache->colors[four_keys[3]],
-                                           blend_map_cache->colors[four_keys[2]],
-                                           blend_map_cache->colors[four_keys[1]],
-                                           blend_map_cache->colors[four_keys[0]]);
+                colors_4px = _mm_set_epi32(blend_map->colors[four_keys[3]],
+                                           blend_map->colors[four_keys[2]],
+                                           blend_map->colors[four_keys[1]],
+                                           blend_map->colors[four_keys[0]]);
                 framebuffer_4px = _mm_xor_si128(framebuffer_4px, colors_4px);
                 _mm_store_si128((__m128i*)&framebuffer[i], framebuffer_4px);
             }
@@ -996,10 +992,10 @@ void C_ColorMap::blend_ssse3(map_cache* blend_map_cache, int *framebuffer, int w
             for(int i = 0; i < w * h; i += 4) {
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
                 _mm_store_si128((__m128i*)four_keys, this->get_key_ssse3(framebuffer_4px));
-                colors_4px = _mm_set_epi32(blend_map_cache->colors[four_keys[3]],
-                                           blend_map_cache->colors[four_keys[2]],
-                                           blend_map_cache->colors[four_keys[1]],
-                                           blend_map_cache->colors[four_keys[0]]);
+                colors_4px = _mm_set_epi32(blend_map->colors[four_keys[3]],
+                                           blend_map->colors[four_keys[2]],
+                                           blend_map->colors[four_keys[1]],
+                                           blend_map->colors[four_keys[0]]);
                 // See Multiply blend case for details. This is basically the same
                 // thing, except that each side gets multiplied with v and 1-v
                 // respectively and then added together.
@@ -1023,8 +1019,8 @@ void C_ColorMap::blend_ssse3(map_cache* blend_map_cache, int *framebuffer, int w
 }
 
 int C_ColorMap::render(char visdata[2][2][576], int is_beat, int *framebuffer, int *fbout, int w, int h) {
-    map_cache* blend_map_cache = this->animate_map_frame(is_beat);
-    this->blend_ssse3(blend_map_cache, framebuffer, w, h);
+    baked_map* blend_map = this->animate_map_frame(is_beat);
+    this->blend_ssse3(blend_map, framebuffer, w, h);
     return 0;
 }
 
@@ -1080,7 +1076,6 @@ bool C_ColorMap::load_map_colors(unsigned char *data, int len, int map_index, in
         this->maps[map_index].colors[i].color_id = GET_INT();
         pos += 4;
     }
-    this->sort_colors(map_index);
     return true;
 }
 
@@ -1099,10 +1094,8 @@ void C_ColorMap::load_config(unsigned char *data, int len) {
         if(!success) {
             break;
         }
+        this->bake_full_map(map_index);
         pos += this->maps[map_index].length * sizeof(map_color);
-    }
-    for(int map_index = 0; map_index < COLORMAP_NUM_MAPS; map_index++) {
-        this->make_map_cache(map_index);
     }
 }
 

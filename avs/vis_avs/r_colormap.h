@@ -75,7 +75,7 @@ typedef struct {
 
 typedef struct {
     int colors[NUM_COLOR_VALUES];
-} map_cache;
+} baked_map;
 
 typedef struct {
     RECT window_rect;
@@ -100,15 +100,15 @@ class C_ColorMap : public C_RBASE {
         void load_map_file(int map_index);
         void save_map_file(int map_index);
         void make_default_map(int map_index);
-        void make_map_cache(int map_index);
+        void bake_full_map(int map_index);
         void add_map_color(int map_index, int position, int color);
         void remove_map_color(int map_index, int index);
         void sort_colors(int map_index);
 
         colormap_apeconfig config;
         map maps[COLORMAP_NUM_MAPS];
-        map_cache map_caches[COLORMAP_NUM_MAPS];
-        map_cache tween_map_cache;
+        baked_map baked_maps[COLORMAP_NUM_MAPS];
+        baked_map tween_map;
         int current_map = 0;
         int next_map = 0;
         HWND dialog = NULL;
@@ -121,12 +121,12 @@ class C_ColorMap : public C_RBASE {
         bool any_maps_enabled();
         void animation_step();
         void animation_step_sse2();
-        void reset_tween_map_cache();
-        map_cache* animate_map_frame(int is_beat);
+        void reset_tween_map();
+        baked_map* animate_map_frame(int is_beat);
         int get_key(int color);
-        void blend(map_cache* blend_map_cache, int* framebuffer, int w, int h);
+        void blend(baked_map* blend_map, int* framebuffer, int w, int h);
         __m128i get_key_ssse3(__m128i color4);
-        void blend_ssse3(map_cache* blend_map_cache, int* framebuffer, int w, int h);
+        void blend_ssse3(baked_map* blend_map, int* framebuffer, int w, int h);
         bool load_map_header(unsigned char *data, int len, int map_index, int pos);
         bool load_map_colors(unsigned char *data, int len, int map_index, int pos);
 };
