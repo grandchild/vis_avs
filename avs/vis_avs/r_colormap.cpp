@@ -1,10 +1,18 @@
-/* This is a reconstructed version of colormap.ape.
- * Credit goes to the original author of colormap.ape, Steven Wittens (a.k.a. "Unconed",
- * https://acko.net) and the authors of Ghidra.
- * Reconstructed from the original APE (version 1.3.0.0) binary with the help of Ghidra.
- * Most of the code deals with handling the UI interactions (all the Win32 UI API calls
- * were thankfully plainly visible in the decompiled binary), and the actual mapping
- * code is fairly straightforward. */
+/*
+Reconstructed by decompiling the original colormap.ape v1.3 binary.
+Credits:
+  Steven Wittens (a.k.a. "Unconed" -> https://acko.net), for the original Colormap,
+  & the Ghidra authors.
+
+Most of the code deals with handling the UI interactions (all the Win32 UI API calls
+were thankfully plainly visible in the decompiled binary), and the actual mapping
+code is fairly straightforward.
+
+The original implementation used MMX asm, which has been updated to using SSE2/SSSE3
+intrinsics. The code could further be sped up by leveraging the "gather" instructions
+available with Intel's AVX2 extension (ca. 2014 and later CPU models) to load colors by
+index from the baked map.
+*/
 #include "r_colormap.h"
 #include <commctrl.h>
 #include <time.h>
@@ -188,7 +196,8 @@ static LRESULT CALLBACK dialog_handler(HWND hwndDlg, UINT uMsg, WPARAM wParam,LP
                 SendDlgItemMessage(hwndDlg, IDC_COLORMAP_ADJUSTABLE_SLIDER, TBM_SETPOS, TRUE, g_ColormapThis->config.adjustable_alpha);
                 
                 // This overrides the setting of the current map above. bug? quickfix?
-                SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_SELECT, CB_SETCURSEL, 0, NULL);  // TODO[feature]: This could be more convenient by saving and restoring the last-selected map.
+                // TODO[feature]: This could be more convenient by saving and restoring the last-selected map.
+                SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_SELECT, CB_SETCURSEL, 0, NULL);
                 SetDlgItemTextA(hwndDlg, IDC_COLORMAP_FILENAME_VIEW, g_ColormapThis->maps[g_ColormapThis->current_map].filename);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_COLORMAP_MAP_CYCLE_SPEED), g_ColormapThis->config.map_cycle_mode != 0);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_COLORMAP_NO_SKIP_FAST_BEATS), g_ColormapThis->config.map_cycle_mode != 0);
