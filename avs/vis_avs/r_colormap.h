@@ -7,7 +7,7 @@
 #include "resource.h"
 
 
-#define MOD_NAME "Trans / ColorMap"
+#define MOD_NAME "Trans / Color Map"
 #define UNIQUEIDSTRING "Color Map"
 
 #define NUM_COLOR_VALUES 256  // 2 ^ BITS_PER_CHANNEL (i.e. 8)
