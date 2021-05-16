@@ -913,7 +913,7 @@ HWND C_ColorMap::conf(HINSTANCE hInstance, HWND hwndParent) {
     WNDCLASSEX mapview;
     mapview.cbSize = sizeof(WNDCLASSEX);
     GetClassInfoEx(hInstance, "ColormapEdit", &mapview);
-    mapview.style = CS_PARENTDC | CS_HREDRAW | CS_VREDRAW;
+    mapview.style = CS_PARENTDC | CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
     mapview.lpfnWndProc = (WNDPROC)colormap_edit_handler;
     mapview.cbClsExtra = 0;
     mapview.cbWndExtra = 0;
