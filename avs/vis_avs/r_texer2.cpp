@@ -2087,7 +2087,7 @@ void C_Texer2::load_config(unsigned char *data, int len)
 int  C_Texer2::save_config(unsigned char *data)
 {
     memcpy(data, &this->config, sizeof(texer2_apeconfig));
-    int l = 0, size = sizeof(texer2_apeconfig);
+    int l = 0;
     char *p = (char *)(data+sizeof(texer2_apeconfig));
     int tot = 16;
 
