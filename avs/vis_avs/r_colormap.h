@@ -52,7 +52,7 @@
 typedef struct {
     unsigned int position;
     unsigned int color;
-    unsigned int color_id;
+    int color_id;
 } map_color;
 
 typedef struct {
@@ -101,8 +101,8 @@ class C_ColorMap : public C_RBASE {
         void save_map_file(int map_index);
         void make_default_map(int map_index);
         void bake_full_map(int map_index);
-        void add_map_color(int map_index, int position, int color);
-        void remove_map_color(int map_index, int index);
+        void add_map_color(int map_index, unsigned int position, int color);
+        void remove_map_color(int map_index, int remove_id);
         void sort_colors(int map_index);
 
         colormap_apeconfig config;
