@@ -58,17 +58,6 @@ extern HINSTANCE g_hInstance;
 static int g_ColorSetValue;
 static int g_currently_selected_color_id = -1;
 
-int compare_colors(const void* color1, const void* color2) {
-    int diff = ((map_color*)color1)->position - ((map_color*)color2)->position;
-    if (diff == 0) {
-        // TODO [bugfix,feature]: If color positions are the same, the brighter color
-        // gets sorted higher. This is somewhat arbitrary. We should try and sort by
-        // previous position, so that when dragging a color, it does not flip until its
-        // position actually becomes less than the other.
-        diff = ((map_color*)color1)->color - ((map_color*)color2)->color;
-    }
-    return diff;
-}
 
 static LRESULT CALLBACK dialog_handler(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam) {
     int choice;
@@ -619,6 +608,18 @@ void C_ColorMap::remove_map_color(int map_index, int remove_id) {
     this->maps[map_index].colors = new_map_colors;
     this->sort_colors(map_index);
     delete[] old_map_colors;
+}
+
+int compare_colors(const void* color1, const void* color2) {
+    int diff = ((map_color*)color1)->position - ((map_color*)color2)->position;
+    if (diff == 0) {
+        // TODO [bugfix,feature]: If color positions are the same, the brighter color
+        // gets sorted higher. This is somewhat arbitrary. We should try and sort by
+        // previous position, so that when dragging a color, it does not flip until its
+        // position actually becomes less than the other.
+        diff = ((map_color*)color1)->color - ((map_color*)color2)->color;
+    }
+    return diff;
 }
 
 void C_ColorMap::sort_colors(int map_index) {
