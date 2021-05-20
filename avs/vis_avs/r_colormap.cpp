@@ -587,7 +587,7 @@ void C_ColorMap::add_map_color(int map_index, unsigned int position, int color) 
         return;
     }
     map_color* new_map_colors = new map_color[this->maps[map_index].length + 1];
-    for(unsigned int i = 0, a = 0; i < this->maps[map_index].length + 1; i++) {
+    for(unsigned int i = 0, a = 0; i < this->maps[map_index].length; i++) {
         if(a == 0 && position >= this->maps[map_index].colors[i].position) {
             new_map_colors[i].position = position;
             new_map_colors[i].color = color;
@@ -608,7 +608,7 @@ void C_ColorMap::remove_map_color(int map_index, int remove_id) {
         return;
     }
     map_color* new_map_colors = new map_color[this->maps[map_index].length];
-    for(unsigned int i = 0, a = 0; i < this->maps[map_index].length + 1; i++) {
+    for(unsigned int i = 0, a = 0; i < this->maps[map_index].length - 1; i++) {
         if(this->maps[map_index].colors[i].color_id == remove_id) {
             a = 1;
         }
