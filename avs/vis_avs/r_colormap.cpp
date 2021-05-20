@@ -222,7 +222,7 @@ static LRESULT CALLBACK set_color_position_handler(HWND hwndDlg, UINT uMsg, WPAR
     switch(uMsg) {
         case WM_CLOSE:
             EndDialog(hwndDlg, 0);
-            return 0;
+            return 1;
         case WM_INITDIALOG:
             wsprintf(value_buf, "%d", g_ColorSetValue);
             SetDlgItemText(hwndDlg, IDC_COLORMAP_COLOR_POSITION, value_buf);
@@ -235,15 +235,15 @@ static LRESULT CALLBACK set_color_position_handler(HWND hwndDlg, UINT uMsg, WPAR
                     if(LOWORD(wParam) == IDC_COLORMAP_COLOR_POSITION) {
                         GetWindowText((HWND)lParam, value_buf, VALUE_BUF_LEN);
                         v = atoi(value_buf);
-                        g_ColorSetValue = CLAMP(v, 0, NUM_COLOR_VALUES);
+                        g_ColorSetValue = CLAMP(v, 0, NUM_COLOR_VALUES - 1);
                     }
                     return 0;
                 case BN_CLICKED:
                     EndDialog(hwndDlg,0);
-                    return 0;
+                    return 1;
             }
     }
-    return 1;
+    return 0;
 }
 
 static LRESULT CALLBACK colormap_edit_handler(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
