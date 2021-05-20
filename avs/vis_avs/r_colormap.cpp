@@ -1066,7 +1066,7 @@ bool C_ColorMap::load_map_header(unsigned char *data, int len, int map_index, in
     pos += 4;
     this->maps[map_index].length = GET_INT();
     pos += 4;
-    this->maps[map_index].map_id = GET_INT();
+    this->maps[map_index].map_id = this->get_new_id();
     pos += 4;
     strncpy(this->maps[map_index].filename, (char*)&data[pos], COLORMAP_MAP_FILENAME_MAXLEN - 1);
     this->maps[map_index].filename[COLORMAP_MAP_FILENAME_MAXLEN - 1] = '\0';
@@ -1085,7 +1085,7 @@ bool C_ColorMap::load_map_colors(unsigned char *data, int len, int map_index, in
         pos += 4;
         this->maps[map_index].colors[i].color = GET_INT();
         pos += 4;
-        this->maps[map_index].colors[i].color_id = GET_INT();
+        this->maps[map_index].colors[i].color_id = this->get_new_id();
         pos += 4;
     }
     return true;
