@@ -21,6 +21,13 @@ index from the baked map.
 #define RGB_TO_BGR(color) (((color) & 0xff0000) >> 16 | ((color) & 0xff00) | ((color) & 0xff) << 16)
 #define BGR_TO_RGB(color) RGB_TO_BGR(color)  // is its own inverse
 #define CLAMP(x, from, to) ((x) >= (to) ? (to) : ((x) <= (from) ? (from) : (x)))
+// Integer range-mapping macros. Avoid truncation by multiplying first.
+// Map point A from one value range to another.
+#define TRANSLATE_RANGE(a, a_min, a_max, b_min, b_max) \
+    ( (a) - (a_min) ) * ( (b_max) - (b_min) ) / ( (a_max) - (a_min) );
+// Get distance from A to B (in B-range) by mapping A to B.
+#define TRANSLATE_DISTANCE(a, a_min, a_max, to_b, b_min, b_max) \
+    ( ( (a_max) * (to_b) ) / ( (b_max) - (b_min) ) - (a) + (a_min) )
 #define GET_INT() (data[pos] | (data[pos+1] << 8) | (data[pos+2] << 16) | (data[pos+3] << 24))
 #define PUT_INT(y) data[pos] = (y) & 0xff;         \
                    data[pos+1] = ((y) >> 8) & 0xff;  \
@@ -123,11 +130,9 @@ static LRESULT CALLBACK dialog_handler(HWND hwndDlg, UINT uMsg, WPARAM wParam,LP
                         g_ColormapThis->maps[current_map].enabled = IsDlgButtonChecked(hwndDlg, IDC_COLORMAP_MAP_ENABLE) == BST_CHECKED;
                         return 0;
                     case IDC_COLORMAP_FLIP_MAP:
-                        if (g_ColormapThis->maps[current_map].length > 0) {
-                            for(unsigned int i = 0; i<g_ColormapThis->maps[current_map].length; i++) {
-                                map_color* color = &g_ColormapThis->maps[current_map].colors[i];
-                                color->position = NUM_COLOR_VALUES - 1 - color->position;
-                            }
+                        for(unsigned int i = 0; i<g_ColormapThis->maps[current_map].length; i++) {
+                            map_color* color = &g_ColormapThis->maps[current_map].colors[i];
+                            color->position = max(0, NUM_COLOR_VALUES - 1 - color->position);
                         }
                         g_ColormapThis->bake_full_map(current_map);
                         InvalidateRect(GetDlgItem(hwndDlg,IDC_COLORMAP_MAPVIEW), 0, 0);
@@ -374,7 +379,7 @@ static LRESULT CALLBACK colormap_edit_handler(HWND hwndDlg, UINT uMsg, WPARAM wP
             if(y > draw_rect.bottom - 14) {
                 for(unsigned int i = 0; i < g_ColormapThis->maps[current_map].length; i++) {
                     map_color color = g_ColormapThis->maps[current_map].colors[i];
-                    int distance = (draw_rect.right * color.position) / NUM_COLOR_VALUES - (x - draw_rect.left);
+                    int distance = TRANSLATE_DISTANCE(x, draw_rect.right, draw_rect.left, color.position, 0, NUM_COLOR_VALUES - 1);
                     if(abs(distance) < 6) {
                         g_currently_selected_color_id = color.color_id;
                     }
@@ -395,7 +400,7 @@ static LRESULT CALLBACK colormap_edit_handler(HWND hwndDlg, UINT uMsg, WPARAM wP
                 for(unsigned int i = 0; i < g_ColormapThis->maps[current_map].length; i++) {
                     map_color* color = &g_ColormapThis->maps[current_map].colors[i];
                     if(color->color_id == g_currently_selected_color_id) {
-                        color->position = (x - draw_rect.left) * NUM_COLOR_VALUES / (draw_rect.right - draw_rect.left);
+                        color->position = TRANSLATE_RANGE(x, draw_rect.left, draw_rect.right, 0, NUM_COLOR_VALUES - 1)
                         g_ColormapThis->bake_full_map(current_map);
                     }
                 }
@@ -420,7 +425,7 @@ static LRESULT CALLBACK colormap_edit_handler(HWND hwndDlg, UINT uMsg, WPARAM wP
             if(y >= draw_rect.bottom - 14) {
                 for(unsigned int i = 0; i < g_ColormapThis->maps[current_map].length; i++) {
                     map_color color = g_ColormapThis->maps[current_map].colors[i];
-                    int distance = ((draw_rect.right * color.position) / NUM_COLOR_VALUES - x) + draw_rect.left;
+                    int distance = TRANSLATE_DISTANCE(x, draw_rect.right, draw_rect.left, color.position, 0, NUM_COLOR_VALUES - 1);
                     if(abs(distance) < 6) {
                         g_currently_selected_color_id = color.color_id;
                     }
@@ -454,7 +459,7 @@ static LRESULT CALLBACK colormap_edit_handler(HWND hwndDlg, UINT uMsg, WPARAM wP
                 selected_menu_item = TrackPopupMenuEx(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON, popup_coords.x, popup_coords.y, hwndDlg, NULL);
             }
             if(selected_menu_item != NULL) {
-                int color_position = (x - draw_rect.left) * NUM_COLOR_VALUES / (draw_rect.right - draw_rect.left);
+                int color_position = TRANSLATE_RANGE(x, draw_rect.left, draw_rect.right, 0, NUM_COLOR_VALUES - 1)
                 static COLORREF custcolors[16];
                 switch(selected_menu_item) {
                     case IDM_COLORMAP_MENU_ADD:
