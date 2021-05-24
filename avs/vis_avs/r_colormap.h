@@ -12,6 +12,7 @@
 
 #define NUM_COLOR_VALUES 256  // 2 ^ BITS_PER_CHANNEL (i.e. 8)
 #define COLORMAP_NUM_MAPS 8
+#define COLORMAP_MAX_COLORS 256
 #define COLORMAP_MAP_FILENAME_MAXLEN 48
 #define COLORMAP_SAVE_MAP_HEADER_SIZE (sizeof(map) - sizeof(map_color*))
 

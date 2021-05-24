@@ -14,6 +14,7 @@ available with Intel's AVX2 extension (ca. 2014 and later CPU models) to load co
 index from the baked map.
 */
 #include "r_colormap.h"
+#include <cstdio>
 #include <commctrl.h>
 #include <time.h>
 
@@ -595,7 +596,7 @@ void C_ColorMap::bake_full_map(int map_index) {
 }
 
 void C_ColorMap::add_map_color(int map_index, unsigned int position, int color) {
-    if(this->maps[map_index].length >= NUM_COLOR_VALUES) {
+    if(this->maps[map_index].length >= COLORMAP_MAX_COLORS) {
         return;
     }
     map_color* new_map_colors = new map_color[this->maps[map_index].length + 1];
@@ -1162,8 +1163,128 @@ int C_ColorMap::save_config(unsigned char *data) {
     return pos;
 }
 
-void C_ColorMap::save_map_file(int map_index) {}
-void C_ColorMap::load_map_file(int map_index) {}
+bool endswithn(char* str, char* suffix, size_t n) {
+    size_t str_len = strnlen(str, n);
+    size_t suffix_len = strnlen(suffix, n);
+    if(str_len < suffix_len) {
+        return false;
+    }
+    char* str_end = str + (str_len - suffix_len);
+    bool result = strncmp(str_end, suffix, suffix_len) == 0;
+    return result;
+}
+
+void C_ColorMap::save_map_file(int map_index) {
+    char filepath[MAX_PATH];
+    OPENFILENAME openfilename;
+    if(strnlen(this->maps[map_index].filename, COLORMAP_MAP_FILENAME_MAXLEN) > 0) {
+        strncpy(filepath, this->maps[map_index].filename, COLORMAP_MAP_FILENAME_MAXLEN);
+    } else {
+        strncpy(filepath, "New Map.clm", COLORMAP_MAP_FILENAME_MAXLEN);
+    }
+    openfilename.lpstrInitialDir = g_path;
+    openfilename.hwndOwner = NULL;
+    openfilename.lpstrFileTitle = NULL;
+    openfilename.nMaxFileTitle = 0;
+    openfilename.lpstrFile = filepath;
+    openfilename.lStructSize = sizeof(OPENFILENAME);
+    openfilename.nMaxFile = MAX_PATH;
+    openfilename.lpstrFilter = "Color Map (*.clm)\0*.clm\0All Files\0*\0";
+    openfilename.nFilterIndex = 1;
+    openfilename.lpstrTitle = "Save Color Map";
+    openfilename.Flags = OFN_EXPLORER;
+    if(GetSaveFileName(&openfilename) == 0) {
+        return;
+    }
+    strncpy(filepath, openfilename.lpstrFile, MAX_PATH);
+    if(!endswithn(openfilename.lpstrFile, ".clm", MAX_PATH)) {
+        size_t len_selected_path = strnlen(openfilename.lpstrFile, MAX_PATH);
+        if(len_selected_path >= MAX_PATH - 4) {
+            MessageBox(this->dialog, "Filename too long!", "Error", MB_ICONERROR);
+            return;
+        }
+        strncpy(filepath + len_selected_path, ".clm", 5);
+    }
+    FILE* file = fopen(openfilename.lpstrFile, "wb");
+    if(file == NULL) {
+        MessageBox(this->dialog, "Unable to open file for writing!", "Error", MB_ICONERROR);
+        return;
+    }
+    fwrite("CLM1", 4, 1, file);
+    fwrite(&this->maps[map_index].length, sizeof(int), 1, file);
+    fwrite(this->maps[map_index].colors, sizeof(map_color), this->maps[map_index].length, file);
+    fclose(file);
+    // TODO [cleanup][bugfix]: Make OS-portable. May return NULL.
+    char* basename = strrchr(filepath, '\\') + 1;
+    strncpy(this->maps[map_index].filename, basename, COLORMAP_MAP_FILENAME_MAXLEN);
+    this->maps[map_index].filename[COLORMAP_MAP_FILENAME_MAXLEN - 1] = '\0';
+    SetDlgItemText(this->dialog, IDC_COLORMAP_FILENAME_VIEW, this->maps[map_index].filename);
+}
+
+void C_ColorMap::load_map_file(int map_index) {
+    char filename[MAX_PATH];
+    OPENFILENAME openfilename;
+    HANDLE file;
+    unsigned char* contents;
+    size_t filesize;
+    long unsigned int bytes_read;
+    int length;
+    int colors_offset;
+
+    strncpy(filename, this->maps[map_index].filename, COLORMAP_MAP_FILENAME_MAXLEN);
+    openfilename.lpstrInitialDir = g_path;
+    openfilename.hwndOwner = NULL;
+    openfilename.lpstrFileTitle = NULL;
+    openfilename.nMaxFileTitle = 0;
+    openfilename.lpstrFile = filename;
+    openfilename.lStructSize = sizeof(OPENFILENAME);
+    openfilename.nMaxFile = MAX_PATH;
+    openfilename.lpstrFilter = "Color Map (*.clm)\0*.clm\0All Files\0*\0";
+    openfilename.nFilterIndex = 1;
+    openfilename.lpstrTitle = "Load Color Map";
+    openfilename.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+    if(GetOpenFileName(&openfilename) == 0) {
+        return;
+    }
+    file = CreateFile(
+        openfilename.lpstrFile,
+        GENERIC_READ,
+        0,
+        NULL,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
+        NULL
+    );
+    if (file == INVALID_HANDLE_VALUE) {
+        MessageBox(this->dialog, "Unable to open file for reading!", "Error", MB_ICONERROR);
+        return;
+    }
+    filesize = GetFileSize(file, NULL);
+    contents = new unsigned char[filesize];
+    ReadFile(file, contents, filesize, &bytes_read, NULL);
+    CloseHandle(file);
+    if(strncmp((char*)contents, "CLM1", 4) != 0) {
+        delete[] contents;
+        MessageBox(this->dialog, "Invalid CLM file!", "Error", MB_ICONERROR);
+        return;
+    }
+    length = *(int*)(contents + 4);
+    colors_offset = 4/*CLM1*/ + 4/*length*/;
+    if(length < 0
+        || length > COLORMAP_MAX_COLORS
+        || length != (bytes_read - colors_offset) / sizeof(map_color)
+    ) {
+        MessageBox(this->dialog, "Corrupt CLM file!", "Warning", MB_ICONWARNING);
+        length = (bytes_read - colors_offset) / sizeof(map_color);
+    }
+    this->maps[map_index].length = length;
+    this->load_map_colors(contents, bytes_read, map_index, colors_offset);
+    delete[] contents;
+    strncpy(this->maps[map_index].filename, strrchr(openfilename.lpstrFile, '\\') + 1, COLORMAP_MAP_FILENAME_MAXLEN);
+    InvalidateRect(GetDlgItem(this->dialog, IDC_COLORMAP_MAPVIEW), NULL, 0);
+    SetDlgItemText(this->dialog, IDC_COLORMAP_FILENAME_VIEW, this->maps[map_index].filename);
+    this->bake_full_map(map_index);
+}
 
 C_RBASE *R_ColorMap(char *desc) {
     srand(time(NULL));
