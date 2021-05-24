@@ -115,10 +115,28 @@ static LRESULT CALLBACK dialog_handler(HWND hwndDlg, UINT uMsg, WPARAM wParam,LP
             } else if(wNotifyCode == BN_CLICKED) {
                 switch(LOWORD(wParam)) {
                     case IDC_COLORMAP_HELP:
-                        MessageBox(hwndDlg, "", "", MB_ICONINFORMATION);
+                        MessageBox(
+                            hwndDlg,
+                            "Color Map stores 8 different colormaps. For every point on the screen, a key is calculated"
+                                " and used as an index (value 0-255) into the map. The point's color will be replaced"
+                                " by the one in the map at that index.\n"
+                                "If the on-beat cycling option is on, Color Map will cycle between all enabled maps. If"
+                                " it's turned off, only Map 1 is used.\n\n"
+                                "To edit the map, drag the arrows around with the left mouse button. You can add/edit"
+                                "/remove colors by right-clicking, double-click an empty position to add a new point"
+                                " there or double-click an existing point to edit it.",
+                            "Color Map v1.3 - Help",
+                            MB_ICONINFORMATION
+                        );
                         return 0;
                     case IDC_COLORMAP_CYCLE_INFO:
-                        MessageBox(hwndDlg, "", "", MB_ICONINFORMATION);
+                        MessageBox(
+                            hwndDlg,
+                            "Note: While editing maps, cycling is temporarily disabled. Switch to another component or"
+                                " close the AVS editor to enable it again.",
+                            "Color Map v1.3 - Help",
+                            MB_ICONINFORMATION
+                        );
                         return 0;
                     case IDC_COLORMAP_FILE_LOAD:
                         g_ColormapThis->load_map_file(current_map);
