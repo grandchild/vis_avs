@@ -218,6 +218,7 @@ void C_RLibrary::initbuiltinape(void)
   ADD_EXT(R_Texer2,"Acko.net: Texer II");
   ADD2(R_Normalise,"Trans: Normalise");
   ADD2(R_ColorMap,"Color Map");
+  ADD2(R_AddBorders,"Virtual Effect: Addborders");
 #endif
 #undef ADD
 #undef ADD2
