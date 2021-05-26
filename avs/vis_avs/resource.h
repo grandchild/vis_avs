@@ -83,6 +83,7 @@
 #define IDD_CFG_NORMALISE               175
 #define IDD_CFG_COLORMAP                176
 #define IDD_CFG_COLORMAP_COLOR_POSITION 177
+#define IDD_CFG_ADDBORDERS              178
 #define IDC_EFFECTS                     1000
 #define IDC_ENABLED                     1001
 #define IDC_FBCLEAR                     1002
@@ -489,6 +490,9 @@
 #define IDC_COLORMAP_MAP_CYCLE_SPEED    1298
 #define IDC_COLORMAP_CYCLE_INFO         1299
 #define IDC_COLORMAP_COLOR_POSITION     1300
+#define IDC_ADDBORDERS_ENABLE           1301
+#define IDC_ADDBORDERS_COLOR            1302
+#define IDC_ADDBORDERS_WIDTH            1303
 #define IDM_DISPLAY                     40001
 #define IDM_PRESETS                     40002
 #define IDM_TRANS                       40003
@@ -508,9 +512,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        178
+#define _APS_NEXT_RESOURCE_VALUE        179
 #define _APS_NEXT_COMMAND_VALUE         40015
-#define _APS_NEXT_CONTROL_VALUE         1301
+#define _APS_NEXT_CONTROL_VALUE         1304
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
