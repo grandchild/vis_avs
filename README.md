@@ -26,6 +26,7 @@ off until after that goal is achieved.
 * 🎂 Former plugin effects rewritten from scratch as builtin-APEs:
   * _Normalise_, originally by [TomyLobo](https://github.com/TomyLobo), [here](https://www.deviantart.com/tomylobo/art/Normalise-APE-10334263).
   * _Colormap_, originally by [Steven Wittens](https://acko.net).
+  * _AddBorders_, originally by [Goebish](https://github.com/goebish).
 * 🥵 Performance is not up to par with official build (about 20% slower). Looking into
   that...
 * 🧨 APE files are crashing AVS or preventing it from starting. Disable these by
