@@ -1,3 +1,4 @@
+/* Reconstructed from scratch. Original APE by Goebish (https://github.com/goebish) */
 #include <windows.h>
 #include <commctrl.h>
 #include "r_defs.h"
