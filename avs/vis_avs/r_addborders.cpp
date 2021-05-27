@@ -1,8 +1,7 @@
 #include <windows.h>
+#include <commctrl.h>
 #include "r_defs.h"
 #include "resource.h"
-#include <xmmintrin.h>
-#include <emmintrin.h>
 
 
 #define MOD_NAME "Render / Add Borders"
@@ -19,7 +18,7 @@ class C_AddBorders : public C_RBASE {
     public:
         C_AddBorders();
         virtual ~C_AddBorders();
-        virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int);
+        virtual int render(char visdata[2][2][576], int is_beat, int *framebuffer, int *fbout, int w, int);
         virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
         virtual char *get_desc();
         virtual void load_config(unsigned char *data, int len);
@@ -30,20 +29,14 @@ class C_AddBorders : public C_RBASE {
 };
 
 static C_AddBorders* g_addborder_this;
-static HINSTANCE g_hDllInstance;
-static int g_color;
 static COLORREF g_cust_colors[16];
 
 static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam) {
     DRAWITEMSTRUCT* drawitem;
-    CHOOSECOLOR choosecolor;
-    unsigned int color;
-    HMENU menu;
     HWND width_slider;
-    int width;
 
     switch(uMsg) {
-        case WM_DRAWITEM:  // 0x2b
+        case WM_DRAWITEM:  // 0x02b
             drawitem = (DRAWITEMSTRUCT*)lParam;
             if (drawitem->CtlID == IDC_ADDBORDERS_COLOR) {
                 LOGBRUSH logbrush;
@@ -65,29 +58,28 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPa
             break;
         case WM_INITDIALOG:  // 0x110
             width_slider = GetDlgItem(hwndDlg, IDC_ADDBORDERS_WIDTH);
-            SendMessage(width_slider, 0x406, 0, 0x320001);
-            SendMessage(width_slider, 0x405, 1, g_addborder_this->width);
+            SendMessage(width_slider, TBM_SETRANGE, 0, MAKELONG(ADDBORDERS_WIDTH_MIN, ADDBORDERS_WIDTH_MAX));
+            SendMessage(width_slider, TBM_SETPOS, 1, g_addborder_this->width);
             if (g_addborder_this->enabled) {
                 CheckDlgButton(hwndDlg, IDC_ADDBORDERS_ENABLE, 1);
             }
             break;
         case WM_HSCROLL:  // 0x114
-            menu = GetMenu((HWND)lParam);
-            width = SendMessage((HWND)lParam, WM_USER, 0, 0);
-            if (menu == IDC_ADDBORDERS_WIDTH) {
-                g_addborder_this->width = width;
+            if (lParam == IDC_ADDBORDERS_WIDTH) {
+                g_addborder_this->width = SendMessage((HWND)lParam, WM_USER, 0, 0);
             }
             break;
         case WM_COMMAND:  // 0x111
             if (LOWORD(wParam) == IDC_ADDBORDERS_ENABLE) {
                 g_addborder_this->enabled = IsDlgButtonChecked(hwndDlg, IDC_ADDBORDERS_ENABLE) != 0;
             } else if (LOWORD(wParam) == IDC_ADDBORDERS_COLOR) {
+                CHOOSECOLOR choosecolor;
                 choosecolor.lStructSize = sizeof(CHOOSECOLOR);
                 choosecolor.hwndOwner = hwndDlg;
                 choosecolor.hInstance = NULL;
                 choosecolor.rgbResult = RGB_TO_BGR(g_addborder_this->color);
                 choosecolor.lpCustColors = g_cust_colors;
-                choosecolor.Flags = 3;
+                choosecolor.Flags = CC_RGBINIT | CC_FULLOPEN;
                 if (ChooseColor(&choosecolor) != 0) {
                     g_addborder_this->color = BGR_TO_RGB(choosecolor.rgbResult);
                 }
@@ -108,7 +100,10 @@ C_AddBorders::C_AddBorders() {
 C_AddBorders::~C_AddBorders() {}
 
 
-int C_AddBorders::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h) {
+int C_AddBorders::render(char visdata[2][2][576], int is_beat, int *framebuffer, int *fbout, int w, int h) {
+    (void)visdata;
+    (void)is_beat;
+    (void)fbout;
     int framesize;
     int border_height_px;
     int border_width_px;
