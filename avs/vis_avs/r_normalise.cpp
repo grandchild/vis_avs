@@ -61,9 +61,9 @@ int C_Normalise::scan_min_max(
     int* framebuffer, int fb_length, unsigned char * max_out, unsigned char * min_out
 ) {
     for(int i = 0; i < fb_length; i++) {
-        unsigned char r = framebuffer[i] & 0xff;
-        unsigned char g = (framebuffer[i] & 0xff00) >> 8;
-        unsigned char b = (framebuffer[i] & 0xff0000) >> 16;
+        unsigned char r = framebuffer[i] >> 16 & 0xff;
+        unsigned char g = framebuffer[i] >> 8 & 0xff;
+        unsigned char b = framebuffer[i] & 0xff;
         unsigned char rg_max = r > g ? r : g;
         unsigned char max_channel = rg_max > b ? rg_max : b;
         if(max_channel > *max_out) {
