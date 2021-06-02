@@ -726,22 +726,22 @@ inline int C_ColorMap::get_key(int color) {
     int r, g, b;
     switch(this->config.color_key) {
         case COLORMAP_COLOR_KEY_RED:
-            return color & 0xff;
+            return color >> 16 & 0xff;
         case COLORMAP_COLOR_KEY_GREEN:
             return color >> 8 & 0xff;
         case COLORMAP_COLOR_KEY_BLUE:
-            return color >> 16 & 0xff;
+            return color & 0xff;
         case COLORMAP_COLOR_KEY_RGB_SUM_HALF:
-            return min(((color & 0xff) + (color >> 8 & 0xff) + (color >> 16 & 0xff)) / 2, NUM_COLOR_VALUES - 1);
+            return min(((color >> 16 & 0xff) + (color >> 8 & 0xff) + (color & 0xff)) / 2, NUM_COLOR_VALUES - 1);
         case COLORMAP_COLOR_KEY_MAX:
-            r = color & 0xff;
-            g = (color & 0xff00) >> 8;
-            b = (color & 0xff0000) >> 16;
+            r = color >> 16 & 0xff;
+            g = color >> 8 & 0xff;
+            b = color & 0xff;
             r = max(r, g);
             return max(r, b);
         default:
         case COLORMAP_COLOR_KEY_RGB_AVERAGE:
-            return ((color & 0xff) + (color >> 8 & 0xff) + (color >> 16 & 0xff)) / 3;
+            return ((color >> 16 & 0xff) + (color >> 8 & 0xff) + (color & 0xff)) / 3;
     }
 }
 
@@ -844,9 +844,9 @@ void C_ColorMap::blend(baked_map* blend_map, int *framebuffer, int w, int h) {
 inline __m128i C_ColorMap::get_key_ssse3(__m128i color4) {
     // Gather uint8s from certain source locations. (0xff => dest will be zero.) Collect
     // the respective channels into the pixel's lower 8bits.
-    __m128i gather_red =     _mm_set_epi32(0xffffff0c, 0xffffff08, 0xffffff04, 0xffffff00);
+    __m128i gather_red =    _mm_set_epi32(0xffffff0e, 0xffffff0a, 0xffffff06, 0xffffff02);
     __m128i gather_green =   _mm_set_epi32(0xffffff0d, 0xffffff09, 0xffffff05, 0xffffff01);
-    __m128i gather_blue =    _mm_set_epi32(0xffffff0e, 0xffffff0a, 0xffffff06, 0xffffff02);
+    __m128i gather_blue =     _mm_set_epi32(0xffffff0c, 0xffffff08, 0xffffff04, 0xffffff00);
     __m128i max_channel_value = _mm_set1_epi32(NUM_COLOR_VALUES - 1);
     __m128i r, g;
     __m128 color4f;
