@@ -628,12 +628,12 @@ NAKED void nseel_asm_mod(void)
     "fld qword ptr [%%ebx]\n\t"
 
     "fld qword ptr [%%eax]\n\t"
-    "fsub qword ptr [%0 + 4]\n\t"
+    "fsub dword ptr [%[g_cmpaddtab] + 4]\n\t"
     "fabs\n\t"
     "fadd qword ptr [%%eax]\n\t"
-    "fadd dword ptr [%0 + 4]\n\t"
+    "fadd dword ptr [%[g_cmpaddtab] + 4]\n\t"
 
-    "fmul dword ptr [%1]\n\t"
+    "fmul dword ptr %[g_half]\n\t"
 
     "fistp dword ptr [%%esi]\n\t"
     "fistp dword ptr [%%esi + 4]\n\t"
@@ -646,7 +646,7 @@ NAKED void nseel_asm_mod(void)
     "fstp qword ptr [%%esi]\n\t"
     "add %%esi, 8\n"
     :
-    : "m"(g_cmpaddtab), "m"(g_half)
+    : [g_cmpaddtab]"m"(g_cmpaddtab), [g_half]"m"(g_half)
     : "eax", "esi"
   );
 #endif
