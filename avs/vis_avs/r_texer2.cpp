@@ -50,7 +50,7 @@ class C_Texer2 : public C_RBASE
 
         CRITICAL_SECTION imageload;
         CRITICAL_SECTION codestuff;
-        
+
         char* help_text = "Texer II\0"
             "Texer II is a rendering component that draws what is commonly known as particles.\r\n"
             "At specified positions on screen, a copy of the source image is placed and blended in various ways.\r\n"
@@ -782,6 +782,7 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                             // save
                             movd mm1, dword ptr [edi]
                             psubusb mm1, mm0
+                            movq mm0, mm1
                         }
 #else  // GCC
                             "psrlw mm0, 8\n\t"
@@ -790,6 +791,7 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                             // save
                             "movd mm1, dword ptr [edi]\n\t"
                             "psubusb mm1, mm0\n\t"
+                            "movq mm0, mm1\n\t"
 #endif
                         T2_SCALE_BLEND_ASM_LEAVE(t2_scale_loop_sub1)
                         cy0 += sdy;
