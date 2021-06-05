@@ -55,6 +55,8 @@ struct Vars {
     double *y;
     double *w;
     double *h;
+    double *iw;
+    double *ih;
     double *v;
     double *sizex;
     double *sizey;

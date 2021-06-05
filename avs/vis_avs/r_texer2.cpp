@@ -339,6 +339,8 @@ void C_Texer2::Recompile() {
     vars.v     = g_extinfo->regVMvariable(context, "v");
     vars.w     = g_extinfo->regVMvariable(context, "w");
     vars.h     = g_extinfo->regVMvariable(context, "h");
+    vars.iw    = g_extinfo->regVMvariable(context, "iw");
+    vars.ih    = g_extinfo->regVMvariable(context, "ih");
     vars.sizex = g_extinfo->regVMvariable(context, "sizex");
     vars.sizey = g_extinfo->regVMvariable(context, "sizey");
     vars.red   = g_extinfo->regVMvariable(context, "red");
@@ -1926,6 +1928,8 @@ int C_Texer2::render(char visdata[2][2][576], int isBeat, int *framebuffer, int 
     *vars.blue = 1.0;
     *vars.sizex = 1.0;
     *vars.sizey = 1.0;
+    *vars.iw = this->iw;
+    *vars.ih = this->ih;
 
     if (codeframe)
         g_extinfo->executeCode(codeframe, visdata);
