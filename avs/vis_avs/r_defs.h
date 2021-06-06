@@ -835,7 +835,7 @@ mmx_mulblend_loop:
     "mov       %%eax, %[input]\n\t"
     "mov       %%edi, %[output]\n\t"
     "mov       %%ecx, %[l]\n\t"
-    "shr       %%ecx, 2\n\t"
+    "shr       %%ecx, 1\n\t"
     ".align    16\n"
     "mmx_mulblend_loop%=:\n\t"
     "movd      %%mm0, [%%eax]\n\t"
