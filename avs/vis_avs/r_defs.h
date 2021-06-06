@@ -480,7 +480,7 @@ static __inline unsigned int BLEND4(unsigned int *p1, unsigned int w, int xp, in
     : [out]"=r"(out)
     : [xp]"m"(xp), [p1]"m"(p1), [yp]"m"(yp), [w]"m"(w),
       [mmx_blend4_revn]"m"(mmx_blend4_revn), [mmx_blend4_zero]"m"(mmx_blend4_zero)
-    : "eax"
+    : "eax", "esi"
   );
   return out;
 #endif // _MSC_VER
