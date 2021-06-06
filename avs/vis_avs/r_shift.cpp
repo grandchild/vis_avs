@@ -347,7 +347,7 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPa
   	  if (LOWORD(wParam) == IDC_HELPBTN)
 	  	{
         char *text="Dynamic Shift\0"
-          "better Dynamic shift help goes here (send me some :)\r\n";
+          "better Dynamic shift help goes here (send me some :)\r\n"
           "Variables:\r\n"
            "x,y = amount to shift (in pixels - set these)\r\n"
            "w,h = width, height (in pixels)\r\n"
