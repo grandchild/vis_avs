@@ -20,9 +20,9 @@
 #define IDD_GCFG_ABOUT                  114
 #define IDD_CFG_FILTER                  115
 #define IDD_CFG_ROTBLT                  116
-#define IDC_CFG_SVP                     117
+#define IDD_CFG_SVP                     117
 #define IDD_CFG_COLORFADE               118
-#define IDD_CFG_CONTRASTENHANCE         119
+#define IDD_CFG_COLORCLIP               119
 #define IDD_CFG_ROTSTAR                 120
 #define IDD_CFG_OSCRING                 121
 #define IDD_CFG_TRANS                   122

@@ -37,7 +37,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef LASER
 
-#define C_THISCLASS C_ContrastEnhanceClass
+#define C_THISCLASS C_ColorClipClass
 #define MOD_NAME "Trans / Color Clip"
 
 class C_THISCLASS : public C_RBASE {
@@ -140,7 +140,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
   return 0;
 }
 
-C_RBASE *R_ContrastEnhance(char *desc)
+C_RBASE *R_ColorClip(char *desc)
 {
 	if (desc) { strcpy(desc,MOD_NAME); return NULL; }
 	return (C_RBASE *) new C_THISCLASS();
@@ -218,8 +218,8 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPa
 HWND C_THISCLASS::conf(HINSTANCE hInstance, HWND hwndParent)
 {
 	g_this = this;
-	return CreateDialog(hInstance,MAKEINTRESOURCE(IDD_CFG_CONTRASTENHANCE),hwndParent,g_DlgProc);
+	return CreateDialog(hInstance,MAKEINTRESOURCE(IDD_CFG_COLORCLIP),hwndParent,g_DlgProc);
 }
 #else
-C_RBASE *R_ContrastEnhance(char *desc) { return NULL; }
+C_RBASE *R_ColorClip(char *desc) { return NULL; }
 #endif

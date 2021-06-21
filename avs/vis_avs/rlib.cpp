@@ -118,7 +118,7 @@ void C_RLibrary::initfx(void)
   DECLARE_EFFECT(R_RotBlit);
   DECLARE_EFFECT(R_SVP);
   DECLARE_EFFECT2(R_ColorFade);
-  DECLARE_EFFECT(R_ContrastEnhance);
+  DECLARE_EFFECT(R_ColorClip);
   DECLARE_EFFECT(R_RotStar);
   DECLARE_EFFECT(R_OscRings);
   DECLARE_EFFECT2(R_Trans);

@@ -217,7 +217,7 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPa
 HWND C_THISCLASS::conf(HINSTANCE hInstance, HWND hwndParent)
 {
 	g_this = this;
-	return CreateDialog(hInstance,MAKEINTRESOURCE(IDC_CFG_SVP),hwndParent,g_DlgProc);
+	return CreateDialog(hInstance,MAKEINTRESOURCE(IDD_CFG_SVP),hwndParent,g_DlgProc);
 }
 #else
 C_RBASE *R_SVP(char *desc)
