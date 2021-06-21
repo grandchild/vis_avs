@@ -25,7 +25,7 @@ jobs:
         run: |-
           msbuild "%GITHUB_WORKSPACE%/build/vis_avs.sln" /m
 
-      - uses: actions/upload-artifact@v2.2.3
+      - uses: actions/upload-artifact@v2.2.4
         with:
           name: vis_avs_msvc.zip
           path: build/Debug/vis_avs.dll
