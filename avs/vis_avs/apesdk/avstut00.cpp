@@ -50,7 +50,6 @@ class C_THISCLASS : public C_RBASE
 
 		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
 		
-		virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
 		virtual char *get_desc();
 
 		virtual void load_config(unsigned char *data, int len);
@@ -197,13 +196,6 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 		}		
 	}
 	return 0;
-}
-
-
-HWND C_THISCLASS::conf(HINSTANCE hInstance, HWND hwndParent) // return NULL if no config dialog possible
-{
-	g_ConfigThis = this;
-	return CreateDialog(hInstance,MAKEINTRESOURCE(IDD_CONFIG),hwndParent,g_DlgProc);
 }
 
 

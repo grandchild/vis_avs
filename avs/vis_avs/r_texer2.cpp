@@ -13,7 +13,6 @@ class C_Texer2 : public C_RBASE
         C_Texer2(int default_version);
         virtual ~C_Texer2();
         virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-        virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
         virtual char *get_desc();
         virtual void load_config(unsigned char *data, int len);
         virtual int  save_config(unsigned char *data);
@@ -211,8 +210,9 @@ void C_Texer2::LoadExamples(HWND button, HWND ctl, bool is_init) {
 }
 
 // this is where we deal with the configuration screen
-static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    C_Texer2* g_ConfigThis = (C_Texer2*)g_current_render;
     char buf[MAX_PATH];
     switch (uMsg)
     {
@@ -2016,13 +2016,6 @@ int C_Texer2::render(char visdata[2][2][576], int isBeat, int *framebuffer, int 
     LeaveCriticalSection(&imageload);
     return 0;
 }
-
-HWND C_Texer2::conf(HINSTANCE hInstance, HWND hwndParent)
-{
-    g_ConfigThis = this;
-    return CreateDialog(hInstance, MAKEINTRESOURCE(IDD_CFG_TEXERII), hwndParent, (DLGPROC)g_DlgProc);
-}
-
 
 char *C_Texer2::get_desc(void)
 {

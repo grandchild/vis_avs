@@ -21,7 +21,6 @@ class C_Normalise : public C_RBASE {
         C_Normalise();
         virtual ~C_Normalise();
         virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int);
-        virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
         virtual char *get_desc();
         virtual void load_config(unsigned char *data, int len);
         virtual int  save_config(unsigned char *data);
@@ -34,10 +33,9 @@ class C_Normalise : public C_RBASE {
         void apply(int* framebuffer, int fb_length, unsigned int scale_table[]);
 };
 
-static C_Normalise* g_ConfigThis;
-static HINSTANCE g_hDllInstance;
 
-static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam) {
+int win32_dlgproc_normalise(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam) {
+    C_Normalise* g_ConfigThis = (C_Normalise*)g_current_render;
     switch (uMsg) {
         case WM_INITDIALOG:
             CheckDlgButton(hwndDlg, IDC_NORMALISE_ENABLED, g_ConfigThis->enabled);
@@ -162,11 +160,6 @@ int C_Normalise::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
     this->make_scale_table(max, min, scale_table);
     this->apply(framebuffer, w * h, scale_table);
     return 0;
-}
-
-HWND C_Normalise::conf(HINSTANCE hInstance, HWND hwndParent) {
-    g_ConfigThis = this;
-    return CreateDialog(hInstance, MAKEINTRESOURCE(IDD_CFG_NORMALISE), hwndParent, g_DlgProc);
 }
 
 char *C_Normalise::get_desc(void) {

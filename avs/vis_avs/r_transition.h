@@ -56,7 +56,6 @@ class C_RenderTransitionClass  {
 		virtual ~C_RenderTransitionClass();
 
 		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-		virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
     static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam);
 };
 

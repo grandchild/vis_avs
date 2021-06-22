@@ -104,10 +104,3 @@ BOOL CALLBACK C_UnknClass::g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPAR
 	}
 	return 0;
 }
-
-
-HWND C_UnknClass::conf(HINSTANCE hInstance, HWND hwndParent)
-{
-	g_this = this;
-	return CreateDialog(hInstance,MAKEINTRESOURCE(IDD_CFG_UNKN),hwndParent,g_DlgProc);
-}

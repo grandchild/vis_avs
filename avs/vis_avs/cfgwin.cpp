@@ -36,6 +36,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "resource.h"
 #include "render.h"
 #include "rlib.h"
+#include "g_lib.h"
 #include "draw.h"
 #include "wnd.h"
 #include "bpm.h"
@@ -57,6 +58,8 @@ extern int cfg_cancelfs_on_deactivate;
 
 HWND g_debugwnd;
 
+C_GLibrary* g_ui_library;
+
 char g_noeffectstr[]= "No effect/setting selected";
 //extern char *verstr;
 static HWND cur_hwnd;
@@ -66,6 +69,7 @@ int config_prompt_save_preset=1,config_reuseonresize=1;
 
 extern BOOL CALLBACK aboutProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam);
 extern BOOL CALLBACK DlgProc_Bpm(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam);
+extern BOOL CALLBACK DlgProc_Transition(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam);
 extern int readyToLoadPreset(HWND parent, int isnew);
 
 extern char *extension(char *fn) ;
@@ -152,6 +156,7 @@ static int ExtractWindowsVersion(void)
 
 void CfgWnd_Create(struct winampVisModule *this_mod)
 {
+  g_ui_library = new C_GLibrary();
 	CreateDialog(this_mod->hDllInstance,MAKEINTRESOURCE(IDD_DIALOG1),this_mod->hwndParent,dlgProc);
 }
 
@@ -177,6 +182,7 @@ void CfgWnd_Destroy(void)
     hcfgThread=0;
   }
   */
+  delete g_ui_library;
 }
 
 static void recursiveAddDirList(HMENU menu, UINT *id, char *path, int pathlen)
@@ -1375,7 +1381,20 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
             {
 				      SetDlgItemText(hwndDlg,IDC_EFNAME,tp->render->get_desc());
 				      if (cur_hwnd) DestroyWindow(cur_hwnd);
-              cur_hwnd=tp->render->conf(g_render_library->GetRendererInstance(tp->effect_index,g_hInstance),hwndDlg);
+              HINSTANCE render_instance = g_render_library->GetRendererInstance(tp->effect_index, g_hInstance);
+              g_current_render = (void*)tp->render;
+              C_Win32GuiComponent* ui_component = g_ui_library->get(tp->effect_index, g_current_render);
+              if(ui_component != NULL) {
+                if(ui_component->uiprep != NULL) {
+                  ui_component->uiprep(render_instance);
+                }
+                cur_hwnd = CreateDialog(
+                  render_instance,
+                  MAKEINTRESOURCE(ui_component->dialog_resource_id),
+                  hwndDlg,
+                  ui_component->ui_handler
+                );
+              }
               if (cur_hwnd) sniffConfigWindow_oldProc=(WNDPROC)SetWindowLong(cur_hwnd,GWL_WNDPROC,(LONG)sniffConfigWindow_newProc);
             }
 				    if (cur_hwnd)
@@ -1435,7 +1454,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
 						  if (x==4)
 							  cur_hwnd=CreateDialog(g_hInstance,MAKEINTRESOURCE(IDD_GCFG_BPM),hwndDlg,DlgProc_Bpm);
 						  if (x==5)
-							  cur_hwnd=g_render_transition->conf(g_hInstance,hwndDlg);
+							  cur_hwnd=CreateDialog(g_hInstance,MAKEINTRESOURCE(IDD_GCFG_TRANSITIONS),hwndDlg,DlgProc_Transition);
 						  if (cur_hwnd) 
               {
 							  RECT r;

@@ -47,7 +47,6 @@ class C_THISCLASS : public C_RBASE {
 		virtual ~C_THISCLASS();
 		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
 		virtual char *get_desc() { return MOD_NAME; }
-		virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
 		virtual void load_config(unsigned char *data, int len);
 		virtual int  save_config(unsigned char *data);
 		void loadPicture(char *name);
@@ -66,9 +65,6 @@ class C_THISCLASS : public C_RBASE {
 		char ascName[MAX_PATH];
   	int persistCount;
 };
-
-static C_THISCLASS *g_ConfigThis; // global configuration dialog pointer 
-static HINSTANCE g_hDllInstance; // global DLL instance pointer (not needed in this example, but could be useful)
 
 // configuration read/write
 
@@ -278,18 +274,19 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 
 // configuration dialog stuff
 
-static void EnableWindows(HWND hwndDlg)
+static void EnableWindows(HWND hwndDlg, C_THISCLASS* config)
 {
-	EnableWindow(GetDlgItem(hwndDlg,IDC_PERSIST),g_ConfigThis->adapt);
-	EnableWindow(GetDlgItem(hwndDlg,IDC_PERSIST_TITLE),g_ConfigThis->adapt);
-	EnableWindow(GetDlgItem(hwndDlg,IDC_PERSIST_TEXT1),g_ConfigThis->adapt);
-	EnableWindow(GetDlgItem(hwndDlg,IDC_PERSIST_TEXT2),g_ConfigThis->adapt);
-	EnableWindow(GetDlgItem(hwndDlg,IDC_X_RATIO),g_ConfigThis->ratio);
-	EnableWindow(GetDlgItem(hwndDlg,IDC_Y_RATIO),g_ConfigThis->ratio);
+	EnableWindow(GetDlgItem(hwndDlg,IDC_PERSIST),config->adapt);
+	EnableWindow(GetDlgItem(hwndDlg,IDC_PERSIST_TITLE),config->adapt);
+	EnableWindow(GetDlgItem(hwndDlg,IDC_PERSIST_TEXT1),config->adapt);
+	EnableWindow(GetDlgItem(hwndDlg,IDC_PERSIST_TEXT2),config->adapt);
+	EnableWindow(GetDlgItem(hwndDlg,IDC_X_RATIO),config->ratio);
+	EnableWindow(GetDlgItem(hwndDlg,IDC_Y_RATIO),config->ratio);
 }
 
-static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_picture(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
+	C_THISCLASS* g_ConfigThis = (C_THISCLASS*)g_current_render;
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
@@ -304,7 +301,7 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPa
       if (g_ConfigThis->ratio) CheckDlgButton(hwndDlg,IDC_RATIO,BST_CHECKED);
       if (!g_ConfigThis->axis_ratio) CheckDlgButton(hwndDlg,IDC_X_RATIO,BST_CHECKED);
       if (g_ConfigThis->axis_ratio) CheckDlgButton(hwndDlg,IDC_Y_RATIO,BST_CHECKED);
-			EnableWindows(hwndDlg);
+			EnableWindows(hwndDlg, g_ConfigThis);
 	    loadComboBox(GetDlgItem(hwndDlg,OBJ_COMBO),"*.BMP",g_ConfigThis->ascName);
 			return 1;
 		case WM_NOTIFY:
@@ -321,13 +318,13 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPa
 				g_ConfigThis->blend=IsDlgButtonChecked(hwndDlg,IDC_ADDITIVE)?1:0;
 				g_ConfigThis->blendavg=IsDlgButtonChecked(hwndDlg,IDC_5050)?1:0;
 				g_ConfigThis->adapt=IsDlgButtonChecked(hwndDlg,IDC_ADAPT)?1:0;
-				EnableWindows(hwndDlg);
+				EnableWindows(hwndDlg, g_ConfigThis);
 			}
 			if(LOWORD(wParam) == IDC_RATIO || LOWORD(wParam) == IDC_X_RATIO || LOWORD(wParam) == IDC_Y_RATIO) {
 				g_ConfigThis->ratio=IsDlgButtonChecked(hwndDlg,IDC_RATIO)?1:0;
 				g_ConfigThis->axis_ratio=IsDlgButtonChecked(hwndDlg,IDC_Y_RATIO)?1:0;
 				g_ConfigThis->lastWidth=-1; g_ConfigThis->lastHeight=-1;
-				EnableWindows(hwndDlg);
+				EnableWindows(hwndDlg, g_ConfigThis);
 			}
 		  if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == OBJ_COMBO) // handle clicks to combo box
 			  {
@@ -345,14 +342,6 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPa
 	}
 	return 0;
 }
-
-
-HWND C_THISCLASS::conf(HINSTANCE hInstance, HWND hwndParent) // return NULL if no config dialog possible
-{
-	g_ConfigThis = this;
-	return CreateDialog(hInstance,MAKEINTRESOURCE(IDD_CFG_PICTURE),hwndParent,g_DlgProc);
-}
-
 
 
 // export stuff

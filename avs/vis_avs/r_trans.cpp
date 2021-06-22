@@ -137,7 +137,6 @@ class C_THISCLASS : public C_RBASE2 {
     virtual int smp_finish(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h); // return value is that of render() for fbstuff etc
 
 		virtual char *get_desc() { return MOD_NAME; }
-		virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
 		virtual void load_config(unsigned char *data, int len);
 		virtual int  save_config(unsigned char *data);
 
@@ -775,10 +774,10 @@ C_RBASE *R_Trans(char *desc)
 }
 
 
-static C_THISCLASS *g_this;
-
-static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_movement(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
+  C_THISCLASS* g_this = (C_THISCLASS*)g_current_render;
+
   static int isstart;
 	switch (uMsg)
 	{
@@ -970,11 +969,7 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPa
 }
 
 
-HWND C_THISCLASS::conf(HINSTANCE hInstance, HWND hwndParent)
-{
-	g_this = this;
-	return CreateDialog(hInstance,MAKEINTRESOURCE(IDD_CFG_TRANS),hwndParent,g_DlgProc);
-}
+
 
 #else
 C_RBASE *R_Trans(char *desc){return NULL; }

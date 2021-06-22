@@ -92,7 +92,6 @@ class C_ColorMap : public C_RBASE {
 
         /* APE interface */
         virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int);
-        virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
         virtual char *get_desc();
         virtual void load_config(unsigned char *data, int len);
         virtual int  save_config(unsigned char *data);

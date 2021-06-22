@@ -48,7 +48,6 @@ class C_THISCLASS : public C_RBASE2 {
 		virtual ~C_THISCLASS();
 		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
 		virtual char *get_desc() { return MOD_NAME; }
-		virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
 		virtual void load_config(unsigned char *data, int len);
 		virtual int  save_config(unsigned char *data);
 
@@ -532,10 +531,10 @@ C_RBASE *R_Water(char *desc)
 }
 
 
-static C_THISCLASS *g_this;
-
-static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_water(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
+  C_THISCLASS* g_this = (C_THISCLASS*)g_current_render;
+
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
@@ -555,11 +554,7 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPa
 }
 
 
-HWND C_THISCLASS::conf(HINSTANCE hInstance, HWND hwndParent)
-{
-	g_this = this;
-	return CreateDialog(hInstance,MAKEINTRESOURCE(IDD_CFG_WATER),hwndParent,g_DlgProc);
-}
+
 
 #else
 C_RBASE *R_Water(char *desc) { return NULL; }

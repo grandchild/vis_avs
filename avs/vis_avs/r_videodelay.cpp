@@ -48,7 +48,6 @@ class C_DELAY : public C_RBASE
 		C_DELAY();
 		virtual ~C_DELAY();
 		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-		virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
 		virtual char *get_desc();
 		virtual void load_config(unsigned char *data, int len);
 		virtual int  save_config(unsigned char *data);
@@ -70,14 +69,10 @@ class C_DELAY : public C_RBASE
 		unsigned long oldframemem;
 };
 
-// global configuration dialog pointer 
-static C_DELAY *g_Delay; 
-// global DLL instance pointer
-static HINSTANCE g_hDllInstance; 
-
 // configuration screen
-static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_videodelay(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
+	C_DELAY* g_Delay = (C_DELAY*)g_current_render;
 	char value[16];
 	int val;
 	unsigned int objectcode, objectmessage;
@@ -293,12 +288,6 @@ int C_DELAY::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *
 		return 1;
 	}
 	else return 0;
-}
-
-HWND C_DELAY::conf(HINSTANCE hInstance, HWND hwndParent) // return NULL if no config dialog possible
-{
-	g_Delay = this;
-	return CreateDialog(hInstance,MAKEINTRESOURCE(IDD_CFG_VIDEODELAY),hwndParent,g_DlgProc);
 }
 
 char *C_DELAY::get_desc(void)

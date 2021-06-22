@@ -61,13 +61,12 @@ static char colormap_labels_blendmodes[COLORMAP_NUM_BLENDMODES][14] = {
     "Adjustable"
 };
 
-static C_ColorMap* g_ColormapThis;
-extern HINSTANCE g_hInstance;
 static int g_ColorSetValue;
 static int g_currently_selected_color_id = -1;
 
 
-static LRESULT CALLBACK dialog_handler(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam) {
+int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam) {
+    C_ColorMap* g_ColormapThis = (C_ColorMap*)g_current_render;
     int choice;
     int current_map = SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_SELECT, CB_GETCURSEL, 0, 0);
     if(current_map < 0) {
@@ -271,6 +270,7 @@ static LRESULT CALLBACK set_color_position_handler(HWND hwndDlg, UINT uMsg, WPAR
 }
 
 static LRESULT CALLBACK colormap_edit_handler(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    C_ColorMap* g_ColormapThis = (C_ColorMap*)g_current_render;
     if (g_ColormapThis == NULL) {
         return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
     }
@@ -508,7 +508,7 @@ static LRESULT CALLBACK colormap_edit_handler(HWND hwndDlg, UINT uMsg, WPARAM wP
                         break;
                     case IDM_COLORMAP_MENU_SETPOS:
                         g_ColorSetValue = g_ColormapThis->maps[current_map].colors[selected_color_index].position;
-                        DialogBoxParam(g_hInstance, MAKEINTRESOURCE(IDD_CFG_COLORMAP_COLOR_POSITION), hwndDlg, (DLGPROC)set_color_position_handler, NULL);
+                        DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_CFG_COLORMAP_COLOR_POSITION), hwndDlg, (DLGPROC)set_color_position_handler, NULL);
                         g_ColormapThis->maps[current_map].colors[selected_color_index].position = g_ColorSetValue;
                         break;
                 }
@@ -518,6 +518,22 @@ static LRESULT CALLBACK colormap_edit_handler(HWND hwndDlg, UINT uMsg, WPARAM wP
             return 0;
     }
     return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+}
+
+void win32_uiprep_colormap(HINSTANCE hInstance) {
+    WNDCLASSEX mapview;
+    mapview.cbSize = sizeof(WNDCLASSEX);
+    if(GetClassInfoEx(hInstance, "ColormapEdit", &mapview)) {
+        return;
+    }
+    mapview.style = CS_PARENTDC | CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+    mapview.lpfnWndProc = (WNDPROC)colormap_edit_handler;
+    mapview.cbClsExtra = 0;
+    mapview.cbWndExtra = 0;
+    mapview.hInstance = hInstance;
+    mapview.hCursor = LoadCursor(0, MAKEINTRESOURCE(IDC_ARROW));
+    mapview.lpszClassName = "ColormapEdit";
+    RegisterClassEx(&mapview);
 }
 
 C_ColorMap::C_ColorMap() :
@@ -543,7 +559,6 @@ C_ColorMap::C_ColorMap() :
         memset(this->maps[i].filename, 0, COLORMAP_MAP_FILENAME_MAXLEN);
         this->make_default_map(i);
     }
-    g_ColormapThis = this;
 }
 
 C_ColorMap::~C_ColorMap() {
@@ -1059,23 +1074,6 @@ int C_ColorMap::render(char visdata[2][2][576], int is_beat, int *framebuffer, i
     baked_map* blend_map = this->animate_map_frame(is_beat);
     this->blend_ssse3(blend_map, framebuffer, w, h);
     return 0;
-}
-
-HWND C_ColorMap::conf(HINSTANCE hInstance, HWND hwndParent) {
-    WNDCLASSEX mapview;
-    mapview.cbSize = sizeof(WNDCLASSEX);
-    GetClassInfoEx(hInstance, "ColormapEdit", &mapview);
-    mapview.style = CS_PARENTDC | CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
-    mapview.lpfnWndProc = (WNDPROC)colormap_edit_handler;
-    mapview.cbClsExtra = 0;
-    mapview.cbWndExtra = 0;
-    mapview.hInstance = hInstance;
-    mapview.hCursor = LoadCursor(0, MAKEINTRESOURCE(IDC_ARROW));
-    mapview.lpszClassName = "ColormapEdit";
-    RegisterClassEx(&mapview);
-
-    g_ColormapThis = this;
-    return CreateDialog(hInstance, MAKEINTRESOURCE(IDD_CFG_COLORMAP), hwndParent, (DLGPROC)dialog_handler);
 }
 
 char *C_ColorMap::get_desc(void) {

@@ -103,6 +103,7 @@ void C_RenderListClass::load_config(unsigned char *data, int len)
     l_len=GET_INT(); pos+=4;
     if (pos+l_len > len || l_len < 0) break;
 
+    // special case for new 2.81+ codable effect list. saved as an effect, but loaded into this very EL right here.
     if (ext>5 && t.effect_index >= DLLRENDERBASE && !memcmp(s,extsigstr,strlen(extsigstr)+1))
     {
       load_config_code(data+pos,l_len);
@@ -999,7 +1000,6 @@ for (i=0;i<NBUF;i++)
 }
 
 
-static C_RenderListClass *g_this;
 static const char *blendmodes[] = 
 {
   "Ignore",
@@ -1019,9 +1019,9 @@ static const char *blendmodes[] =
 };
 
 
-
-BOOL CALLBACK C_RenderListClass::g_DlgProcRoot(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_root_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
+  C_RenderListClass* g_this = (C_RenderListClass*)g_current_render;
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
@@ -1047,8 +1047,9 @@ BOOL CALLBACK C_RenderListClass::g_DlgProcRoot(HWND hwndDlg, UINT uMsg, WPARAM w
 }
 
 
-BOOL CALLBACK C_RenderListClass::g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
+  C_RenderListClass* g_this = (C_RenderListClass*)g_current_render;
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
@@ -1211,14 +1212,6 @@ BOOL CALLBACK C_RenderListClass::g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wPara
 		break;
 	}
 	return 0;
-}
-
-
-HWND C_RenderListClass::conf(HINSTANCE hInstance, HWND hwndParent)
-{
-	g_this = this;
-  return CreateDialog(hInstance,MAKEINTRESOURCE(isroot?IDD_CFG_LISTROOT:IDD_CFG_LIST),hwndParent,isroot?g_DlgProcRoot:g_DlgProc);
-//  return NULL;
 }
 
 char C_RenderListClass::sig_str[] = "Nullsoft AVS Preset 0.2\x1a";

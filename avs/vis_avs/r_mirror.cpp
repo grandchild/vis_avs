@@ -45,7 +45,6 @@ class C_THISCLASS : public C_RBASE {
     virtual ~C_THISCLASS() { }
 		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
 		virtual char *get_desc() { return MOD_NAME; }
-		virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
 		virtual void load_config(unsigned char *data, int len);
 		virtual int  save_config(unsigned char *data);
 
@@ -270,10 +269,9 @@ return a;
 
 
 // configuration dialog stuff
-
-
-static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_mirror(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
+	C_THISCLASS* g_ConfigThis = (C_THISCLASS*)g_current_render;
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
@@ -360,14 +358,6 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPa
 	}
 	return 0;
 }
-
-
-HWND C_THISCLASS::conf(HINSTANCE hInstance, HWND hwndParent) // return NULL if no config dialog possible
-{
-	g_ConfigThis = this;
-	return CreateDialog(hInstance,MAKEINTRESOURCE(IDD_CFG_MIRROR),hwndParent,g_DlgProc);
-}
-
 
 
 // export stuff

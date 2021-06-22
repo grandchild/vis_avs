@@ -51,7 +51,6 @@ class C_THISCLASS : public C_RBASE {
 		virtual ~C_THISCLASS();
 		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
 		virtual char *get_desc() { return MOD_NAME; }
-		virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
 		virtual void load_config(unsigned char *data, int len);
 		virtual int  save_config(unsigned char *data);
     int enabled;
@@ -75,9 +74,6 @@ class C_THISCLASS : public C_RBASE {
 	int *old_image,old_image_w,old_image_h;
 	};
 
-
-static C_THISCLASS *g_ConfigThis; // global configuration dialog pointer 
-static HINSTANCE g_hDllInstance; // global DLL instance pointer (not needed in this example, but could be useful)
 
 // configuration read/write
 
@@ -302,15 +298,15 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 
 
 // configuration dialog stuff
-
-static void EnableWindows(HWND hwndDlg)
+static void EnableWindows(HWND hwndDlg, C_THISCLASS* config)
 {
-	EnableWindow(GetDlgItem(hwndDlg,IDC_PERSIST),g_ConfigThis->adapt);
-	EnableWindow(GetDlgItem(hwndDlg,IDC_PERSIST_TITLE),g_ConfigThis->adapt);
+	EnableWindow(GetDlgItem(hwndDlg,IDC_PERSIST),config->adapt);
+	EnableWindow(GetDlgItem(hwndDlg,IDC_PERSIST_TITLE),config->adapt);
 }
 
-static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_avi(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
+	C_THISCLASS* g_ConfigThis = (C_THISCLASS*)g_current_render;
 switch (uMsg)
 	{
 	case WM_INITDIALOG:
@@ -325,7 +321,7 @@ switch (uMsg)
     if (g_ConfigThis->adapt) CheckDlgButton(hwndDlg,IDC_ADAPT,BST_CHECKED);
     if (!g_ConfigThis->adapt && !g_ConfigThis->blend && !g_ConfigThis->blendavg)
 		CheckDlgButton(hwndDlg,IDC_REPLACE,BST_CHECKED);
-		EnableWindows(hwndDlg);
+		EnableWindows(hwndDlg, g_ConfigThis);
 	  loadComboBox(GetDlgItem(hwndDlg,OBJ_COMBO),"*.AVI",g_ConfigThis->ascName);
 		return 1;
 	case WM_NOTIFY:
@@ -346,7 +342,7 @@ switch (uMsg)
 			g_ConfigThis->blend=IsDlgButtonChecked(hwndDlg,IDC_ADDITIVE)?1:0;
 			g_ConfigThis->blendavg=IsDlgButtonChecked(hwndDlg,IDC_5050)?1:0;
 			g_ConfigThis->adapt=IsDlgButtonChecked(hwndDlg,IDC_ADAPT)?1:0;
-			EnableWindows(hwndDlg);
+			EnableWindows(hwndDlg, g_ConfigThis);
 			}
 	  if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == OBJ_COMBO) // handle clicks to combo box
 		  {
@@ -364,11 +360,6 @@ return 0;
 }
 
 
-HWND C_THISCLASS::conf(HINSTANCE hInstance, HWND hwndParent) // return NULL if no config dialog possible
-{
-	g_ConfigThis = this;
-	return CreateDialog(hInstance,MAKEINTRESOURCE(IDD_CFG_AVI),hwndParent,g_DlgProc);
-}
 // export stuff
 
 C_RBASE *R_AVI(char *desc) // creates a new effect object if desc is NULL, otherwise fills in desc with description

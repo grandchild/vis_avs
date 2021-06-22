@@ -20,7 +20,6 @@ class C_AddBorders : public C_RBASE {
         C_AddBorders();
         virtual ~C_AddBorders();
         virtual int render(char visdata[2][2][576], int is_beat, int *framebuffer, int *fbout, int w, int);
-        virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
         virtual char *get_desc();
         virtual void load_config(unsigned char *data, int len);
         virtual int  save_config(unsigned char *data);
@@ -29,10 +28,10 @@ class C_AddBorders : public C_RBASE {
         int width;
 };
 
-static C_AddBorders* g_addborder_this;
 static COLORREF g_cust_colors[16];
 
-static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam) {
+int win32_dlgproc_addborders(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam) {
+    C_AddBorders* g_addborder_this = (C_AddBorders*)g_current_render;
     DRAWITEMSTRUCT* drawitem;
     HWND width_slider;
 
@@ -137,11 +136,6 @@ int C_AddBorders::render(char visdata[2][2][576], int is_beat, int *framebuffer,
         }
     }
     return 0;
-}
-
-HWND C_AddBorders::conf(HINSTANCE hInstance, HWND hwndParent) {
-    g_addborder_this = this;
-    return CreateDialog(hInstance, MAKEINTRESOURCE(IDD_CFG_ADDBORDERS), hwndParent, g_DlgProc);
 }
 
 char *C_AddBorders::get_desc(void) {

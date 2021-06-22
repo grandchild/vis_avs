@@ -46,15 +46,11 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 class C_THISCLASS : public C_RBASE {
-	protected:
-    static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam);
-
 	public:
 		C_THISCLASS();
 		virtual ~C_THISCLASS();
 		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
 		virtual char *get_desc() { return MOD_NAME; }
-		virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
 		virtual void load_config(unsigned char *data, int len);
 		virtual int  save_config(unsigned char *data);
     RString effect_exp[4];
@@ -379,9 +375,10 @@ static presetType presets[]=
 #endif
 };
 
-static C_THISCLASS *g_this;
-BOOL CALLBACK C_THISCLASS::g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_superscope(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
+  C_THISCLASS* g_this = (C_THISCLASS*)g_current_render;
+
   static int isstart;
 	switch (uMsg)
 	{
@@ -581,8 +578,3 @@ BOOL CALLBACK C_THISCLASS::g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPAR
 }
 
 
-HWND C_THISCLASS::conf(HINSTANCE hInstance, HWND hwndParent)
-{
-	g_this = this;
-	return CreateDialog(hInstance,MAKEINTRESOURCE(IDD_CFG_SSCOPE),hwndParent,g_DlgProc);
-}

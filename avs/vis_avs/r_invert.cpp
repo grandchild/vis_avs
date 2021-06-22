@@ -46,16 +46,10 @@ class C_THISCLASS : public C_RBASE {
 		virtual ~C_THISCLASS();
 		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
 		virtual char *get_desc() { return MOD_NAME; }
-		virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
 		virtual void load_config(unsigned char *data, int len);
 		virtual int  save_config(unsigned char *data);
     int enabled;
 	};
-
-
-static C_THISCLASS *g_ConfigThis; // global configuration dialog pointer 
-static HINSTANCE g_hDllInstance; // global DLL instance pointer (not needed in this example, but could be useful)
-
 
 C_THISCLASS::~C_THISCLASS() 
 {
@@ -188,29 +182,20 @@ _mmx_invert_noendloop:
 
 
 // configuration dialog stuff
-
-
-static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_invert(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
-switch (uMsg)
-	{
-	case WM_INITDIALOG:
-        if (g_ConfigThis->enabled) CheckDlgButton(hwndDlg,IDC_CHECK1,BST_CHECKED);
-		return 1;
-	case WM_COMMAND:
+  C_THISCLASS* g_ConfigThis = (C_THISCLASS*)g_current_render;
+  switch (uMsg) {
+  	case WM_INITDIALOG:
+      if (g_ConfigThis->enabled)
+        CheckDlgButton(hwndDlg,IDC_CHECK1,BST_CHECKED);
+  		return 1;
+  	case WM_COMMAND:
       if (LOWORD(wParam) == IDC_CHECK1)
         g_ConfigThis->enabled=IsDlgButtonChecked(hwndDlg,IDC_CHECK1)?1:0;
 	}
-return 0;
+  return 0;
 }
-
-
-HWND C_THISCLASS::conf(HINSTANCE hInstance, HWND hwndParent) // return NULL if no config dialog possible
-{
-	g_ConfigThis = this;
-	return CreateDialog(hInstance,MAKEINTRESOURCE(IDD_CFG_INVERT),hwndParent,g_DlgProc);
-}
-
 
 
 // export stuff

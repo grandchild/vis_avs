@@ -25,7 +25,6 @@ class C_CONVOLUTION : public C_RBASE
 		C_CONVOLUTION();
 		virtual ~C_CONVOLUTION();
 		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-		virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
 		virtual char *get_desc();
 		virtual void load_config(unsigned char *data, int len);
 		virtual int  save_config(unsigned char *data);
@@ -56,16 +55,11 @@ class C_CONVOLUTION : public C_RBASE
 		unsigned int codelength;		// length of draw
 };
 
-// global configuration dialog pointer 
-static C_CONVOLUTION *g_Filter; 
-// global DLL instance pointer
-static HINSTANCE g_hDllInstance; 
-
-
 
 // configuration screen
-static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_convolution(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
+	C_CONVOLUTION* g_Filter = (C_CONVOLUTION*)g_current_render;
 	char value[16];
 	int val;
 	unsigned int objectcode, objectmessage;
@@ -386,12 +380,6 @@ int C_CONVOLUTION::render(char visdata[2][2][576], int isBeat, int *framebuffer,
 	}
 	ret = draw(framebuffer,fbout,m64farray);
 	return ret;
-}
-
-HWND C_CONVOLUTION::conf(HINSTANCE hInstance, HWND hwndParent) // return NULL if no config dialog possible
-{
-	g_Filter = this;
-	return CreateDialog(hInstance,MAKEINTRESOURCE(IDD_CFG_CONVOLUTION),hwndParent,g_DlgProc);
 }
 
 char *C_CONVOLUTION::get_desc(void)

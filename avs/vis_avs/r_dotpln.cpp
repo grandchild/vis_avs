@@ -54,7 +54,6 @@ class C_THISCLASS : public C_RBASE {
 		virtual ~C_THISCLASS();
 		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int, int);
 		virtual char *get_desc() { return MOD_NAME; }
-		virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
 		virtual void load_config(unsigned char *data, int len);
 		virtual int  save_config(unsigned char *data);
 
@@ -244,10 +243,10 @@ C_RBASE *R_DotPlane(char *desc)
 
 
 
-static C_THISCLASS *g_this;
-
-static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_dotfountain(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
+  C_THISCLASS* g_this = (C_THISCLASS*)g_current_render;
+
 	int *a=NULL;
 	switch (uMsg)
 	{
@@ -297,13 +296,6 @@ static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPa
 			}
 	}
 	return 0;
-}
-
-
-HWND C_THISCLASS::conf(HINSTANCE hInstance, HWND hwndParent)
-{
-	g_this = this;
-	return CreateDialog(hInstance,MAKEINTRESOURCE(IDD_CFG_DOTPLANE),hwndParent,g_DlgProc);
 }
 
 #else

@@ -53,7 +53,6 @@ class C_THISCLASS : public C_RBASE
 		C_THISCLASS();
 		virtual ~C_THISCLASS();
 		virtual int render(char visdata[2][2][576], int isBeat,	int *framebuffer, int *fbout, int w, int h);		
-		virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
 		virtual char *get_desc();
 		virtual void load_config(unsigned char *data, int len);
 		virtual int  save_config(unsigned char *data);
@@ -63,14 +62,10 @@ class C_THISCLASS : public C_RBASE
 		HWND hwndDlg;
 };
 
-// global configuration dialog pointer 
-static C_THISCLASS *g_ConfigThis; 
-static HINSTANCE g_hDllInstance; 
-
-
 // this is where we deal with the configuration screen
-static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+int win32_dlgproc_chanshift(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	C_THISCLASS* g_ConfigThis = (C_THISCLASS*)g_current_render;
 	int ids[] = { IDC_RBG, IDC_BRG, IDC_BGR, IDC_GBR, IDC_GRB, IDC_RGB };
 	switch (uMsg)
 	{
@@ -524,12 +519,6 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 		break;
 	}
 	return 0;
-}
-
-HWND C_THISCLASS::conf(HINSTANCE hInstance, HWND hwndParent) 
-{
-	g_ConfigThis = this;
-	return CreateDialog(hInstance, MAKEINTRESOURCE(IDD_CFG_CHANSHIFT), hwndParent, (DLGPROC)g_DlgProc);
 }
 
 

@@ -46,7 +46,6 @@ class C_THISCLASS : public C_RBASE {
 		virtual ~C_THISCLASS();
 		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
 		virtual char *get_desc() { return MOD_NAME; }
-		virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
 		virtual void load_config(unsigned char *data, int len);
 		virtual int  save_config(unsigned char *data);
 	int x, y;
@@ -57,10 +56,6 @@ class C_THISCLASS : public C_RBASE {
   int onbeat, x2,y2,beatdur;
   double cur_x,cur_y;
 };
-
-
-static C_THISCLASS *g_ConfigThis; // global configuration dialog pointer 
-static HINSTANCE g_hDllInstance; // global DLL instance pointer (not needed in this example, but could be useful)
 
 
 C_THISCLASS::~C_THISCLASS() // set up default configuration
@@ -242,10 +237,9 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 
 
 // configuration dialog stuff
-
-
-static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_interleave(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
+  C_THISCLASS* g_ConfigThis = (C_THISCLASS*)g_current_render;
 switch (uMsg)
 	{
 	case WM_INITDIALOG:
@@ -354,14 +348,6 @@ switch (uMsg)
 	}
 return 0;
 }
-
-
-HWND C_THISCLASS::conf(HINSTANCE hInstance, HWND hwndParent) // return NULL if no config dialog possible
-{
-	g_ConfigThis = this;
-	return CreateDialog(hInstance,MAKEINTRESOURCE(IDD_CFG_INTERLEAVE),hwndParent,g_DlgProc);
-}
-
 
 
 // export stuff

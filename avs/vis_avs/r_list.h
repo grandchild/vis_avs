@@ -30,6 +30,9 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _R_LIST_H_
 #define _R_LIST_H_
 
+#include "r_defs.h"
+#include "c__base.h"
+
 #define LIST_ID 0xfffffffe
 
 extern unsigned char blendtable[256][256];
@@ -52,11 +55,20 @@ class C_RenderListClass : public C_RBASE {
     static char sig_str[];
     int *thisfb;
     int l_w, l_h;
-    int isroot;
 
     int num_renders,num_renders_alloc;
     T_RenderListType *renders;
-		int inblendval, outblendval;
+
+    int codehandle[4];
+
+    int AVS_EEL_CONTEXTNAME;
+    double *var_beat, *var_alphain, *var_alphaout, *var_enabled, *var_clear, *var_w, *var_h;
+
+    int fake_enabled;
+
+  public:
+		int isroot;
+    int inblendval, outblendval;
 		int bufferin, bufferout;
 		int ininvert, outinvert;
 
@@ -64,18 +76,12 @@ class C_RenderListClass : public C_RBASE {
     RString effect_exp[2];
 
 		int inited;
-    int codehandle[4];
     int need_recompile;
     CRITICAL_SECTION rcs;
 
-    int AVS_EEL_CONTEXTNAME;
-    double *var_beat, *var_alphain, *var_alphaout, *var_enabled, *var_clear, *var_w, *var_h;
     int isstart;
-
     int mode;
-
     int beat_render, beat_render_frames;
-    int fake_enabled;
 
 #ifdef LASER
     C_LineListBase *line_save;
@@ -128,7 +134,6 @@ class C_RenderListClass : public C_RBASE {
 		virtual ~C_RenderListClass();
 
 		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-		virtual HWND conf(HINSTANCE hInstance, HWND hwndParent);
 		virtual void load_config(unsigned char *data, int len);
 		virtual int  save_config(unsigned char *data);
 		virtual char *get_desc();
@@ -161,8 +166,6 @@ class C_RenderListClass : public C_RBASE {
 
     int enabled() { return ((mode&2)^2) || fake_enabled>0; }
     void set_enabled(int v) { if (!v) mode|=2; else mode&=~2; }
-    static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam);
-    static BOOL CALLBACK g_DlgProcRoot(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam);
 		int save_config_ex(unsigned char *data, int rootsave);
 		void load_config_code(unsigned char *data, int len);
 		int  save_config_code(unsigned char *data);    

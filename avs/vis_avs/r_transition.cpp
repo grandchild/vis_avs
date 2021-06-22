@@ -60,7 +60,6 @@ static const char *transitionmodes[] =
   "Dot Dissolve",
 };
 
-static C_RenderTransitionClass *g_this;
 C_RenderTransitionClass::C_RenderTransitionClass()
 {
   last_file[0]=0;
@@ -537,7 +536,7 @@ int C_RenderTransitionClass::render(char visdata[2][2][576], int isBeat, int *fr
   return 0;
 }
 
-BOOL CALLBACK C_RenderTransitionClass::g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+BOOL CALLBACK DlgProc_Transition(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg)
 	{
@@ -620,11 +619,3 @@ BOOL CALLBACK C_RenderTransitionClass::g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM
 	}
 	return 0;
 }
-
-
-HWND C_RenderTransitionClass::conf(HINSTANCE hInstance, HWND hwndParent)
-{
-	g_this = this;
-  return CreateDialog(hInstance,MAKEINTRESOURCE(IDD_GCFG_TRANSITIONS),hwndParent,g_DlgProc);
-}
-
