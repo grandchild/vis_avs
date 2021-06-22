@@ -531,7 +531,10 @@ void win32_uiprep_colormap(HINSTANCE hInstance) {
     mapview.cbClsExtra = 0;
     mapview.cbWndExtra = 0;
     mapview.hInstance = hInstance;
+    mapview.hIcon = NULL;
     mapview.hCursor = LoadCursor(0, MAKEINTRESOURCE(IDC_ARROW));
+    mapview.hbrBackground = NULL;
+    mapview.lpszMenuName = NULL;
     mapview.lpszClassName = "ColormapEdit";
     RegisterClassEx(&mapview);
 }
