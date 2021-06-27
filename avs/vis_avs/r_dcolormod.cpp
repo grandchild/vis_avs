@@ -194,32 +194,6 @@ C_RBASE *R_DColorMod(char *desc)
 	return (C_RBASE *) new C_THISCLASS();
 }
 
-typedef struct 
-{
-  char *name;
-  char *init;
-  char *point;
-  char *frame;
-  char *beat;
-  int recompute;
-} colormodPresetType;
-
-static colormodPresetType presets[]=
-{
-  // Name, Init, Level, Frame, Beat, Recalc
-  {"4x Red Brightness, 2x Green, 1x Blue","","red=4*red; green=2*green;","","",0},
-  {"Solarization","","red=(min(1,red*2)-red)*2;\r\ngreen=red; blue=red;","","",0},
-  {"Double Solarization","","red=(min(1,red*2)-red)*2;\r\nred=(min(1,red*2)-red)*2;\r\ngreen=red; blue=red;","","",0},
-  {"Inverse Solarization (Soft)","","red=abs(red - .5) * 1.5;\r\ngreen=red; blue=red;","","",0},
-  {"Big Brightness on Beat","scale=1.0","red=red*scale;\r\ngreen=red; blue=red;","scale=0.07 + (scale*0.93)","scale=16",1},
-  {"Big Brightness on Beat (Interpolative)","c = 200; f = 0;","red = red * t;\r\ngreen=red;blue=red;","f = f + 1;\r\nt = (1.025 - (f / c)) * 5;","c = f;f = 0;",1},
-  {"Pulsing Brightness (Beat Interpolative)","c = 200; f = 0;","red = red * st;\r\ngreen=red;blue=red;","f = f + 1;\r\nt = (f * 2 * $PI) / c;\r\nst = sin(t) + 1;","c = f;f = 0;",1},
-  {"Rolling Solarization (Beat Interpolative)","c = 200; f = 0;","red=(min(1,red*st)-red)*st;\r\nred=(min(1,red*2)-red)*2;\r\ngreen=red; blue=red;","f = f + 1;\r\nt = (f * 2 * $PI) / c;\r\nst = ( sin(t) * .75 ) + 2;","c = f;f = 0;",1},
-  {"Rolling Tone (Beat Interpolative)","c = 200; f = 0;","red = red * st;\r\ngreen = green * ct;\r\nblue = (blue * 4 * ti) - red - green;","f = f + 1;\r\nt = (f * 2 * $PI) / c;\r\nti = (f / c);\r\nst = sin(t) + 1.5;\r\nct = cos(t) + 1.5;","c = f;f = 0;",1},
-  {"Random Inverse Tone (Switch on Beat)","","dd = red * 1.5;\r\nred = pow(dd, dr);\r\ngreen = pow(dd, dg);\r\nblue = pow(dd, db);","","token = rand(99) % 3;\r\ndr = if (equal(token, 0), -1, 1);\r\ndg = if (equal(token, 1), -1, 1);\r\ndb = if (equal(token, 2), -1, 1);",1},
-};
-
-
 int win32_dlgproc_colormodifier(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
   C_THISCLASS* g_this = (C_THISCLASS*)g_current_render;
@@ -242,21 +216,7 @@ int win32_dlgproc_colormodifier(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lP
     case WM_COMMAND:
       if (LOWORD(wParam) == IDC_BUTTON1) 
       {
-        char *text="Color Modifier\0"
-          "The color modifier allows you to modify the intensity of each color\r\n"
-          "channel with respect to itself. For example, you could reverse the red\r\n"
-          "channel, double the green channel, or half the blue channel.\r\n"
-          "\r\n"
-          "The code in the 'level' section should adjust the variables\r\n"
-          "'red', 'green', and 'blue', whose value represent the channel\r\n"
-          "intensity (0..1).\r\n"
-          "Code in the 'frame' or 'level' sections can also use the variable\r\n"
-          "'beat' to detect if it is currently a beat.\r\n"
-          "\r\n"
-          "Try loading an example via the 'Load Example' button for examples."
-
-          ;
-        compilerfunctionlist(hwndDlg,text);
+        compilerfunctionlist(hwndDlg, g_this->help_text);
       }
 
       if (LOWORD(wParam)==IDC_CHECK1)
@@ -271,25 +231,25 @@ int win32_dlgproc_colormodifier(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lP
         MENUITEMINFO i={sizeof(i),};
         hMenu=CreatePopupMenu();
         int x;
-        for (x = 0; x < sizeof(presets)/sizeof(presets[0]); x ++)
+        for (x = 0; x < sizeof(g_this->presets)/sizeof(g_this->presets[0]); x ++)
         {
             i.fMask=MIIM_TYPE|MIIM_DATA|MIIM_ID;
             i.fType=MFT_STRING;
             i.wID = x+16;
-            i.dwTypeData=presets[x].name;
-            i.cch=strlen(presets[x].name);
+            i.dwTypeData=g_this->presets[x].name;
+            i.cch=strlen(g_this->presets[x].name);
             InsertMenuItem(hMenu,x,TRUE,&i);
         }
         GetWindowRect(GetDlgItem(hwndDlg,IDC_BUTTON4),&r);
         x=TrackPopupMenu(hMenu,TPM_LEFTALIGN|TPM_TOPALIGN|TPM_RETURNCMD|TPM_RIGHTBUTTON|TPM_LEFTBUTTON|TPM_NONOTIFY,r.right,r.top,0,hwndDlg,NULL);
-        if (x >= 16 && x < 16+sizeof(presets)/sizeof(presets[0]))
+        if (x >= 16 && x < 16+sizeof(g_this->presets)/sizeof(g_this->presets[0]))
         {
           isstart=1;
-          SetDlgItemText(hwndDlg,IDC_EDIT1,presets[x-16].point);
-          SetDlgItemText(hwndDlg,IDC_EDIT2,presets[x-16].frame);
-          SetDlgItemText(hwndDlg,IDC_EDIT3,presets[x-16].beat);
-          SetDlgItemText(hwndDlg,IDC_EDIT4,presets[x-16].init);
-          g_this->m_recompute=presets[x-16].recompute;
+          SetDlgItemText(hwndDlg,IDC_EDIT1,g_this->presets[x-16].point);
+          SetDlgItemText(hwndDlg,IDC_EDIT2,g_this->presets[x-16].frame);
+          SetDlgItemText(hwndDlg,IDC_EDIT3,g_this->presets[x-16].beat);
+          SetDlgItemText(hwndDlg,IDC_EDIT4,g_this->presets[x-16].init);
+          g_this->m_recompute=g_this->presets[x-16].recompute;
           CheckDlgButton(hwndDlg,IDC_CHECK1,g_this->m_recompute?BST_CHECKED:0);
           isstart=0;
 

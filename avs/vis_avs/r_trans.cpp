@@ -869,13 +869,7 @@ int win32_dlgproc_movement(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
       }
       if (LOWORD(wParam) == IDC_BUTTON2)
       {
-        char *text="Movement\0"
-          "Movement help goes here (send me some :)\r\n"
-"To use the custom table, modify r,d,x or y.\r\n"
-"Rect coords: x,y are in (-1..1) . Otherwise: d is (0..1) and r is (0..2PI).\r\n"
-"You can also access 'sw' and 'sh' for screen dimensions in pixels (might be useful)\r\n"
-          ;
-        compilerfunctionlist(hwndDlg,text);
+        compilerfunctionlist(hwndDlg, g_this->help_text);
       }
       return 0;
     return 0;

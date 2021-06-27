@@ -40,20 +40,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 int g_line_blend_mode;
 
-static char *line_blendmodes[]= 
-{
-  "Replace",
-  "Additive",
-  "Maximum Blend",
-  "50/50 Blend",
-  "Subtractive Blend 1",
-  "Subtractive Blend 2",
-  "Multiply Blend",
-	"Adjustable Blend",
-  "XOR",
-  "Minimum Blend",
-};
-
 #define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255
 #define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))
 void C_THISCLASS::load_config(unsigned char *data, int len)
@@ -104,9 +90,9 @@ int win32_dlgproc_setrendermode(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lP
 		case WM_INITDIALOG:
       {
         int x;
-        for (x = 0; x<sizeof(line_blendmodes)/sizeof(line_blendmodes[0]); x ++)
+        for (x = 0; x<sizeof(g_this->line_blendmodes)/sizeof(g_this->line_blendmodes[0]); x ++)
         {
-          SendDlgItemMessage(hwndDlg,IDC_COMBO1,CB_ADDSTRING,0,(LPARAM)line_blendmodes[x]);
+          SendDlgItemMessage(hwndDlg,IDC_COMBO1,CB_ADDSTRING,0,(LPARAM)g_this->line_blendmodes[x]);
         }
       }
       if (g_this->newmode&0x80000000)

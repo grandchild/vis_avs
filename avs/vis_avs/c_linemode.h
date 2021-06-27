@@ -17,4 +17,17 @@ class C_THISCLASS : public C_RBASE {
 		virtual int  save_config(unsigned char *data);
 
     int newmode;
+
+	char* line_blendmodes[10] = {
+		"Replace",
+		"Additive",
+		"Maximum Blend",
+		"50/50 Blend",
+		"Subtractive Blend 1",
+		"Subtractive Blend 2",
+		"Multiply Blend",
+		"Adjustable Blend",
+		"XOR",
+		"Minimum Blend",
+	};
 };

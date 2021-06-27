@@ -174,6 +174,23 @@ class C_RenderListClass : public C_RBASE {
 		void load_config_code(unsigned char *data, int len);
 		int  save_config_code(unsigned char *data);    
 		void FillBufferCombo(HWND dlg, int ctl);
+
+    char* blendmodes[14] = {
+      "Ignore",
+      "Replace",
+      "50/50",
+      "Maximum",
+      "Additive",
+      "Subtractive 1",
+      "Subtractive 2",
+      "Every other line",
+      "Every other pixel",
+      "XOR",
+      "Adjustable",
+      "Multiply",
+      "Buffer",
+      "Minimum",
+    };
 };
 
 #endif // _R_LIST_H_

@@ -47,6 +47,12 @@ class C_THISCLASS : public C_RBASE2 {
     int wrap;
     CRITICAL_SECTION rcs;
 
+    char* help_text = "Movement\0"
+        "Movement help goes here (send me some :)\r\n"
+        "To use the custom table, modify r,d,x or y.\r\n"
+        "Rect coords: x,y are in (-1..1) . Otherwise: d is (0..1) and r is (0..2PI).\r\n"
+        "You can also access 'sw' and 'sh' for screen dimensions in pixels (might be useful)\r\n";
+
     Description descriptions[24] = {
         {/* 0,*/ "none", "", 0, 0},
         {/* 1,*/ "slight fuzzify", "", 0, 0},

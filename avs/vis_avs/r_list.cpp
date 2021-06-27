@@ -1001,25 +1001,6 @@ for (i=0;i<NBUF;i++)
 }
 
 
-static const char *blendmodes[] = 
-{
-  "Ignore",
-  "Replace",
-  "50/50",
-  "Maximum",
-  "Additive",
-  "Subtractive 1",
-  "Subtractive 2",
-  "Every other line",
-  "Every other pixel",
-  "XOR",
-	"Adjustable",
-  "Multiply",
-	"Buffer",
-  "Minimum",
-};
-
-
 int win32_dlgproc_root_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
   C_RenderListClass* g_this = (C_RenderListClass*)g_current_render;
@@ -1071,10 +1052,10 @@ int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
 #ifndef LASER
         {
           int x;
-          for (x = 0; x < sizeof(blendmodes)/sizeof(blendmodes[0]); x ++)
+          for (x = 0; x < sizeof(g_this->blendmodes)/sizeof(g_this->blendmodes[0]); x ++)
           {
-            SendDlgItemMessage(hwndDlg,IDC_COMBO1,CB_ADDSTRING,0,(LPARAM)blendmodes[x]);
-            SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_ADDSTRING,0,(LPARAM)blendmodes[x]);
+            SendDlgItemMessage(hwndDlg,IDC_COMBO1,CB_ADDSTRING,0,(LPARAM)g_this->blendmodes[x]);
+            SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_ADDSTRING,0,(LPARAM)g_this->blendmodes[x]);
           }
           SendDlgItemMessage(hwndDlg,IDC_COMBO1,CB_SETCURSEL,(WPARAM)g_this->blendout(),0);
           SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_SETCURSEL,(WPARAM)g_this->blendin(),0);
