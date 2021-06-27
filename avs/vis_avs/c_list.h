@@ -29,9 +29,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 
-#ifndef _R_LIST_H_
-#define _R_LIST_H_
-
 #include "r_defs.h"
 #include "c__base.h"
 #include <windows.h>
@@ -192,5 +189,3 @@ class C_RenderListClass : public C_RBASE {
       "Minimum",
     };
 };
-
-#endif // _R_LIST_H_
