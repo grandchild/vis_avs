@@ -152,7 +152,7 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 g_ConfigThis->config.mask = IsDlgButtonChecked(hwndDlg, IDC_TEXERII_OMASK) == BST_CHECKED;
 
                 if (LOWORD(wParam) == IDC_TEXERII_ABOUT) {
-                    g_extinfo->doscripthelp(hwndDlg, g_ConfigThis->help_text);
+                    compilerfunctionlist(hwndDlg, g_ConfigThis->help_text);
                 } else if (LOWORD(wParam) == IDC_TEXERII_EXAMPLE) {
                     HWND examplesButton = GetDlgItem(hwndDlg, IDC_TEXERII_EXAMPLE);
                     g_ConfigThis->LoadExamples(hwndDlg, examplesButton, false);
