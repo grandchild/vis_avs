@@ -239,7 +239,7 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
     return 0;
 }
 
-static LRESULT CALLBACK set_color_position_handler(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam) {
+static int win32_dlgproc_colormap_color_position(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam) {
     int v;
     #define VALUE_BUF_LEN 64
     char value_buf[VALUE_BUF_LEN];
@@ -271,7 +271,7 @@ static LRESULT CALLBACK set_color_position_handler(HWND hwndDlg, UINT uMsg, WPAR
     return 0;
 }
 
-static LRESULT CALLBACK colormap_edit_handler(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+static int win32_dlgproc_colormap_edit(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     C_ColorMap* g_ColormapThis = (C_ColorMap*)g_current_render;
     if (g_ColormapThis == NULL) {
         return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
@@ -510,7 +510,7 @@ static LRESULT CALLBACK colormap_edit_handler(HWND hwndDlg, UINT uMsg, WPARAM wP
                         break;
                     case IDM_COLORMAP_MENU_SETPOS:
                         g_ColorSetValue = g_ColormapThis->maps[current_map].colors[selected_color_index].position;
-                        DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_CFG_COLORMAP_COLOR_POSITION), hwndDlg, (DLGPROC)set_color_position_handler, NULL);
+                        DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_CFG_COLORMAP_COLOR_POSITION), hwndDlg, (DLGPROC)win32_dlgproc_colormap_color_position, NULL);
                         g_ColormapThis->maps[current_map].colors[selected_color_index].position = g_ColorSetValue;
                         break;
                 }
@@ -529,7 +529,7 @@ void win32_uiprep_colormap(HINSTANCE hInstance) {
         return;
     }
     mapview.style = CS_PARENTDC | CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
-    mapview.lpfnWndProc = (WNDPROC)colormap_edit_handler;
+    mapview.lpfnWndProc = (WNDPROC)win32_dlgproc_colormap_edit;
     mapview.cbClsExtra = 0;
     mapview.cbWndExtra = 0;
     mapview.hInstance = hInstance;
