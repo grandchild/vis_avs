@@ -11,9 +11,6 @@
 
 #define MAX_DRAW_SIZE 16384
 
-char lastszFile[MAX_FILENAME_SIZE];						// stores the name of the last opened file in any instance of the ape
-unsigned int instances = 0;								// stores the number of instances currently open
-
 // configuration screen
 int win32_dlgproc_convolution(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
@@ -98,12 +95,7 @@ int win32_dlgproc_convolution(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPar
 				file_box.nMaxFile = sizeof(g_Filter->szFile);
 				file_box.lpstrFileTitle = NULL;
 				file_box.nMaxFileTitle = 0;
-				if (lastszFile[0] != '\0')
-				{
-					for (int i=0; i<MAX_FILENAME_SIZE;i++) g_Filter->szFile[i] = lastszFile[i];
-					file_box.lpstrInitialDir = NULL;
-				}
-				else file_box.lpstrInitialDir = "C:\\Program Files\\Winamp3\\Wacs\\data\\avs";
+				file_box.lpstrInitialDir = NULL;
 				file_box.lpstrFile = g_Filter->szFile;
 				file_box.lpstrTitle = NULL;
 				file_box.lpfnHook = NULL;
@@ -130,7 +122,6 @@ int win32_dlgproc_convolution(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPar
 							data = new unsigned char[MAX_FILENAME_SIZE];
 							DWORD numbytesread;
 							file_box.lpstrInitialDir = NULL;
-							for (int i=0;i<MAX_FILENAME_SIZE;i++) lastszFile[i] = g_Filter->szFile[i];
 							if (ReadFile(filehandle, data, MAX_FILENAME_SIZE, &numbytesread, NULL)==0 && GetLastError()!=ERROR_HANDLE_EOF)
 							{
 								// display the error
@@ -188,7 +179,6 @@ int win32_dlgproc_convolution(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPar
 							int numbytestowrite = g_Filter->save_config(data);
 							DWORD numbyteswritten;
 							file_box.lpstrInitialDir = NULL;
-							for (int i=0;i<MAX_FILENAME_SIZE;i++) lastszFile[i] = g_Filter->szFile[i];
 							if (WriteFile(filehandle, data, numbytestowrite, &numbyteswritten, NULL)==0)
 							{
 								// display the error
@@ -283,8 +273,6 @@ int win32_dlgproc_convolution(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPar
 C_CONVOLUTION::C_CONVOLUTION() 
 {	
 	szFile[0] = '\0';
-	if (instances==0) lastszFile[0] = '\0';
-	instances++;
 	// set box array values
 	for (int i=0;i<50;i++) farray[i]=0;
 	farray[50] = 1;
@@ -303,7 +291,6 @@ C_CONVOLUTION::C_CONVOLUTION()
 // virtual destructor
 C_CONVOLUTION::~C_CONVOLUTION() 
 {
-	instances--;
 	while (drawstate!=0) if (drawstate == 2) deletedraw();
 }
 
@@ -396,10 +383,8 @@ void C_CONVOLUTION::load_config(unsigned char *data, int len) // read configurat
 		for (;len-pos > 0;pos++,i++)
 		{
 			szFile[i]=data[pos];
-			lastszFile[i]=data[pos];
 		}
 		szFile[i] = '\0';		// add the terminating null byte 
-		lastszFile[i] = '\0';	// add the terminating null byte 
 	}
 	updatedraw = true;
 }
