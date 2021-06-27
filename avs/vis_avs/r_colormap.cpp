@@ -13,10 +13,12 @@ intrinsics. The code could further be sped up by leveraging the "gather" instruc
 available with Intel's AVX2 extension (ca. 2014 and later CPU models) to load colors by
 index from the baked map.
 */
-#include "r_colormap.h"
+#include "c_colormap.h"
 #include <cstdio>
 #include <commctrl.h>
 #include <time.h>
+#include "r_defs.h"
+#include "resource.h"
 
 
 #define RGB_TO_BGR(color) (((color) & 0xff0000) >> 16 | ((color) & 0xff00) | ((color) & 0xff) << 16)

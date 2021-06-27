@@ -1,32 +1,14 @@
 /* Reconstructed from scratch. Original APE by Goebish (https://github.com/goebish) */
+#include "c_addborders.h"
 #include <windows.h>
 #include <commctrl.h>
 #include "r_defs.h"
 #include "resource.h"
 
 
-#define MOD_NAME "Render / Add Borders"
-#define UNIQUEIDSTRING "Virtual Effect: Addborders"
-
-#define ADDBORDERS_WIDTH_MIN 1
-#define ADDBORDERS_WIDTH_MAX 50
-
 #define RGB_TO_BGR(color) (((color) & 0xff0000) >> 16 | ((color) & 0xff00) | ((color) & 0xff) << 16)
 #define BGR_TO_RGB(color) RGB_TO_BGR(color)  // is its own inverse
 
-
-class C_AddBorders : public C_RBASE {
-    public:
-        C_AddBorders();
-        virtual ~C_AddBorders();
-        virtual int render(char visdata[2][2][576], int is_beat, int *framebuffer, int *fbout, int w, int);
-        virtual char *get_desc();
-        virtual void load_config(unsigned char *data, int len);
-        virtual int  save_config(unsigned char *data);
-        bool enabled;
-        int color;
-        int width;
-};
 
 static COLORREF g_cust_colors[16];
 

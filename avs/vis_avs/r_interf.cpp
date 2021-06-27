@@ -27,6 +27,7 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+#include "c_interf.h"
 #include <windows.h>
 #include <stdlib.h>
 #include <commctrl.h>
@@ -34,45 +35,9 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "resource.h"
 #include "r_defs.h"
 
+
 #ifndef LASER
 
-#define MOD_NAME "Trans / Interferences"
-#define C_THISCLASS C_InterferencesClass
-
-class C_THISCLASS : public C_RBASE {
-	protected:
-	public:
-		C_THISCLASS();
-		virtual ~C_THISCLASS();
-		float GET_FLOAT(unsigned char *data, int pos);
-		void PUT_FLOAT(float f, unsigned char *data, int pos);
-		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-		virtual char *get_desc() { return MOD_NAME; }
-		virtual void load_config(unsigned char *data, int len);
-		virtual int  save_config(unsigned char *data);
-    int enabled;
-		int nPoints;
-		int distance;
-		int alpha;
-		int rotation;
-		int rotationinc;
-		int distance2;
-		int alpha2;
-		int rotationinc2;
-		int rgb;
-		int blend;
-		int blendavg;
-		float speed;
-		int onbeat;
-		float a;
-		int _distance;
-		int _alpha;
-		int _rotationinc;
-		int _rgb;
-		float status;
-	};
-
-#define PI 3.14159
 C_THISCLASS::~C_THISCLASS() 
 {
 }
@@ -96,7 +61,7 @@ rotationinc2=25;
 alpha2=192;
 status=2;
 speed = (float)0.2;
-a=(float)rotation/255*(float)PI*2;
+a=(float)rotation/255*(float)M_PI*2;
 }
 
 void C_THISCLASS::PUT_FLOAT(float f, unsigned char *data, int pos)
@@ -130,8 +95,8 @@ void C_THISCLASS::load_config(unsigned char *data, int len) // read configuratio
 	if (len-pos >= 4) { rgb=GET_INT(); pos+=4; }
 	if (len-pos >= 4) { onbeat=GET_INT(); pos+=4; }
 	if (len-pos >= 4) { speed=GET_FLOAT(data, pos); pos+=4; }
-	a=(float)rotation/255*(float)PI*2;
-	status=(float)PI;
+	a=(float)rotation/255*(float)M_PI*2;
+	status=(float)M_PI;
 }
 
 #define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255
@@ -178,10 +143,10 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
   if (!enabled) return 0;
 	if (pnts == 0) return 0;
 
-	float angle=(float)(2*PI)/pnts;
+	float angle=(float)(2*M_PI)/pnts;
 	
 	if (onbeat && isBeat)
-		if (status >= PI)
+		if (status >= M_PI)
 			status=0;
 
 	s = (float)sin(status);
@@ -189,7 +154,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 	_alpha = alpha + (int)((float)(alpha2-alpha) * s);
 	_distance = distance + (int)((float)(distance2-distance) * s);
 
-	a=(float)rotation/255*(float)PI*2;
+	a=(float)rotation/255*(float)M_PI*2;
 
   int xpoints[MAX_POINTS],ypoints[MAX_POINTS];
 
@@ -380,8 +345,8 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 	rotation=rotation<-255 ? rotation+255 : rotation;
 
 	status += speed;
-	status=min(status, (float)PI);
-	if (status<-PI) status = (float) PI;
+	status=min(status, (float)M_PI);
+	if (status<-M_PI) status = (float) M_PI;
 
 	int *p = framebuffer;
 	int *d = fbout;

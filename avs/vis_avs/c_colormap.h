@@ -3,12 +3,10 @@
 
 #include <windows.h>
 #include <immintrin.h>
-#include "r_defs.h"
-#include "resource.h"
+#include "c__base.h"
 
 
 #define MOD_NAME "Trans / Color Map"
-#define UNIQUEIDSTRING "Color Map"
 
 #define NUM_COLOR_VALUES 256  // 2 ^ BITS_PER_CHANNEL (i.e. 8)
 #define COLORMAP_NUM_MAPS 8

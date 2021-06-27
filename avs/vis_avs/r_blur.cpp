@@ -29,6 +29,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 // alphachannel safe 11/21/99
 
+#include "c_blur.h"
 #include <windows.h>
 #include <commctrl.h>
 #include "r_defs.h"
@@ -38,31 +39,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #ifndef LASER
-
-#define C_THISCLASS C_BlurClass
-#define MOD_NAME "Trans / Blur"
-
-static const int zero=0;
-
-class C_THISCLASS : public C_RBASE2 {
-	protected:
-	public:
-		C_THISCLASS();
-		virtual ~C_THISCLASS();
-		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-		virtual char *get_desc() { return MOD_NAME; }
-		virtual void load_config(unsigned char *data, int len);
-		virtual int  save_config(unsigned char *data);
-
-    virtual int smp_getflags() { return 1; }
-		virtual int smp_begin(int max_threads, char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h); 
-    virtual void smp_render(int this_thread, int max_threads, char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h); 
-    virtual int smp_finish(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h); // return value is that of render() for fbstuff etc
-
-    int enabled;
-
-    int roundmode;
-};
 
 #define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255
 #define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))

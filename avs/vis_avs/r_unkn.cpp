@@ -27,14 +27,12 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+#include "c_unkn.h"
 #include <windows.h>
 #include <commctrl.h>
 #include "r_defs.h"
 #include "resource.h"
 
-#define MOD_NAME "Unknown Render Object"
-
-#include "r_unkn.h"
 
 char *C_UnknClass::get_desc() { return MOD_NAME; }
 void C_UnknClass::SetID(int d, char *dString) { id=d; memset(idString,0,sizeof(idString)); strcpy(idString,dString); }
@@ -86,10 +84,9 @@ int C_UnknClass::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
   return 0;
 }
 
-static C_UnknClass *g_this;
-
-BOOL CALLBACK C_UnknClass::g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_unknown(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
+  C_UnknClass* g_this = (C_UnknClass*)g_current_render;
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:

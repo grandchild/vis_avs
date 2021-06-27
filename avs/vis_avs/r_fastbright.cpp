@@ -27,6 +27,7 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+#include "c_fastbright.h"
 #include <windows.h>
 #include <commctrl.h>
 #include "r_defs.h"
@@ -34,27 +35,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "timing.h"
 
+
 #ifndef LASER
-
-#define C_THISCLASS C_FastBright
-#define MOD_NAME "Trans / Fast Brightness"
-
-class C_THISCLASS : public C_RBASE {
-	protected:
-	public:
-		C_THISCLASS();
-		virtual ~C_THISCLASS();
-		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-		virtual char *get_desc() { return MOD_NAME; }
-		virtual void load_config(unsigned char *data, int len);
-		virtual int  save_config(unsigned char *data);
-#ifdef NO_MMX 
-    int tab[3][256];
-#endif
-    
-    int dir;
-};
-
 
 #define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))
 void C_THISCLASS::load_config(unsigned char *data, int len) // read configuration of max length "len" from data.

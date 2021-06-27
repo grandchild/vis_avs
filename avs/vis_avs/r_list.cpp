@@ -32,12 +32,13 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <commctrl.h>
 #include "resource.h"
 #include "r_defs.h"
-#include "r_unkn.h"
-#include "r_list.h"
+#include "c_unkn.h"
+#include "c_list.h"
 #include "render.h"
 #include "undo.h"
 
 #include "avs_eelif.h"
+
 
 #define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255
 #define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))
@@ -391,7 +392,7 @@ int C_RenderListClass::render(char visdata[2][2][576], int isBeat, int *framebuf
       for (x = 0; x < 2; x ++) 
       {
         freeCode(codehandle[x]);
-        codehandle[x]=compileCode(effect_exp[x].get());
+        codehandle[x]=compileCode((char*)effect_exp[x].c_str());
       }
 
       LeaveCriticalSection(&rcs);
@@ -1097,8 +1098,8 @@ int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
         if (g_this->clearfb()) CheckDlgButton(hwndDlg,IDC_CHECK1,BST_CHECKED);
 #endif
         g_this->isstart=1;
-        SetDlgItemText(hwndDlg,IDC_EDIT4,g_this->effect_exp[0].get());
-        SetDlgItemText(hwndDlg,IDC_EDIT5,g_this->effect_exp[1].get());
+        SetDlgItemText(hwndDlg,IDC_EDIT4,(char*)g_this->effect_exp[0].c_str());
+        SetDlgItemText(hwndDlg,IDC_EDIT5,(char*)g_this->effect_exp[1].c_str());
         g_this->isstart=0;
 
 
@@ -1120,8 +1121,8 @@ int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
           if (!g_this->isstart && HIWORD(wParam) == EN_CHANGE)
           {
             EnterCriticalSection(&g_this->rcs);
-            g_this->effect_exp[0].get_from_dlgitem(hwndDlg,IDC_EDIT4);
-            g_this->effect_exp[1].get_from_dlgitem(hwndDlg,IDC_EDIT5);
+            g_this->effect_exp[0] = string_from_dlgitem(hwndDlg,IDC_EDIT4);
+            g_this->effect_exp[1] = string_from_dlgitem(hwndDlg,IDC_EDIT5);
             g_this->need_recompile=1;
 				    if (LOWORD(wParam) == IDC_EDIT4) g_this->inited = 0;
             LeaveCriticalSection(&g_this->rcs);

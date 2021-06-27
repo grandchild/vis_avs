@@ -27,11 +27,15 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+#pragma once
+
 #ifndef _R_LIST_H_
 #define _R_LIST_H_
 
 #include "r_defs.h"
 #include "c__base.h"
+#include <windows.h>
+#include <string>
 
 #define LIST_ID 0xfffffffe
 
@@ -73,7 +77,7 @@ class C_RenderListClass : public C_RBASE {
 		int ininvert, outinvert;
 
     int use_code;
-    RString effect_exp[2];
+    std::string effect_exp[2];
 
 		int inited;
     int need_recompile;

@@ -27,48 +27,14 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+#include "c_multiplier.h"
 #include <windows.h>
 #include <commctrl.h>
 #include "resource.h"
 #include "r_defs.h"
 
+
 #ifndef LASER
-
-
-#define MD_XI    0
-#define MD_X8    1
-#define MD_X4    2
-#define MD_X2    3
-#define MD_X05   4
-#define MD_X025  5
-#define MD_X0125 6
-#define MD_XS    7
-
-// this will be the directory and APE name displayed in the AVS Editor
-#define MOD_NAME "Trans / Multiplier"
-#define C_THISCLASS C_MultiplierClass
-
-typedef struct {
-	int	ml;
-} apeconfig;
-
-class C_THISCLASS : public C_RBASE 
-{
-	protected:
-	public:
-		C_THISCLASS();
-		virtual ~C_THISCLASS();
-		virtual int render(char visdata[2][2][576], int isBeat,	int *framebuffer, int *fbout, int w, int h);		
-		virtual char *get_desc();
-		virtual void load_config(unsigned char *data, int len);
-		virtual int  save_config(unsigned char *data);
-
-		apeconfig config;
-
-		HWND hwndDlg;
-};
-
-static HINSTANCE g_hDllInstance; 
 
 // this is where we deal with the configuration screen
 int win32_dlgproc_multiplier(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -110,8 +76,6 @@ int win32_dlgproc_multiplier(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 			return 0;
 
 		case WM_INITDIALOG:
-			g_ConfigThis->hwndDlg = hwndDlg;
-
 			switch (g_ConfigThis->config.ml) {
 			case MD_XI:
 				id = IDC_XI;

@@ -27,6 +27,7 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+#include "c_bump.h"
 #include <windows.h>
 #include <stdlib.h>
 #include <vfw.h>
@@ -34,55 +35,10 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include "resource.h"
 #include "r_defs.h"
-#include "r_stack.h"
 #include "avs_eelif.h"
 
+
 #ifndef LASER
-
-#define MOD_NAME "Trans / Bump"
-#define C_THISCLASS C_BumpClass
-
-class C_THISCLASS : public C_RBASE {
-	protected:
-	public:
-		C_THISCLASS();
-		float GET_FLOAT(unsigned char *data, int pos);
-		void PUT_FLOAT(float f, unsigned char *data, int pos);
-		void InitializeStars(int Start);
-		void CreateStar(int A);
-		virtual ~C_THISCLASS();
-		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-		virtual char *get_desc() { return MOD_NAME; }
-		virtual void load_config(unsigned char *data, int len);
-		virtual int  save_config(unsigned char *data);
-		int __inline depthof(int c, int i);
-    int enabled;
-	int depth;
-	int depth2;
-	int onbeat;
-	int durFrames;
-	int thisDepth;
-	int blend;
-	int blendavg;
-	int nF;
-	int codeHandle;
-	int codeHandleBeat;
-	int codeHandleInit;
-	double *var_x;
-	double *var_y;
-	double *var_isBeat;
-	double *var_isLongBeat;
-	double *var_bi;
-	RString code1,code2,code3;
-	int need_recompile;
-	int showlight;
-  int initted;
-	int invert;
-  int AVS_EEL_CONTEXTNAME;
-	int oldstyle;
-	int buffern;
-    CRITICAL_SECTION rcs;
-	};
 
 C_THISCLASS::~C_THISCLASS() 
 {
@@ -232,9 +188,9 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
     freeCode(codeHandle);
     freeCode(codeHandleBeat);
     freeCode(codeHandleInit);
-    codeHandle = compileCode(code1.get());
-    codeHandleBeat = compileCode(code2.get());
-    codeHandleInit = compileCode(code3.get());
+    codeHandle = compileCode((char*)code1.c_str());
+    codeHandleBeat = compileCode((char*)code2.c_str());
+    codeHandleInit = compileCode((char*)code3.c_str());
 
     LeaveCriticalSection(&rcs);
   }
@@ -413,9 +369,9 @@ int win32_dlgproc_bump(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 switch (uMsg)
 	{
 	case WM_INITDIALOG:
-		SetDlgItemText(hwndDlg, IDC_CODE1, g_ConfigThis->code1.get());
-		SetDlgItemText(hwndDlg, IDC_CODE2, g_ConfigThis->code2.get());
-		SetDlgItemText(hwndDlg, IDC_CODE3, g_ConfigThis->code3.get());
+		SetDlgItemText(hwndDlg, IDC_CODE1, (char*)g_ConfigThis->code1.c_str());
+		SetDlgItemText(hwndDlg, IDC_CODE2, (char*)g_ConfigThis->code2.c_str());
+		SetDlgItemText(hwndDlg, IDC_CODE3, (char*)g_ConfigThis->code3.c_str());
 		SendDlgItemMessage(hwndDlg, IDC_DEPTH, TBM_SETTICFREQ, 10, 0);
 		SendDlgItemMessage(hwndDlg, IDC_DEPTH, TBM_SETRANGE, TRUE, MAKELONG(1, 100));
 		SendDlgItemMessage(hwndDlg, IDC_DEPTH, TBM_SETPOS, TRUE, g_ConfigThis->depth);
@@ -503,21 +459,21 @@ switch (uMsg)
 	  if (LOWORD(wParam) == IDC_CODE1 && HIWORD(wParam) == EN_CHANGE)
 			{
         EnterCriticalSection(&g_ConfigThis->rcs);
-        g_ConfigThis->code1.get_from_dlgitem(hwndDlg,IDC_CODE1);
+        g_ConfigThis->code1 = string_from_dlgitem(hwndDlg, IDC_CODE1);
 				g_ConfigThis->need_recompile=1;
         LeaveCriticalSection(&g_ConfigThis->rcs);
 			}
 	  if (LOWORD(wParam) == IDC_CODE2 && HIWORD(wParam) == EN_CHANGE)
 			{
         EnterCriticalSection(&g_ConfigThis->rcs);
-        g_ConfigThis->code2.get_from_dlgitem(hwndDlg,IDC_CODE2);
+        g_ConfigThis->code2 = string_from_dlgitem(hwndDlg, IDC_CODE2);
 				g_ConfigThis->need_recompile=1;
         LeaveCriticalSection(&g_ConfigThis->rcs);
 			}
 	  if (LOWORD(wParam) == IDC_CODE3 && HIWORD(wParam) == EN_CHANGE)
 			{
         EnterCriticalSection(&g_ConfigThis->rcs);
-        g_ConfigThis->code3.get_from_dlgitem(hwndDlg,IDC_CODE3);
+        g_ConfigThis->code3 = string_from_dlgitem(hwndDlg, IDC_CODE3);
 				g_ConfigThis->need_recompile=1;
         g_ConfigThis->initted=0;
         LeaveCriticalSection(&g_ConfigThis->rcs);

@@ -1,75 +1,8 @@
-#define OUT_REPLACE       0
-#define OUT_ADDITIVE      1
-#define OUT_MAXIMUM       2
-#define OUT_5050          3
-#define OUT_SUB1          4
-#define OUT_SUB2          5
-#define OUT_MULTIPLY      6
-#define OUT_ADJUSTABLE    7
-#define OUT_XOR           8
-#define OUT_MINIMUM       9
+#pragma once
 
-#define ID_TEXER2_EXAMPLE_COLOROSC 31337
-#define ID_TEXER2_EXAMPLE_FLUMMYSPEC 31338
-#define ID_TEXER2_EXAMPLE_BEATCIRCLE 31339
-#define ID_TEXER2_EXAMPLE_3DRINGS 31340
+#include "c_texer2.h"
 
-// this will be the directory and APE name displayed in the AVS Editor
-#define MOD_NAME "Render / Texer II"
 
-// this is how WVS will recognize this APE internally
-#define UNIQUEIDSTRING "Acko.net: Texer II"
-
-#define TEXER_II_VERSION_V2_81D 0
-#define TEXER_II_VERSION_V2_81D_UPGRADE_HELP \
-    "Saved version wraps x/y only once. Upgrade to wrap around forever."
-#define TEXER_II_VERSION_CURRENT 1
-
-struct texer2_apeconfig {
-    int version;  /* formerly "mode", which was unused. */
-    char img[MAX_PATH];
-    int resize;
-    int wrap;
-    int mask;
-    int d;
-};
-
-struct Code {
-    char *init;
-    char *frame;
-    char *beat;
-    char *point;
-    Code() { init = new char[1]; frame = new char[1]; beat = new char[1]; point = new char[1]; init[0] = frame[0] = beat[0] = point[0] = 0; }
-    ~Code() { delete[] init; delete[] frame; delete[] beat; delete[] point; }
-
-    void SetInit(char *str) { delete init; init = str; }
-    void SetFrame(char *str) { delete frame; frame = str; }
-    void SetBeat(char *str) { delete beat; beat = str; }
-    void SetPoint(char *str) { delete point; point = str; }
-};
-
-struct Vars {
-    double *n;
-    double *i;
-    double *x;
-    double *y;
-    double *w;
-    double *h;
-    double *iw;
-    double *ih;
-    double *v;
-    double *sizex;
-    double *sizey;
-    double *red;
-    double *green;
-    double *blue;
-    double *skip;
-};
-
-//extended APE stuff
-
-typedef void *VM_CONTEXT;
-typedef void *VM_CODEHANDLE;
 typedef struct
 {
     int ver; // ver=1 to start

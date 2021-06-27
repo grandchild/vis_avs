@@ -27,37 +27,15 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+#include "c_svp.h"
 #include <windows.h>
 #include <commctrl.h>
 #include "r_defs.h"
 #include "resource.h"
 extern HINSTANCE g_hInstance;
 
-#include "svp_vis.h"
 
 #ifndef LASER
-
-#define C_THISCLASS C_SVPClass
-#define MOD_NAME "Render / SVP Loader"
-
-class C_THISCLASS : public C_RBASE {
-	protected:
-	public:
-		C_THISCLASS();
-		virtual ~C_THISCLASS();
-		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-		virtual char *get_desc() { return MOD_NAME; }
-		virtual void load_config(unsigned char *data, int len);
-		virtual int  save_config(unsigned char *data);
-
-
-    char m_library[MAX_PATH];
-    void SetLibrary();
-    HMODULE hLibrary;
-    CRITICAL_SECTION cs;
-    VisInfo *vi;
-    VisData vd;
-};
 
 #define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255
 #define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))

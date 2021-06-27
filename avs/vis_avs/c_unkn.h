@@ -27,3 +27,26 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+#pragma once
+
+#include "c__base.h"
+
+#define MOD_NAME "Unknown Render Object"
+#define UNKN_ID 0xffffffff
+
+
+class C_UnknClass : public C_RBASE {
+	public:
+		C_UnknClass();
+		virtual ~C_UnknClass();
+		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
+		virtual void load_config(unsigned char *data, int len);
+		virtual int  save_config(unsigned char *data);
+		virtual char *get_desc();
+
+    virtual void SetID(int d, char *dString);
+    int id;
+    char idString[33];
+    char *configdata;
+    int configdata_len;
+};

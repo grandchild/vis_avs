@@ -28,7 +28,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 #include "r_defs.h"
-#include "r_list.h"
+#include "c_list.h"
 #include "r_transition.h"
 #include "rlib.h"
 

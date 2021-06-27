@@ -30,6 +30,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // alphachannel safe 11/21/99
 // highly optimized on 10/10/00 JF. MMX.
 
+#include "c_blit.h"
 #include <windows.h>
 #include <commctrl.h>
 #include "r_defs.h"
@@ -38,36 +39,11 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // TODO: doesn't complain if not included. -> research.
 #include "timing.h"
 
+
 #ifndef LASER
-
-
-#define C_THISCLASS C_BlitClass
-#define MOD_NAME "Trans / Blitter Feedback"
 
 static const unsigned int revn[2]={0xff00ff,0xff00ff};//{0x1000100,0x1000100}; <<- this is actually more correct, but we're going for consistency vs. the non-mmx ver-jf
 static const int zero=0;
-
-
-
-class C_THISCLASS : public C_RBASE {
-	protected:
-	public:
-		C_THISCLASS();
-		virtual ~C_THISCLASS();
-		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-		virtual char *get_desc() { return MOD_NAME; }
-		virtual void load_config(unsigned char *data, int len);
-		virtual int  save_config(unsigned char *data);
-
-		int scale, scale2, blend,beatch;
-		int fpos;
-    int subpixel;
-
-
-  int blitter_normal(int *framebuffer, int *fbout, int w, int h, int f_val);
-  int blitter_out(int *framebuffer, int *fbout, int w, int h, int f_val);
-};
-
 
 #define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255
 #define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))

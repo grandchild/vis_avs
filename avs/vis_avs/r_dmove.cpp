@@ -27,15 +27,15 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#define M_PI 3.14159265358979323846
 
+#include "c_dmove.h"
 #include <windows.h>
 #include <commctrl.h>
 #include <math.h>
 #include "r_defs.h"
 #include "resource.h"
 #include "avs_eelif.h"
-#include "r_list.h"
+#include "c_list.h"
 
 #include "timing.h"
 
@@ -56,49 +56,6 @@ static void __docheck(int xp, int yp, int m_lastw, int m_lasth, int d_x, int d_y
 
 
 #ifndef LASER
-
-#define C_THISCLASS C_DMoveClass
-#define MOD_NAME "Trans / Dynamic Movement"
-
-class C_THISCLASS : public C_RBASE2 {
-	protected:
-	public:
-		C_THISCLASS();
-		virtual ~C_THISCLASS();
-		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-
-    virtual int smp_getflags() { return 1; }
-		virtual int smp_begin(int max_threads, char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h); 
-    virtual void smp_render(int this_thread, int max_threads, char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h); 
-    virtual int smp_finish(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h); // return value is that of render() for fbstuff etc
-
-		virtual char *get_desc() { return MOD_NAME; }
-		virtual void load_config(unsigned char *data, int len);
-		virtual int  save_config(unsigned char *data);
-    RString effect_exp[4];
-
-    int m_lastw,m_lasth;
-    int m_lastxres, m_lastyres, m_xres, m_yres;
-    int *m_wmul;
-    int *m_tab;
-    int AVS_EEL_CONTEXTNAME;
-    double *var_d, *var_b, *var_r, *var_x, *var_y, *var_w, *var_h, *var_alpha;
-		int inited;
-    int codehandle[4];
-    int need_recompile;
-    int buffern;
-    int subpixel,rectcoords,blend,wrap, nomove;
-    CRITICAL_SECTION rcs;
-
-
-    // smp stuff
-    int __subpixel,__rectcoords,__blend,__wrap, __nomove;
-    int w_adj;
-    int h_adj;
-    int XRES;
-    int YRES;
-
-};
 
 #define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255
 #define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))
@@ -280,7 +237,7 @@ int C_THISCLASS::smp_begin(int max_threads, char visdata[2][2][576], int isBeat,
     for (x = 0; x < 4; x ++) 
     {
       freeCode(codehandle[x]);
-      codehandle[x]=compileCode(effect_exp[x].get());
+      codehandle[x]=compileCode((char*)effect_exp[x].c_str());
     }
     LeaveCriticalSection(&rcs);
   }
@@ -637,10 +594,10 @@ int win32_dlgproc_dynamicmovement(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM 
 	{
 		case WM_INITDIALOG:
       isstart=1;
-      SetDlgItemText(hwndDlg,IDC_EDIT1,g_this->effect_exp[0].get());
-      SetDlgItemText(hwndDlg,IDC_EDIT2,g_this->effect_exp[1].get());
-      SetDlgItemText(hwndDlg,IDC_EDIT3,g_this->effect_exp[2].get());
-      SetDlgItemText(hwndDlg,IDC_EDIT4,g_this->effect_exp[3].get());
+      SetDlgItemText(hwndDlg,IDC_EDIT1,(char*)g_this->effect_exp[0].c_str());
+      SetDlgItemText(hwndDlg,IDC_EDIT2,(char*)g_this->effect_exp[1].c_str());
+      SetDlgItemText(hwndDlg,IDC_EDIT3,(char*)g_this->effect_exp[2].c_str());
+      SetDlgItemText(hwndDlg,IDC_EDIT4,(char*)g_this->effect_exp[3].c_str());
       if (g_this->blend)
         CheckDlgButton(hwndDlg,IDC_CHECK1,BST_CHECKED);
       if (g_this->subpixel)
@@ -764,10 +721,10 @@ int win32_dlgproc_dynamicmovement(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM 
         if (LOWORD(wParam) == IDC_EDIT1||LOWORD(wParam) == IDC_EDIT2||LOWORD(wParam) == IDC_EDIT3||LOWORD(wParam) == IDC_EDIT4)
         {
           EnterCriticalSection(&g_this->rcs);
-          g_this->effect_exp[0].get_from_dlgitem(hwndDlg,IDC_EDIT1);
-          g_this->effect_exp[1].get_from_dlgitem(hwndDlg,IDC_EDIT2);
-          g_this->effect_exp[2].get_from_dlgitem(hwndDlg,IDC_EDIT3);
-          g_this->effect_exp[3].get_from_dlgitem(hwndDlg,IDC_EDIT4);
+          g_this->effect_exp[0] = string_from_dlgitem(hwndDlg,IDC_EDIT1);
+          g_this->effect_exp[1] = string_from_dlgitem(hwndDlg,IDC_EDIT2);
+          g_this->effect_exp[2] = string_from_dlgitem(hwndDlg,IDC_EDIT3);
+          g_this->effect_exp[3] = string_from_dlgitem(hwndDlg,IDC_EDIT4);
           g_this->need_recompile=1;
 				  if (LOWORD(wParam) == IDC_EDIT4) g_this->inited = 0;
           LeaveCriticalSection(&g_this->rcs);

@@ -1,5 +1,7 @@
+#include <string>
 #include "g_lib.h"
-#include "r_list.h"
+#include "c_list.h"
+#include "c_unkn.h"
 #include "resource.h"
 
 
@@ -24,7 +26,6 @@
     this->components[i].uiprep = win32_uiprep_ ## HANDLER_AND_PREP_SUFFIX;     \
     ADD_COMPONENT(-1, ID_STRING, RES_SUFFIX, HANDLER_AND_PREP_SUFFIX)
 
-void* g_current_render;
 
 C_GLibrary::C_GLibrary() {
     this->components = (C_Win32GuiComponent*)calloc(
@@ -91,6 +92,11 @@ C_GLibrary::C_GLibrary() {
     // clang-format on
     this->size = i;
 
+    this->unknown.id = UNKN_ID;
+    this->unknown.idstring[0] = '\0';
+    this->unknown.dialog_resource_id = IDD_CFG_UNKN;
+    this->unknown.ui_handler = (DLGPROC)win32_dlgproc_unknown;
+
     this->effectlist.id = LIST_ID;
     this->effectlist.idstring[0] = '\0';
     this->effectlist.dialog_resource_id = IDD_CFG_LIST;
@@ -109,7 +115,7 @@ C_GLibrary::~C_GLibrary() {
 
 C_Win32GuiComponent* C_GLibrary::get(int id_or_idstring, void* render_component) {
     if(id_or_idstring == -1) {
-        return NULL;
+        return &this->unknown;
     }
     if(id_or_idstring > APE_ID_BASE) {
         return this->get_by_idstring((char*)id_or_idstring);
@@ -137,3 +143,15 @@ C_Win32GuiComponent* C_GLibrary::get_by_idstring(char* idstring) {
     }
     return NULL;
 }
+
+
+std::string string_from_dlgitem(HWND hwnd, int dlgItem) {
+    int l = SendDlgItemMessage(hwnd, dlgItem, WM_GETTEXTLENGTH, 0, 0);
+    char* buf = (char*)calloc(l + 1, sizeof(char));
+    GetDlgItemText(hwnd, dlgItem, buf, l + 1);
+    std::string str(buf);
+    free(buf);
+    return str;
+}
+
+void* g_current_render;

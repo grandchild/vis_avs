@@ -27,8 +27,7 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#define M_PI 3.14159265358979323846
-
+#include "c_sscope.h"
 #include <windows.h>
 #include <commctrl.h>
 #include <math.h>
@@ -40,35 +39,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 #include "timing.h"
 
-#define C_THISCLASS C_SScopeClass
-#define MOD_NAME "Render / SuperScope"
-
-
-
-class C_THISCLASS : public C_RBASE {
-	public:
-		C_THISCLASS();
-		virtual ~C_THISCLASS();
-		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-		virtual char *get_desc() { return MOD_NAME; }
-		virtual void load_config(unsigned char *data, int len);
-		virtual int  save_config(unsigned char *data);
-    RString effect_exp[4];
-    int which_ch;
-    int num_colors;
-		int colors[16];
-    int mode;
-
-    int color_pos;
-
-    int AVS_EEL_CONTEXTNAME;
-    double *var_b, *var_x, *var_y, *var_i, *var_n, *var_v, *var_w, *var_h, *var_red, *var_green, *var_blue;
-    double *var_skip, *var_linesize, *var_drawmode;
-		int inited;
-    int codehandle[4];
-    int need_recompile;
-    CRITICAL_SECTION rcs;
-};
 
 #define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255
 #define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))
@@ -212,7 +182,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
     for (x = 0; x < 4; x ++) 
     {
       freeCode(codehandle[x]);
-      codehandle[x]=compileCode(effect_exp[x].get());
+      codehandle[x]=compileCode((char*)effect_exp[x].c_str());
     }
 
     LeaveCriticalSection(&rcs);
@@ -391,16 +361,16 @@ int win32_dlgproc_superscope(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
       SendDlgItemMessage(hwndDlg,IDC_EDIT4,EM_SETEVENTMASK,0,ENM_CHANGE);
 #endif
       SetDlgItemInt(hwndDlg,IDC_NUMCOL,g_this->num_colors,FALSE);
-      SetDlgItemText(hwndDlg,IDC_EDIT1,g_this->effect_exp[0].get());
-      SetDlgItemText(hwndDlg,IDC_EDIT2,g_this->effect_exp[1].get());
-      SetDlgItemText(hwndDlg,IDC_EDIT3,g_this->effect_exp[2].get());
-      SetDlgItemText(hwndDlg,IDC_EDIT4,g_this->effect_exp[3].get());
+      SetDlgItemText(hwndDlg,IDC_EDIT1,(char*)g_this->effect_exp[0].c_str());
+      SetDlgItemText(hwndDlg,IDC_EDIT2,(char*)g_this->effect_exp[1].c_str());
+      SetDlgItemText(hwndDlg,IDC_EDIT3,(char*)g_this->effect_exp[2].c_str());
+      SetDlgItemText(hwndDlg,IDC_EDIT4,(char*)g_this->effect_exp[3].c_str());
 
 #if 0//syntax highlighting
-      doAVSEvalHighLight(hwndDlg,IDC_EDIT1,g_this->effect_exp[0].get());
-      doAVSEvalHighLight(hwndDlg,IDC_EDIT2,g_this->effect_exp[1].get());
-      doAVSEvalHighLight(hwndDlg,IDC_EDIT3,g_this->effect_exp[2].get());
-      doAVSEvalHighLight(hwndDlg,IDC_EDIT4,g_this->effect_exp[3].get());
+      doAVSEvalHighLight(hwndDlg,IDC_EDIT1,(char*)g_this->effect_exp[0].c_str());
+      doAVSEvalHighLight(hwndDlg,IDC_EDIT2,(char*)g_this->effect_exp[1].c_str());
+      doAVSEvalHighLight(hwndDlg,IDC_EDIT3,(char*)g_this->effect_exp[2].c_str());
+      doAVSEvalHighLight(hwndDlg,IDC_EDIT4,(char*)g_this->effect_exp[3].c_str());
 #endif
 
       CheckDlgButton(hwndDlg,g_this->mode?IDC_LINES:IDC_DOT,BST_CHECKED);
@@ -454,22 +424,22 @@ int win32_dlgproc_superscope(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
         if ((LOWORD(wParam) == IDC_EDIT1||LOWORD(wParam) == IDC_EDIT2||LOWORD(wParam) == IDC_EDIT3||LOWORD(wParam) == IDC_EDIT4) && HIWORD(wParam) == EN_CHANGE)
         {
           EnterCriticalSection(&g_this->rcs);
-          g_this->effect_exp[0].get_from_dlgitem(hwndDlg,IDC_EDIT1);
-          g_this->effect_exp[1].get_from_dlgitem(hwndDlg,IDC_EDIT2);
-          g_this->effect_exp[2].get_from_dlgitem(hwndDlg,IDC_EDIT3);
-          g_this->effect_exp[3].get_from_dlgitem(hwndDlg,IDC_EDIT4);
+          g_this->effect_exp[0] = string_from_dlgitem(hwndDlg,IDC_EDIT1);
+          g_this->effect_exp[1] = string_from_dlgitem(hwndDlg,IDC_EDIT2);
+          g_this->effect_exp[2] = string_from_dlgitem(hwndDlg,IDC_EDIT3);
+          g_this->effect_exp[3] = string_from_dlgitem(hwndDlg,IDC_EDIT4);
           g_this->need_recompile=1;
 				  if (LOWORD(wParam) == IDC_EDIT4) g_this->inited = 0;
           LeaveCriticalSection(&g_this->rcs);
 #if 0//syntax highlighting
           if (LOWORD(wParam) == IDC_EDIT1)
-            doAVSEvalHighLight(hwndDlg,IDC_EDIT1,g_this->effect_exp[0].get());
+            doAVSEvalHighLight(hwndDlg,IDC_EDIT1,(char*)g_this->effect_exp[0].c_str());
           if (LOWORD(wParam) == IDC_EDIT2)
-            doAVSEvalHighLight(hwndDlg,IDC_EDIT2,g_this->effect_exp[1].get());
+            doAVSEvalHighLight(hwndDlg,IDC_EDIT2,(char*)g_this->effect_exp[1].c_str());
           if (LOWORD(wParam) == IDC_EDIT3)
-            doAVSEvalHighLight(hwndDlg,IDC_EDIT3,g_this->effect_exp[2].get());
+            doAVSEvalHighLight(hwndDlg,IDC_EDIT3,(char*)g_this->effect_exp[2].c_str());
           if (LOWORD(wParam) == IDC_EDIT4)
-            doAVSEvalHighLight(hwndDlg,IDC_EDIT4,g_this->effect_exp[3].get());
+            doAVSEvalHighLight(hwndDlg,IDC_EDIT4,(char*)g_this->effect_exp[3].c_str());
 #endif
         }
         if (LOWORD(wParam) == IDC_DOT || LOWORD(wParam) == IDC_LINES)

@@ -31,14 +31,11 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // copyright tom holden, 2002
 // mail: cfp@myrealbox.com
 
+#include "c_multidelay.h"
 #include <windows.h>
 #include "resource.h"
 #include "r_defs.h"
 
-#define MOD_NAME "Trans / Multi Delay"
-#define C_DELAY C_MultiDelayClass
-
-// R_MultiDelay / #define UNIQUEIDSTRING "Holden05: Multi Delay"
 
 // saved
 bool usebeats[6];
@@ -59,25 +56,6 @@ unsigned long framemem;
 unsigned long oldframemem;
 unsigned int renderid;
 
-class C_DELAY : public C_RBASE 
-{
-	protected:
-	public:
-		// standard ape members
-		C_DELAY();
-		virtual ~C_DELAY();
-		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-		virtual char *get_desc();
-		virtual void load_config(unsigned char *data, int len);
-		virtual int  save_config(unsigned char *data);
-
-		// saved members
-		int mode;
-		int activebuffer;
-
-		// unsaved members
-		unsigned int creationid;
-};
 
 
 // configuration screen

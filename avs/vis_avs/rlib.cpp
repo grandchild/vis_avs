@@ -29,8 +29,9 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include <windows.h>
 #include "r_defs.h"
-#include "r_unkn.h"
-#include "r_list.h"
+#include "c__base.h"
+#include "c_unkn.h"
+#include "c_list.h"
 #include "rlib.h"
 
 #include "avs_eelif.h"
@@ -38,37 +39,25 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255
 #define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))
 
-void C_RBASE::load_string(RString &s,unsigned char *data, int &pos, int len) // read configuration of max length "len" from data.
-{
+void C_RBASE::load_string(std::string &s, unsigned char *data, int &pos, int len) {
   int size=GET_INT(); pos += 4;
-  if (size > 0 && len-pos >= size)
-	{
-    s.resize(size);
-	  memcpy(s.get(), data+pos, size);
+  if (size > 0 && len-pos >= size) {
+	  s.assign((char*)(data+pos), size);
 	  pos+=size;
-	}
-  else 
-  {
-    s.resize(1);
-    s.get()[0]=0;
+	} else {
+    s.assign("");
   }
 }
-void C_RBASE::save_string(unsigned char *data, int &pos, RString &text)
-{
-  if (text.get() && text.get()[0])
-	{
-    char *p=text.get();
-    int x=32768;
-    while (x-- && *p) p++;
-    if (*p)
-    {
+void C_RBASE::save_string(unsigned char *data, int &pos, std::string &text) {
+  if (!text.empty()) {
+    if (text.length() > 32768) {
       MessageBox(NULL,"Yo, this is some long ass shit","FUCK!",MB_OK);
       //FUCKO
     }
-    int l=(strlen(text.get())+1);
+    int l = text.length() + 1;
 	  PUT_INT(l); pos+=4;
-	  memcpy(data+pos, text.get(), strlen(text.get())+1);
-	  pos+=strlen(text.get())+1;
+	  memcpy(data+pos, text.c_str(), l);
+	  pos += l;
 	}
   else
   { 

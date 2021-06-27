@@ -28,6 +28,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 // alphachannel safe 11/21/99
+#include "c_comment.h"
 #include <windows.h>
 #include <commctrl.h>
 #include "r_defs.h"
@@ -35,21 +36,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "timing.h"
 
-#define C_THISCLASS C_CommentClass
-#define MOD_NAME "Misc / Comment"
-
-class C_THISCLASS : public C_RBASE {
-	protected:
-	public:
-		C_THISCLASS();
-		virtual ~C_THISCLASS();
-		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-		virtual char *get_desc() { return MOD_NAME; }
-		virtual void load_config(unsigned char *data, int len);
-		virtual int  save_config(unsigned char *data);
-
-    RString msgdata;
-};
 
 #define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255
 #define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))
@@ -94,12 +80,12 @@ int win32_dlgproc_comment(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
-      SetDlgItemText(hwndDlg,IDC_EDIT1,g_this->msgdata.get());
+      SetDlgItemText(hwndDlg,IDC_EDIT1,(char*)g_this->msgdata.c_str());
     return 1;
     case WM_COMMAND:
       if (LOWORD(wParam) == IDC_EDIT1 && HIWORD(wParam) == EN_CHANGE)
       {
-        g_this->msgdata.get_from_dlgitem(hwndDlg,IDC_EDIT1);
+        g_this->msgdata = string_from_dlgitem(hwndDlg,IDC_EDIT1);
       }
       return 0;
 	}

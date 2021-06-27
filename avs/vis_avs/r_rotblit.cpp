@@ -28,44 +28,17 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 // alphachannel safe 11/21/99
+#include "c_rotblit.h"
 #include <windows.h>
 #include <commctrl.h>
 #include "r_defs.h"
 #include "resource.h"
+#include <math.h>
 
 #include "timing.h"
 
 
 #ifndef LASER
-
-#include <math.h>
-#ifdef _MSC_VER
-#define M_PI 3.1415926536
-#endif
-
-#define C_THISCLASS C_RotBlitClass
-#define MOD_NAME "Trans / Roto Blitter"
-
-
-class C_THISCLASS : public C_RBASE {
-	protected:
-	public:
-		C_THISCLASS();
-		virtual ~C_THISCLASS();
-		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-		virtual char *get_desc() { return MOD_NAME; }
-		virtual void load_config(unsigned char *data, int len);
-		virtual int  save_config(unsigned char *data);
-
-		int zoom_scale, rot_dir, blend, beatch, beatch_speed, zoom_scale2, beatch_scale,scale_fpos;
-		int rot_rev;
-    int subpixel;
-    double rot_rev_pos;
-
-    int l_w, l_h;
-    int *w_mul;
-};
-
 
 #define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255
 #define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))

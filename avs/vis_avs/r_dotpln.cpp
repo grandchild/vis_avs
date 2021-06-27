@@ -28,41 +28,15 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 // alphachannel safe 11/21/99
+#include "c_dotpln.h"
 #include <windows.h>
 #include <math.h>
 #include <commctrl.h>
 #include "resource.h"
 #include "r_defs.h"
 
+
 #ifndef LASER
-
-#define C_THISCLASS C_DotPlaneClass
-#define MOD_NAME "Render / Dot Plane"
-
-#define NUM_WIDTH 64
-
-
-class C_THISCLASS : public C_RBASE {
-	protected:
-		float r;
-		float atable[NUM_WIDTH*NUM_WIDTH];
-		float vtable[NUM_WIDTH*NUM_WIDTH];
-		int   ctable[NUM_WIDTH*NUM_WIDTH];
-		int color_tab[64];
-	public:
-		C_THISCLASS();
-		virtual ~C_THISCLASS();
-		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int, int);
-		virtual char *get_desc() { return MOD_NAME; }
-		virtual void load_config(unsigned char *data, int len);
-		virtual int  save_config(unsigned char *data);
-
-		int rotvel,angle;
-		int colors[5];
-
-		void initcolortab();
-};
-
 
 #define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255
 #define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))

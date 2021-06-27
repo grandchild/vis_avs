@@ -2,59 +2,17 @@
 // copyright tom holden, 2002
 // mail: cfp@myrealbox.com
 
+#include "c_convolution.h"
 #include <windows.h>
 #include <stdlib.h>
-#include <mmintrin.h>
 #include "r_defs.h"
 #include "resource.h"
 
-#define MOD_NAME "Trans / Convolution Filter"
 
 #define MAX_DRAW_SIZE 16384
-#define MAX_FILENAME_SIZE 1024
-
-typedef int (* FunctionType)(void *, void *, void *);	// framebuffer, fbout, m64farray
 
 char lastszFile[MAX_FILENAME_SIZE];						// stores the name of the last opened file in any instance of the ape
 unsigned int instances = 0;								// stores the number of instances currently open
-
-class C_CONVOLUTION : public C_RBASE 
-{
-	public:
-		// standard ape members
-		C_CONVOLUTION();
-		virtual ~C_CONVOLUTION();
-		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-		virtual char *get_desc();
-		virtual void load_config(unsigned char *data, int len);
-		virtual int  save_config(unsigned char *data);
-
-		// file access members
-		OPENFILENAME FileBox;			// the file dialogue
-		char szFile[MAX_FILENAME_SIZE];				// buffer for file name
-		HANDLE hf;						// file handle
-
-		// functions
-		void createdraw(void);			// create the draw function
-		_inline void deletedraw(void);	// delete it
-		FunctionType draw;				// the draw function
-
-		// main filter data (saved)
-		bool enabled;					// toggles plug-in on and off
-		bool wraparound;				// toggles wrap around subtraction
-		bool absolute;					// toggles absolute values in subtraction results
-		bool twopass;					// toggles two pass mode
-		int farray[51];					// box data
-
-		// non-saved values
-		__m64 m64farray[50];			// abs(farray) packed into the four unsigned shorts that make up an m64 
-		int width,height;				// does what it says on the tin
-		DWORD oldprotect;				// needed for virtual protect stuff
-		int drawstate;					// 0 not allocated 1 creating 2 created
-		bool updatedraw;				// true if draw needs updating
-		unsigned int codelength;		// length of draw
-};
-
 
 // configuration screen
 int win32_dlgproc_convolution(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
@@ -64,6 +22,8 @@ int win32_dlgproc_convolution(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPar
 	int val;
 	unsigned int objectcode, objectmessage;
 	HWND hwndEdit;
+	OPENFILENAME file_box;
+	HANDLE filehandle;
 	switch (uMsg)
 	{
 		case WM_INITDIALOG: //init e.g. fill in boxes
@@ -78,27 +38,6 @@ int win32_dlgproc_convolution(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPar
 				_itoa(g_Filter->farray[i],value,10);
 				SetWindowText(hwndEdit,value);
 			}
-			// file dialogue initialisation.
-			g_Filter->FileBox.lStructSize = sizeof(OPENFILENAME);
-			g_Filter->FileBox.hwndOwner = hwndDlg;
-			g_Filter->FileBox.hInstance = NULL;
-			g_Filter->FileBox.lpstrFilter = "Convolution Filter File (*.cff)\0*.cff\0All Files (*.*)\0*.*\0";
-			g_Filter->FileBox.lpstrCustomFilter = NULL;
-			g_Filter->FileBox.nMaxCustFilter = 0;
-			g_Filter->FileBox.nFilterIndex = 1;
-			g_Filter->FileBox.nMaxFile = sizeof(g_Filter->szFile);
-			g_Filter->FileBox.lpstrFileTitle = NULL;
-			g_Filter->FileBox.nMaxFileTitle = 0;
-			if (lastszFile[0] != NULL)
-			{
-				for (int i=0; i<MAX_FILENAME_SIZE;i++) g_Filter->szFile[i] = lastszFile[i];
-				g_Filter->FileBox.lpstrInitialDir = NULL;
-			}
-			else g_Filter->FileBox.lpstrInitialDir = "C:\\Program Files\\Winamp3\\Wacs\\data\\avs";
-			g_Filter->FileBox.lpstrFile = g_Filter->szFile;
-			g_Filter->FileBox.lpstrTitle = NULL;
-			g_Filter->FileBox.lpfnHook = NULL;
-			g_Filter->FileBox.lpstrDefExt = "cff";
 			return 1;
 		case WM_COMMAND:
 			objectcode = LOWORD(wParam);
@@ -147,106 +86,129 @@ int win32_dlgproc_convolution(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPar
 				}
 				return 0;
 			}
-			// see if the load button's been clicked
-			if ((objectcode == IDC_CONVOLUTION_BUTTON3)&&(objectmessage == BN_CLICKED))
-			{
-				g_Filter->FileBox.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | 0x02000000 | OFN_HIDEREADONLY;	// 0x02000000 is OFN_DONTADDTORECENT for some reason the compiler is not recognising it.
-				if (GetOpenFileName(&g_Filter->FileBox))
+			if ((objectcode == IDC_CONVOLUTION_BUTTON3 || objectcode == IDC_CONVOLUTION_BUTTON2) && objectmessage == BN_CLICKED) {
+				// file dialogue initialisation.
+				file_box.lStructSize = sizeof(OPENFILENAME);
+				file_box.hwndOwner = hwndDlg;
+				file_box.hInstance = NULL;
+				file_box.lpstrFilter = "Convolution Filter File (*.cff)\0*.cff\0All Files (*.*)\0*.*\0";
+				file_box.lpstrCustomFilter = NULL;
+				file_box.nMaxCustFilter = 0;
+				file_box.nFilterIndex = 1;
+				file_box.nMaxFile = sizeof(g_Filter->szFile);
+				file_box.lpstrFileTitle = NULL;
+				file_box.nMaxFileTitle = 0;
+				if (lastszFile[0] != '\0')
 				{
-					g_Filter->hf = CreateFile(g_Filter->FileBox.lpstrFile, GENERIC_READ, 0, (LPSECURITY_ATTRIBUTES) NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,(HANDLE) NULL);
-					if (g_Filter->hf == INVALID_HANDLE_VALUE)
-					{
-						// display the error
-						LPVOID lpMsgBuf;
-						FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpMsgBuf, 0, NULL);
-						MessageBox( NULL, (LPCTSTR)lpMsgBuf, "Unexpected file error.", MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND );
-						LocalFree( lpMsgBuf );
-						return 0;
-					}
-					else
-					{
-						unsigned char *data;
-						data = new unsigned char[MAX_FILENAME_SIZE];
-						DWORD numbytesread;
-						g_Filter->FileBox.lpstrInitialDir = NULL;
-						for (int i=0;i<MAX_FILENAME_SIZE;i++) lastszFile[i] = g_Filter->szFile[i];
-						if (ReadFile(g_Filter->hf, data, MAX_FILENAME_SIZE, &numbytesread, NULL)==0 && GetLastError()!=ERROR_HANDLE_EOF)
-						{
-							// display the error
-							LPVOID lpMsgBuf;
-							FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpMsgBuf, 0, NULL);
-							MessageBox( NULL, (LPCTSTR)lpMsgBuf, "Unexpected file error.", MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND );
-							LocalFree( lpMsgBuf );
-						}
-						g_Filter->load_config(data,(unsigned int) numbytesread);
-						// refresh the dialogue with the new data
-						CheckDlgButton(hwndDlg,IDC_CONVOLUTION_CHECK1,g_Filter->enabled);
-						CheckDlgButton(hwndDlg,IDC_CONVOLUTION_CHECK2,g_Filter->wraparound);
-						CheckDlgButton(hwndDlg,IDC_CONVOLUTION_CHECK3,g_Filter->absolute);
-						CheckDlgButton(hwndDlg,IDC_CONVOLUTION_CHECK4,g_Filter->twopass);
-						if (g_Filter->farray[50] == 0) g_Filter->farray[50] = 1;
-						for(int i=0;i<51;i++)
-						{
-							hwndEdit = GetDlgItem(hwndDlg,IDC_CONVOLUTION_EDIT1+i);
-							_itoa(g_Filter->farray[i],value,10);
-							SetWindowText(hwndEdit,value);
-						}
-						if (CloseHandle(g_Filter->hf)==0)
-						{
-							// display the error
-							LPVOID lpMsgBuf;
-							FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpMsgBuf, 0, NULL);
-							MessageBox( NULL, (LPCTSTR)lpMsgBuf, "Unexpected file error.", MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND );
-							LocalFree( lpMsgBuf );
-						}
-					}
+					for (int i=0; i<MAX_FILENAME_SIZE;i++) g_Filter->szFile[i] = lastszFile[i];
+					file_box.lpstrInitialDir = NULL;
 				}
-				return 0;
-			}
-			// see if the save button's been clicked
-			if ((objectcode == IDC_CONVOLUTION_BUTTON2)&&(objectmessage == BN_CLICKED))
-			{
-				g_Filter->FileBox.Flags = 0x02000000 | OFN_HIDEREADONLY;	// 0x02000000 is OFN_DONTADDTORECENT for some reason the compiler is not recognising it.
-				if (GetSaveFileName(&(g_Filter->FileBox)))
+				else file_box.lpstrInitialDir = "C:\\Program Files\\Winamp3\\Wacs\\data\\avs";
+				file_box.lpstrFile = g_Filter->szFile;
+				file_box.lpstrTitle = NULL;
+				file_box.lpfnHook = NULL;
+				file_box.lpstrDefExt = "cff";
+				// see if the load button's been clicked
+				if (objectcode == IDC_CONVOLUTION_BUTTON3)
 				{
-					g_Filter->hf = CreateFile(g_Filter->FileBox.lpstrFile, GENERIC_WRITE, 0, (LPSECURITY_ATTRIBUTES) NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL,(HANDLE) NULL);
-					if ((g_Filter->hf == INVALID_HANDLE_VALUE) && (GetLastError()==ERROR_FILE_EXISTS) && (MessageBox(hwndDlg, "This file already exists. Do you want to overwrite it?", "convolution",  MB_YESNO|MB_ICONQUESTION|MB_DEFBUTTON2|MB_APPLMODAL|MB_SETFOREGROUND)==IDYES))
-						g_Filter->hf = CreateFile(g_Filter->FileBox.lpstrFile, GENERIC_WRITE, 0, (LPSECURITY_ATTRIBUTES) NULL, TRUNCATE_EXISTING, FILE_ATTRIBUTE_NORMAL,(HANDLE) NULL);
-					if (g_Filter->hf == INVALID_HANDLE_VALUE)
+					file_box.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | 0x02000000 | OFN_HIDEREADONLY;	// 0x02000000 is OFN_DONTADDTORECENT for some reason the compiler is not recognising it.
+					if (GetOpenFileName(&file_box))
 					{
-						// display the error
-						LPVOID lpMsgBuf;
-						FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpMsgBuf, 0, NULL);
-						MessageBox( NULL, (LPCTSTR)lpMsgBuf, "Unexpected file error.", MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND );
-						LocalFree( lpMsgBuf );
-					}
-					else
-					{
-						unsigned char *data;
-						data = new unsigned char[MAX_FILENAME_SIZE];
-						int numbytestowrite = g_Filter->save_config(data);
-						DWORD numbyteswritten;
-						g_Filter->FileBox.lpstrInitialDir = NULL;
-						for (int i=0;i<MAX_FILENAME_SIZE;i++) lastszFile[i] = g_Filter->szFile[i];
-						if (WriteFile(g_Filter->hf, data, numbytestowrite, &numbyteswritten, NULL)==0)
+						filehandle = CreateFile(file_box.lpstrFile, GENERIC_READ, 0, (LPSECURITY_ATTRIBUTES) NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,(HANDLE) NULL);
+						if (filehandle == INVALID_HANDLE_VALUE)
 						{
 							// display the error
 							LPVOID lpMsgBuf;
 							FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpMsgBuf, 0, NULL);
 							MessageBox( NULL, (LPCTSTR)lpMsgBuf, "Unexpected file error.", MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND );
 							LocalFree( lpMsgBuf );
+							return 0;
 						}
-						if (CloseHandle(g_Filter->hf)==0)
+						else
 						{
-							// display the error
-							LPVOID lpMsgBuf;
-							FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpMsgBuf, 0, NULL);
-							MessageBox( NULL, (LPCTSTR)lpMsgBuf, "Unexpected file error.", MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND );
-							LocalFree( lpMsgBuf );
+							unsigned char *data;
+							data = new unsigned char[MAX_FILENAME_SIZE];
+							DWORD numbytesread;
+							file_box.lpstrInitialDir = NULL;
+							for (int i=0;i<MAX_FILENAME_SIZE;i++) lastszFile[i] = g_Filter->szFile[i];
+							if (ReadFile(filehandle, data, MAX_FILENAME_SIZE, &numbytesread, NULL)==0 && GetLastError()!=ERROR_HANDLE_EOF)
+							{
+								// display the error
+								LPVOID lpMsgBuf;
+								FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpMsgBuf, 0, NULL);
+								MessageBox( NULL, (LPCTSTR)lpMsgBuf, "Unexpected file error.", MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND );
+								LocalFree( lpMsgBuf );
+							}
+							g_Filter->load_config(data,(unsigned int) numbytesread);
+							// refresh the dialogue with the new data
+							CheckDlgButton(hwndDlg,IDC_CONVOLUTION_CHECK1,g_Filter->enabled);
+							CheckDlgButton(hwndDlg,IDC_CONVOLUTION_CHECK2,g_Filter->wraparound);
+							CheckDlgButton(hwndDlg,IDC_CONVOLUTION_CHECK3,g_Filter->absolute);
+							CheckDlgButton(hwndDlg,IDC_CONVOLUTION_CHECK4,g_Filter->twopass);
+							if (g_Filter->farray[50] == 0) g_Filter->farray[50] = 1;
+							for(int i=0;i<51;i++)
+							{
+								hwndEdit = GetDlgItem(hwndDlg,IDC_CONVOLUTION_EDIT1+i);
+								_itoa(g_Filter->farray[i],value,10);
+								SetWindowText(hwndEdit,value);
+							}
+							if (CloseHandle(filehandle)==0)
+							{
+								// display the error
+								LPVOID lpMsgBuf;
+								FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpMsgBuf, 0, NULL);
+								MessageBox( NULL, (LPCTSTR)lpMsgBuf, "Unexpected file error.", MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND );
+								LocalFree( lpMsgBuf );
+							}
 						}
 					}
+					return 0;
 				}
-				return 0;
+				// see if the save button's been clicked
+				if (objectcode == IDC_CONVOLUTION_BUTTON2)
+				{
+					file_box.Flags = 0x02000000 | OFN_HIDEREADONLY;	// 0x02000000 is OFN_DONTADDTORECENT for some reason the compiler is not recognising it.
+					if (GetSaveFileName(&(file_box)))
+					{
+						filehandle = CreateFile(file_box.lpstrFile, GENERIC_WRITE, 0, (LPSECURITY_ATTRIBUTES) NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL,(HANDLE) NULL);
+						if ((filehandle == INVALID_HANDLE_VALUE) && (GetLastError()==ERROR_FILE_EXISTS) && (MessageBox(hwndDlg, "This file already exists. Do you want to overwrite it?", "convolution",  MB_YESNO|MB_ICONQUESTION|MB_DEFBUTTON2|MB_APPLMODAL|MB_SETFOREGROUND)==IDYES))
+							filehandle = CreateFile(file_box.lpstrFile, GENERIC_WRITE, 0, (LPSECURITY_ATTRIBUTES) NULL, TRUNCATE_EXISTING, FILE_ATTRIBUTE_NORMAL,(HANDLE) NULL);
+						if (filehandle == INVALID_HANDLE_VALUE)
+						{
+							// display the error
+							LPVOID lpMsgBuf;
+							FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpMsgBuf, 0, NULL);
+							MessageBox( NULL, (LPCTSTR)lpMsgBuf, "Unexpected file error.", MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND );
+							LocalFree( lpMsgBuf );
+						}
+						else
+						{
+							unsigned char *data;
+							data = new unsigned char[MAX_FILENAME_SIZE];
+							int numbytestowrite = g_Filter->save_config(data);
+							DWORD numbyteswritten;
+							file_box.lpstrInitialDir = NULL;
+							for (int i=0;i<MAX_FILENAME_SIZE;i++) lastszFile[i] = g_Filter->szFile[i];
+							if (WriteFile(filehandle, data, numbytestowrite, &numbyteswritten, NULL)==0)
+							{
+								// display the error
+								LPVOID lpMsgBuf;
+								FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpMsgBuf, 0, NULL);
+								MessageBox( NULL, (LPCTSTR)lpMsgBuf, "Unexpected file error.", MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND );
+								LocalFree( lpMsgBuf );
+							}
+							if (CloseHandle(filehandle)==0)
+							{
+								// display the error
+								LPVOID lpMsgBuf;
+								FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpMsgBuf, 0, NULL);
+								MessageBox( NULL, (LPCTSTR)lpMsgBuf, "Unexpected file error.", MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND );
+								LocalFree( lpMsgBuf );
+							}
+						}
+					}
+					return 0;
+				}
 			}
 			// see if enable checkbox is checked
 			if (objectcode == IDC_CONVOLUTION_CHECK1)
@@ -320,8 +282,8 @@ int win32_dlgproc_convolution(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPar
 // set up default configuration 
 C_CONVOLUTION::C_CONVOLUTION() 
 {	
-	szFile[0] = NULL;
-	if (instances==0) lastszFile[0] = NULL;
+	szFile[0] = '\0';
+	if (instances==0) lastszFile[0] = '\0';
 	instances++;
 	// set box array values
 	for (int i=0;i<50;i++) farray[i]=0;
@@ -427,7 +389,7 @@ void C_CONVOLUTION::load_config(unsigned char *data, int len) // read configurat
 		}
 	}
 	if (farray[50]==0) farray[50] = 1;
-	if (szFile[0] == NULL)
+	if (szFile[0] == '\0')
 	{
 		// load the last file name
 		int i = 0;
@@ -436,9 +398,8 @@ void C_CONVOLUTION::load_config(unsigned char *data, int len) // read configurat
 			szFile[i]=data[pos];
 			lastszFile[i]=data[pos];
 		}
-		if (szFile[0] != NULL) FileBox.lpstrInitialDir = NULL;
-		szFile[i] = NULL;		// add the terminating null byte 
-		lastszFile[i] = NULL;	// add the terminating null byte 
+		szFile[i] = '\0';		// add the terminating null byte 
+		lastszFile[i] = '\0';	// add the terminating null byte 
 	}
 	updatedraw = true;
 }
@@ -461,7 +422,7 @@ int  C_CONVOLUTION::save_config(unsigned char *data)
 		PUT_INT(farray[i]);
 		pos+=4;
 	}
-	for(int i=0;szFile[i] != NULL;pos++,i++) data[pos]=szFile[i];
+	for(int i=0;szFile[i] != '\0';pos++,i++) data[pos]=szFile[i];
 	return pos;
 }
 

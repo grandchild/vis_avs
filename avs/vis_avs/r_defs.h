@@ -41,11 +41,6 @@ extern unsigned char g_blendtable[256][256];
 
 extern int g_reset_vars_on_recompile;
 
-// A pointer to the currently open dialog UI. Used by each component's dialog handler.
-// Will be cast to the respective component class. Declared in g_lib.h, set in
-// cfgwin.cpp.
-extern void* g_current_render;
-
 // use this function to get a global buffer, and the last flag says whether or not to
 // allocate it if it's not valid...
 #define NBUF 8

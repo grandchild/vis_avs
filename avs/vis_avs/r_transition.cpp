@@ -35,7 +35,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "resource.h"
 #include "cfgwnd.h"
 #include "r_defs.h"
-#include "r_unkn.h"
 #include "r_transition.h"
 #include "render.h"
 #include <math.h>

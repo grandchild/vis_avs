@@ -27,6 +27,7 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+#include "c_interleave.h"
 #include <windows.h>
 #include <stdlib.h>
 #include <vfw.h>
@@ -34,29 +35,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "resource.h"
 #include "r_defs.h"
 
+
 #ifndef LASER
-
-#define MOD_NAME "Trans / Interleave"
-#define C_THISCLASS C_InterleaveClass
-
-class C_THISCLASS : public C_RBASE {
-	protected:
-	public:
-		C_THISCLASS();
-		virtual ~C_THISCLASS();
-		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-		virtual char *get_desc() { return MOD_NAME; }
-		virtual void load_config(unsigned char *data, int len);
-		virtual int  save_config(unsigned char *data);
-	int x, y;
-    int enabled;
-    int color;
-	int blend;
-	int blendavg;
-  int onbeat, x2,y2,beatdur;
-  double cur_x,cur_y;
-};
-
 
 C_THISCLASS::~C_THISCLASS() // set up default configuration
 {

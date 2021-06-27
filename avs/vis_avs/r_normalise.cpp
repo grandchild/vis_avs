@@ -1,3 +1,4 @@
+#include "c_normalise.h"
 #include <windows.h>
 #include "r_defs.h"
 #include "resource.h"
@@ -5,8 +6,6 @@
 #include <emmintrin.h>
 
 
-#define MOD_NAME "Trans / Normalise"
-#define UNIQUEIDSTRING "Trans: Normalise"
 /* This is a tradeoff heuristic used in the SSE2 implementation. Checking more often
 (->lower number) will increase total cost for scan, but will exit (slightly) earlier, if
 possible. Assuming Normalise is only used if necessary most of the time (i.e. image
@@ -15,24 +14,6 @@ fairly large number here.
 Must be divisible by four, or early-exit check condition will never be hit! */
 #define TRY_BAIL_SCAN_EARLY_EVERY_NTH_PIXEL 512
 #define NUM_COLOR_VALUES 256  // 2 ^ BITS_PER_CHANNEL (i.e. 8)
-
-class C_Normalise : public C_RBASE {
-    public:
-        C_Normalise();
-        virtual ~C_Normalise();
-        virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int);
-        virtual char *get_desc();
-        virtual void load_config(unsigned char *data, int len);
-        virtual int  save_config(unsigned char *data);
-        bool enabled;
-
-    protected:
-        int scan_min_max(int* framebuffer, int fb_length, unsigned char * max_out, unsigned char * min_out);
-        int scan_min_max_sse2(int* framebuffer, int fb_length, unsigned char * max_out, unsigned char * min_out);
-        void make_scale_table(unsigned char max, unsigned char min, unsigned int scale_table_out[]);
-        void apply(int* framebuffer, int fb_length, unsigned int scale_table[]);
-};
-
 
 int win32_dlgproc_normalise(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam) {
     C_Normalise* g_ConfigThis = (C_Normalise*)g_current_render;

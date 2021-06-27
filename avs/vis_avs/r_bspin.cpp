@@ -29,40 +29,15 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 // alphachannel safe (sets alpha to 0 on rendered portions) 11/21/99
 
+#include "c_bspin.h"
 #include <windows.h>
 #include <math.h>
 #include "r_defs.h"
 
 #include "resource.h"
 
+
 #ifndef LASER
-
-#define C_THISCLASS C_BSpinClass
-#define MOD_NAME "Render / Bass Spin"
-
-class C_THISCLASS : public C_RBASE {
-	protected:
-	public:
-		C_THISCLASS();
-		virtual ~C_THISCLASS();
-		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-		virtual char *get_desc() { return MOD_NAME; }
-		virtual void load_config(unsigned char *data, int len);
-		virtual int  save_config(unsigned char *data);
-
-		void my_triangle(int *fb, int points[6], int width, int height, int color);
-		int enabled;
-		int colors[2];
-		int mode;
-
-
-		int last_a;
-		int lx[2][2],ly[2][2];
-		double r_v[2];
-		double v[2];
-		double dir[2];
-};
-
 
 #define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255
 #define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))

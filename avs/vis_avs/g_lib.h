@@ -10,6 +10,7 @@
 #define DECL_HANDLER(NAME) extern int win32_dlgproc_##NAME(HWND, UINT, WPARAM, LPARAM)
 #define DECL_UIPREP(NAME) extern void win32_uiprep_##NAME(HINSTANCE)
 
+DECL_HANDLER(unknown);
 DECL_HANDLER(root_effectlist);
 DECL_HANDLER(effectlist);
 DECL_HANDLER(simple);
@@ -95,9 +96,14 @@ class C_GLibrary {
   protected:
     C_Win32GuiComponent* get_by_idstring(char* idstring);
     C_Win32GuiComponent* components;
+    C_Win32GuiComponent unknown;
     C_Win32GuiComponent effectlist;
     C_Win32GuiComponent root_effectlist;
     unsigned int size;
 };
 
+std::string string_from_dlgitem(HWND hwnd, int dlgItem);
+
+// A pointer to the currently open dialog UI. Used by each component's dialog handler.
+// Will be cast to the respective component class. Set in cfgwin.cpp.
 extern void* g_current_render;

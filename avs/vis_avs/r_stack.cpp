@@ -32,34 +32,12 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <commctrl.h>
 #include "r_defs.h"
 #include "resource.h"
-#include "r_stack.h"
+#include "c_stack.h"
 
 #include "timing.h"
 
+
 #ifndef LASER
-
-#define MOD_NAME "Misc / Buffer Save"
-
-#define C_THISCLASS C_StackClass
-
-class C_THISCLASS : public C_RBASE {
-	protected:
-	public:
-		C_StackClass();
-		virtual ~C_StackClass();
-		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-		virtual char *get_desc();
-		virtual void load_config(unsigned char *data, int len);
-		virtual int  save_config(unsigned char *data);
-
-    int clear;
-    volatile int dir_ch;
-
-    int blend;
-    int dir;
-    int which;
-    int adjblend_val;
-};
 
 #define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255
 #define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))
