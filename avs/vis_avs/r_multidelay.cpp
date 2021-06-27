@@ -38,24 +38,23 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 // saved
-bool usebeats[6];
-int delay[6];
+bool g_usebeats[MULTIDELAY_NUM_BUFFERS];
+int g_delay[MULTIDELAY_NUM_BUFFERS];
 
 // unsaved
-LPVOID buffer[6];
-LPVOID inpos[6];
-LPVOID outpos[6];
-unsigned long buffersize[6];
-unsigned long virtualbuffersize[6];
-unsigned long oldvirtualbuffersize[6];
-unsigned long framedelay[6];
+LPVOID buffer[MULTIDELAY_NUM_BUFFERS];
+LPVOID inpos[MULTIDELAY_NUM_BUFFERS];
+LPVOID outpos[MULTIDELAY_NUM_BUFFERS];
+unsigned long buffersize[MULTIDELAY_NUM_BUFFERS];
+unsigned long virtualbuffersize[MULTIDELAY_NUM_BUFFERS];
+unsigned long oldvirtualbuffersize[MULTIDELAY_NUM_BUFFERS];
+unsigned long g_framedelay[MULTIDELAY_NUM_BUFFERS];
 unsigned int numinstances = 0;
 unsigned long framessincebeat;
-unsigned long framesperbeat;
+unsigned long g_framesperbeat;
 unsigned long framemem;
 unsigned long oldframemem;
 unsigned int renderid;
-
 
 
 // configuration screen
@@ -71,13 +70,13 @@ int win32_dlgproc_multidelay(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
       {
         int i;
 			  for (i=0;i<3;i++) CheckDlgButton(hwndDlg,1100+i,g_Delay->mode==i);
-			  for (i=0;i<6;i++)
+			  for (i=0;i<MULTIDELAY_NUM_BUFFERS;i++)
 			  {
 				  CheckDlgButton(hwndDlg,1000+i,g_Delay->activebuffer==i);
-				  CheckDlgButton(hwndDlg,1020+i,usebeats[i]);
-				  CheckDlgButton(hwndDlg,1030+i,!usebeats[i]);
+				  CheckDlgButton(hwndDlg,1020+i,g_Delay->usebeats(i));
+				  CheckDlgButton(hwndDlg,1030+i,!g_Delay->usebeats(i));
 				  hwndEdit = GetDlgItem(hwndDlg,1010+i);
-				  _itoa(delay[i],value,10);
+				  _itoa(g_Delay->delay(i),value,10);
 				  SetWindowText(hwndEdit,value);
 			  }
       }
@@ -100,11 +99,11 @@ int win32_dlgproc_multidelay(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
 			{
 				if(IsDlgButtonChecked(hwndDlg,objectcode)==1)
 				{
-					usebeats[objectcode-1030] = false;
+					g_Delay->usebeats(objectcode-1030, false);
 					CheckDlgButton(hwndDlg,objectcode-10,BST_UNCHECKED);
-					framedelay[objectcode-1030] = delay[objectcode-1030]+1;
+					g_Delay->framedelay(objectcode-1030, g_Delay->delay(objectcode-1030)+1);
 				}
-				else usebeats[objectcode-1030] = true;
+				else g_Delay->usebeats(objectcode-1030, true);
 			    return 0;
 			}
 			// beats stuff
@@ -112,11 +111,11 @@ int win32_dlgproc_multidelay(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
 			{
 				if(IsDlgButtonChecked(hwndDlg,objectcode)==1)
 				{
-					usebeats[objectcode-1020] = true;
+					g_Delay->usebeats(objectcode-1020, true);
 					CheckDlgButton(hwndDlg,objectcode+10,BST_UNCHECKED);
-					framedelay[objectcode-1020] = framesperbeat+1;
+					g_Delay->framedelay(objectcode-1020, g_Delay->framesperbeat()+1);
 				}
-				else usebeats[objectcode-1020] = false;
+				else g_Delay->usebeats(objectcode-1020, false);
 			    return 0;
 			}
 			// edit box stuff
@@ -126,12 +125,12 @@ int win32_dlgproc_multidelay(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
 				if (objectmessage == EN_CHANGE)
 				{
 					GetWindowText(hwndEdit,value,16);
-					delay[objectcode-1010] = max(atoi(value),0);
-					framedelay[objectcode-1010] = (usebeats[objectcode-1010]?framesperbeat:delay[objectcode-1010])+1;
+					g_Delay->delay(objectcode-1010, max(atoi(value),0));
+					g_Delay->framedelay(objectcode-1010, (g_Delay->usebeats(objectcode-1010)?g_Delay->framesperbeat():g_Delay->delay(objectcode-1010))+1);
 				}
 				else if (objectmessage == EN_KILLFOCUS)
 				{
-					_itoa(delay[objectcode-1010],value,10);
+					_itoa(g_Delay->delay(objectcode-1010),value,10);
 					SetWindowText(hwndEdit,value);
 				}
 				return 0;
@@ -160,16 +159,16 @@ C_DELAY::C_DELAY()
 	creationid = numinstances;
 	if (creationid == 1)
 	{
-		for (int i=0; i<6; i++)
+		for (int i=0; i<MULTIDELAY_NUM_BUFFERS; i++)
 		{
 			renderid = 0;
 			framessincebeat = 0;
-			framesperbeat = 0;
+			g_framesperbeat = 0;
 			framemem = 1;
 			oldframemem = 1;
-			usebeats[i] = false;
-			delay[i] = 0;
-			framedelay[i] = 0;
+			g_usebeats[i] = false;
+			g_delay[i] = 0;
+			g_framedelay[i] = 0;
 			buffersize[i] = 1;
 			virtualbuffersize[i] = 1;
 			oldvirtualbuffersize[i] = 1;
@@ -184,7 +183,7 @@ C_DELAY::C_DELAY()
 C_DELAY::~C_DELAY() 
 {
 	numinstances--;
-	if (numinstances == 0) for (int i=0; i<6; i++) VirtualFree(buffer[i],buffersize[i],MEM_DECOMMIT);
+	if (numinstances == 0) for (int i=0; i<MULTIDELAY_NUM_BUFFERS; i++) VirtualFree(buffer[i],buffersize[i],MEM_DECOMMIT);
 }
 
 // RENDER FUNCTION:
@@ -204,16 +203,16 @@ int C_DELAY::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *
 		framemem = w*h*4;
 		if (isBeat)
 		{
-			framesperbeat = framessincebeat;
-			for (int i=0;i<6;i++) if (usebeats[i]) framedelay[i] = framesperbeat+1;
+			g_framesperbeat = framessincebeat;
+			for (int i=0;i<MULTIDELAY_NUM_BUFFERS;i++) if (g_usebeats[i]) g_framedelay[i] = g_framesperbeat+1;
 			framessincebeat = 0;
 		}
 		framessincebeat++;
-		for (int i=0;i<6;i++)
+		for (int i=0;i<MULTIDELAY_NUM_BUFFERS;i++)
 		{
-			if (framedelay[i]>1)
+			if (g_framedelay[i]>1)
 			{
-				virtualbuffersize[i] = framedelay[i]*framemem;
+				virtualbuffersize[i] = g_framedelay[i]*framemem;
 				if (framemem == oldframemem)
 				{
 					if (virtualbuffersize[i] != oldvirtualbuffersize[i])
@@ -224,7 +223,7 @@ int C_DELAY::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *
 							{
 								// allocate new memory
 								if (!VirtualFree(buffer[i],buffersize[i],MEM_DECOMMIT)) return 0;
-								if (usebeats[i])
+								if (g_usebeats[i])
 								{
 									buffersize[i] = 2*virtualbuffersize[i];
 									buffer[i] = VirtualAlloc(NULL,buffersize[i],MEM_COMMIT,PAGE_READWRITE);
@@ -243,13 +242,13 @@ int C_DELAY::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *
 								inpos[i] = (LPVOID)(((unsigned long)buffer[i])+virtualbuffersize[i]-framemem);
 								if (buffer[i] == NULL)
 								{
-									framedelay[i] = 0;
-									if (usebeats[i])
+									g_framedelay[i] = 0;
+									if (g_usebeats[i])
 									{
-										framesperbeat = 0;
+										g_framesperbeat = 0;
 										framessincebeat = 0;
-										framedelay[i] = 0;
-										delay[i] = 0;
+										g_framedelay[i] = 0;
+										g_delay[i] = 0;
 									}
 								}
 							}
@@ -280,7 +279,7 @@ int C_DELAY::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *
 				{
 					// allocate new memory
 					if (!VirtualFree(buffer[i],buffersize[i],MEM_DECOMMIT)) return 0;
-					if (usebeats[i])
+					if (g_usebeats[i])
 					{
 						buffersize[i] = 2*virtualbuffersize[i];
 						buffer[i] = VirtualAlloc(NULL,buffersize[i],MEM_COMMIT,PAGE_READWRITE);
@@ -299,13 +298,13 @@ int C_DELAY::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *
 					inpos[i] = (LPVOID)(((unsigned long)buffer[i])+virtualbuffersize[i]-framemem);
 					if (buffer[i] == NULL)
 					{
-						framedelay[i] = 0;
-						if (usebeats[i])
+						g_framedelay[i] = 0;
+						if (g_usebeats[i])
 						{
-							framesperbeat = 0;
+							g_framesperbeat = 0;
 							framessincebeat = 0;
-							framedelay[i] = 0;
-							delay[i] = 0;
+							g_framedelay[i] = 0;
+							g_delay[i] = 0;
 						}
 					}
 					oldvirtualbuffersize[i] = virtualbuffersize[i];
@@ -314,12 +313,12 @@ int C_DELAY::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *
 			}
 		}
 	}
-	if (mode != 0 && framedelay[activebuffer]>1)
+	if (mode != 0 && g_framedelay[activebuffer]>1)
 	{
 		if (mode == 2) CopyMemory(framebuffer,outpos[activebuffer],framemem);
 		else CopyMemory(inpos[activebuffer],framebuffer,framemem);
 	}
-	if (renderid == numinstances) for (int i=0;i<6;i++)
+	if (renderid == numinstances) for (int i=0;i<MULTIDELAY_NUM_BUFFERS;i++)
 	{
 		inpos[i] = (LPVOID)(((unsigned long)inpos[i])+framemem);
 		outpos[i] = (LPVOID)(((unsigned long)outpos[i])+framemem);
@@ -354,19 +353,19 @@ void C_DELAY::load_config(unsigned char *data, int len) // read configuration of
 	}
 	if (len-pos >= 4) 
 	{
-		for (int i=0;i<6;i++)
+		for (int i=0;i<MULTIDELAY_NUM_BUFFERS;i++)
 		{
 			if (len-pos >= 4) 
 			{
 				// load usebeats
-				usebeats[i]=(GET_INT()==1);
+				g_usebeats[i]=(GET_INT()==1);
 				pos+=4;
 			}
 			if (len-pos >= 4) 
 			{
 				// load delay
-				delay[i]=GET_INT();
-				framedelay[i] = (usebeats[i]?framesperbeat:delay[i])+1;
+				g_delay[i]=GET_INT();
+				g_framedelay[i] = (g_usebeats[i]?g_framesperbeat:g_delay[i])+1;
 				pos+=4;
 			}
 		}
@@ -384,11 +383,11 @@ int  C_DELAY::save_config(unsigned char *data)
 	pos+=4;
 	if (creationid == 1)
 	{
-		for (int i=0;i<6;i++)
+		for (int i=0;i<MULTIDELAY_NUM_BUFFERS;i++)
 		{
-			PUT_INT((int)usebeats[i]);
+			PUT_INT((int)g_usebeats[i]);
 			pos+=4;
-			PUT_INT(delay[i]);
+			PUT_INT(g_delay[i]);
 			pos+=4;
 		}
 	}
@@ -405,3 +404,10 @@ C_RBASE *R_MultiDelay(char *desc) // creates a new effect object if desc is NULL
 	}
 	return (C_RBASE *) new C_DELAY();
 }
+
+bool          C_DELAY::usebeats(int buf) { return g_usebeats[buf]; }
+void          C_DELAY::usebeats(int buf, bool value) { g_usebeats[buf] = value; }
+int           C_DELAY::delay(int buf) { return g_delay[buf]; }
+void          C_DELAY::delay(int buf, int value) { g_delay[buf] = value; }
+void          C_DELAY::framedelay(int buf, unsigned long value) { g_framedelay[buf] = value; }
+unsigned long C_DELAY::framesperbeat() { return g_framesperbeat; }
