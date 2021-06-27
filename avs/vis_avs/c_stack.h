@@ -1,5 +1,7 @@
 #pragma once
 
+#include "c__base.h"
+
 #define MOD_NAME "Misc / Buffer Save"
 #define C_THISCLASS C_StackClass
 
