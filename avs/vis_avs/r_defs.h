@@ -32,7 +32,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../gcc-hacks.h"
 #include "c__base.h"
-#include "g_lib.h"
+#include "g__lib.h"
 
 
 // defined in main.cpp, render.cpp
