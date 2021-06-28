@@ -175,7 +175,7 @@ static APEinfo ext_info=
   NSEEL_code_compile,
   AVS_EEL_IF_Execute,
   NSEEL_code_free,
-  compilerfunctionlist,
+  NULL,
   getGlobalBuffer,
 };
 

@@ -82,7 +82,7 @@ typedef struct
   void (*freeCode)(VM_CODEHANDLE);
 
   // requires ver >= 2
-  void (*doscripthelp)(HWND hwndDlg,char *mytext); // mytext can be NULL for no custom page
+  void* _removed;  // this used to be the "doscripthelp" utility method. removed until the render code can signal the ui.
 
   /// requires ver >= 3
   void *(*getNbuffer)(int w, int h, int n, int do_alloc); // do_alloc should be 0 if you dont want it to allocate if empty
