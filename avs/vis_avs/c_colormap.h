@@ -95,13 +95,12 @@ class C_ColorMap : public C_RBASE {
         virtual int  save_config(unsigned char *data);
 
         /* Other utilities */
-        void load_map_file(int map_index);
-        void save_map_file(int map_index);
         void make_default_map(int map_index);
         void bake_full_map(int map_index);
         void add_map_color(int map_index, unsigned int position, int color);
         void remove_map_color(int map_index, int remove_id);
         void sort_colors(int map_index);
+        bool load_map_colors(unsigned char *data, int len, int map_index, int pos);
 
         colormap_apeconfig config;
         map maps[COLORMAP_NUM_MAPS];
@@ -126,5 +125,4 @@ class C_ColorMap : public C_RBASE {
         __m128i get_key_ssse3(__m128i color4);
         void blend_ssse3(baked_map* blend_map, int* framebuffer, int w, int h);
         bool load_map_header(unsigned char *data, int len, int map_index, int pos);
-        bool load_map_colors(unsigned char *data, int len, int map_index, int pos);
 };

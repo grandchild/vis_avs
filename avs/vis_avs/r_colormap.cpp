@@ -66,6 +66,8 @@ static char colormap_labels_blendmodes[COLORMAP_NUM_BLENDMODES][14] = {
 static int g_ColorSetValue;
 static int g_currently_selected_color_id = -1;
 
+void save_map_file(C_ColorMap* colormap, int map_index);
+void load_map_file(C_ColorMap* colormap, int map_index);
 
 int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam) {
     C_ColorMap* g_ColormapThis = (C_ColorMap*)g_current_render;
@@ -141,10 +143,10 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
                         );
                         return 0;
                     case IDC_COLORMAP_FILE_LOAD:
-                        g_ColormapThis->load_map_file(current_map);
+                        load_map_file(g_ColormapThis, current_map);
                         return 0;
                     case IDC_COLORMAP_FILE_SAVE:
-                        g_ColormapThis->save_map_file(current_map);
+                        save_map_file(g_ColormapThis, current_map);
                         return 0;
                     case IDC_COLORMAP_MAP_ENABLE:
                         g_ColormapThis->maps[current_map].enabled = IsDlgButtonChecked(hwndDlg, IDC_COLORMAP_MAP_ENABLE) == BST_CHECKED;
@@ -1177,11 +1179,11 @@ bool endswithn(char* str, char* suffix, size_t n) {
     return result;
 }
 
-void C_ColorMap::save_map_file(int map_index) {
+void save_map_file(C_ColorMap* colormap, int map_index) {
     char filepath[MAX_PATH];
     OPENFILENAME openfilename;
-    if(strnlen(this->maps[map_index].filename, COLORMAP_MAP_FILENAME_MAXLEN) > 0) {
-        strncpy(filepath, this->maps[map_index].filename, COLORMAP_MAP_FILENAME_MAXLEN);
+    if(strnlen(colormap->maps[map_index].filename, COLORMAP_MAP_FILENAME_MAXLEN) > 0) {
+        strncpy(filepath, colormap->maps[map_index].filename, COLORMAP_MAP_FILENAME_MAXLEN);
     } else {
         strncpy(filepath, "New Map.clm", COLORMAP_MAP_FILENAME_MAXLEN);
     }
@@ -1203,28 +1205,28 @@ void C_ColorMap::save_map_file(int map_index) {
     if(!endswithn(openfilename.lpstrFile, ".clm", MAX_PATH)) {
         size_t len_selected_path = strnlen(openfilename.lpstrFile, MAX_PATH);
         if(len_selected_path >= MAX_PATH - 4) {
-            MessageBox(this->dialog, "Filename too long!", "Error", MB_ICONERROR);
+            MessageBox(colormap->dialog, "Filename too long!", "Error", MB_ICONERROR);
             return;
         }
         strncpy(filepath + len_selected_path, ".clm", 5);
     }
     FILE* file = fopen(openfilename.lpstrFile, "wb");
     if(file == NULL) {
-        MessageBox(this->dialog, "Unable to open file for writing!", "Error", MB_ICONERROR);
+        MessageBox(colormap->dialog, "Unable to open file for writing!", "Error", MB_ICONERROR);
         return;
     }
     fwrite("CLM1", 4, 1, file);
-    fwrite(&this->maps[map_index].length, sizeof(int), 1, file);
-    fwrite(this->maps[map_index].colors, sizeof(map_color), this->maps[map_index].length, file);
+    fwrite(&colormap->maps[map_index].length, sizeof(int), 1, file);
+    fwrite(colormap->maps[map_index].colors, sizeof(map_color), colormap->maps[map_index].length, file);
     fclose(file);
     // TODO [cleanup][bugfix]: Make OS-portable. May return NULL.
     char* basename = strrchr(filepath, '\\') + 1;
-    strncpy(this->maps[map_index].filename, basename, COLORMAP_MAP_FILENAME_MAXLEN);
-    this->maps[map_index].filename[COLORMAP_MAP_FILENAME_MAXLEN - 1] = '\0';
-    SetDlgItemText(this->dialog, IDC_COLORMAP_FILENAME_VIEW, this->maps[map_index].filename);
+    strncpy(colormap->maps[map_index].filename, basename, COLORMAP_MAP_FILENAME_MAXLEN);
+    colormap->maps[map_index].filename[COLORMAP_MAP_FILENAME_MAXLEN - 1] = '\0';
+    SetDlgItemText(colormap->dialog, IDC_COLORMAP_FILENAME_VIEW, colormap->maps[map_index].filename);
 }
 
-void C_ColorMap::load_map_file(int map_index) {
+void load_map_file(C_ColorMap* colormap, int map_index) {
     char filename[MAX_PATH];
     OPENFILENAME openfilename;
     HANDLE file;
@@ -1234,7 +1236,7 @@ void C_ColorMap::load_map_file(int map_index) {
     int length;
     int colors_offset;
 
-    strncpy(filename, this->maps[map_index].filename, COLORMAP_MAP_FILENAME_MAXLEN);
+    strncpy(filename, colormap->maps[map_index].filename, COLORMAP_MAP_FILENAME_MAXLEN);
     openfilename.lpstrInitialDir = g_path;
     openfilename.hwndOwner = NULL;
     openfilename.lpstrFileTitle = NULL;
@@ -1259,7 +1261,7 @@ void C_ColorMap::load_map_file(int map_index) {
         NULL
     );
     if (file == INVALID_HANDLE_VALUE) {
-        MessageBox(this->dialog, "Unable to open file for reading!", "Error", MB_ICONERROR);
+        MessageBox(colormap->dialog, "Unable to open file for reading!", "Error", MB_ICONERROR);
         return;
     }
     filesize = GetFileSize(file, NULL);
@@ -1268,7 +1270,7 @@ void C_ColorMap::load_map_file(int map_index) {
     CloseHandle(file);
     if(strncmp((char*)contents, "CLM1", 4) != 0) {
         delete[] contents;
-        MessageBox(this->dialog, "Invalid CLM file!", "Error", MB_ICONERROR);
+        MessageBox(colormap->dialog, "Invalid CLM file!", "Error", MB_ICONERROR);
         return;
     }
     length = *(int*)(contents + 4);
@@ -1277,16 +1279,16 @@ void C_ColorMap::load_map_file(int map_index) {
         || length > COLORMAP_MAX_COLORS
         || length != (bytes_read - colors_offset) / sizeof(map_color)
     ) {
-        MessageBox(this->dialog, "Corrupt CLM file!", "Warning", MB_ICONWARNING);
+        MessageBox(colormap->dialog, "Corrupt CLM file!", "Warning", MB_ICONWARNING);
         length = (bytes_read - colors_offset) / sizeof(map_color);
     }
-    this->maps[map_index].length = length;
-    this->load_map_colors(contents, bytes_read, map_index, colors_offset);
+    colormap->maps[map_index].length = length;
+    colormap->load_map_colors(contents, bytes_read, map_index, colors_offset);
     delete[] contents;
-    strncpy(this->maps[map_index].filename, strrchr(openfilename.lpstrFile, '\\') + 1, COLORMAP_MAP_FILENAME_MAXLEN);
-    InvalidateRect(GetDlgItem(this->dialog, IDC_COLORMAP_MAPVIEW), NULL, 0);
-    SetDlgItemText(this->dialog, IDC_COLORMAP_FILENAME_VIEW, this->maps[map_index].filename);
-    this->bake_full_map(map_index);
+    strncpy(colormap->maps[map_index].filename, strrchr(openfilename.lpstrFile, '\\') + 1, COLORMAP_MAP_FILENAME_MAXLEN);
+    InvalidateRect(GetDlgItem(colormap->dialog, IDC_COLORMAP_MAPVIEW), NULL, 0);
+    SetDlgItemText(colormap->dialog, IDC_COLORMAP_FILENAME_VIEW, colormap->maps[map_index].filename);
+    colormap->bake_full_map(map_index);
 }
 
 C_RBASE *R_ColorMap(char *desc) {
