@@ -56,4 +56,22 @@ class C_RenderTransitionClass  {
 		virtual ~C_RenderTransitionClass();
 
 		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
+
+    char* transitionmodes[15] = {
+        "Random",
+        "Cross dissolve",
+        "L/R Push",
+        "R/L Push",
+        "T/B Push",
+        "B/T Push",
+        "9 Random Blocks",
+        "Split L/R Push",
+        "L/R to Center Push",
+        "L/R to Center Squeeze",
+        "L/R Wipe",
+        "R/L Wipe",
+        "T/B Wipe",
+        "B/T Wipe",
+        "Dot Dissolve",
+    };
 };

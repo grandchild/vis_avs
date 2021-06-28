@@ -39,24 +39,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math.h>
 extern char *scanstr_back(char *str, char *toscan, char *defval);
 
-static const char *transitionmodes[] = 
-{
-  "Random",
-	"Cross dissolve",
-	"L/R Push",
-	"R/L Push",
-	"T/B Push",
-	"B/T Push",
-	"9 Random Blocks",
-	"Split L/R Push",
-	"L/R to Center Push",
-	"L/R to Center Squeeze",
-  "L/R Wipe",
-  "R/L Wipe",
-  "T/B Wipe",
-  "B/T Wipe",
-  "Dot Dissolve",
-};
 
 C_RenderTransitionClass::C_RenderTransitionClass()
 {
@@ -541,8 +523,8 @@ int win32_dlgproc_transition(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
 		case WM_INITDIALOG:
       {
 			int x;
-      for (x = 0; x < sizeof(transitionmodes)/sizeof(transitionmodes[0]); x ++)
-	      SendDlgItemMessage(hwndDlg,IDC_TRANSITION,CB_ADDSTRING,0,(LPARAM)transitionmodes[x]);
+      for (x = 0; x < sizeof(g_render_transition->transitionmodes)/sizeof(g_render_transition->transitionmodes[0]); x ++)
+	      SendDlgItemMessage(hwndDlg,IDC_TRANSITION,CB_ADDSTRING,0,(LPARAM)g_render_transition->transitionmodes[x]);
       SendDlgItemMessage(hwndDlg,IDC_TRANSITION,CB_SETCURSEL,(WPARAM)cfg_transition_mode&0x7fff,0);
 			SendDlgItemMessage(hwndDlg, IDC_SPEED, TBM_SETRANGE, TRUE, MAKELONG(1, 32));
 			SendDlgItemMessage(hwndDlg, IDC_SPEED, TBM_SETPOS, TRUE, cfg_transitions_speed);
