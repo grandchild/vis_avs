@@ -33,6 +33,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <process.h>
 #include "r_defs.h"
+#include "g__defs.h"
 #include "vis.h"
 
 #ifdef WA3_COMPONENT

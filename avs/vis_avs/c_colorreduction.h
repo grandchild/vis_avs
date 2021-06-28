@@ -1,6 +1,7 @@
 #pragma once
 
 #include "c__base.h"
+#include "c__defs.h"  // MAX_PATH
 
 #define MOD_NAME "Trans / Color Reduction"
 #define C_THISCLASS C_ColorReduction

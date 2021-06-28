@@ -31,27 +31,19 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _R_DEFS_H_
 
 #include "../gcc-hacks.h"
+#include "c__defs.h"
 #include "c__base.h"
 #include "g__lib.h"
 
 
 // defined in main.cpp, render.cpp
-extern char g_path[];
 extern unsigned char g_blendtable[256][256];
 
 extern int g_reset_vars_on_recompile;
 
 // use this function to get a global buffer, and the last flag says whether or not to
 // allocate it if it's not valid...
-#define NBUF 8
 void *getGlobalBuffer(int w, int h, int n, int do_alloc);
-
-
-// implemented in util.cpp
-void GR_SelectColor(HWND hwnd, int *a);
-void GR_DrawColoredButton(DRAWITEMSTRUCT *di, COLORREF color);
-void loadComboBox(HWND dlg, char *ext, char *selectedName);
-void compilerfunctionlist(HWND hwndDlg, char *localinfo=NULL);
 
 // matrix.cpp
 void matrixRotate(float matrix[], char m, float Deg);

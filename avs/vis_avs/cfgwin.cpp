@@ -31,6 +31,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <commctrl.h>
 #include "r_defs.h"
+#include "g__defs.h"
 #include "g__lib.h"
 #include "vis.h"
 #include "cfgwnd.h"
