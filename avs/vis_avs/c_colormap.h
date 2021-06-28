@@ -125,4 +125,31 @@ class C_ColorMap : public C_RBASE {
         __m128i get_key_ssse3(__m128i color4);
         void blend_ssse3(baked_map* blend_map, int* framebuffer, int w, int h);
         bool load_map_header(unsigned char *data, int len, int map_index, int pos);
+
+    public:
+        char* colormap_labels_map_cycle_mode[COLORMAP_NUM_CYCLEMODES] = {
+            "None (single map)",
+            "On-beat random",
+            "On-beat sequential"
+        };
+        char* colormap_labels_color_key[COLORMAP_NUM_KEYMODES] = {
+            "Red Channel",
+            "Green Channel",
+            "Blue Channel",
+            "(R+G+B)/2",
+            "Maximal Channel",
+            "(R+G+B)/3"
+        };
+        char* colormap_labels_blendmodes[COLORMAP_NUM_BLENDMODES] = {
+            "Replace",
+            "Additive",
+            "Maximum",
+            "Minimum",
+            "50/50",
+            "Subtractive 1",
+            "Subtractive 2",
+            "Multiply",
+            "XOR",
+            "Adjustable"
+        };
 };

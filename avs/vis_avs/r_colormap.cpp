@@ -37,32 +37,6 @@ index from the baked map.
                    data[pos+2] = ((y) >> 16) & 0xff; \
                    data[pos+3] = ((y) >> 24) & 0xff
 
-static char colormap_labels_map_cycle_mode[COLORMAP_NUM_CYCLEMODES][19] = {
-    "None (single map)",
-    "On-beat random",
-    "On-beat sequential"
-};
-static char colormap_labels_color_key[COLORMAP_NUM_KEYMODES][16] = {
-    "Red Channel",
-    "Green Channel",
-    "Blue Channel",
-    "(R+G+B)/2",
-    "Maximal Channel",
-    "(R+G+B)/3"
-};
-static char colormap_labels_blendmodes[COLORMAP_NUM_BLENDMODES][14] = {
-    "Replace",
-    "Additive",
-    "Maximum",
-    "Minimum",
-    "50/50",
-    "Subtractive 1",
-    "Subtractive 2",
-    "Multiply",
-    "XOR",
-    "Adjustable"
-};
-
 static int g_ColorSetValue;
 static int g_currently_selected_color_id = -1;
 
@@ -194,15 +168,15 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
                 SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_SELECT, CB_SETCURSEL, g_ColormapThis->current_map, 0);
                 CheckDlgButton(hwndDlg, IDC_COLORMAP_MAP_ENABLE, g_ColormapThis->maps[g_ColormapThis->current_map].enabled != 0);
                 for(unsigned int i = 0; i < COLORMAP_NUM_CYCLEMODES; i++) {
-                    SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_CYCLING_SELECT, CB_ADDSTRING, NULL, (LPARAM)colormap_labels_map_cycle_mode[i]);
+                    SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_CYCLING_SELECT, CB_ADDSTRING, NULL, (LPARAM)g_ColormapThis->colormap_labels_map_cycle_mode[i]);
                 }
                 SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_CYCLING_SELECT, CB_SETCURSEL, g_ColormapThis->config.map_cycle_mode, NULL);
                 for(unsigned int i = 0; i < COLORMAP_NUM_KEYMODES; i++) {
-                    SendDlgItemMessage(hwndDlg, IDC_COLORMAP_KEY_SELECT, CB_ADDSTRING, NULL, (LPARAM)colormap_labels_color_key[i]);
+                    SendDlgItemMessage(hwndDlg, IDC_COLORMAP_KEY_SELECT, CB_ADDSTRING, NULL, (LPARAM)g_ColormapThis->colormap_labels_color_key[i]);
                 }
                 SendDlgItemMessage(hwndDlg, IDC_COLORMAP_KEY_SELECT, CB_SETCURSEL, g_ColormapThis->config.color_key, NULL);
                 for(unsigned int i = 0; i < COLORMAP_NUM_BLENDMODES; i++) {
-                    SendDlgItemMessage(hwndDlg, IDC_COLORMAP_OUT_BLENDMODE, CB_ADDSTRING, NULL, (LPARAM)colormap_labels_blendmodes[i]);
+                    SendDlgItemMessage(hwndDlg, IDC_COLORMAP_OUT_BLENDMODE, CB_ADDSTRING, NULL, (LPARAM)g_ColormapThis->colormap_labels_blendmodes[i]);
                 }
                 SendDlgItemMessage(hwndDlg, IDC_COLORMAP_OUT_BLENDMODE, CB_SETCURSEL, g_ColormapThis->config.blendmode, NULL);
                 CheckDlgButton(hwndDlg, IDC_COLORMAP_NO_SKIP_FAST_BEATS, g_ColormapThis->config.dont_skip_fast_beats != 0);
