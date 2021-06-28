@@ -27,9 +27,9 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#ifndef _R_TRANSITION_H_
-#define _R_TRANSITION_H_
+#pragma once
 
+#include <windows.h>
 #include "undo.h"
 
 class C_RenderTransitionClass  {
@@ -56,7 +56,4 @@ class C_RenderTransitionClass  {
 		virtual ~C_RenderTransitionClass();
 
 		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
-    static BOOL CALLBACK g_DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam);
 };
-
-#endif // _R_TRANSITION_H_

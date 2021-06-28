@@ -29,7 +29,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "r_defs.h"
 #include "c_list.h"
-#include "r_transition.h"
+#include "c_transition.h"
 #include "rlib.h"
 
 void Render_Init(HINSTANCE hDllInstance);

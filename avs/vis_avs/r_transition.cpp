@@ -27,7 +27,7 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include <windows.h>
+#include "c_transition.h"
 #include <stdio.h>
 #include <commctrl.h>
 #include <process.h>
@@ -35,7 +35,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "resource.h"
 #include "cfgwnd.h"
 #include "r_defs.h"
-#include "r_transition.h"
 #include "render.h"
 #include <math.h>
 extern char *scanstr_back(char *str, char *toscan, char *defval);
@@ -535,7 +534,7 @@ int C_RenderTransitionClass::render(char visdata[2][2][576], int isBeat, int *fr
   return 0;
 }
 
-BOOL CALLBACK DlgProc_Transition(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_transition(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg)
 	{
