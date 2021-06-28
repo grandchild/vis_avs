@@ -37,6 +37,14 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef LASER
 
+// historically, these were the radio buttons' resource IDs, hence the weird numbers.
+#define CHANSHIFT_MODE_RBG 1020
+#define CHANSHIFT_MODE_BRG 1019
+#define CHANSHIFT_MODE_BGR 1021
+#define CHANSHIFT_MODE_GBR 1018
+#define CHANSHIFT_MODE_GRB 1022
+#define CHANSHIFT_MODE_RGB 1183
+
 // this is where we deal with the configuration screen
 int win32_dlgproc_chanshift(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -72,7 +80,7 @@ int win32_dlgproc_chanshift(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 C_THISCLASS::C_THISCLASS() 
 {
 	memset(&config, 0, sizeof(channelShiftConfig));
-	config.mode = IDC_RBG;
+	config.mode = CHANSHIFT_MODE_RBG;
 	config.onbeat = 1;
 }
 
@@ -87,7 +95,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
   if (isBeat&0x80000000) return 0;
 
 	int c;
-	int modes[] = { IDC_RGB, IDC_RBG, IDC_GBR, IDC_GRB, IDC_BRG, IDC_BGR };
+	int modes[] = { CHANSHIFT_MODE_RGB, CHANSHIFT_MODE_RBG, CHANSHIFT_MODE_GBR, CHANSHIFT_MODE_GRB, CHANSHIFT_MODE_BRG, CHANSHIFT_MODE_BGR };
 
 	if (isBeat && config.onbeat) {
 		config.mode = modes[rand() % 6];
@@ -98,9 +106,9 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 	// TODO [performance]: All of these byte-swapping sections just smell like PSHUFB
 	switch (config.mode) {
 	default:
-	case IDC_RGB:
+	case CHANSHIFT_MODE_RGB:
 		return 0;
-	case IDC_RBG:
+	case CHANSHIFT_MODE_RBG:
 #ifdef _MSC_VER
 		__asm {
 			mov ebx, framebuffer;
@@ -159,7 +167,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 #endif
 		break;
 		
-	case IDC_BRG:
+	case CHANSHIFT_MODE_BRG:
 #ifdef _MSC_VER
 		__asm {
 			mov ebx, framebuffer;
@@ -250,7 +258,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 #endif
 		break;
 
-	case IDC_BGR:
+	case CHANSHIFT_MODE_BGR:
 #ifdef _MSC_VER
 		__asm {
 			mov ebx, framebuffer;
@@ -317,7 +325,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 #endif
 		break;
 
-	case IDC_GBR:
+	case CHANSHIFT_MODE_GBR:
 #ifdef _MSC_VER
 		__asm {
 			mov ebx, framebuffer;
@@ -400,7 +408,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 #endif
 		break;
 
-	case IDC_GRB:
+	case CHANSHIFT_MODE_GRB:
 #ifdef _MSC_VER
 		__asm {
 			mov ebx, framebuffer;

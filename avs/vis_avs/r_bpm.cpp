@@ -38,6 +38,9 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "r_defs.h"
 
 
+#define SLIDER_CTRL_IN 1
+#define SLIDER_CTRL_OUT 2
+
 C_THISCLASS::~C_THISCLASS() 
 {
 }
@@ -92,8 +95,8 @@ int  C_THISCLASS::save_config(unsigned char *data) // write configuration to dat
 
 void C_THISCLASS::SliderStep(int Ctl, int *slide)
 {
-*slide += Ctl == IDC_IN ? inInc : outInc;
-if (!*slide || *slide == 8) (Ctl == IDC_IN ? inInc : outInc) *= -1;
+*slide += Ctl == SLIDER_CTRL_IN ? inInc : outInc;
+if (!*slide || *slide == 8) (Ctl == SLIDER_CTRL_IN ? inInc : outInc) *= -1;
 }
 
 // render function
@@ -110,7 +113,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 
 	if (isBeat) // Show the beat received from AVS
 		{
-		SliderStep(IDC_IN, &inSlide);
+		SliderStep(SLIDER_CTRL_IN, &inSlide);
 		count++;
 		}
 
@@ -123,7 +126,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 	if (TCNow > arbLastTC + arbVal)
 		{
 		arbLastTC = TCNow;
-		SliderStep(IDC_OUT, &outSlide);
+		SliderStep(SLIDER_CTRL_OUT, &outSlide);
 		return SET_BEAT;
 		}
 	return CLR_BEAT;
@@ -134,7 +137,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 	if (isBeat && ++skipCount >= skipVal+1)
 		{
 		skipCount = 0;
-		SliderStep(IDC_OUT, &outSlide);
+		SliderStep(SLIDER_CTRL_OUT, &outSlide);
 		return SET_BEAT;
 		}
 	return CLR_BEAT;
@@ -146,7 +149,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 		return CLR_BEAT;
 	else
 		{
-		SliderStep(IDC_OUT, &outSlide);
+		SliderStep(SLIDER_CTRL_OUT, &outSlide);
 		return SET_BEAT;
 		}
 	}
