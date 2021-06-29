@@ -16,10 +16,8 @@
 #define OUT_XOR           8
 #define OUT_MINIMUM       9
 
-#define ID_TEXER2_EXAMPLE_COLOROSC 31337
-#define ID_TEXER2_EXAMPLE_FLUMMYSPEC 31338
-#define ID_TEXER2_EXAMPLE_BEATCIRCLE 31339
-#define ID_TEXER2_EXAMPLE_3DRINGS 31340
+#define TEXERII_NUM_EXAMPLES 4
+#define TEXERII_EXAMPLES_FIRST_ID 31337
 
 #define TEXER_II_VERSION_V2_81D 0
 #define TEXER_II_VERSION_V2_81D_UPGRADE_HELP \
@@ -67,12 +65,22 @@ struct Vars {
     double *skip;
 };
 
+struct Texer2Example {
+    char *name;
+    char *init;
+    char *frame;
+    char *beat;
+    char *point;
+    int resize;
+    int wrap;
+    int mask;
+};
+
 typedef void *VM_CONTEXT;
 typedef void *VM_CODEHANDLE;
 
 class C_Texer2 : public C_RBASE
 {
-    protected:
     public:
         C_Texer2(int default_version);
         virtual ~C_Texer2();
@@ -86,7 +94,6 @@ class C_Texer2 : public C_RBASE
 
         virtual void Recompile();
         virtual void DrawParticle(int *framebuffer, int *texture, int w, int h, double x, double y, double sizex, double sizey, unsigned int color);
-        virtual void LoadExamples(HWND button, HWND ctl, bool is_init);
 
         texer2_apeconfig config;
 
@@ -157,4 +164,99 @@ class C_Texer2 : public C_RBASE
             "Texer II supports the standard AVS blend modes. Just place a Misc / Set Render Mode before the Texer II and choose the appropriate setting. You will most likely use Additive or Maximum blend.\r\n"
             "\r\n"
             "Texer II was written by Steven Wittens. Thanks to everyone at the Winamp.com forums for feedback, especially Deamon and gaekwad2 for providing the examples and Tuggummi for providing the default image.\r\n";
+
+        Texer2Example examples[TEXERII_NUM_EXAMPLES] = {
+            {
+                "Colored Oscilloscope",
+                /* init */
+                "// This example needs Maximum render mode\r\n"
+                "n=300;",
+                /* frame */
+                "",
+                /* beat */
+                "",
+                /* point */
+                "x=(i*2-1)*2;y=v;\r\n"
+                "red=1-y*2;green=abs(y)*2;blue=y*2-1;",
+                0, 0, 1,
+            },
+            {
+                "Flummy Spectrum",
+                /* init */
+                "// This example needs Maximum render mode",
+                /* frame */
+                "n=w/20+1;",
+                /* beat */
+                "",
+                /* point */
+                "x=i*1.8-.9;\r\n"
+                "y=0;\r\n"
+                "vol=1.001-getspec(abs(x)*.5,.05,0)*min(1,abs(x)+.5)*2;\r\n"
+                "sizex=vol;sizey=(1/vol)*2;\r\n"
+                "j=abs(x);red=1-j;green=1-abs(.5-j);blue=j",
+                1, 0, 1,
+            },
+            {
+                "Beat-responsive Circle",
+                /* init */
+                "// This example needs Maximum render mode\r\n"
+                "n=30;newradius=.5;",
+                /* frame */
+                "rotation=rotation+step;step=step*.9;\r\n"
+                "radius=radius*.9+newradius*.1;\r\n"
+                "point=0;\r\n"
+                "aspect=h/w;",
+                /* beat */
+                "step=.05;\r\n"
+                "newradius=rand(100)*.005+.5;",
+                /* point */
+                "angle=rotation+point/n*$pi*2;\r\n"
+                "x=cos(angle)*radius*aspect;y=sin(angle)*radius;\r\n"
+                "red=sin(i*$pi*2)*.5+.5;green=1-red;blue=.5;\r\n"
+                "point=point+1;",
+                0, 0, 1,
+            },
+            {
+                "3D Beat Rings",
+                /* init */
+                "// This shows how to use texer for 3D particles\r\n"
+                "// Additive or maximum blend mode should be used\r\n"
+                "xr=(rand(50)/500)-0.05;\r\n"
+                "yr=(rand(50)/500)-0.05;\r\n"
+                "zr=(rand(50)/500)-0.05;",
+                /* frame */
+                "// Rotation along x/y/z axes\r\n"
+                "xt=xt+xr;yt=yt+yr;zt=zt+zr;\r\n"
+                "// Shrink rings\r\n"
+                "bt=max(0,bt*.95+.01);\r\n"
+                "// Aspect correction\r\n"
+                "asp=w/h;\r\n"
+                "// Dynamically adjust particle count based on ring size\r\n"
+                "n=((bt*40)|0)*3;",
+                /* beat */
+                "// New rotation speeds\r\n"
+                "xr=(rand(50)/500)-0.05;\r\n"
+                "yr=(rand(50)/500)-0.05;\r\n"
+                "zr=(rand(50)/500)-0.05;\r\n"
+                "// Ring size\r\n"
+                "bt=1.2;\r\n"
+                "n=((bt*40)|0)*3;",
+                /* point */
+                "// 3D object\r\n"
+                "x1=sin(i*$pi*6)/2*bt;\r\n"
+                "y1=above(i,.66)-below(i,.33);\r\n"
+                "z1=cos(i*$pi*6)/2*bt;\r\n"
+                "\r\n"
+                "// 3D rotations\r\n"
+                "x2=x1*sin(zt)-y1*cos(zt);y2=x1*cos(zt)+y1*sin(zt);\r\n"
+                "z2=x2*cos(yt)+z1*sin(yt);x3=x2*sin(yt)-z1*cos(yt);\r\n"
+                "y3=y2*sin(xt)-z2*cos(xt);z3=y2*cos(xt)+z2 *sin(xt);\r\n"
+                "\r\n"
+                "// 2D Projection\r\n"
+                "iz=1/(z3+2);\r\n"
+                "x=x3*iz;y=y3*iz*asp;\r\n"
+                "sizex=iz*2;sizey=iz*2;",
+                1, 0, 0,
+            },
+        };
 };

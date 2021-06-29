@@ -11,112 +11,42 @@
 // extended APE api support
 APEinfo *g_extinfo = 0;
 
-void C_Texer2::LoadExamples(HWND button, HWND ctl, bool is_init) {
+void load_examples(C_Texer2* texer2, HWND button, HWND ctl) {
     RECT r;
-    GetWindowRect(ctl, &r);
+    if(GetWindowRect(ctl, &r) == 0) {
+        return;
+    }
 
     HMENU m = CreatePopupMenu();
-    AppendMenu(m, MF_STRING, ID_TEXER2_EXAMPLE_COLOROSC, "Colored Oscilloscope");
-    AppendMenu(m, MF_STRING, ID_TEXER2_EXAMPLE_FLUMMYSPEC, "Flummy Spectrum");
-    AppendMenu(m, MF_STRING, ID_TEXER2_EXAMPLE_BEATCIRCLE, "Beat-responsive Circle");
-    AppendMenu(m, MF_STRING, ID_TEXER2_EXAMPLE_3DRINGS, "3D Beat Rings");
-
-    int ret = TrackPopupMenu(m, TPM_RETURNCMD, r.left+1, r.bottom+1, 0, ctl, 0);
-    switch(ret) {
-        case ID_TEXER2_EXAMPLE_COLOROSC:
-            this->code.SetInit("// This example needs Maximum render mode\r\n"
-                               "n=300;");
-            this->code.SetFrame("");
-            this->code.SetBeat("");
-            this->code.SetPoint("x=(i*2-1)*2;y=v;\r\n"
-                                "red=1-y*2;green=abs(y)*2;blue=y*2-1;");
-            this->config.mask = 1;
-            this->config.resize = 0;
-            this->config.wrap = 0;
-            break;
-        case ID_TEXER2_EXAMPLE_FLUMMYSPEC:
-            this->code.SetInit("// This example needs Maximum render mode");
-            this->code.SetFrame("");
-            this->code.SetBeat("");
-            this->code.SetPoint("x=i*1.8-.9;\r\n"
-                                "y=0;\r\n"
-                                "vol=1.001-getspec(abs(x)*.5,.05,0)*min(1,abs(x)+.5)*2;\r\n"
-                                "sizex=vol;sizey=(1/vol)*2;\r\n"
-                                "j=abs(x);red=1-j;green=1-abs(.5-j);blue=j");
-            this->config.mask = 1;
-            this->config.resize = 1;
-            this->config.wrap = 0;
-            break;
-        case ID_TEXER2_EXAMPLE_BEATCIRCLE:
-            this->code.SetInit("// This example needs Maximum render mode\r\n"
-                               "n=30;newradius=.5;");
-            this->code.SetFrame("rotation=rotation+step;step=step*.9;\r\n"
-                                "radius=radius*.9+newradius*.1;\r\n"
-                                "point=0;\r\n"
-                                "aspect=h/w;");
-            this->code.SetBeat("step=.05;\r\n"
-                               "newradius=rand(100)*.005+.5;");
-            this->code.SetPoint("angle=rotation+point/n*$pi*2;\r\n"
-                                "x=cos(angle)*radius*aspect;y=sin(angle)*radius;\r\n"
-                                "red=sin(i*$pi*2)*.5+.5;green=1-red;blue=.5;\r\n"
-                                "point=point+1;");
-            this->config.mask = 1;
-            this->config.resize = 0;
-            this->config.wrap = 0;
-            break;
-        case ID_TEXER2_EXAMPLE_3DRINGS:
-            this->code.SetInit("// This shows how to use texer for 3D particles\r\n"
-                               "// Additive or maximum blend mode should be used\r\n"
-                               "xr=(rand(50)/500)-0.05;\r\n"
-                               "yr=(rand(50)/500)-0.05;\r\n"
-                               "zr=(rand(50)/500)-0.05;");
-            this->code.SetFrame("// Rotation along x/y/z axes\r\n"
-                                "xt=xt+xr;yt=yt+yr;zt=zt+zr;\r\n"
-                                "// Shrink rings\r\n"
-                                "bt=max(0,bt*.95+.01);\r\n"
-                                "// Aspect correction\r\n"
-                                "asp=w/h;\r\n"
-                                "// Dynamically adjust particle count based on ring size\r\n"
-                                "n=((bt*40)|0)*3;");
-            this->code.SetBeat("// New rotation speeds\r\n"
-                               "xr=(rand(50)/500)-0.05;\r\n"
-                               "yr=(rand(50)/500)-0.05;\r\n"
-                               "zr=(rand(50)/500)-0.05;\r\n"
-                               "// Ring size\r\n"
-                               "bt=1.2;\r\n"
-                               "n=((bt*40)|0)*3;");
-            this->code.SetPoint("// 3D object\r\n"
-                                "x1=sin(i*$pi*6)/2*bt;\r\n"
-                                "y1=above(i,.66)-below(i,.33);\r\n"
-                                "z1=cos(i*$pi*6)/2*bt;\r\n"
-                                "\r\n"
-                                "// 3D rotations\r\n"
-                                "x2=x1*sin(zt)-y1*cos(zt);y2=x1*cos(zt)+y1*sin(zt);\r\n"
-                                "z2=x2*cos(yt)+z1*sin(yt);x3=x2*sin(yt)-z1*cos(yt);\r\n"
-                                "y3=y2*sin(xt)-z2*cos(xt);z3=y2*cos(xt)+z2 *sin(xt);\r\n"
-                                "\r\n"
-                                "// 2D Projection\r\n"
-                                "iz=1/(z3+2);\r\n"
-                                "x=x3*iz;y=y3*iz*asp;\r\n"
-                                "sizex=iz*2;sizey=iz*2;");
-            this->config.mask = 0;
-            this->config.resize = 1;
-            this->config.wrap = 0;
-            break;
-        default:
-            break;
+    if(m == NULL) {
+        return;
     }
-    CheckDlgButton(button, IDC_TEXERII_OWRAP, this->config.wrap ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(button, IDC_TEXERII_OMASK, this->config.mask ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(button, IDC_TEXERII_ORESIZE, this->config.resize ? BST_CHECKED : BST_UNCHECKED);
-    SetDlgItemTextA(button, IDC_TEXERII_CINIT, this->code.init);
-    SetDlgItemTextA(button, IDC_TEXERII_CFRAME, this->code.frame);
-    SetDlgItemTextA(button, IDC_TEXERII_CBEAT, this->code.beat);
-    SetDlgItemTextA(button, IDC_TEXERII_CPOINT, this->code.point);
+    for(int i=0; i<TEXERII_NUM_EXAMPLES; i++) {
+        AppendMenu(m, MF_STRING, TEXERII_EXAMPLES_FIRST_ID + i, texer2->examples[i].name);
+    }
+    int ret = TrackPopupMenu(m, TPM_RETURNCMD, r.left+1, r.bottom+1, 0, ctl, 0);
+    if(ret < TEXERII_EXAMPLES_FIRST_ID || ret >= (TEXERII_EXAMPLES_FIRST_ID + TEXERII_NUM_EXAMPLES)) {
+        return;
+    }
+    Texer2Example* example = &(texer2->examples[ret - TEXERII_EXAMPLES_FIRST_ID]);
+    texer2->code.SetInit(example->init);
+    texer2->code.SetFrame(example->frame);
+    texer2->code.SetBeat(example->beat);
+    texer2->code.SetPoint(example->point);
+    texer2->config.resize = example->resize;
+    texer2->config.wrap = example->wrap;
+    texer2->config.mask = example->mask;
+    CheckDlgButton(button, IDC_TEXERII_OWRAP, texer2->config.wrap ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(button, IDC_TEXERII_OMASK, texer2->config.mask ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(button, IDC_TEXERII_ORESIZE, texer2->config.resize ? BST_CHECKED : BST_UNCHECKED);
+    SetDlgItemTextA(button, IDC_TEXERII_CINIT, texer2->code.init);
+    SetDlgItemTextA(button, IDC_TEXERII_CFRAME, texer2->code.frame);
+    SetDlgItemTextA(button, IDC_TEXERII_CBEAT, texer2->code.beat);
+    SetDlgItemTextA(button, IDC_TEXERII_CPOINT, texer2->code.point);
     // select the default texture image
-    SendDlgItemMessageA(this->hwndDlg, IDC_TEXERII_TEXTURE, CB_SETCURSEL, 0, 0);
-    this->Recompile();
-    this->InitTexture();
+    SendDlgItemMessageA(texer2->hwndDlg, IDC_TEXERII_TEXTURE, CB_SETCURSEL, 0, 0);
+    texer2->Recompile();
+    texer2->InitTexture();
 }
 
 // this is where we deal with the configuration screen
@@ -155,7 +85,7 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     compilerfunctionlist(hwndDlg, g_ConfigThis->help_text);
                 } else if (LOWORD(wParam) == IDC_TEXERII_EXAMPLE) {
                     HWND examplesButton = GetDlgItem(hwndDlg, IDC_TEXERII_EXAMPLE);
-                    g_ConfigThis->LoadExamples(hwndDlg, examplesButton, false);
+                    load_examples(g_ConfigThis, hwndDlg, examplesButton);
                 }
             } else if (wNotifyCode == EN_CHANGE) {
                 char *buf;
