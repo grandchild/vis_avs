@@ -220,6 +220,14 @@ C_Texer2::C_Texer2(int default_version)
     init = true;
     config.version = default_version;
 
+    code.SetInit(examples[0].init);
+    code.SetFrame(examples[0].frame);
+    code.SetBeat(examples[0].beat);
+    code.SetPoint(examples[0].point);
+    config.resize = examples[0].resize;
+    config.wrap = examples[0].wrap;
+    config.mask = examples[0].mask;
+
     InitializeCriticalSection(&imageload);
     InitializeCriticalSection(&codestuff);
 
