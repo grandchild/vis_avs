@@ -28,11 +28,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 #include "c_invert.h"
-#include <windows.h>
 #include <stdlib.h>
-#include <vfw.h>
-#include <commctrl.h>
-#include "resource.h"
 #include "r_defs.h"
 
 
@@ -167,25 +163,6 @@ _mmx_invert_noendloop:
   return 0;
 }
 
-
-// configuration dialog stuff
-int win32_dlgproc_invert(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
-{
-  C_THISCLASS* g_ConfigThis = (C_THISCLASS*)g_current_render;
-  switch (uMsg) {
-  	case WM_INITDIALOG:
-      if (g_ConfigThis->enabled)
-        CheckDlgButton(hwndDlg,IDC_CHECK1,BST_CHECKED);
-  		return 1;
-  	case WM_COMMAND:
-      if (LOWORD(wParam) == IDC_CHECK1)
-        g_ConfigThis->enabled=IsDlgButtonChecked(hwndDlg,IDC_CHECK1)?1:0;
-	}
-  return 0;
-}
-
-
-// export stuff
 
 C_RBASE *R_Invert(char *desc) // creates a new effect object if desc is NULL, otherwise fills in desc with description
 {

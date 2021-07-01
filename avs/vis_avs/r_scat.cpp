@@ -29,11 +29,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 // alphachannel safe 11/21/99
 #include "c_scat.h"
-#include <windows.h>
-#include <commctrl.h>
 #include "r_defs.h"
-#include "resource.h"
-
 #include "timing.h"
 
 
@@ -108,30 +104,6 @@ C_RBASE *R_Scat(char *desc)
 	if (desc) { strcpy(desc,MOD_NAME); return NULL; }
 	return (C_RBASE *) new C_THISCLASS();
 }
-
-
-int win32_dlgproc_scatter(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
-{
-  C_THISCLASS* g_this = (C_THISCLASS*)g_current_render;
-
-	switch (uMsg)
-	{
-		case WM_INITDIALOG:
-      if (g_this->enabled) CheckDlgButton(hwndDlg,IDC_CHECK1,BST_CHECKED);
-			return 1;
-    case WM_COMMAND:
-      if (LOWORD(wParam) == IDC_CHECK1)
-      {
-          if (IsDlgButtonChecked(hwndDlg,IDC_CHECK1))
-            g_this->enabled=1;
-          else
-            g_this->enabled=0;
-      }
-      return 0;
-	}
-	return 0;
-}
-
 
 
 #else

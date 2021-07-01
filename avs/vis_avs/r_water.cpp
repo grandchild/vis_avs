@@ -28,18 +28,12 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 // alphachannel safe 11/21/99
-
 #include "c_water.h"
-#include <windows.h>
-#include <commctrl.h>
 #include "r_defs.h"
-#include "resource.h"
-
 #include "timing.h"
 
+
 #ifndef LASER
-
-
 
 #define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255
 #define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))
@@ -56,8 +50,6 @@ int  C_THISCLASS::save_config(unsigned char *data)
 }
 
 
-
-
 C_THISCLASS::C_THISCLASS()
 {
   enabled=1;
@@ -69,7 +61,6 @@ C_THISCLASS::~C_THISCLASS()
 {
   if (lastframe) GlobalFree(lastframe);
 }
-
 
 
 #define _R(x) (( x ) & 0xff)
@@ -508,32 +499,6 @@ C_RBASE *R_Water(char *desc)
 	if (desc) { strcpy(desc,MOD_NAME); return NULL; }
 	return (C_RBASE *) new C_THISCLASS();
 }
-
-
-int win32_dlgproc_water(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
-{
-  C_THISCLASS* g_this = (C_THISCLASS*)g_current_render;
-
-	switch (uMsg)
-	{
-		case WM_INITDIALOG:
-      if (g_this->enabled) CheckDlgButton(hwndDlg,IDC_CHECK1,BST_CHECKED);
-			return 1;
-    case WM_COMMAND:
-      if (LOWORD(wParam) == IDC_CHECK1)
-      {
-        if (IsDlgButtonChecked(hwndDlg,IDC_CHECK1))
-          g_this->enabled=1;
-        else
-          g_this->enabled=0;
-      }
-    return 0;
-	}
-	return 0;
-}
-
-
-
 
 #else
 C_RBASE *R_Water(char *desc) { return NULL; }

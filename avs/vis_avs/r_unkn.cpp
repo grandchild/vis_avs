@@ -28,10 +28,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 #include "c_unkn.h"
-#include <windows.h>
-#include <commctrl.h>
 #include "r_defs.h"
-#include "resource.h"
 
 
 char *C_UnknClass::get_desc() { return MOD_NAME; }
@@ -84,20 +81,3 @@ int C_UnknClass::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
   return 0;
 }
 
-int win32_dlgproc_unknown(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
-{
-  C_UnknClass* g_this = (C_UnknClass*)g_current_render;
-	switch (uMsg)
-	{
-		case WM_INITDIALOG:
-      {
-        char s[512]="";
-        if (g_this->idString[0]) wsprintf(s,"APE: %s\r\n",g_this->idString);
-        else wsprintf(s,"Built-in ID: %d\r\n",g_this->id);
-        wsprintf(s+strlen(s),"Config size: %d\r\n",g_this->configdata_len);
-        SetDlgItemText(hwndDlg,IDC_EDIT1,s);
-      }
- 			return 1;
-	}
-	return 0;
-}

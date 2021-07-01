@@ -29,11 +29,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 // alphachannel safe 11/21/99
 #include "c_comment.h"
-#include <windows.h>
-#include <commctrl.h>
 #include "r_defs.h"
-#include "resource.h"
-
 #include "timing.h"
 
 
@@ -71,25 +67,3 @@ C_RBASE *R_Comment(char *desc)
 	if (desc) { strcpy(desc,MOD_NAME); return NULL; }
 	return (C_RBASE *) new C_THISCLASS();
 }
-
-
-int win32_dlgproc_comment(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
-{
-  C_THISCLASS* g_this = (C_THISCLASS*)g_current_render;
-
-	switch (uMsg)
-	{
-		case WM_INITDIALOG:
-      SetDlgItemText(hwndDlg,IDC_EDIT1,(char*)g_this->msgdata.c_str());
-    return 1;
-    case WM_COMMAND:
-      if (LOWORD(wParam) == IDC_EDIT1 && HIWORD(wParam) == EN_CHANGE)
-      {
-        g_this->msgdata = string_from_dlgitem(hwndDlg,IDC_EDIT1);
-      }
-      return 0;
-	}
-	return 0;
-}
-
-

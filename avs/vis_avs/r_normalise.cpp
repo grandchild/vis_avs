@@ -1,7 +1,5 @@
 #include "c_normalise.h"
-#include <windows.h>
 #include "r_defs.h"
-#include "resource.h"
 #include <xmmintrin.h>
 #include <emmintrin.h>
 
@@ -15,20 +13,6 @@ Must be divisible by four, or early-exit check condition will never be hit! */
 #define TRY_BAIL_SCAN_EARLY_EVERY_NTH_PIXEL 512
 #define NUM_COLOR_VALUES 256  // 2 ^ BITS_PER_CHANNEL (i.e. 8)
 
-int win32_dlgproc_normalise(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam) {
-    C_Normalise* g_ConfigThis = (C_Normalise*)g_current_render;
-    switch (uMsg) {
-        case WM_INITDIALOG:
-            CheckDlgButton(hwndDlg, IDC_NORMALISE_ENABLED, g_ConfigThis->enabled);
-            return 1;
-        case WM_COMMAND:
-            if (LOWORD(wParam) == IDC_NORMALISE_ENABLED) {
-                g_ConfigThis->enabled = IsDlgButtonChecked(hwndDlg, IDC_NORMALISE_ENABLED) == 1;
-                return 0;
-            }
-    }
-    return 0;
-}
 
 C_Normalise::C_Normalise() {
     this->enabled = true;

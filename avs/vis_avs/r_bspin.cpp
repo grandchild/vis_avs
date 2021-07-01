@@ -30,11 +30,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // alphachannel safe (sets alpha to 0 on rendered portions) 11/21/99
 
 #include "c_bspin.h"
-#include <windows.h>
 #include <math.h>
 #include "r_defs.h"
-
-#include "resource.h"
 
 
 #ifndef LASER
@@ -149,68 +146,6 @@ C_RBASE *R_BSpin(char *desc)
 	if (desc) { strcpy(desc,MOD_NAME); return NULL; }
 	return (C_RBASE *) new C_THISCLASS();
 }
-
-
-int win32_dlgproc_bassspin(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
-{
-  C_THISCLASS* g_this = (C_THISCLASS*)g_current_render;
-
-	int *a=NULL;
-	switch (uMsg)
-	{
-		case WM_DRAWITEM:
-			{
-				DRAWITEMSTRUCT *di=(DRAWITEMSTRUCT *)lParam;
-				switch (di->CtlID)
-				{
-					case IDC_LC:
-						GR_DrawColoredButton(di,g_this->colors[0]);
-					break;
-					case IDC_RC:
-						GR_DrawColoredButton(di,g_this->colors[1]);
-					break;
-				}
-			}
-		return 0;
-		case WM_INITDIALOG:
-			if (g_this->enabled&1) CheckDlgButton(hwndDlg,IDC_LEFT,BST_CHECKED);
-			if (g_this->enabled&2) CheckDlgButton(hwndDlg,IDC_RIGHT,BST_CHECKED);
-			if (g_this->mode==0) CheckDlgButton(hwndDlg,IDC_LINES,BST_CHECKED);
-			if (g_this->mode==1) CheckDlgButton(hwndDlg,IDC_TRI,BST_CHECKED);
-
-			return 1;
-		case WM_COMMAND:
-			switch (LOWORD(wParam))
-			{
-				case IDC_LINES:
-					g_this->mode=IsDlgButtonChecked(hwndDlg,IDC_LINES)?0:1;
-				return 0;
-				case IDC_TRI:
-					g_this->mode=IsDlgButtonChecked(hwndDlg,IDC_TRI)?1:0;
-				return 0;
-				case IDC_LEFT:
-					g_this->enabled&=~1;
-					g_this->enabled|=IsDlgButtonChecked(hwndDlg,IDC_LEFT)?1:0;
-				return 0;
-				case IDC_RIGHT:
-					g_this->enabled&=~2;
-					g_this->enabled|=IsDlgButtonChecked(hwndDlg,IDC_RIGHT)?2:0;
-				return 0;
-				case IDC_LC:
-					if (!a) a=&g_this->colors[0];
-				case IDC_RC:
-					if (!a) a=&g_this->colors[1];
-					GR_SelectColor(hwndDlg,a);
-					InvalidateRect(GetDlgItem(hwndDlg,LOWORD(wParam)),NULL,FALSE);
-				return 0;
-
-
-			}
-
-	}
-	return 0;
-}
-
 
 #define F16(x) ((x)<<16)
 

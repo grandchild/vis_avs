@@ -70,7 +70,7 @@ int config_prompt_save_preset=1,config_reuseonresize=1;
 
 extern BOOL CALLBACK aboutProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam);
 extern BOOL CALLBACK DlgProc_Bpm(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam);
-extern BOOL CALLBACK win32_dlgproc_transition(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam);
+extern int win32_dlgproc_transition(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam);
 extern int readyToLoadPreset(HWND parent, int isnew);
 
 extern char *extension(char *fn) ;
@@ -1455,7 +1455,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
 						  if (x==4)
 							  cur_hwnd=CreateDialog(g_hInstance,MAKEINTRESOURCE(IDD_GCFG_BPM),hwndDlg,DlgProc_Bpm);
 						  if (x==5)
-							  cur_hwnd=CreateDialog(g_hInstance,MAKEINTRESOURCE(IDD_GCFG_TRANSITIONS),hwndDlg,win32_dlgproc_transition);
+							  cur_hwnd=CreateDialog(g_hInstance,MAKEINTRESOURCE(IDD_GCFG_TRANSITIONS),hwndDlg,(DLGPROC)win32_dlgproc_transition);
 						  if (cur_hwnd) 
               {
 							  RECT r;

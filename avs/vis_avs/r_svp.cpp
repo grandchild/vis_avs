@@ -28,11 +28,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 #include "c_svp.h"
-#include <windows.h>
-#include <commctrl.h>
 #include "r_defs.h"
-#include "resource.h"
-extern HINSTANCE g_hInstance;
 
 
 #ifndef LASER
@@ -155,40 +151,6 @@ C_RBASE *R_SVP(char *desc)
 	return (C_RBASE *) new C_THISCLASS();
 }
 
-
-int win32_dlgproc_svp(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
-{
-  C_THISCLASS* g_this = (C_THISCLASS*)g_current_render;
-
-	switch (uMsg)
-	{
-		case WM_INITDIALOG:
-      loadComboBox(GetDlgItem(hwndDlg,IDC_COMBO1), "*.SVP", g_this->m_library);
-      loadComboBox(GetDlgItem(hwndDlg,IDC_COMBO1), "*.UVS", g_this->m_library);
- 			return 1;
-    case WM_COMMAND:
-      switch (LOWORD(wParam))
-      {
-        case IDC_COMBO1:
-          {
-            int a=SendDlgItemMessage(hwndDlg,IDC_COMBO1,CB_GETCURSEL,0,0);
-            if (a != CB_ERR)
-            {
-              if (SendDlgItemMessage(hwndDlg,IDC_COMBO1,CB_GETLBTEXT,a,(LPARAM)g_this->m_library) == CB_ERR)
-              {
-                g_this->m_library[0]=0;
-              }
-            }
-            else 
-              g_this->m_library[0]=0;
-            g_this->SetLibrary();
-          }
-          return 0;
-      }
-    return 0;
-	}
-	return 0;
-}
 
 #else
 C_RBASE *R_SVP(char *desc)

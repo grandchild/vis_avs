@@ -28,10 +28,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 #include "c_chanshift.h"
-#include <windows.h>
-#include <commctrl.h>
 #include <time.h>
-#include "resource.h"
 #include "r_defs.h"
 
 
@@ -45,36 +42,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CHANSHIFT_MODE_GRB 1022
 #define CHANSHIFT_MODE_RGB 1183
 
-// this is where we deal with the configuration screen
-int win32_dlgproc_chanshift(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	C_THISCLASS* g_ConfigThis = (C_THISCLASS*)g_current_render;
-	int ids[] = { IDC_RBG, IDC_BRG, IDC_BGR, IDC_GBR, IDC_GRB, IDC_RGB };
-	switch (uMsg)
-	{
-		case WM_COMMAND:
-			if (HIWORD(wParam) == BN_CLICKED) {
-				for (int i=0;i<sizeof(ids)/sizeof(ids[0]);i++)
-					if (IsDlgButtonChecked(hwndDlg, ids[i]))
-						g_ConfigThis->config.mode = ids[i];
-				g_ConfigThis->config.onbeat = IsDlgButtonChecked(hwndDlg, IDC_ONBEAT) ? 1 : 0;
-			}
-			return 1;
-
-
-		case WM_INITDIALOG:
-			CheckDlgButton(hwndDlg, g_ConfigThis->config.mode, 1);
-			if (g_ConfigThis->config.onbeat)
-				CheckDlgButton(hwndDlg, IDC_ONBEAT, 1);
-			
-			return 1;
-
-		case WM_DESTROY:
-			KillTimer(hwndDlg, 1);
-			return 1;
-	}
-	return 0;
-}
 
 // set up default configuration 
 C_THISCLASS::C_THISCLASS() 
