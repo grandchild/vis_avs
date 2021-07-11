@@ -32,10 +32,12 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         -fpermissive        # -fpermissive needed for MAKEINTRESOURCE macro, which casts
                             # LPSTR to WORD, a.k.a. char* to short unsigned int.
     )
-    # (CMake generator expressions cannot be multiline, hence the CXX_COMPILE_FLAGS
-    # variable workaround.)
-    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${AVS_CXX_COMPILER_FLAGS}>)
-    add_link_options(-Wl,--subsystem,windows)
+    # (CMake generator expressions cannot be multiline, hence the AVS_CXX_COMPILE_FLAGS
+    # variable in a foreach workaround.)
+    foreach(FLAG ${AVS_CXX_COMPILER_FLAGS})
+        add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${FLAG}>)
+    endforeach()
+    # add_link_options(-Wl,--subsystem,windows)
 else() # TODO: Clang option
     message(SEND_ERROR "unsupported compiler ${CMAKE_CXX_COMPILER_ID}")
 endif()
