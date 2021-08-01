@@ -1006,7 +1006,7 @@ char C_RenderListClass::sig_str[] = "Nullsoft AVS Preset 0.2\x1a";
 int C_RenderListClass::__SavePreset(char *filename)
 {
   EnterCriticalSection(&g_render_cs);
-	unsigned char *data = (unsigned char *) calloc(1124*1024, 1);
+	unsigned char *data = (unsigned char *) calloc(1024*1024, 1);
   int success=-1;
   if (data)
   {
@@ -1073,7 +1073,7 @@ int C_RenderListClass::__LoadPreset(char *filename, int clear)
 int C_RenderListClass::__SavePresetToUndo(C_UndoItem &item)
 {
   EnterCriticalSection(&g_render_cs);
-	unsigned char *data = (unsigned char *) calloc(1124*1024, 1);
+	unsigned char *data = (unsigned char *) calloc(1024*1024, 1);
   int success=-1;
   if (data)
   {
