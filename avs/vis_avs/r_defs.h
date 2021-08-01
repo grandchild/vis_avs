@@ -33,8 +33,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../gcc-hacks.h"
 #include "c__defs.h"
 #include "c__base.h"
-#include "g__lib.h"
-
+#include <windows.h>
 
 // defined in main.cpp, render.cpp
 extern unsigned char g_blendtable[256][256];
