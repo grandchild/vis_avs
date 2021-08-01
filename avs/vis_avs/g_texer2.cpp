@@ -6,7 +6,7 @@
 #include <windows.h>
 
 
-void load_examples(C_Texer2* texer2, HWND button, HWND ctl);
+void load_examples(C_Texer2* texer2, HWND dialog, HWND button);
 
 int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -77,8 +77,6 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
 
         case WM_INITDIALOG:
-            g_ConfigThis->hwndDlg = hwndDlg;
-
             {
                 WIN32_FIND_DATA wfd;
                 HANDLE h;
@@ -123,9 +121,9 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-void load_examples(C_Texer2* texer2, HWND button, HWND ctl) {
+void load_examples(C_Texer2* texer2, HWND dialog, HWND button) {
     RECT r;
-    if(GetWindowRect(ctl, &r) == 0) {
+    if(GetWindowRect(button, &r) == 0) {
         return;
     }
 
@@ -136,7 +134,7 @@ void load_examples(C_Texer2* texer2, HWND button, HWND ctl) {
     for(int i=0; i<TEXERII_NUM_EXAMPLES; i++) {
         AppendMenu(m, MF_STRING, TEXERII_EXAMPLES_FIRST_ID + i, texer2->examples[i].name);
     }
-    int ret = TrackPopupMenu(m, TPM_RETURNCMD, r.left+1, r.bottom+1, 0, ctl, 0);
+    int ret = TrackPopupMenu(m, TPM_RETURNCMD, r.left+1, r.bottom+1, 0, button, 0);
     if(ret < TEXERII_EXAMPLES_FIRST_ID || ret >= (TEXERII_EXAMPLES_FIRST_ID + TEXERII_NUM_EXAMPLES)) {
         return;
     }
@@ -148,15 +146,15 @@ void load_examples(C_Texer2* texer2, HWND button, HWND ctl) {
     texer2->config.resize = example->resize;
     texer2->config.wrap = example->wrap;
     texer2->config.mask = example->mask;
-    CheckDlgButton(button, IDC_TEXERII_OWRAP, texer2->config.wrap ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(button, IDC_TEXERII_OMASK, texer2->config.mask ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(button, IDC_TEXERII_ORESIZE, texer2->config.resize ? BST_CHECKED : BST_UNCHECKED);
-    SetDlgItemTextA(button, IDC_TEXERII_CINIT, texer2->code.init);
-    SetDlgItemTextA(button, IDC_TEXERII_CFRAME, texer2->code.frame);
-    SetDlgItemTextA(button, IDC_TEXERII_CBEAT, texer2->code.beat);
-    SetDlgItemTextA(button, IDC_TEXERII_CPOINT, texer2->code.point);
+    CheckDlgButton(dialog, IDC_TEXERII_OWRAP, texer2->config.wrap ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(dialog, IDC_TEXERII_OMASK, texer2->config.mask ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(dialog, IDC_TEXERII_ORESIZE, texer2->config.resize ? BST_CHECKED : BST_UNCHECKED);
+    SetDlgItemText(dialog, IDC_TEXERII_CINIT, texer2->code.init);
+    SetDlgItemText(dialog, IDC_TEXERII_CFRAME, texer2->code.frame);
+    SetDlgItemText(dialog, IDC_TEXERII_CBEAT, texer2->code.beat);
+    SetDlgItemText(dialog, IDC_TEXERII_CPOINT, texer2->code.point);
     // select the default texture image
-    SendDlgItemMessageA(texer2->hwndDlg, IDC_TEXERII_TEXTURE, CB_SETCURSEL, 0, 0);
+    SendDlgItemMessage(dialog, IDC_TEXERII_TEXTURE, CB_SETCURSEL, 0, 0);
     texer2->Recompile();
     texer2->InitTexture();
 }

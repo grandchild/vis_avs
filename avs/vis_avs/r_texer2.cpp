@@ -52,7 +52,6 @@ void C_Texer2::Recompile() {
 C_Texer2::C_Texer2(int default_version)
 {
     memset(&config, 0, sizeof(texer2_apeconfig));
-    hwndDlg = 0;
     bmp = 0;
     iw = 0;
     ih = 0;

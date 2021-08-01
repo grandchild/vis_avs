@@ -106,7 +106,6 @@ class C_Texer2 : public C_RBASE
 
         Code code;
 
-        HWND hwndDlg;
         HBITMAP bmp;
         HDC bmpdc;
         HBITMAP bmpold;
