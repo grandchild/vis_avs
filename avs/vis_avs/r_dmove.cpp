@@ -150,8 +150,8 @@ C_THISCLASS::~C_THISCLASS()
     codehandle[x]=0;
   }
   AVS_EEL_QUITINST();
-  if (m_wmul) GlobalFree(m_wmul);
-  if (m_tab) GlobalFree(m_tab);
+  if (m_wmul) free(m_wmul);
+  if (m_tab) free(m_tab);
 
   m_tab=0;
   m_wmul=0;
@@ -198,12 +198,12 @@ int C_THISCLASS::smp_begin(int max_threads, char visdata[2][2][576], int isBeat,
     m_lastyres = YRES;
     m_lastw=w;
     m_lasth=h;
-    if (m_wmul) GlobalFree(m_wmul);
-    m_wmul=(int*)GlobalAlloc(GMEM_FIXED,sizeof(int)*h);
+    if (m_wmul) free(m_wmul);
+    m_wmul=(int*)malloc(sizeof(int)*h);
     for (y = 0; y < h; y ++) m_wmul[y]=y*w;
-    if (m_tab) GlobalFree(m_tab);
+    if (m_tab) free(m_tab);
 
-    m_tab=(int*)GlobalAlloc(GMEM_FIXED,(XRES*YRES*3 + (XRES*6 + 6)*MAX_SMP_THREADS)*sizeof(int));
+    m_tab=(int*)malloc((XRES*YRES*3 + (XRES*6 + 6)*MAX_SMP_THREADS)*sizeof(int));
   }
 
   if (!__subpixel)

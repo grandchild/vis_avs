@@ -59,7 +59,7 @@ C_THISCLASS::C_THISCLASS()
 
 C_THISCLASS::~C_THISCLASS()
 {
-  if (lastframe) GlobalFree(lastframe);
+  if (lastframe) free(lastframe);
 }
 
 
@@ -86,9 +86,9 @@ int C_THISCLASS::smp_begin(int max_threads, char visdata[2][2][576], int isBeat,
 
   if (!lastframe || w*h != lastframe_len)
   {
-    if (lastframe) GlobalFree(lastframe);
+    if (lastframe) free(lastframe);
     lastframe_len=w*h;
-    lastframe=(unsigned int *)GlobalAlloc(GPTR,w*h*sizeof(int));
+    lastframe=(unsigned int *)calloc(w*h, sizeof(int));
   }
 
   return max_threads;

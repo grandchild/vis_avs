@@ -63,7 +63,7 @@ C_THISCLASS::~C_THISCLASS()
    AVIFileExit ( ); 
    DrawDibClose (hDrawDib); 
    if(old_image) {
-	   GlobalFree(old_image);
+	   free(old_image);
 	   old_image=NULL;
 	   old_image_h=old_image_w=0;
    }
@@ -181,8 +181,8 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 
   if(h!=old_image_h||w!=old_image_w) {
 	  if(old_image)
-		  GlobalFree(old_image);
-	  old_image=(int *)GlobalAlloc(GMEM_FIXED,sizeof(int)*w*h);
+		  free(old_image);
+	  old_image=(int *)malloc(sizeof(int)*w*h);
 	  old_image_h=h; old_image_w=w;
   }
 

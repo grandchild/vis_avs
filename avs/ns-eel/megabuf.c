@@ -27,8 +27,8 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+#include <stdlib.h>
 #include "../gcc-hacks.h"
-#include <windows.h>
 #include "../ns-eel/ns-eel.h"
 #include "../ns-eel/ns-eel-int.h"
 #include "megabuf.h"
@@ -62,10 +62,10 @@ void megabuf_cleanup(NSEEL_VMCTX ctx)
       int x;
       for (x = 0; x < MEGABUF_BLOCKS; x ++)
       {
-        if (blocks[x]) GlobalFree(blocks[x]);
+        if (blocks[x]) free(blocks[x]);
         blocks[x]=0;
       }
-      GlobalFree((HGLOBAL)blocks);
+      free(blocks);
       c->userfunc_data[0]=0;
     }
   }
@@ -80,7 +80,7 @@ static double * megabuf(double ***blocks, double which)
 
   if (!*blocks)
   {
-    *blocks = (double **)GlobalAlloc(GPTR,sizeof(double *)*MEGABUF_BLOCKS);
+    *blocks = (double **)calloc(MEGABUF_BLOCKS, sizeof(double *));
   }
   if (!*blocks) return &error;
 
@@ -89,7 +89,7 @@ static double * megabuf(double ***blocks, double which)
     int whichentry = w%MEGABUF_ITEMSPERBLOCK;
     if (!(*blocks)[whichblock])
     {
-      (*blocks)[whichblock]=(double *)GlobalAlloc(GPTR,sizeof(double)*MEGABUF_ITEMSPERBLOCK);
+      (*blocks)[whichblock]=(double *)calloc(MEGABUF_ITEMSPERBLOCK, sizeof(double));
     }
     if ((*blocks)[whichblock])
       return &(*blocks)[whichblock][whichentry];

@@ -185,8 +185,8 @@ C_THISCLASS::~C_THISCLASS()
     freeCode(codehandle[x]);
     codehandle[x]=0;
   }
-  if (m_wmul) GlobalFree(m_wmul);
-  if (m_tab) GlobalFree(m_tab);
+  if (m_wmul) free(m_wmul);
+  if (m_tab) free(m_tab);
   AVS_EEL_QUITINST();
 
   m_tab=0;
@@ -204,10 +204,10 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
     m_lastw=w; // jf 121100 - added (oops)
     m_lasth=h;
     max_d=sqrt((w*w+h*h)/4.0);
-    if (m_wmul) GlobalFree(m_wmul);
-    m_wmul=(int*)GlobalAlloc(GMEM_FIXED,sizeof(int)*h);
+    if (m_wmul) free(m_wmul);
+    m_wmul=(int*)malloc(sizeof(int)*h);
     for (y = 0; y < h; y ++) m_wmul[y]=y*w;
-    if (m_tab) GlobalFree(m_tab);
+    if (m_tab) free(m_tab);
     m_tab=0;
   }
   int imax_d=(int)(max_d + 32.9);
@@ -215,7 +215,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
   if (imax_d < 33) imax_d=33;
 
   if (!m_tab)
-    m_tab=(int*)GlobalAlloc(GMEM_FIXED,sizeof(int)*imax_d);
+    m_tab=(int*)malloc(sizeof(int)*imax_d);
 
   int x;
 

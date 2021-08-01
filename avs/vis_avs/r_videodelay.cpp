@@ -49,14 +49,14 @@ C_DELAY::C_DELAY()
 	buffersize = 1;
 	virtualbuffersize = 1;
 	oldvirtualbuffersize = 1;
-	buffer = VirtualAlloc(NULL,buffersize,MEM_COMMIT,PAGE_READWRITE);
+	buffer = calloc(buffersize, 1);
 	inoutpos = buffer;
 }
 
 // virtual destructor
 C_DELAY::~C_DELAY() 
 {
-	VirtualFree(buffer,buffersize,MEM_DECOMMIT);
+	free(buffer);
 }
 
 // RENDER FUNCTION:
@@ -92,22 +92,22 @@ int C_DELAY::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *
 					if (virtualbuffersize > buffersize)
 					{
 						// allocate new memory
-						if (!VirtualFree(buffer,buffersize,MEM_DECOMMIT)) return 0;
+						free(buffer);
 						if (usebeats)
 						{
 							buffersize = 2*virtualbuffersize;
 							if (buffersize > framemem*400) buffersize = framemem*400;	//new
-							buffer = VirtualAlloc(NULL,buffersize,MEM_COMMIT,PAGE_READWRITE);
+							buffer = calloc(buffersize, 1);
 							if (buffer == NULL)
 							{
 								buffersize = virtualbuffersize;
-								buffer = VirtualAlloc(NULL,buffersize,MEM_COMMIT,PAGE_READWRITE);
+								buffer = calloc(buffersize, 1);
 							}
 						}
 						else
 						{
 							buffersize = virtualbuffersize;
-							buffer = VirtualAlloc(NULL,buffersize,MEM_COMMIT,PAGE_READWRITE);
+							buffer = calloc(buffersize, 1);
 						}
 						inoutpos = buffer;
 						if (buffer == NULL)
@@ -122,8 +122,8 @@ int C_DELAY::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *
 						unsigned long size = (((unsigned long)buffer)+oldvirtualbuffersize) - ((unsigned long)inoutpos);
 						unsigned long l = ((unsigned long)buffer)+virtualbuffersize;
 						unsigned long d =  l - size;
-						MoveMemory((LPVOID)d, inoutpos, size);
-						for (l = (unsigned long)inoutpos; l < d; l += framemem) CopyMemory((LPVOID)l,(LPVOID)d,framemem);
+						memmove((void*)d, inoutpos, size);
+						for (l = (unsigned long)inoutpos; l < d; l += framemem) memcpy((void*)l,(void*)d,framemem);
 					}
 				}
 				else
@@ -131,10 +131,10 @@ int C_DELAY::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *
 					unsigned long presegsize = ((unsigned long)inoutpos)-((unsigned long)buffer)+framemem;
 					if (presegsize > virtualbuffersize)
 					{
-						MoveMemory(buffer,(LPVOID)(((unsigned long)buffer)+presegsize-virtualbuffersize),virtualbuffersize);
-						inoutpos = (LPVOID)(((unsigned long)buffer)+virtualbuffersize-framemem);
+						memmove(buffer,(void*)(((unsigned long)buffer)+presegsize-virtualbuffersize),virtualbuffersize);
+						inoutpos = (void*)(((unsigned long)buffer)+virtualbuffersize-framemem);
 					}
-					else if (presegsize < virtualbuffersize) MoveMemory((LPVOID)(((unsigned long)inoutpos)+framemem),(LPVOID)(((unsigned long)buffer)+oldvirtualbuffersize+presegsize-virtualbuffersize),virtualbuffersize-presegsize);
+					else if (presegsize < virtualbuffersize) memmove((void*)(((unsigned long)inoutpos)+framemem),(void*)(((unsigned long)buffer)+oldvirtualbuffersize+presegsize-virtualbuffersize),virtualbuffersize-presegsize);
 				}
 				oldvirtualbuffersize = virtualbuffersize;
 			}
@@ -142,21 +142,21 @@ int C_DELAY::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *
 		else
 		{
 			// allocate new memory
-			if (!VirtualFree(buffer,buffersize,MEM_DECOMMIT)) return 0;
+			free(buffer);
 			if (usebeats)
 			{
 				buffersize = 2*virtualbuffersize;
-				buffer = VirtualAlloc(NULL,buffersize,MEM_COMMIT,PAGE_READWRITE);
+				buffer = calloc(buffersize, 1);
 				if (buffer == NULL)
 				{
 					buffersize = virtualbuffersize;
-					buffer = VirtualAlloc(NULL,buffersize,MEM_COMMIT,PAGE_READWRITE);
+					buffer = calloc(buffersize, 1);
 				}
 			}
 			else
 			{
 				buffersize = virtualbuffersize;
-				buffer = VirtualAlloc(NULL,buffersize,MEM_COMMIT,PAGE_READWRITE);
+				buffer = calloc(buffersize, 1);
 			}
 			inoutpos = buffer;
 			if (buffer == NULL)
@@ -168,9 +168,9 @@ int C_DELAY::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *
 			oldvirtualbuffersize = virtualbuffersize;
 		}
 		oldframemem = framemem;
-		CopyMemory(fbout,inoutpos,framemem);
-		CopyMemory(inoutpos,framebuffer,framemem);
-		inoutpos = (LPVOID)(((unsigned long)inoutpos)+framemem);
+		memcpy(fbout,inoutpos,framemem);
+		memcpy(inoutpos,framebuffer,framemem);
+		inoutpos = (void*)(((unsigned long)inoutpos)+framemem);
 		if ((unsigned long)inoutpos>=((unsigned long)buffer)+virtualbuffersize) inoutpos = buffer;
 		return 1;
 	}

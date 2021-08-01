@@ -1625,7 +1625,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
   							EnterCriticalSection(&g_render_cs);
                 parentrender->insertRender(&ren,insert_pos);
 								LeaveCriticalSection(&g_render_cs);
-                C_RenderListClass::T_RenderListType *newt=(C_RenderListClass::T_RenderListType *)GlobalAlloc(GMEM_FIXED,sizeof(C_RenderListClass::T_RenderListType));
+                C_RenderListClass::T_RenderListType *newt=(C_RenderListClass::T_RenderListType *)malloc(sizeof(C_RenderListClass::T_RenderListType));
                 *newt=ren;
                 TV_INSERTSTRUCT is={parenthandle,0,{TVIF_PARAM|TVIF_TEXT|TVIF_CHILDREN,0,0,0,ren.render->get_desc(),0,0,0,newt->effect_index==LIST_ID?1:0,(int)newt}};
                 if (!hTreeItem || parenthandle==hTreeItem) is.hInsertAfter=TVI_FIRST;
@@ -1685,7 +1685,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
                   if (!parentrender->removeRenderFrom(tp,1))
                   {
                     TreeView_DeleteItem(GetDlgItem(hwndDlg,IDC_TREE1),hTreeItem);
-	                  if (tp) GlobalFree((HGLOBAL)tp);
+	                  if (tp) free(tp);
                   }
   						    LeaveCriticalSection(&g_render_cs);
                 }
@@ -1723,18 +1723,18 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
                   for (insert_pos=0; insert_pos<parentrender->getNumRenders() 
                        && parentrender->getRender(insert_pos)->render != tp->render; insert_pos++);
                   insert_pos++;                
-                  unsigned char *buf = (unsigned char *) GlobalAlloc(GPTR,1024*1024);
+                  unsigned char *buf = (unsigned char *) calloc(1024*1024, sizeof(unsigned char));
                   if (buf)
                   {
                     int len=tp->render->save_config(buf);
                     ren.render->load_config(buf,len);
-                    GlobalFree((HGLOBAL)buf);
+                    free(buf);
                   }
 						      EnterCriticalSection(&g_render_cs);
                   parentrender->insertRender(&ren,insert_pos);
 						      LeaveCriticalSection(&g_render_cs);
                   
-                  C_RenderListClass::T_RenderListType *newt=(C_RenderListClass::T_RenderListType *)GlobalAlloc(GMEM_FIXED,sizeof(C_RenderListClass::T_RenderListType));
+                  C_RenderListClass::T_RenderListType *newt=(C_RenderListClass::T_RenderListType *)malloc(sizeof(C_RenderListClass::T_RenderListType));
                   *newt=ren;
                   TV_INSERTSTRUCT is={hParent,0,{TVIF_PARAM|TVIF_TEXT|TVIF_CHILDREN,0,0,0,ren.render->get_desc(),0,0,0,newt->effect_index==LIST_ID?1:0,(int)newt}};
                   is.hInsertAfter=hTreeItem;
@@ -1800,7 +1800,7 @@ static void _do_add(HWND hwnd, HTREEITEM h, C_RenderListClass *list)
     C_RenderListClass::T_RenderListType *t=list->getRender(x);
     if (t)
     {
-      C_RenderListClass::T_RenderListType *newt=(C_RenderListClass::T_RenderListType *)GlobalAlloc(GMEM_FIXED,sizeof(C_RenderListClass::T_RenderListType));
+      C_RenderListClass::T_RenderListType *newt=(C_RenderListClass::T_RenderListType *)malloc(sizeof(C_RenderListClass::T_RenderListType));
       memcpy(newt,t,sizeof(C_RenderListClass::T_RenderListType));
       TV_INSERTSTRUCT is;
       memset(&is,0,sizeof(is));
@@ -1828,7 +1828,7 @@ static void _do_free(HWND hwnd, HTREEITEM h)
   {
 	  TV_ITEM i={TVIF_HANDLE|TVIF_PARAM,h,0,0,0,0,0};
   	TreeView_GetItem(hwnd,&i);
-    if (i.lParam) GlobalFree((HGLOBAL)(void*)i.lParam);
+    if (i.lParam) free((void*)i.lParam);
     HTREEITEM h2=TreeView_GetChild(hwnd,h);
     if (h2) _do_free(hwnd,h2);
     h=TreeView_GetNextSibling(hwnd,h);
@@ -1872,7 +1872,7 @@ void CfgWnd_Populate(int force)
   {
     treeview_hack=1;
     HWND hwnd=GetDlgItem(g_hwndDlg,IDC_TREE1);
-    C_RenderListClass::T_RenderListType *newt=(C_RenderListClass::T_RenderListType *)GlobalAlloc(GMEM_FIXED,sizeof(C_RenderListClass::T_RenderListType));
+    C_RenderListClass::T_RenderListType *newt=(C_RenderListClass::T_RenderListType *)malloc(sizeof(C_RenderListClass::T_RenderListType));
     newt->render=g_render_effects;
     newt->effect_index=LIST_ID;
     TV_INSERTSTRUCT is;

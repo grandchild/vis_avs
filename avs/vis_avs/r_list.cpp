@@ -316,7 +316,7 @@ void C_RenderListClass::freeBuffers()
     int x;
     for (x = 0; x < NBUF; x ++)
     {
-      if (nb_save[x]) GlobalFree(nb_save[x]);
+      if (nb_save[x]) free(nb_save[x]);
       nb_save[x]=NULL;
       nbw_save[x]=nbh_save[x]=0;
     }
@@ -428,7 +428,7 @@ int C_RenderListClass::render(char visdata[2][2][576], int isBeat, int *framebuf
     int s=0,x;
 #ifndef LASER
     int line_blend_mode_save=g_line_blend_mode;
-    if (thisfb) GlobalFree((HGLOBAL)thisfb); 
+    if (thisfb) free(thisfb);
     thisfb=NULL;
     if (use_clear&&(isroot||blendin()!=1)) 
       memset(framebuffer,0,w*h*sizeof(int));
@@ -524,7 +524,7 @@ int C_RenderListClass::render(char visdata[2][2][576], int isBeat, int *framebuf
   // check to see if we're enabled
   if (!use_enabled) 
   {
-    if (thisfb) GlobalFree((HGLOBAL)thisfb); 
+    if (thisfb) free(thisfb);
     thisfb=NULL;
     return 0;
   }
@@ -538,29 +538,34 @@ int C_RenderListClass::render(char visdata[2][2][576], int isBeat, int *framebuf
     extern int config_reuseonresize;
     int do_resize=config_reuseonresize && !!thisfb && l_w && l_h && !use_clear;
 
-    int *newfb=(int*)GlobalAlloc(do_resize?GMEM_FIXED:GPTR,w*h*sizeof(int));
-    if (newfb && do_resize) 
-    {
-      int x,y;
-      int dxpos=(l_w<<16)/w;
-      int ypos=0;
-      int dypos=(l_h<<16)/h;
-      int *out=newfb;
-      for (y = 0; y < h; y++)
-      {
-        int *p=thisfb + l_w * (ypos>>16);
-        int xpos=0;
-        for (x = 0; x < w; x ++)
+    int *newfb;
+    if(!do_resize) {
+      newfb = (int*)calloc(w*h, sizeof(int));
+    } else {
+      newfb = (int*)malloc(w*h*sizeof(int));
+      if (newfb) {
+        int x,y;
+        int dxpos=(l_w<<16)/w;
+        int ypos=0;
+        int dypos=(l_h<<16)/h;
+        int *out=newfb;
+        for (y = 0; y < h; y++)
         {
-          *out++=p[xpos>>16];
-          xpos+=dxpos;
+          int *p=thisfb + l_w * (ypos>>16);
+          int xpos=0;
+          for (x = 0; x < w; x ++)
+          {
+            *out++=p[xpos>>16];
+            xpos+=dxpos;
+          }
+          ypos+=dypos;
         }
-        ypos+=dypos;
       }
     }
+    // TODO [bug]: What happens here if newfb alloc failed?
     l_w=w;
     l_h=h;
-    if (thisfb) GlobalFree((HGLOBAL)thisfb);
+    if (thisfb) free(thisfb);
     thisfb=newfb;
   }
   // handle clear mode
@@ -918,7 +923,7 @@ int C_RenderListClass::removeRender(int index, int del)
     if (!num_renders)
     {
       num_renders_alloc=0;
-      if (renders) GlobalFree((HGLOBAL)renders);
+      if (renders) free(renders);
       renders=NULL;
     }
     return 0;
@@ -934,12 +939,12 @@ void C_RenderListClass::clearRenders(void)
     {
       delete renders[x].render;
     }
-    GlobalFree((HGLOBAL)renders);
+    free(renders);
   }
   num_renders=0;
   num_renders_alloc=0;
   renders=NULL;
-  if (thisfb) GlobalFree((HGLOBAL)thisfb);
+  if (thisfb) free(thisfb);
   thisfb=0;
 }
 
@@ -956,7 +961,7 @@ int C_RenderListClass::insertRender(T_RenderListType *r, int index) // index=-1 
   if (num_renders+1 >= num_renders_alloc || !renders)
   {
     num_renders_alloc=num_renders+16;
-    T_RenderListType *newr=(T_RenderListType *) GlobalAlloc(GPTR,num_renders_alloc*sizeof(T_RenderListType));
+    T_RenderListType *newr=(T_RenderListType *) calloc(num_renders_alloc, sizeof(T_RenderListType));
     if (!newr) return -1;
     if (num_renders&&renders)
     {
@@ -964,7 +969,7 @@ int C_RenderListClass::insertRender(T_RenderListType *r, int index) // index=-1 
     }
     if (renders)
     {
-      GlobalFree((HGLOBAL)renders);
+      free(renders);
     }
     renders=newr;
   }
@@ -1001,7 +1006,7 @@ char C_RenderListClass::sig_str[] = "Nullsoft AVS Preset 0.2\x1a";
 int C_RenderListClass::__SavePreset(char *filename)
 {
   EnterCriticalSection(&g_render_cs);
-	unsigned char *data = (unsigned char *) GlobalAlloc(GPTR,1124*1024);
+	unsigned char *data = (unsigned char *) calloc(1124*1024, 1);
   int success=-1;
   if (data)
   {
@@ -1021,7 +1026,7 @@ int C_RenderListClass::__SavePreset(char *filename)
       else success=2;
     }
     else success=1;
-    GlobalFree((HGLOBAL)data);
+    free(data);
   }
   LeaveCriticalSection(&g_render_cs);
 	return success;
@@ -1030,7 +1035,7 @@ int C_RenderListClass::__SavePreset(char *filename)
 int C_RenderListClass::__LoadPreset(char *filename, int clear)
 {
   EnterCriticalSection(&g_render_cs);
-	unsigned char *data = (unsigned char *) GlobalAlloc(GPTR,1024*1024);
+	unsigned char *data = (unsigned char *) calloc(1024*1024, 1);
   int success=1;
   if (clear) clearRenders();
   if (data)
@@ -1058,7 +1063,7 @@ int C_RenderListClass::__LoadPreset(char *filename, int clear)
       }
     }
   //  else MessageBox(NULL,"Error laoding preset: fopen",filename,MB_OK);
-    GlobalFree((HGLOBAL)data);
+    free(data);
   }
 //  else MessageBox(NULL,"Error laoding preset: MALLOC",filename,MB_OK);
   LeaveCriticalSection(&g_render_cs);
@@ -1068,7 +1073,7 @@ int C_RenderListClass::__LoadPreset(char *filename, int clear)
 int C_RenderListClass::__SavePresetToUndo(C_UndoItem &item)
 {
   EnterCriticalSection(&g_render_cs);
-	unsigned char *data = (unsigned char *) GlobalAlloc(GPTR,1124*1024);
+	unsigned char *data = (unsigned char *) calloc(1124*1024, 1);
   int success=-1;
   if (data)
   {
@@ -1084,7 +1089,7 @@ int C_RenderListClass::__SavePresetToUndo(C_UndoItem &item)
     }
 
     else success=1;
-    GlobalFree((HGLOBAL)data);
+    free(data);
   }
   LeaveCriticalSection(&g_render_cs);
 	return success;
@@ -1093,7 +1098,7 @@ int C_RenderListClass::__SavePresetToUndo(C_UndoItem &item)
 int C_RenderListClass::__LoadPresetFromUndo(C_UndoItem &item, int clear)
 {
   EnterCriticalSection(&g_render_cs);
-	unsigned char *data = (unsigned char *) GlobalAlloc(GPTR,1024*1024);
+	unsigned char *data = (unsigned char *) calloc(1024*1024, 1);
   int success=1;
   if (clear) clearRenders();
   if (data)
@@ -1115,7 +1120,7 @@ int C_RenderListClass::__LoadPresetFromUndo(C_UndoItem &item, int clear)
         success=0;
       }
     }
-    GlobalFree((HGLOBAL)data);
+    free(data);
   }
   LeaveCriticalSection(&g_render_cs);
   return success;

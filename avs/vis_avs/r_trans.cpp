@@ -188,7 +188,7 @@ C_THISCLASS::C_THISCLASS()
 
 C_THISCLASS::~C_THISCLASS()
 {
-  if (trans_tab) GlobalFree(trans_tab);
+  if (trans_tab) free(trans_tab);
   trans_tab=NULL;
   trans_tab_w=trans_tab_h=0;
   trans_effect=0;
@@ -204,10 +204,10 @@ int C_THISCLASS::smp_begin(int max_threads, char visdata[2][2][576], int isBeat,
   {
     int p;
     int *transp,x;
-    if (trans_tab) GlobalFree(trans_tab);
+    if (trans_tab) free(trans_tab);
     trans_tab_w=w; 
     trans_tab_h=h;
-    trans_tab=(int*)GlobalAlloc(GMEM_FIXED,trans_tab_w*trans_tab_h*sizeof(int));
+    trans_tab=(int*)malloc(trans_tab_w*trans_tab_h*sizeof(int));
     trans_effect=effect;
     trans_tab_subpixel=(subpixel && trans_tab_w*trans_tab_h < (1<<22) &&
                   ((trans_effect >= REFFECT_MIN && trans_effect <= REFFECT_MAX

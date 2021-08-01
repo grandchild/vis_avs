@@ -40,9 +40,9 @@ bool g_usebeats[MULTIDELAY_NUM_BUFFERS];
 int g_delay[MULTIDELAY_NUM_BUFFERS];
 
 // unsaved
-LPVOID buffer[MULTIDELAY_NUM_BUFFERS];
-LPVOID inpos[MULTIDELAY_NUM_BUFFERS];
-LPVOID outpos[MULTIDELAY_NUM_BUFFERS];
+void* buffer[MULTIDELAY_NUM_BUFFERS];
+void* inpos[MULTIDELAY_NUM_BUFFERS];
+void* outpos[MULTIDELAY_NUM_BUFFERS];
 unsigned long buffersize[MULTIDELAY_NUM_BUFFERS];
 unsigned long virtualbuffersize[MULTIDELAY_NUM_BUFFERS];
 unsigned long oldvirtualbuffersize[MULTIDELAY_NUM_BUFFERS];
@@ -80,7 +80,7 @@ C_DELAY::C_DELAY()
 			buffersize[i] = 1;
 			virtualbuffersize[i] = 1;
 			oldvirtualbuffersize[i] = 1;
-			buffer[i] = VirtualAlloc(NULL,buffersize[i],MEM_COMMIT,PAGE_READWRITE);
+			buffer[i] = calloc(buffersize[i], 1);
 			inpos[i] = buffer[i];
 			outpos[i] = buffer[i];
 		}
@@ -91,7 +91,11 @@ C_DELAY::C_DELAY()
 C_DELAY::~C_DELAY() 
 {
 	numinstances--;
-	if (numinstances == 0) for (int i=0; i<MULTIDELAY_NUM_BUFFERS; i++) VirtualFree(buffer[i],buffersize[i],MEM_DECOMMIT);
+	if (numinstances == 0) {
+		for (int i=0; i<MULTIDELAY_NUM_BUFFERS; i++) {
+			free(buffer[i]);
+		}
+	}
 }
 
 // RENDER FUNCTION:
@@ -130,24 +134,24 @@ int C_DELAY::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *
 							if (virtualbuffersize[i] > buffersize[i])
 							{
 								// allocate new memory
-								if (!VirtualFree(buffer[i],buffersize[i],MEM_DECOMMIT)) return 0;
+								free(buffer[i]);
 								if (g_usebeats[i])
 								{
 									buffersize[i] = 2*virtualbuffersize[i];
-									buffer[i] = VirtualAlloc(NULL,buffersize[i],MEM_COMMIT,PAGE_READWRITE);
+									buffer[i] = calloc(buffersize[i], 1);
 									if (buffer[i] == NULL)
 									{
 										buffersize[i] = virtualbuffersize[i];
-										buffer[i] = VirtualAlloc(NULL,buffersize[i],MEM_COMMIT,PAGE_READWRITE);
+										buffer[i] = calloc(buffersize[i], 1);
 									}
 								}
 								else
 								{
 									buffersize[i] = virtualbuffersize[i];
-									buffer[i] = VirtualAlloc(NULL,buffersize[i],MEM_COMMIT,PAGE_READWRITE);
+									buffer[i] = calloc(buffersize[i], 1);
 								}
 								outpos[i] = buffer[i];
-								inpos[i] = (LPVOID)(((unsigned long)buffer[i])+virtualbuffersize[i]-framemem);
+								inpos[i] = (void*)(((unsigned long)buffer[i])+virtualbuffersize[i]-framemem);
 								if (buffer[i] == NULL)
 								{
 									g_framedelay[i] = 0;
@@ -165,8 +169,8 @@ int C_DELAY::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *
 								unsigned long size = (((unsigned long)buffer[i])+oldvirtualbuffersize[i]) - ((unsigned long)outpos[i]);
 								unsigned long l = ((unsigned long)buffer[i])+virtualbuffersize[i];
 								unsigned long d =  l - size;
-								MoveMemory((LPVOID)d, outpos[i], size);
-								for (l = (unsigned long)outpos[i]; l < d; l += framemem) CopyMemory((LPVOID)l,(LPVOID)d,framemem);
+								memmove((void*)d, outpos[i], size);
+								for (l = (unsigned long)outpos[i]; l < d; l += framemem) memcpy((void*)l,(void*)d,framemem);
 							}
 						}
 						else
@@ -174,11 +178,11 @@ int C_DELAY::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *
 							unsigned long presegsize = ((unsigned long)outpos[i])-((unsigned long)buffer[i]);
 							if (presegsize > virtualbuffersize[i])
 							{
-								MoveMemory(buffer[i],(LPVOID)(((unsigned long)buffer[i])+presegsize-virtualbuffersize[i]),virtualbuffersize[i]);
-								inpos[i] = (LPVOID)(((unsigned long)buffer[i])+virtualbuffersize[i]-framemem);
+								memmove(buffer[i],(void*)(((unsigned long)buffer[i])+presegsize-virtualbuffersize[i]),virtualbuffersize[i]);
+								inpos[i] = (void*)(((unsigned long)buffer[i])+virtualbuffersize[i]-framemem);
 								outpos[i] = buffer[i];
 							}
-							else if (presegsize < virtualbuffersize[i]) MoveMemory(outpos[i],(LPVOID)(((unsigned long)buffer[i])+oldvirtualbuffersize[i]+presegsize-virtualbuffersize[i]),virtualbuffersize[i]-presegsize);
+							else if (presegsize < virtualbuffersize[i]) memmove(outpos[i],(void*)(((unsigned long)buffer[i])+oldvirtualbuffersize[i]+presegsize-virtualbuffersize[i]),virtualbuffersize[i]-presegsize);
 						}
 						oldvirtualbuffersize[i] = virtualbuffersize[i];
 					}
@@ -186,24 +190,24 @@ int C_DELAY::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *
 				else
 				{
 					// allocate new memory
-					if (!VirtualFree(buffer[i],buffersize[i],MEM_DECOMMIT)) return 0;
+					free(buffer[i]);
 					if (g_usebeats[i])
 					{
 						buffersize[i] = 2*virtualbuffersize[i];
-						buffer[i] = VirtualAlloc(NULL,buffersize[i],MEM_COMMIT,PAGE_READWRITE);
+						buffer[i] = calloc(buffersize[i], 1);
 						if (buffer[i] == NULL)
 						{
 							buffersize[i] = virtualbuffersize[i];
-							buffer[i] = VirtualAlloc(NULL,buffersize[i],MEM_COMMIT,PAGE_READWRITE);
+							buffer[i] = calloc(buffersize[i], 1);
 						}
 					}
 					else
 					{
 						buffersize[i] = virtualbuffersize[i];
-						buffer[i] = VirtualAlloc(NULL,buffersize[i],MEM_COMMIT,PAGE_READWRITE);
+						buffer[i] = calloc(buffersize[i], 1);
 					}
 					outpos[i] = buffer[i];
-					inpos[i] = (LPVOID)(((unsigned long)buffer[i])+virtualbuffersize[i]-framemem);
+					inpos[i] = (void*)(((unsigned long)buffer[i])+virtualbuffersize[i]-framemem);
 					if (buffer[i] == NULL)
 					{
 						g_framedelay[i] = 0;
@@ -223,13 +227,13 @@ int C_DELAY::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *
 	}
 	if (mode != 0 && g_framedelay[activebuffer]>1)
 	{
-		if (mode == 2) CopyMemory(framebuffer,outpos[activebuffer],framemem);
-		else CopyMemory(inpos[activebuffer],framebuffer,framemem);
+		if (mode == 2) memcpy(framebuffer,outpos[activebuffer],framemem);
+		else memcpy(inpos[activebuffer],framebuffer,framemem);
 	}
 	if (renderid == numinstances) for (int i=0;i<MULTIDELAY_NUM_BUFFERS;i++)
 	{
-		inpos[i] = (LPVOID)(((unsigned long)inpos[i])+framemem);
-		outpos[i] = (LPVOID)(((unsigned long)outpos[i])+framemem);
+		inpos[i] = (void*)(((unsigned long)inpos[i])+framemem);
+		outpos[i] = (void*)(((unsigned long)outpos[i])+framemem);
 		if ((unsigned long)inpos[i]>=((unsigned long)buffer[i])+virtualbuffersize[i]) inpos[i] = buffer[i];
 		if ((unsigned long)outpos[i]>=((unsigned long)buffer[i])+virtualbuffersize[i]) outpos[i] = buffer[i];
 	}

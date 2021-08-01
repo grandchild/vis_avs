@@ -39,8 +39,8 @@ void C_UnknClass::SetID(int d, char *dString) { id=d; memset(idString,0,sizeof(i
 #define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))
 void C_UnknClass::load_config(unsigned char *data, int len)
 {
-  if (configdata) GlobalFree(configdata);
-  configdata=(char *)GlobalAlloc(GMEM_FIXED,len);
+  if (configdata) free(configdata);
+  configdata=(char *)malloc(len);
   memcpy(configdata,data,len);
   configdata_len=len;
 //  char s[1024]="";
@@ -72,7 +72,7 @@ C_UnknClass::C_UnknClass()
 
 C_UnknClass::~C_UnknClass()
 {
-  if (configdata) GlobalFree(configdata);
+  if (configdata) free(configdata);
   configdata=0;
 }
 	

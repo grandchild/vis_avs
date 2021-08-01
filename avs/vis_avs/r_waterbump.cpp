@@ -48,7 +48,7 @@ C_THISCLASS::~C_THISCLASS()
 {
   int i;
   for(i=0;i<2;i++) {
-	  if(buffers[i]) GlobalFree(buffers[i]);
+	  if(buffers[i]) free(buffers[i]);
 	  buffers[i]=NULL;
   }
 }
@@ -235,13 +235,13 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 
   if(buffer_w!=w||buffer_h!=h) {
 	  for(i=0;i<2;i++) {
-		  if(buffers[i])GlobalFree(buffers[i]);
+		  if(buffers[i])free(buffers[i]);
 		  buffers[i]=NULL;
 	  }
   }
   if(buffers[0]==NULL) {
 	  for(i=0;i<2;i++) {
-		buffers[i]=(int *)GlobalAlloc(GPTR,w*h*sizeof(int));
+		buffers[i]=(int *)calloc(w*h, sizeof(int));
 		}
 	  buffer_w=w;
 	  buffer_h=h;

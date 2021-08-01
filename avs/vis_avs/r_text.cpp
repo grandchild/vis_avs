@@ -48,11 +48,11 @@ if (lw || lh)
    if (hOldFont) SelectObject(hBitmapDC, hOldFont);
    DeleteDC (hBitmapDC); 
    ReleaseDC (NULL, hDesktopDC); 
-   if (myBuffer) GlobalFree(myBuffer);
+   if (myBuffer) free(myBuffer);
    }
 
 // Alloc buffers, select objects, init structures
-   myBuffer = (int *)GlobalAlloc(GMEM_FIXED,w*h*4);
+   myBuffer = (int *)malloc(w*h*4);
    hDesktopDC = GetDC (NULL); 
    hRetBitmap = CreateCompatibleBitmap (hDesktopDC, w, h);
    hBitmapDC = CreateCompatibleDC (hDesktopDC); 
@@ -87,9 +87,9 @@ if (lw || lh)
     if (hOldFont) SelectObject(hBitmapDC, hOldFont);
 	DeleteDC (hBitmapDC); 
 	ReleaseDC (NULL, hDesktopDC); 
-	if (myBuffer) GlobalFree(myBuffer);
+	if (myBuffer) free(myBuffer);
 	}
-if (text) GlobalFree(text);
+if (text) free(text);
 if (myFont)
 	DeleteObject(myFont);
 }
@@ -184,14 +184,14 @@ void C_THISCLASS::load_config(unsigned char *data, int len) // read configuratio
 	if (len-pos >= 4) { size=GET_INT(); pos+=4; }
 	if (size > 0 && len-pos >= size)
 		{
-		if (text) GlobalFree(text);
-		text = (char *)GlobalAlloc(GMEM_FIXED,size+1);
+		if (text) free(text);
+		text = (char *)malloc(size+1);
 		memcpy(text, data+pos, size);
 		pos+=size;
 		}
 	else
 		{
-		if (text) GlobalFree(text);
+		if (text) free(text);
 		text = NULL;
 		}
 	myFont = CreateFontIndirect(&lf);

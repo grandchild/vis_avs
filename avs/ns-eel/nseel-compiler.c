@@ -28,8 +28,11 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include <windows.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 #include <stdio.h>
+#include "../gcc-hacks.h"
 #include "ns-eel-int.h"
 
 #ifdef NSEEL_REENTRANT_EXECUTION
@@ -239,7 +242,7 @@ static void freeBlocks(llBlock *start)
   while (start)
   {
     llBlock *llB = start->next;
-    GlobalFree(start);
+    free(start);
     start=llB;
   }
 }
@@ -259,7 +262,26 @@ static void *__newBlock(llBlock **start, int size)
   alloc_size=sizeof(llBlock);
   if ((int)size > LLB_DSIZE) alloc_size += size - LLB_DSIZE;
   // grab bigger block if absolutely necessary (heh)
-  llb = (llBlock *)VirtualAlloc(NULL, alloc_size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+  llb = (llBlock *)malloc(alloc_size);
+  // TODO [bug]: make memory read-write-executable -- apparently not needed atm in wine
+  /* // ripped from EEL2:
+  #ifdef _WIN32
+    DWORD ov;
+    int offs = ((UINT_PTR)llb) & ~4095;
+    int eoffs = ((UINT_PTR)llb + alloc_size + 4095) & ~4095;
+    VirtualProtect((void*)offs, eoffs-offs, PAGE_EXECUTE_READWRITE, &ov);
+  #else
+    static int pagesize = 0;
+    if (!pagesize) {
+      pagesize=sysconf(_SC_PAGESIZE);
+      if (!pagesize) pagesize = 4096;
+    }
+    unsigned int* offs, eoffs;
+    offs = ((unsigned int*)llb) & ~(pagesize - 1);
+    eoffs = ((unsigned int*)llb + alloc_size + pagesize - 1) & ~(pagesize - 1);
+    mprotect((void*)offs, eoffs-offs, PROT_WRITE | PROT_READ | PROT_EXEC);
+  #endif
+  */
   llb->sizeused=size;
   llb->next = *start;  
   *start = llb;
@@ -736,7 +758,7 @@ NSEEL_CODEHANDLE NSEEL_code_compile(NSEEL_VMCTX _ctx, char *_expression)
     if (ctx->computTableTop > NSEEL_MAX_TEMPSPACE_ENTRIES- /* safety */ 16 - /* alignment */4 ||
         !tmp->startptr) 
     { 
-      lstrcpyn(ctx->last_error_string,expr,sizeof(ctx->last_error_string));
+      strncpy(ctx->last_error_string,expr,sizeof(ctx->last_error_string));
       scode=NULL; 
       break; 
     }

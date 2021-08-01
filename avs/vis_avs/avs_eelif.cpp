@@ -298,7 +298,7 @@ static void gmegabuf_cleanup()
   int x;
   for (x = 0; x < MEGABUF_BLOCKS; x ++)
   {
-    if (gmb_blocks[x]) GlobalFree(gmb_blocks[x]);
+    if (gmb_blocks[x]) free(gmb_blocks[x]);
     gmb_blocks[x]=0;
   }
 }
@@ -315,7 +315,7 @@ static double * gmegabuf(double which)
     int whichentry = w%MEGABUF_ITEMSPERBLOCK;
     if (!gmb_blocks[whichblock])
     {
-      gmb_blocks[whichblock]=(double *)GlobalAlloc(GPTR,sizeof(double)*MEGABUF_ITEMSPERBLOCK);
+      gmb_blocks[whichblock]=(double *)calloc(MEGABUF_ITEMSPERBLOCK, sizeof(double));
     }
     if (gmb_blocks[whichblock])
       return &gmb_blocks[whichblock][whichentry];

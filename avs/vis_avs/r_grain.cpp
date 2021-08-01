@@ -37,7 +37,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 C_THISCLASS::~C_THISCLASS() // set up default configuration
 {
 if (depthBuffer)
-	GlobalFree(depthBuffer);
+	free(depthBuffer);
 }
 
 // configuration read/write
@@ -98,8 +98,8 @@ void C_THISCLASS::reinit(int w, int h)
 int x,y;
 unsigned char *p;
 if (depthBuffer)
-	GlobalFree(depthBuffer);
-depthBuffer = (unsigned char *)GlobalAlloc(GMEM_FIXED,w*h*2);
+	free(depthBuffer);
+depthBuffer = (unsigned char *)malloc(w*h*2);
 p = depthBuffer;
 if (p)
 	for (y=0;y<h;y++)

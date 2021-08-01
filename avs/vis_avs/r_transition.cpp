@@ -59,7 +59,7 @@ C_RenderTransitionClass::~C_RenderTransitionClass()
     initThread=0;
   }  for (x = 0; x < 4; x ++)
   {
-    if (fbs[x]) GlobalFree(fbs[x]);
+    if (fbs[x]) free(fbs[x]);
     fbs[x]=NULL;
   }
 }
@@ -82,10 +82,10 @@ unsigned int WINAPI C_RenderTransitionClass::m_initThread(LPVOID p)
     else if (d == THREAD_PRIORITY_LOWEST) d=THREAD_PRIORITY_IDLE;
     SetThreadPriority(GetCurrentThread(),d);
   }
-  int *fb=(int *)GlobalAlloc(GPTR,_this->l_w*_this->l_h*sizeof(int));
+  int *fb=(int *)calloc(_this->l_w*_this->l_h, sizeof(int));
   char last_visdata[2][2][576]={0,};
   g_render_effects2->render(last_visdata,0x80000000,fb,fb,_this->l_w,_this->l_h);
-  GlobalFree((HGLOBAL)fb);
+  free(fb);
 
   _this->_dotransitionflag=2;
 
@@ -209,7 +209,7 @@ int C_RenderTransitionClass::render(char visdata[2][2][576], int isBeat, int *fr
     {
       if (fbs[x]) 
         {
-        GlobalFree(fbs[x]);
+        free(fbs[x]);
         fbs[x]=NULL;
       }
     }
@@ -229,8 +229,8 @@ int C_RenderTransitionClass::render(char visdata[2][2][576], int isBeat, int *fr
     int x;
     for (x = 0; x < 4; x ++)
     {
-      if (fbs[x]) GlobalFree(fbs[x]);
-      fbs[x]=(int*)GlobalAlloc(GPTR,l_w*l_h*sizeof(int));
+      if (fbs[x]) free(fbs[x]);
+      fbs[x]=(int*)calloc(l_w*l_h, sizeof(int));
     }
   }
 
@@ -505,7 +505,7 @@ int C_RenderTransitionClass::render(char visdata[2][2][576], int isBeat, int *fr
     start_time=0;
     for (x = 0; x < 4; x ++)
     {
-      if (fbs[x]) GlobalFree(fbs[x]);
+      if (fbs[x]) free(fbs[x]);
       fbs[x]=NULL;
     }
     g_render_effects2->clearRenders();

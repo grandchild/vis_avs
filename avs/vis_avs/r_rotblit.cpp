@@ -87,7 +87,7 @@ C_THISCLASS::C_THISCLASS()
 
 C_THISCLASS::~C_THISCLASS()
 {
-  if (w_mul) GlobalFree(w_mul);
+  if (w_mul) free(w_mul);
   w_mul=NULL;
   l_w=l_h=0;
 }
@@ -99,10 +99,10 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
   if (l_w != w || l_h != h || !w_mul) // generate width table
   {
     int x;
-    if (w_mul) GlobalFree(w_mul);
+    if (w_mul) free(w_mul);
     l_w=w;
     l_h=h;
-    w_mul=(int *)GlobalAlloc(GMEM_FIXED,sizeof(int)*h);
+    w_mul=(int *)malloc(sizeof(int)*h);
     for (x = 0; x < h; x ++)
       w_mul[x]=x*w;
   }

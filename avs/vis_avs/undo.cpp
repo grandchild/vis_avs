@@ -45,7 +45,7 @@ C_UndoItem::C_UndoItem(const C_UndoItem& T) : data(NULL), length(0), isdirty(tru
 
 C_UndoItem::C_UndoItem(void *_data, int _length, bool _isdirty) : data(NULL), length(length), isdirty(_isdirty)
 {
-  data = GlobalAlloc(GPTR, length);
+  data = calloc(length, 1);
   memcpy(data, _data, length);
 }
 
@@ -53,7 +53,7 @@ C_UndoItem::~C_UndoItem()
 {
   if (data) 
   {
-    GlobalFree(data);
+    free(data);
   }
 }
 
@@ -63,9 +63,9 @@ C_UndoItem & C_UndoItem::operator = (const C_UndoItem& T)
   isdirty = T.isdirty;
   if (data) 
   {
-    GlobalFree(data);
+    free(data);
   }
-  data = GlobalAlloc(GPTR, length);
+  data = calloc(length, 1);
   memcpy(data, T.data, length);
   return *this;
 }
@@ -86,9 +86,9 @@ void C_UndoItem::set(void *_data, int _length, bool _isdirty)
   isdirty = _isdirty;
   if (data) 
   {
-    GlobalFree(data);
+    free(data);
   }
-  data = GlobalAlloc(GPTR, length);
+  data = calloc(length, 1);
   memcpy(data, _data, length);
 }
 

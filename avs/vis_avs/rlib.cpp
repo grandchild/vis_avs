@@ -70,7 +70,7 @@ void C_RLibrary::add_dofx(void *rf, int has_r2)
 {
   if ((NumRetrFuncs&7)==0||!RetrFuncs)
   {
-    void *newdl=(void *)GlobalAlloc(GMEM_FIXED,sizeof(rfStruct)*(NumRetrFuncs+8));
+    void *newdl=(void *)malloc(sizeof(rfStruct)*(NumRetrFuncs+8));
     if (!newdl) 
     {
       MessageBox(NULL,"Out of memory","AVS Critical Error",MB_OK);
@@ -80,7 +80,7 @@ void C_RLibrary::add_dofx(void *rf, int has_r2)
     if (RetrFuncs) 
     {
       memcpy(newdl,RetrFuncs,NumRetrFuncs*sizeof(rfStruct));
-      GlobalFree(RetrFuncs);
+      free(RetrFuncs);
     }
     RetrFuncs=(rfStruct*)newdl;    
   }
@@ -218,7 +218,7 @@ void C_RLibrary::_add_dll(HINSTANCE hlib,class C_RBASE *(__cdecl *cre)(char *),c
 {
   if ((NumDLLFuncs&7)==0||!DLLFuncs)
   {
-    DLLInfo *newdl=(DLLInfo *)GlobalAlloc(GMEM_FIXED,sizeof(DLLInfo)*(NumDLLFuncs+8));
+    DLLInfo *newdl=(DLLInfo *)malloc(sizeof(DLLInfo)*(NumDLLFuncs+8));
     if (!newdl) 
     {
       MessageBox(NULL,"Out of memory","AVS Critical Error",MB_OK);
@@ -228,7 +228,7 @@ void C_RLibrary::_add_dll(HINSTANCE hlib,class C_RBASE *(__cdecl *cre)(char *),c
     if (DLLFuncs) 
     {
       memcpy(newdl,DLLFuncs,NumDLLFuncs*sizeof(DLLInfo));
-      GlobalFree(DLLFuncs);
+      free(DLLFuncs);
     }
     DLLFuncs=newdl;
   
@@ -387,7 +387,7 @@ C_RLibrary::C_RLibrary()
 
 C_RLibrary::~C_RLibrary()
 {
-  if (RetrFuncs) GlobalFree(RetrFuncs);
+  if (RetrFuncs) free(RetrFuncs);
   RetrFuncs=0;
   NumRetrFuncs=0;
 
@@ -399,7 +399,7 @@ C_RLibrary::~C_RLibrary()
       if (DLLFuncs[x].hDllInstance)
         FreeLibrary(DLLFuncs[x].hDllInstance);
     }
-    GlobalFree(DLLFuncs);
+    free(DLLFuncs);
   }
   DLLFuncs=NULL;
   NumDLLFuncs=0;
@@ -436,12 +436,12 @@ void *getGlobalBuffer(int w, int h, int n, int do_alloc)
 
   if (!g_n_buffers[n] || g_n_buffers_w[n] != w || g_n_buffers_h[n] != h)
   {
-    if (g_n_buffers[n]) GlobalFree(g_n_buffers[n]);
+    if (g_n_buffers[n]) free(g_n_buffers[n]);
     if (do_alloc)
     {
       g_n_buffers_w[n]=w;
       g_n_buffers_h[n]=h;
-      return g_n_buffers[n]=GlobalAlloc(GPTR,sizeof(int)*w*h);
+      return g_n_buffers[n]=calloc(w*h, sizeof(int));
     }
 
     g_n_buffers[n]=NULL;
