@@ -65,7 +65,7 @@ C_THISCLASS::~C_THISCLASS()
 {
 }
 	
-int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int*, int w, int h)
 {
 	int p=0;
 	char *t=(char *)&visdata[1][0][0];

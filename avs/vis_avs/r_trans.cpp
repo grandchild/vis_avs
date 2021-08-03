@@ -38,7 +38,12 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef LASER
 
-#define MAKE_REFFECT(n,x) void _ref##n(double &r, double &d, double max_d, int &xo, int &yo) { x }
+#define MAKE_REFFECT(n, expr) \
+  void _ref##n(double &r, double &d, double max_d, int &xo, int &yo) { \
+    /* any parameter unused in at least one expression, avoid "unused parameter" warnings */ \
+    (void)r, (void)d, (void)max_d, (void)xo, (void)yo; \
+    expr \
+  }
 
 typedef void t_reffect(double &r, double &d, double max_d, int &xo, int &yo);
 
@@ -456,7 +461,7 @@ int C_THISCLASS::smp_begin(int max_threads, char visdata[2][2][576], int isBeat,
   return max_threads;
 }
 
-void C_THISCLASS::smp_render(int this_thread, int max_threads, char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+void C_THISCLASS::smp_render(int this_thread, int max_threads, char[2][2][576], int, int *framebuffer, int *fbout, int w, int h)
 {
   if (!effect) return;
   
@@ -660,7 +665,7 @@ void C_THISCLASS::smp_render(int this_thread, int max_threads, char visdata[2][2
   }
 }
 
-int C_THISCLASS::smp_finish(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h) // return value is that of render() for fbstuff etc
+int C_THISCLASS::smp_finish(char[2][2][576], int, int*, int*, int, int)
 {
   return !!effect;
 }

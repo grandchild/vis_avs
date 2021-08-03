@@ -8,7 +8,7 @@
 #include "cfgwnd.h"
 
 
-int win32_dlgproc_transition(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_transition(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 {
 	switch (uMsg)
 	{

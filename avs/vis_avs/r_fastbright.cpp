@@ -74,7 +74,7 @@ C_THISCLASS::~C_THISCLASS()
 {
 }
 	
-int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int*, int w, int h)
 {
   if (isBeat&0x80000000) return 0;
 #ifdef NO_MMX // the non mmx x2 version really isn't any , in terms faster than normal brightness with no exclusions turned on

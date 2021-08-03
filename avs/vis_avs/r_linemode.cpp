@@ -60,7 +60,7 @@ C_THISCLASS::~C_THISCLASS()
 {
 }
 
-int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+int C_THISCLASS::render(char[2][2][576], int isBeat, int*, int*, int, int)
 {
   if (isBeat&0x80000000) return 0;
   if (newmode&0x80000000)

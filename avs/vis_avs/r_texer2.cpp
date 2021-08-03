@@ -1601,7 +1601,7 @@ bool overlaps_edge(double wrapped_coord, double img_size, int img_size_px, int s
     return ((abs_wrapped_coord + rel_size_half) > 1.0) && ((abs_wrapped_coord - rel_size_half) < 1.0);
 }
 
-int C_Texer2::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+int C_Texer2::render(char visdata[2][2][576], int isBeat, int *framebuffer, int*, int w, int h)
 {
     EnterCriticalSection(&codestuff);
 

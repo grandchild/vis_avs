@@ -80,7 +80,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 }
 
 
-int C_THISCLASS::smp_begin(int max_threads, char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+int C_THISCLASS::smp_begin(int max_threads, char[2][2][576], int, int*, int*, int w, int h)
 {
   if (!enabled) return 0;
 
@@ -95,13 +95,13 @@ int C_THISCLASS::smp_begin(int max_threads, char visdata[2][2][576], int isBeat,
 }
 
 
-int C_THISCLASS::smp_finish(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h) // return value is that of render() for fbstuff etc
+int C_THISCLASS::smp_finish(char[2][2][576], int, int*, int*, int, int)
 {
   return !!enabled;
 }
 
 
-void C_THISCLASS::smp_render(int this_thread, int max_threads, char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+void C_THISCLASS::smp_render(int this_thread, int max_threads, char[2][2][576], int, int* framebuffer, int* fbout, int w, int h)
 {
   if (!enabled) return;
 

@@ -110,7 +110,7 @@ C_THISCLASS::~C_THISCLASS()
 {
 }
 
-int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int width, int height)
+int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int*, int width, int height)
 {
   if (isBeat&0x80000000) return 0;
 	float btable[NUM_WIDTH];

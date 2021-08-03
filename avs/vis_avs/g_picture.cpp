@@ -16,7 +16,7 @@ static void EnableWindows(HWND hwndDlg, C_THISCLASS* config)
 	EnableWindow(GetDlgItem(hwndDlg,IDC_Y_RATIO),config->ratio);
 }
 
-int win32_dlgproc_picture(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_picture(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 {
 	C_THISCLASS* g_ConfigThis = (C_THISCLASS*)g_current_render;
 	switch (uMsg)

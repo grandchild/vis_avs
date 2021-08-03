@@ -5,7 +5,7 @@
 #include <windows.h>
 
 
-int win32_dlgproc_unknown(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_unknown(HWND hwndDlg, UINT uMsg, WPARAM, LPARAM)
 {
   C_UnknClass* g_this = (C_UnknClass*)g_current_render;
 	switch (uMsg)

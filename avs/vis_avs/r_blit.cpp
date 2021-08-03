@@ -518,7 +518,7 @@ int C_THISCLASS::blitter_normal(int *framebuffer, int *fbout, int w, int h, int 
 }
 
 	
-int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
 {
   if (isBeat&0x80000000) return 0;
 	int f_val;

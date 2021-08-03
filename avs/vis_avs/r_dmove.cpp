@@ -167,12 +167,12 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
   return smp_finish(visdata,isBeat,framebuffer,fbout,w,h);
 }
 
-int C_THISCLASS::smp_finish(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h) // return value is that of render() for fbstuff etc
+int C_THISCLASS::smp_finish(char[2][2][576], int, int*, int*, int, int)
 {
   return !__nomove;
 }
 
-int C_THISCLASS::smp_begin(int max_threads, char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+int C_THISCLASS::smp_begin(int max_threads, char visdata[2][2][576], int isBeat, int *framebuffer, int*, int w, int h)
 {
   __subpixel=subpixel;
   __rectcoords=rectcoords;
@@ -322,7 +322,7 @@ int C_THISCLASS::smp_begin(int max_threads, char visdata[2][2][576], int isBeat,
 }
 
 
-void C_THISCLASS::smp_render(int this_thread, int max_threads, char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+void C_THISCLASS::smp_render(int this_thread, int max_threads, char[2][2][576], int, int *framebuffer, int *fbout, int w, int h)
 {
   if (max_threads < 1) max_threads=1;
 

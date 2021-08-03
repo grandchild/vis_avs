@@ -5,7 +5,7 @@
 #include <windows.h>
 
 
-int win32_dlgproc_convolution(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_convolution(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 {
 	C_CONVOLUTION* g_Filter = (C_CONVOLUTION*)g_current_render;
 	char value[16];

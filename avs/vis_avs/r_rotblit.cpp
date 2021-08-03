@@ -92,7 +92,7 @@ C_THISCLASS::~C_THISCLASS()
   l_w=l_h=0;
 }
 	
-int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
 {
 	int y;
 

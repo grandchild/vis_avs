@@ -5,7 +5,7 @@
 #include <windows.h>
 
 
-int win32_dlgproc_videodelay(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_videodelay(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 {
 	C_DELAY* g_Delay = (C_DELAY*)g_current_render;
 	char value[16];

@@ -5,7 +5,7 @@
 #include <windows.h>
 
 
-int win32_dlgproc_invert(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_invert(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 {
   C_THISCLASS* g_ConfigThis = (C_THISCLASS*)g_current_render;
   switch (uMsg) {

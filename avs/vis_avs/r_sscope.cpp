@@ -146,7 +146,7 @@ static __inline int makeint(double t)
   return (int)(t*255.0);
 }
 	
-int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int*, int w, int h)
 {
   if (need_recompile)
   {

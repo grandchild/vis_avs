@@ -805,15 +805,15 @@ class IVideoOutput
   public:
     virtual ~IVideoOutput() { }
     virtual int open(int w, int h, int vflip, double aspectratio, unsigned int fmt)=0;
-    virtual void setcallback(LRESULT (*msgcallback)(void *token, HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam), void *token) { }
+    virtual void setcallback(LRESULT (*msgcallback)(void *token, HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam), void *token) { (void)msgcallback, (void)token; }
     virtual void close()=0;
     virtual void draw(void *frame)=0;
-    virtual void drawSubtitle(SubsItem *item) { }
-    virtual void showStatusMsg(const char *text) { }
+    virtual void drawSubtitle(SubsItem *item) { (void)item; }
+    virtual void showStatusMsg(const char *text) { (void)text; }
     virtual int get_latency() { return 0; }
-    virtual void notifyBufferState(int bufferstate) { } /* 0-255*/
+    virtual void notifyBufferState(int bufferstate) { (void)bufferstate; } /* 0-255*/
 
-    virtual int extended(int param1, int param2, int param3) { return 0; } // Dispatchable, eat this!
+    virtual int extended(int param1, int param2, int param3) { (void)param1, (void)param2, (void)param3; return 0; } // Dispatchable, eat this!
 };
 
 class ITrackSelector 

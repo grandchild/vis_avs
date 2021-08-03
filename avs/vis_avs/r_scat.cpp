@@ -62,7 +62,7 @@ C_THISCLASS::~C_THISCLASS()
 {
 }
 
-int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
 {
   int l;
   if (!enabled) return 0;

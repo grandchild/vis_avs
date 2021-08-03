@@ -339,7 +339,7 @@ static int rfind_ud2_trap_epilog_size(char* fn_end, char* fn_begin) {
 /* Overwrite the UD2 trap instruction with a near-jump instruction (0xEB) to just after
    the current code block. Execution continues at the start of the next code block or at
    the final "ret" instruction and returns from NSEEL_code_execute. */
-void write_gcc_naked_function_trap_padding_jmp(unsigned char* code, int size2, int fn) {
+void write_gcc_naked_function_trap_padding_jmp(unsigned char* code, int size2) {
     int epilog_size = rfind_ud2_trap_epilog_size(code + size2, code);
     if(epilog_size > 127) {
       printf("epilog_size too large for relative jump: %d\n", epilog_size);
@@ -461,7 +461,7 @@ int nseel_createCompiledFunction3(compileContext *ctx, int fntype, int fn, int c
     ptr=(int *)(block+4+sizes1);
     memcpy(ptr,func3,size);
 #ifdef __GNUC__
-    write_gcc_naked_function_trap_padding_jmp((unsigned char*)ptr, size, fn);
+    write_gcc_naked_function_trap_padding_jmp((unsigned char*)ptr, size);
 #endif
 
     ptr=findFBlock((char*)ptr);
@@ -501,7 +501,7 @@ int nseel_createCompiledFunction3(compileContext *ctx, int fntype, int fn, int c
 
     memcpy(outp,(void*)myfunc,size2);
 #ifdef __GNUC__
-    write_gcc_naked_function_trap_padding_jmp(outp, size2, fn);
+    write_gcc_naked_function_trap_padding_jmp(outp, size2);
 #endif
     if (preProc) preProc(outp,size2,ctx->userfunc_data);
 
@@ -545,7 +545,7 @@ int nseel_createCompiledFunction2(compileContext *ctx, int fntype, int fn, int c
     ptr=(int *)(block+4+sizes1);
     memcpy(ptr,func3,size);
 #ifdef __GNUC__
-    write_gcc_naked_function_trap_padding_jmp((unsigned char*)ptr, size, fn);
+    write_gcc_naked_function_trap_padding_jmp((unsigned char*)ptr, size);
 #endif
 
     ptr=findFBlock((char*)ptr);
@@ -573,7 +573,7 @@ int nseel_createCompiledFunction2(compileContext *ctx, int fntype, int fn, int c
 
     memcpy(outp,(void*)myfunc,size2);
 #ifdef __GNUC__
-    write_gcc_naked_function_trap_padding_jmp(outp, size2, fn);
+    write_gcc_naked_function_trap_padding_jmp(outp, size2);
 #endif
     if (preProc) preProc(outp,size2,ctx->userfunc_data);
 
@@ -604,7 +604,7 @@ int nseel_createCompiledFunction1(compileContext *ctx, int fntype, int fn, int c
   memcpy(block+4, func1, size);
   memcpy(block+size+4,(void*)myfunc,size2);
 #ifdef __GNUC__
-  write_gcc_naked_function_trap_padding_jmp(block + size + 4, size2, fn);
+  write_gcc_naked_function_trap_padding_jmp(block + size + 4, size2);
 #endif
   if (preProc) preProc(block+size+4,size2,ctx->userfunc_data);
 

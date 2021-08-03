@@ -217,7 +217,7 @@ static void recursiveAddDirList(HMENU menu, UINT *id, char *path, int pathlen)
   }
 }
 
-static BOOL CALLBACK DlgProc_Preset(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+static BOOL CALLBACK DlgProc_Preset(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 {
 	switch (uMsg)
 	{
@@ -897,7 +897,7 @@ int dosavePreset(HWND hwndDlg)
 
 extern int g_config_seh;
 
-static BOOL CALLBACK debugProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+static BOOL CALLBACK debugProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 {
   extern int debug_reg[8];
   switch (uMsg)

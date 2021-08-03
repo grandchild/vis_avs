@@ -113,7 +113,7 @@ void C_Normalise::apply(int* framebuffer, int fb_length, unsigned int scale_tabl
     }
 }
 
-int C_Normalise::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h) {
+int C_Normalise::render(char[2][2][576], int, int *framebuffer, int*, int w, int h) {
     unsigned char max = 0;
     unsigned char min = 0xff;
     unsigned int scale_table[NUM_COLOR_VALUES];

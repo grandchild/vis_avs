@@ -143,7 +143,7 @@ return ((((a >> 4) & 0x0F0F0F) * (16-divisor) + (((b >> 4) & 0x0F0F0F) * divisor
 // isBeat is 1 if a beat has been detected.
 // visdata is in the format of [spectrum:0,wave:1][channel][band].
 
-int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int*, int w, int h)
 {
 #ifdef LASER
   w=h=1024;

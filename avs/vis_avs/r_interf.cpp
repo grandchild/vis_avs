@@ -128,7 +128,7 @@ int  C_THISCLASS::save_config(unsigned char *data) // write configuration to dat
 
 #define MAX_POINTS 8
 
-int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
 {
   int pnts=nPoints;
 	int x,y;

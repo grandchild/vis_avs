@@ -65,7 +65,7 @@ C_DELAY::~C_DELAY()
 // isBeat is 1 if a beat has been detected.
 // visdata is in the format of [spectrum:0,wave:1][channel][band].
 
-int C_DELAY::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+int C_DELAY::render(char[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
 {
   if (isBeat&0x80000000) return 0;
 

@@ -16,7 +16,7 @@ a|=IsDlgButtonChecked(hwndDlg,IDC_VERTICAL2)?VERTICAL2:0;
 return a;
 }
 
-int win32_dlgproc_mirror(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_mirror(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 {
 	C_THISCLASS* g_ConfigThis = (C_THISCLASS*)g_current_render;
 	switch (uMsg)

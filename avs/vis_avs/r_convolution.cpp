@@ -51,7 +51,7 @@ _inline void C_CONVOLUTION::deletedraw(void)
 #define data(xx,yy) framebuffer[c[yy]+min(max(i+xx,0),lastcol)]
 //#define scale(out) min(max((long)((out+farray[25])/farray[50]),0),255)
 #define bound(xx) min(max(xx,0),255)
-int C_CONVOLUTION::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+int C_CONVOLUTION::render(char[2][2][576], int, int *framebuffer, int *fbout, int w, int h)
 {
 	int ret;
 	if ((w!=width)||(h!=height))

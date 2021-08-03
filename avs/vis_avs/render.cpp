@@ -78,7 +78,7 @@ unsigned int const mmx_blend4_revn[2]={0xff00ff,0xff00ff};//{0x1000100,0x1000100
 int const mmx_blendadj_mask[2] = { 0xff00ff,0xff00ff};
 int const mmx_blend4_zero=0;
 
-void Render_Init(HINSTANCE hDllInstance)
+void Render_Init(HINSTANCE)
 {
 #ifdef LASER
   laser_connect();
@@ -119,7 +119,7 @@ void Render_Init(HINSTANCE hDllInstance)
   }
 }
 
-void Render_Quit(HINSTANCE hDllInstance)
+void Render_Quit(HINSTANCE)
 {
   if (g_render_transition) delete g_render_transition;
   g_render_transition=NULL;

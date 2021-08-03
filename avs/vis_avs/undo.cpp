@@ -43,7 +43,7 @@ C_UndoItem::C_UndoItem(const C_UndoItem& T) : data(NULL), length(0), isdirty(tru
   *this = T;
 }
 
-C_UndoItem::C_UndoItem(void *_data, int _length, bool _isdirty) : data(NULL), length(length), isdirty(_isdirty)
+C_UndoItem::C_UndoItem(void *_data, int _length, bool _isdirty) : data(NULL), length(_length), isdirty(_isdirty)
 {
   data = calloc(length, 1);
   memcpy(data, _data, length);

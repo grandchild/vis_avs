@@ -6,7 +6,7 @@
 #include <commctrl.h>
 
 
-int win32_dlgproc_root_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_root_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 {
   C_RenderListClass* g_this = (C_RenderListClass*)g_current_render;
 	switch (uMsg)
@@ -33,7 +33,7 @@ int win32_dlgproc_root_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM 
 	return 0;
 }
 
-int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 {
   C_RenderListClass* g_this = (C_RenderListClass*)g_current_render;
 	switch (uMsg)

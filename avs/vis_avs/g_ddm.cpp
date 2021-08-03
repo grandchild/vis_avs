@@ -5,7 +5,7 @@
 #include <windows.h>
 
 
-int win32_dlgproc_dynamicdistancemodifier(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+int win32_dlgproc_dynamicdistancemodifier(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 {
   C_THISCLASS* g_this = (C_THISCLASS*)g_current_render;
 

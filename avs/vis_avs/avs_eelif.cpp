@@ -122,6 +122,7 @@ static double gettime(double sc)
 static double setmousepos(double x, double y)
 {
   //fucko: implement me
+  (void) x, (void)y;
   return 0.0;
 }
 

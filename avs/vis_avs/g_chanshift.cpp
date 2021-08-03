@@ -5,7 +5,7 @@
 #include <windows.h>
 
 
-int win32_dlgproc_chanshift(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+int win32_dlgproc_chanshift(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 {
 	C_THISCLASS* g_ConfigThis = (C_THISCLASS*)g_current_render;
 	int ids[] = { IDC_RBG, IDC_BRG, IDC_BGR, IDC_GBR, IDC_GRB, IDC_RGB };

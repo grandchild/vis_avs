@@ -120,7 +120,7 @@ static winampVisModule *getModule(int which)
 }
 #endif
 
-BOOL CALLBACK aboutProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+BOOL CALLBACK aboutProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 {
   switch (uMsg)
   {
@@ -409,7 +409,7 @@ void quit3(void)
 
 #define FPS_NF 64
 
-static unsigned int WINAPI RenderThread(LPVOID a)
+static unsigned int WINAPI RenderThread(LPVOID)
 {
   int framedata[FPS_NF]={0,};
 	int framedata_pos=0;

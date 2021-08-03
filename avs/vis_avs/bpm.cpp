@@ -46,7 +46,7 @@ extern char g_title[2048];
 #endif
 
 int refineBeat(int isBeat);
-BOOL TCHistStep(BeatType *t, DWORD _Avg, int *_halfDiscriminated, int *_hdPos, DWORD *_lastTC, DWORD TC, int Type);
+BOOL TCHistStep(BeatType *t, int *_halfDiscriminated, int *_hdPos, DWORD *_lastTC, DWORD TC, int Type);
 void InsertHistStep(BeatType *t, DWORD TC, int Type, int i);
 void CalcBPM(void);
 BOOL ReadyToLearn(void);
@@ -103,7 +103,7 @@ int stickyConfidenceCount;			// Used to decided when to go sticky
 BOOL doResyncBpm=FALSE;
 
 // configuration dialog stuff
-BOOL CALLBACK DlgProc_Bpm(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
+BOOL CALLBACK DlgProc_Bpm(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM)
 {
 switch (uMsg)
 	{
@@ -367,7 +367,7 @@ memset(halfDiscriminated, 0, TCHistSize*sizeof(int));
 }
 
 // Called whenever isBeat was true in render
-BOOL TCHistStep(BeatType *t, DWORD _Avg, int *_halfDiscriminated, int *_hdPos, DWORD *_lastTC, DWORD TC, int Type)
+BOOL TCHistStep(BeatType *t, int *_halfDiscriminated, int *_hdPos, DWORD *_lastTC, DWORD TC, int Type)
 {
 int i=0;
 int offI;
@@ -626,7 +626,7 @@ int refineBeat(int isBeat)
 
 
    if (isBeat) // If it is a real beat, do discrimination/guessing and computations, then see if it is accepted
- 		accepted = TCHistStep(TCHist, Avg, halfDiscriminated, &hdPos, &lastTC, TCNow, BEAT_REAL);
+ 		accepted = TCHistStep(TCHist, halfDiscriminated, &hdPos, &lastTC, TCNow, BEAT_REAL);
 
    // Calculate current Bpm
    CalcBPM();
@@ -703,7 +703,7 @@ int refineBeat(int isBeat)
 	if (predicted)
 		{
 		predictionLastTC = TCNow;
-		if (Confidence > 25) TCHistStep(TCHist, Avg, halfDiscriminated, &hdPos, &lastTC, TCNow, BEAT_GUESSED);
+		if (Confidence > 25) TCHistStep(TCHist, halfDiscriminated, &hdPos, &lastTC, TCNow, BEAT_GUESSED);
 		SliderStep(IDC_OUT, &outSlide);
 		doResyncBpm=FALSE;
  		return ((cfg_smartbeat && !cfg_smartbeatonlysticky) || (cfg_smartbeat && cfg_smartbeatonlysticky && sticked)) ? 1 : isBeat;

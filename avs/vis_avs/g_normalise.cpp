@@ -5,7 +5,7 @@
 #include <windows.h>
 
 
-int win32_dlgproc_normalise(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam) {
+int win32_dlgproc_normalise(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     C_Normalise* g_ConfigThis = (C_Normalise*)g_current_render;
     switch (uMsg) {
         case WM_INITDIALOG:

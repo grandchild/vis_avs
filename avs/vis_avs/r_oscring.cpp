@@ -76,7 +76,7 @@ C_THISCLASS::~C_THISCLASS()
 {
 }
 	
-int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int*, int w, int h)
 {
 	int x;
   int current_color;
