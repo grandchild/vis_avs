@@ -33,12 +33,11 @@ switch (uMsg)
 	  loadComboBox(GetDlgItem(hwndDlg,OBJ_COMBO),"*.AVI",g_ConfigThis->ascName);
 		return 1;
 	case WM_NOTIFY:
-		{
 		if (LOWORD(wParam) == IDC_PERSIST)
 			g_ConfigThis->persist = SendDlgItemMessage(hwndDlg, IDC_PERSIST, TBM_GETPOS, 0, 0);
 		if (LOWORD(wParam) == IDC_SPEED)
 			g_ConfigThis->speed = SendDlgItemMessage(hwndDlg, IDC_SPEED, TBM_GETPOS, 0, 0);
-		}
+		break;
 	case WM_COMMAND:
 	  if ((LOWORD(wParam) == IDC_CHECK1) ||
 	     (LOWORD(wParam) == IDC_ADDITIVE) ||

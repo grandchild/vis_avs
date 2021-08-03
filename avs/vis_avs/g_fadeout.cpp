@@ -41,6 +41,7 @@ int win32_dlgproc_fade(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
           g_this->maketab();
 				}
 			}
+			return 0;
     case WM_COMMAND:
       switch (LOWORD(wParam))
       {

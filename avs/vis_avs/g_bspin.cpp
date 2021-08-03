@@ -51,10 +51,11 @@ int win32_dlgproc_bassspin(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 					g_this->enabled|=IsDlgButtonChecked(hwndDlg,IDC_RIGHT)?2:0;
 				return 0;
 				case IDC_LC:
-					if (!a) a=&g_this->colors[0];
+					GR_SelectColor(hwndDlg, &g_this->colors[0]);
+					InvalidateRect(GetDlgItem(hwndDlg,LOWORD(wParam)),NULL,FALSE);
+				return 0;
 				case IDC_RC:
-					if (!a) a=&g_this->colors[1];
-					GR_SelectColor(hwndDlg,a);
+					GR_SelectColor(hwndDlg, &g_this->colors[1]);
 					InvalidateRect(GetDlgItem(hwndDlg,LOWORD(wParam)),NULL,FALSE);
 				return 0;
 
