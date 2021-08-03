@@ -249,7 +249,7 @@ extern int const mmx_blend4_zero;
 extern int const mmx_blendadj_mask[2];
 // NOTE. WHEN USING THIS FUNCTION, BE SURE TO DO 'if (g_mmx_available) __asm emms;' before calling
 // any fpu code, or before returning.
-#pragma warning( push, 1 )
+
 
 #ifndef NO_MMX
 static unsigned int __inline BLEND_ADJ(unsigned int a, unsigned int b, int v)
@@ -579,9 +579,6 @@ static __inline unsigned int BLEND4_16(unsigned int *p1, unsigned int w, int xp,
 #endif // _MSC_VER
 #endif
 }
-
-
-#pragma warning( pop ) 
 
 
 static __inline void mmx_avgblend_block(int *output, int *input, int l)
