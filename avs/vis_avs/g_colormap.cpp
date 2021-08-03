@@ -146,17 +146,17 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
                 SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_SELECT, CB_SETCURSEL, g_ColormapThis->current_map, 0);
                 CheckDlgButton(hwndDlg, IDC_COLORMAP_MAP_ENABLE, g_ColormapThis->maps[g_ColormapThis->current_map].enabled != 0);
                 for(unsigned int i = 0; i < COLORMAP_NUM_CYCLEMODES; i++) {
-                    SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_CYCLING_SELECT, CB_ADDSTRING, NULL, (LPARAM)g_ColormapThis->colormap_labels_map_cycle_mode[i]);
+                    SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_CYCLING_SELECT, CB_ADDSTRING, 0, (LPARAM)g_ColormapThis->colormap_labels_map_cycle_mode[i]);
                 }
-                SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_CYCLING_SELECT, CB_SETCURSEL, g_ColormapThis->config.map_cycle_mode, NULL);
+                SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_CYCLING_SELECT, CB_SETCURSEL, g_ColormapThis->config.map_cycle_mode, 0);
                 for(unsigned int i = 0; i < COLORMAP_NUM_KEYMODES; i++) {
-                    SendDlgItemMessage(hwndDlg, IDC_COLORMAP_KEY_SELECT, CB_ADDSTRING, NULL, (LPARAM)g_ColormapThis->colormap_labels_color_key[i]);
+                    SendDlgItemMessage(hwndDlg, IDC_COLORMAP_KEY_SELECT, CB_ADDSTRING, 0, (LPARAM)g_ColormapThis->colormap_labels_color_key[i]);
                 }
-                SendDlgItemMessage(hwndDlg, IDC_COLORMAP_KEY_SELECT, CB_SETCURSEL, g_ColormapThis->config.color_key, NULL);
+                SendDlgItemMessage(hwndDlg, IDC_COLORMAP_KEY_SELECT, CB_SETCURSEL, g_ColormapThis->config.color_key, 0);
                 for(unsigned int i = 0; i < COLORMAP_NUM_BLENDMODES; i++) {
-                    SendDlgItemMessage(hwndDlg, IDC_COLORMAP_OUT_BLENDMODE, CB_ADDSTRING, NULL, (LPARAM)g_ColormapThis->colormap_labels_blendmodes[i]);
+                    SendDlgItemMessage(hwndDlg, IDC_COLORMAP_OUT_BLENDMODE, CB_ADDSTRING, 0, (LPARAM)g_ColormapThis->colormap_labels_blendmodes[i]);
                 }
-                SendDlgItemMessage(hwndDlg, IDC_COLORMAP_OUT_BLENDMODE, CB_SETCURSEL, g_ColormapThis->config.blendmode, NULL);
+                SendDlgItemMessage(hwndDlg, IDC_COLORMAP_OUT_BLENDMODE, CB_SETCURSEL, g_ColormapThis->config.blendmode, 0);
                 CheckDlgButton(hwndDlg, IDC_COLORMAP_NO_SKIP_FAST_BEATS, g_ColormapThis->config.dont_skip_fast_beats != 0);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_COLORMAP_ADJUSTABLE_SLIDER),
                              g_ColormapThis->config.blendmode == COLORMAP_BLENDMODE_ADJUSTABLE);
@@ -165,7 +165,7 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 
                 // This overrides the setting of the current map above. bug? quickfix?
                 // TODO[feature]: This could be more convenient by saving and restoring the last-selected map.
-                SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_SELECT, CB_SETCURSEL, 0, NULL);
+                SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_SELECT, CB_SETCURSEL, 0, 0);
                 SetDlgItemTextA(hwndDlg, IDC_COLORMAP_FILENAME_VIEW, g_ColormapThis->maps[g_ColormapThis->current_map].filename);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_COLORMAP_MAP_CYCLE_SPEED), g_ColormapThis->config.map_cycle_mode != 0);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_COLORMAP_NO_SKIP_FAST_BEATS), g_ColormapThis->config.map_cycle_mode != 0);
@@ -181,10 +181,10 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
         case WM_HSCROLL:
             if(g_ColormapThis != NULL) {
                 if((HWND)lParam == GetDlgItem(hwndDlg, IDC_COLORMAP_ADJUSTABLE_SLIDER)) {
-                    int adjustable_pos = SendDlgItemMessage(hwndDlg, IDC_COLORMAP_ADJUSTABLE_SLIDER, TBM_GETPOS, NULL, NULL);
+                    int adjustable_pos = SendDlgItemMessage(hwndDlg, IDC_COLORMAP_ADJUSTABLE_SLIDER, TBM_GETPOS, 0, 0);
                     g_ColormapThis->config.adjustable_alpha = CLAMP(adjustable_pos, 0, COLORMAP_ADJUSTABLE_BLEND_MAX);
                 } else if((HWND)lParam == GetDlgItem(hwndDlg, IDC_COLORMAP_MAP_CYCLE_SPEED)) {
-                    int cycle_speed_pos = SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_CYCLE_SPEED, TBM_GETPOS, NULL, NULL);
+                    int cycle_speed_pos = SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_CYCLE_SPEED, TBM_GETPOS, 0, 0);
                     g_ColormapThis->config.map_cycle_speed = CLAMP(cycle_speed_pos, COLORMAP_MAP_CYCLE_SPEED_MIN, COLORMAP_MAP_CYCLE_SPEED_MAX);
                 }
             }
@@ -417,23 +417,23 @@ static int win32_dlgproc_colormap_edit(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
                                      IDM_COLORMAP_MENU_EDIT : IDM_COLORMAP_MENU_ADD;
             } else {
                 HMENU menu = CreatePopupMenu();
-                AppendMenu(menu, NULL, IDM_COLORMAP_MENU_ADD, "Add Color");
+                AppendMenu(menu, MF_ENABLED, IDM_COLORMAP_MENU_ADD, "Add Color");
                 if (g_currently_selected_color_id != -1) {
-                    AppendMenu(menu, NULL, IDM_COLORMAP_MENU_EDIT, "Edit Color");
+                    AppendMenu(menu, MF_ENABLED, IDM_COLORMAP_MENU_EDIT, "Edit Color");
                     if (g_ColormapThis->maps[current_map].length > 1) {
-                        AppendMenu(menu, NULL, IDM_COLORMAP_MENU_DELETE, "Delete Color");
+                        AppendMenu(menu, MF_ENABLED, IDM_COLORMAP_MENU_DELETE, "Delete Color");
                     }
-                    AppendMenu(menu, MF_SEPARATOR, NULL, NULL);
+                    AppendMenu(menu, MF_SEPARATOR, 0, NULL);
                     char set_position_str[19];
                     wsprintf(set_position_str, "Set Position (%d)",
                              g_ColormapThis->maps[current_map].colors[selected_color_index].position);
-                    AppendMenu(menu, NULL, IDM_COLORMAP_MENU_SETPOS, set_position_str);
+                    AppendMenu(menu, MF_ENABLED, IDM_COLORMAP_MENU_SETPOS, set_position_str);
                 }
                 POINT popup_coords = {x + 1, y};
                 ClientToScreen(hwndDlg, &popup_coords);
                 selected_menu_item = TrackPopupMenuEx(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON, popup_coords.x, popup_coords.y, hwndDlg, NULL);
             }
-            if(selected_menu_item != NULL) {
+            if(selected_menu_item) {
                 int color_position = TRANSLATE_RANGE(x, draw_rect.left, draw_rect.right, 0, NUM_COLOR_VALUES - 1);
                 static COLORREF custcolors[16];
                 switch(selected_menu_item) {
@@ -464,7 +464,7 @@ static int win32_dlgproc_colormap_edit(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
                         break;
                     case IDM_COLORMAP_MENU_SETPOS:
                         g_ColorSetValue = g_ColormapThis->maps[current_map].colors[selected_color_index].position;
-                        DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_CFG_COLORMAP_COLOR_POSITION), hwndDlg, (DLGPROC)win32_dlgproc_colormap_color_position, NULL);
+                        DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_CFG_COLORMAP_COLOR_POSITION), hwndDlg, (DLGPROC)win32_dlgproc_colormap_color_position, 0);
                         g_ColormapThis->maps[current_map].colors[selected_color_index].position = g_ColorSetValue;
                         break;
                 }

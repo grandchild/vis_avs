@@ -163,7 +163,7 @@ static void DD_RestoreBkgndSettings()
     int e=COLOR_DESKTOP;
     unsigned long c=g_saved_bkgnd_color;
     SetSysColors(1, &e, &c); // FUCKING MESSAGE PUMP AND SETSYSCOLORS
-    SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, g_saved_desktop_wallpaper, NULL);
+    SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, g_saved_desktop_wallpaper, 0);
     g_saved_desktop_values=0;
   }
 }
@@ -475,7 +475,7 @@ void DD_CreateSurfaces(int w, int h, int fsh, int fs, int fsbpp, int flip, int d
           int e=COLOR_DESKTOP;
           unsigned long c=RGB(rv,gv,bv);
           SetSysColors(1, &e, &c);
-          SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (void*)"", NULL);
+          SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (void*)"", 0);
   
           // rewrite registry settings right now so we don't fuck the user desktop if avs crashes
           {

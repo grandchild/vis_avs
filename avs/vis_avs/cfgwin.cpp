@@ -1139,11 +1139,11 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
         HTREEITEM h=TreeView_HitTest(hwnd,&hti);
         if (hti.flags&TVHT_ABOVE)
         {
-          SendMessage(hwnd,WM_VSCROLL,SB_LINEUP,NULL);
+          SendMessage(hwnd,WM_VSCROLL,SB_LINEUP,0);
         }
         if (hti.flags&TVHT_BELOW)
         {
-          SendMessage(hwnd,WM_VSCROLL,SB_LINEDOWN,NULL);
+          SendMessage(hwnd,WM_VSCROLL,SB_LINEDOWN,0);
         }
         if (hti.flags&TVHT_NOWHERE)
         {
