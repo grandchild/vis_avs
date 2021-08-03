@@ -31,8 +31,6 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(AVS_CXX_COMPILER_FLAGS
         -fpermissive        # -fpermissive needed for MAKEINTRESOURCE macro, which casts
                             # LPSTR to WORD, a.k.a. char* to short unsigned int.
-        -Wno-register       # Ignore deprecated "register" type modifier warnings, so we
-                            # can see other warnings. Remove when register types fixed.
     )
     # (CMake generator expressions cannot be multiline, hence the AVS_CXX_COMPILE_FLAGS
     # variable in a foreach workaround.)

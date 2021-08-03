@@ -140,7 +140,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			i = btable;
 			for (p = 0; p < NUM_WIDTH; p ++)
 			{
-				register int t;
+				int t;
 				t=max(sd[0],sd[1]);
 				t=max(t,sd[2]);
 				*o = (float)t;
@@ -186,8 +186,8 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 			float x, y, z;
 			matrixApply(matrix,w,64.0f-*at,q,&x,&y,&z);
 			z = adj / z;
-			register int ix = (int) (x * z) + (width/2);
-			register int iy = (int) (y * z) + (height/2);
+			int ix = (int) (x * z) + (width/2);
+			int iy = (int) (y * z) + (height/2);
 			if (iy >= 0 && iy < height && ix >= 0 && ix < width) 
 			{
         BLEND_LINE(framebuffer + iy*width + ix,*ct);

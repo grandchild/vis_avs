@@ -46,14 +46,14 @@ static int lexgetc(char **exp)
   if (c) (*exp)++;
   return( c != 0 ? c : -1);
 }
-static int tst__b(register int c, char tab[])
+static int tst__b(int c, char tab[])
 {
   return (tab[(c >> 3) & 037] & (1 << (c & 07)) );
 }
 
 int nseel_gettoken(compileContext *ctx, char *lltb, int lltbsiz)
 {
-        register char *lp, *tp, *ep;
+        char *lp, *tp, *ep;
 
         tp = lltb;
         ep = tp+lltbsiz-1;
@@ -66,9 +66,9 @@ int nseel_gettoken(compileContext *ctx, char *lltb, int lltbsiz)
 
 int nseel_yylex(compileContext *ctx, char **exp)
 {
-  register int c, st;
+  int c, st;
   int final, l, llk, i;
-  register struct lextab *lp;
+  struct lextab *lp;
   char *cp;
 
   while (1)
@@ -127,9 +127,9 @@ void nseel_llinit(compileContext *ctx)
 
 static int llinp(compileContext *ctx, char **exp)
 {
-        register int c;
-        register struct lextab *lp;
-        register char *cp;
+        int c;
+        struct lextab *lp;
+        char *cp;
 
         lp = &nseel_lextab;
         cp = lp->llign;                         /* Ignore class         */
@@ -159,7 +159,7 @@ static int llset(compileContext *ctx)
  * Return TRUE if EOF and nothing was moved in the look-ahead buffer
  */
 {
-        register char *lp1, *lp2;
+        char *lp1, *lp2;
 
         for (lp1 = ctx->llbuf, lp2 = ctx->llend; lp2 < ctx->llp2;)
                 *lp1++ = *lp2++;

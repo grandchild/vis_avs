@@ -188,13 +188,13 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 	{
 		for (p = 0; p < NUM_ROT_DIV; p ++)
 		{
-			register float x, y, z;
+			float x, y, z;
 			matrixApply(matrix,in->ax*in->r,in->h,in->ay*in->r,&x,&y,&z);
  			z = adj / z;
       if (z > 0.0000001)
       {
-			  register int ix = (int) (x * z) + width/2;
-			  register int iy = (int) (y * z) + height/2;
+			  int ix = (int) (x * z) + width/2;
+			  int iy = (int) (y * z) + height/2;
 			  if (iy >= 0 && iy < height && ix >= 0 && ix < width) 
 			  {
           BLEND_LINE(framebuffer + iy*width + ix,in->c);

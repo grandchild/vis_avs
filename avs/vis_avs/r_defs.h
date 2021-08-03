@@ -58,7 +58,7 @@ void line(int *fb, int x1,int y1,int x2,int y2, int width, int height, int color
 // inlines
 static unsigned int __inline BLEND(unsigned int a, unsigned int b)
 {
-	register unsigned int r,t;
+	unsigned int r,t;
 	r=(a&0xff)+(b&0xff);
 	t=min(r,0xff);
 	r=(a&0xff00)+(b&0xff00);
@@ -111,7 +111,7 @@ static unsigned int __inline BLEND_MAX(unsigned int a, unsigned int b)
   //       Since AVS's resolution is guaranteed to be a multiple of 4 anyway, this
   //       optimization could go further and work on 4 pixels at once by using AVX's
   //       128-bit-width VPMAXUB instruction.
-	register unsigned int t;
+	unsigned int t;
   int _a=a&0xff;
   int _b=b&0xff;
 	t=FASTMAX(_a,_b);
@@ -125,7 +125,7 @@ static unsigned int __inline BLEND_MAX(unsigned int a, unsigned int b)
 static unsigned int __inline BLEND_MIN(unsigned int a, unsigned int b)
 {
 #if 1
-	register unsigned int t;
+	unsigned int t;
   int _a=a&0xff;
   int _b=b&0xff;
 	t=FASTMIN(_a,_b);
@@ -194,7 +194,7 @@ static unsigned int __inline BLEND_AVG(unsigned int a, unsigned int b)
 
 static unsigned int __inline BLEND_SUB(unsigned int a, unsigned int b)
 {
-	register int r,t;
+	int r,t;
 	r=(a&0xff)-(b&0xff);
 	t=max(r,0);
 	r=(a&0xff00)-(b&0xff00);
@@ -211,7 +211,7 @@ static unsigned int __inline BLEND_SUB(unsigned int a, unsigned int b)
 
 static unsigned int __inline BLEND_ADJ_NOMMX(unsigned int a, unsigned int b, int v)
 {
-	register int t;
+	int t;
 	t=g_blendtable[a&0xFF][v]+g_blendtable[b&0xFF][0xFF-v];
 	t|=(g_blendtable[(a&0xFF00)>>8][v]+g_blendtable[(b&0xFF00)>>8][0xFF-v])<<8;
 	t|=(g_blendtable[(a&0xFF0000)>>16][v]+g_blendtable[(b&0xFF0000)>>16][0xFF-v])<<16;
@@ -220,7 +220,7 @@ static unsigned int __inline BLEND_ADJ_NOMMX(unsigned int a, unsigned int b, int
 
 static unsigned int __inline BLEND_MUL(unsigned int a, unsigned int b)
 {
-	register int t;
+	int t;
 	t=g_blendtable[a&0xFF][b&0xFF];
 	t|=g_blendtable[(a&0xFF00)>>8][(b&0xFF00)>>8]<<8;
   t|=g_blendtable[(a&0xFF0000)>>16][(b&0xFF0000)>>16]<<16;
@@ -229,7 +229,7 @@ static unsigned int __inline BLEND_MUL(unsigned int a, unsigned int b)
 
 static __inline void BLEND_LINE(int *fb, int color)
 {
-  register int bm=g_line_blend_mode&0xff;
+  int bm=g_line_blend_mode&0xff;
   switch (g_line_blend_mode&0xff)
   {
     case 1: *fb=BLEND(*fb,color); break;
@@ -319,7 +319,7 @@ static unsigned int __inline BLEND_ADJ(unsigned int a, unsigned int b, int v)
 static __inline unsigned int BLEND4(unsigned int *p1, unsigned int w, int xp, int yp)
 {
 #ifdef NO_MMX
-  register int t;
+  int t;
   unsigned char a1,a2,a3,a4;
   a1=g_blendtable[255-xp][255-yp];
   a2=g_blendtable[xp][255-yp];
@@ -448,7 +448,7 @@ static __inline unsigned int BLEND4(unsigned int *p1, unsigned int w, int xp, in
 static __inline unsigned int BLEND4_16(unsigned int *p1, unsigned int w, int xp, int yp)
 {
 #ifdef NO_MMX
-  register int t;
+  int t;
   unsigned char a1,a2,a3,a4;
   xp=(xp>>8)&0xff;
   yp=(yp>>8)&0xff;
