@@ -528,7 +528,8 @@ void save_map_file(C_ColorMap* colormap, int map_index) {
     if(GetSaveFileName(&openfilename) == 0) {
         return;
     }
-    strncpy(filepath, openfilename.lpstrFile, MAX_PATH);
+    strncpy(filepath, openfilename.lpstrFile, MAX_PATH - 1);
+    filepath[MAX_PATH - 1] = '\0';
     if(!endswithn(openfilename.lpstrFile, ".clm", MAX_PATH)) {
         size_t len_selected_path = strnlen(openfilename.lpstrFile, MAX_PATH);
         if(len_selected_path >= MAX_PATH - 4) {

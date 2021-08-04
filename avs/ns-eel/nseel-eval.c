@@ -145,7 +145,7 @@ int nseel_setVar(compileContext *ctx, int varNum)
     nameptr=ctx->varTable_Names[wb]+ti*NSEEL_MAX_VARIABLE_NAMELEN;
     if (!nameptr[0]) 
     {
-      strncpy(nameptr,ctx->lastVar,NSEEL_MAX_VARIABLE_NAMELEN);
+      memcpy(nameptr,ctx->lastVar,NSEEL_MAX_VARIABLE_NAMELEN);
     }  
     return varNum;  
   }

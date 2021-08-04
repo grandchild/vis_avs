@@ -758,7 +758,8 @@ NSEEL_CODEHANDLE NSEEL_code_compile(NSEEL_VMCTX _ctx, char *_expression)
     if (ctx->computTableTop > NSEEL_MAX_TEMPSPACE_ENTRIES- /* safety */ 16 - /* alignment */4 ||
         !tmp->startptr) 
     { 
-      strncpy(ctx->last_error_string,expr,sizeof(ctx->last_error_string));
+      strncpy(ctx->last_error_string,expr,sizeof(ctx->last_error_string) - 1);
+      ctx->last_error_string[sizeof(ctx->last_error_string) - 1] = '\0';
       scode=NULL; 
       break; 
     }

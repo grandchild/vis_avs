@@ -99,7 +99,8 @@ void Render_Init(HINSTANCE)
 
 	char INI_FILE[MAX_PATH];
 	char *p=INI_FILE;
-	strncpy(INI_FILE,(char*)SendMessage(GetWinampHwnd(),WM_WA_IPC,0,IPC_GETINIFILE),MAX_PATH);
+	strncpy(INI_FILE,(char*)SendMessage(GetWinampHwnd(),WM_WA_IPC,0,IPC_GETINIFILE),MAX_PATH - 1);
+	INI_FILE[MAX_PATH - 1] = '\0';
 	p += strlen(INI_FILE) - 1;
 	while (p >= INI_FILE && *p != '\\') p--;
 #ifdef LASER
@@ -127,7 +128,8 @@ void Render_Quit(HINSTANCE)
   {
 		char INI_FILE[MAX_PATH];
 		char *p=INI_FILE;
-		strncpy(INI_FILE,(char*)SendMessage(GetWinampHwnd(),WM_WA_IPC,0,IPC_GETINIFILE),MAX_PATH);
+		strncpy(INI_FILE,(char*)SendMessage(GetWinampHwnd(),WM_WA_IPC,0,IPC_GETINIFILE),MAX_PATH - 1);
+		INI_FILE[MAX_PATH - 1] = '\0';
 		p += strlen(INI_FILE) - 1;
 		while (p >= INI_FILE && *p != '\\') p--;
   #ifdef LASER
