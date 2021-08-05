@@ -63,9 +63,13 @@ C_THISCLASS::C_THISCLASS() // set up default configuration
 
 float C_THISCLASS::GET_FLOAT(unsigned char *data, int pos)
 {
-int a = data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24);
-float f = *(float *)&a;
-return f;
+  float f;
+  unsigned char* a = (unsigned char*)&f;
+  a[0] = data[pos];
+  a[1] = data[pos + 1];
+  a[2] = data[pos + 2];
+  a[3] = data[pos + 3];
+  return f;
 }
 
 void C_THISCLASS::load_config(unsigned char *data, int len) // read configuration of max length "len" from data.
@@ -86,8 +90,8 @@ void C_THISCLASS::load_config(unsigned char *data, int len) // read configuratio
 #define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255
 void C_THISCLASS::PUT_FLOAT(float f, unsigned char *data, int pos)
 {
-int y = *(int *)&f;
-data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255;
+unsigned char* y = (unsigned char*)&f;
+data[pos]=y[0]; data[pos+1]=y[1]; data[pos+2]=y[2]; data[pos+3]=y[3];
 }
 
 int  C_THISCLASS::save_config(unsigned char *data) // write configuration to data, return length. config data should not exceed 64k.

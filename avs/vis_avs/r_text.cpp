@@ -154,13 +154,6 @@ C_THISCLASS::C_THISCLASS() // set up default configuration
 
 #define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))
 
-float C_THISCLASS::GET_FLOAT(unsigned char *data, int pos)
-{
-int a = data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24);
-float f = *(float *)&a;
-return f;
-}
-
 void C_THISCLASS::load_config(unsigned char *data, int len) // read configuration of max length "len" from data.
 {
 	int pos=0;
@@ -210,11 +203,6 @@ void C_THISCLASS::load_config(unsigned char *data, int len) // read configuratio
 }
 
 #define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255
-void C_THISCLASS::PUT_FLOAT(float f, unsigned char *data, int pos)
-{
-int y = *(int *)&f;
-data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255;
-}
 extern HWND hwnd_WinampParent;
 
 
