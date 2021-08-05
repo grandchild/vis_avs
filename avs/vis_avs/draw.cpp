@@ -1576,7 +1576,7 @@ HRESULT WINAPI _cb3(
     lpDDSurfaceDesc->ddpfPixelFormat.dwRGBBitCount==16 ||
     lpDDSurfaceDesc->ddpfPixelFormat.dwRGBBitCount==15))
   {  
-    int *(*x)=(int **)lpContext;
+    int **x=(int **)lpContext;
     if (lpDDSurfaceDesc->ddpfPixelFormat.dwRGBBitCount > (DWORD)x[2][0] || 
         lpDDSurfaceDesc->dwWidth < (DWORD)x[0][0] ||
         lpDDSurfaceDesc->dwHeight < (DWORD)x[1][0])
@@ -1593,7 +1593,7 @@ HRESULT WINAPI _cb3(
 
 int DDraw_PickMode(int *w, int *h, int *bpp)
 {
-  int *(x[3])={w,h,bpp};
+  int *x[3]={w,h,bpp};
   *w=0;
   *h=0;
   *bpp=0;

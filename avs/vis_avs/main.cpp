@@ -186,7 +186,7 @@ static int init(struct winampVisModule *this_mod)
   if (!hRich) hRich=LoadLibrary("RICHED32.dll");
 #endif
   GetSystemTimeAsFileTime(&ft);
-  srand(ft.dwLowDateTime|ft.dwHighDateTime^GetCurrentThreadId());
+  srand(ft.dwLowDateTime | (ft.dwHighDateTime^GetCurrentThreadId()));
 	g_hInstance=this_mod->hDllInstance;
 #ifdef WA3_COMPONENT
 	GetModuleFileName(GetModuleHandle(NULL),g_path,MAX_PATH);
@@ -417,7 +417,7 @@ static unsigned int WINAPI RenderThread(LPVOID)
 	char vis_data[2][2][576];
   FILETIME ft;
   GetSystemTimeAsFileTime(&ft);
-  srand(ft.dwLowDateTime|ft.dwHighDateTime^GetCurrentThreadId());
+  srand(ft.dwLowDateTime | (ft.dwHighDateTime^GetCurrentThreadId()));
 	while (!g_ThreadQuit)
 	{
 		int w,h,*fb=NULL, *fb2=NULL,beat=0;

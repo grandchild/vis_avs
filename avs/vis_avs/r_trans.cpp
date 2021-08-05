@@ -123,7 +123,7 @@ void C_THISCLASS::load_config(unsigned char *data, int len)
     effect=GET_INT(); pos+=4; 
   }
 
-  if (effect != 32767 && effect > REFFECT_MAX || effect < 0)
+  if ((effect != 32767 && effect > REFFECT_MAX) || effect < 0)
     effect=0;
 
   // Once we know what our _real_ effect value is, if it uses the evaluator, allocate and stuff the string, here.
@@ -309,7 +309,7 @@ int C_THISCLASS::smp_begin(int max_threads, char visdata[2][2][576], int isBeat,
               if (oh < 0) { ypartial=0; oh=0; }
               if (oh >= h-1) {ypartial=31; oh=h-2; }
             }
-            *transp++ = ow+oh*w | (ypartial<<22) | (xpartial<<27);
+            *transp++ = (oh*w+ow) | (ypartial<<22) | (xpartial<<27);
           }
           else 
           {
@@ -409,7 +409,7 @@ int C_THISCLASS::smp_begin(int max_threads, char visdata[2][2][576], int isBeat,
                 if (oh < 0) { ypartial=0; oh=0; }
                 if (oh >= h-1) {ypartial=31; oh=h-2; }
               }
-              *transp++ = ow+oh*w | (ypartial<<22) | (xpartial<<27);
+              *transp++ = (oh*w+ow) | (ypartial<<22) | (xpartial<<27);
             }
             else
             {

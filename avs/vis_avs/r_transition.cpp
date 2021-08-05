@@ -69,7 +69,7 @@ unsigned int WINAPI C_RenderTransitionClass::m_initThread(LPVOID p)
   C_RenderTransitionClass *_this=(C_RenderTransitionClass*)p;
   FILETIME ft;
   GetSystemTimeAsFileTime(&ft);
-  srand(ft.dwLowDateTime|ft.dwHighDateTime^GetCurrentThreadId());
+  srand(ft.dwLowDateTime | (ft.dwHighDateTime^GetCurrentThreadId()));
   if (cfg_transitions2&32)
   {
     extern HANDLE g_hThread;
