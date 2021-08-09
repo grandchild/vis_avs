@@ -8,7 +8,7 @@
 int win32_dlgproc_multiplier(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 {
 	C_THISCLASS* g_ConfigThis = (C_THISCLASS*)g_current_render;
-	int id;
+	int id = 0;
 	switch (uMsg)
 	{
 		case WM_COMMAND:
@@ -70,7 +70,9 @@ int win32_dlgproc_multiplier(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 				id = IDC_XS;
 				break;
 			}
-			SendMessage(GetDlgItem(hwndDlg, id), BM_SETCHECK, BST_CHECKED, 0);
+			if(id) {
+				SendMessage(GetDlgItem(hwndDlg, id), BM_SETCHECK, BST_CHECKED, 0);
+			}
 
 			return 1;
 

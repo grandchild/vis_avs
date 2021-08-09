@@ -157,7 +157,7 @@ C_THISCLASS::C_THISCLASS() // set up default configuration
 void C_THISCLASS::load_config(unsigned char *data, int len) // read configuration of max length "len" from data.
 {
 	int pos=0;
-	int size;
+	int size=0;
 	updating=true;
 	forceredraw=1;
 	if (len-pos >= 4) { enabled=GET_INT(); pos+=4; }

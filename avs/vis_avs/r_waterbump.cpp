@@ -257,12 +257,12 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int *fbou
 		int x,y;
 		switch(drop_position_x) {
 			case 0: x=w/4; break;
-			case 1: x=w/2; break;
+			case 1: default: x=w/2; break;
 			case 2: x=w*3/4; break;
 		}
 		switch(drop_position_y) {
 			case 0: y=h/4; break;
-			case 1: y=h/2; break;
+			case 1: default: y=h/2; break;
 			case 2: y=h*3/4; break;
 		}
 		SineBlob(x,y,drop_radius,-depth,page);

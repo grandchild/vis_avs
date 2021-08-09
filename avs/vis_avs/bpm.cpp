@@ -511,6 +511,7 @@ Confidence2 = (int)(etC * 100);
 // Now apply second layer, recalculate average using only beats within range of typical drift
 // Also, count how many of them we are keeping
 totalTC=0;
+v = 0;
 for (i=0;i<TCHistSize-1;i++)
 	{
 	v += TCHist[i].TC - TCHist[i+1].TC;
@@ -674,7 +675,7 @@ int refineBeat(int isBeat)
 					  (predictionLastTC < TCNow - (30000/predictionBpm) - (60000/predictionBpm)*0.2));*/
 	if (predictionBpm && accepted && !predicted)
 		{
-		int b;
+		int b = predictionBpm;
 		if (TCNow > predictionLastTC + (60000 / predictionBpm)*0.7)
 			{
 			resyncin = TRUE;
