@@ -112,7 +112,8 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int*, int
 		  {
 		  d = depthof(*p);
 		  c = tableb[d] | (tableg[d]<<8) | (tabler[d]<<16);
-		  *p++ = BLEND(*p, c);
+		  *p = BLEND(*p, c);
+		  ++p;
 		  }
   }
   else if (blendavg)
@@ -121,7 +122,8 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int*, int
 		  {
 		  d = depthof(*p);
 		  c = tableb[d] | (tableg[d]<<8) | (tabler[d]<<16);
-		  *p++ = BLEND_AVG(*p, c);
+		  *p = BLEND_AVG(*p, c);
+		  ++p;
 		  }
   }
   else

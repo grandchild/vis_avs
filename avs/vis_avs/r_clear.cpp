@@ -90,8 +90,8 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int*, int
   fcounter++;
 
   if (blend==2) while (i--) BLEND_LINE(p++,color);
-  else if (blend) while (i--) *p++=BLEND(*p,color);
-  else if (blendavg) while (i--) *p++=BLEND_AVG(*p,color);
+  else if (blend) while (i--) { *p=BLEND(*p,color); p++; }
+  else if (blendavg) while (i--) { *p=BLEND_AVG(*p,color); p++; }
   else while (i--) *p++=color;
   return 0;
 }

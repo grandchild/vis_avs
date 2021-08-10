@@ -129,7 +129,8 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int*, int
       {
         int *tmp=fbp+w-1;
         int n=halfw;
-        while (n--) *tmp-- = BLEND_ADAPT(*tmp, *fbp++, divis); 
+        while (n--) *tmp = BLEND_ADAPT(*tmp, *fbp++, divis);
+        --tmp;
       }
 		  else
       {
@@ -150,7 +151,8 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int*, int
       {
         int *tmp=fbp+w-1;
         int n=halfw;
-        while (n--) *fbp++ = BLEND_ADAPT(*fbp,*tmp--,divis);
+        while (n--) *fbp = BLEND_ADAPT(*fbp,*tmp--,divis);
+        ++fbp;
       }
 		  else
       {
@@ -171,7 +173,8 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int*, int
 		  if (smooth && divis) 
       {
         int n=w;
-        while (n--) fbp++[j]=BLEND_ADAPT(fbp[j], *fbp, divis); 
+        while (n--) fbp[j]=BLEND_ADAPT(fbp[j], *fbp, divis);
+        ++fbp;
       }
 		  else 
       {
@@ -192,7 +195,8 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int*, int
       {
         int n=w;
         while (n--)
-  		   *fbp++ = BLEND_ADAPT(*fbp, fbp[j], divis); 
+          *fbp = BLEND_ADAPT(*fbp, fbp[j], divis);
+          ++fbp;
       }
 		  else 
       {
