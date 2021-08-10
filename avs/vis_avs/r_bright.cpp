@@ -101,63 +101,6 @@ if (iabs(((color) & 0xFF0000) - ((ref) & 0xFF0000)) > (distance<<16)) return 0;
 return 1;
 }
 
-// TODO [cleanup]: This is dead code right now
-static void mmx_brighten_block(int *p, int rm, int gm, int bm, int l)
-{
-  int poo[2]=
-  {
-    (bm>>8)|((gm>>8)<<16),
-    rm>>8
-  };
-#ifdef _MSC_VER
-  __asm 
-  {
-    mov eax, p
-    mov ecx, l
-    movq mm1, [poo]
-    align 16
-mmx_brightblock_loop:
-    pxor mm0, mm0
-    punpcklbw mm0, [eax]
-
-    pmulhw mm0, mm1
-    packuswb mm0, mm0
-
-    movd [eax], mm0
-
-    add eax, 4
-
-    dec ecx
-    jnz mmx_brightblock_loop
-    emms
-  };
-#else // _MSC_VER
-  __asm__ __volatile__ (
-    "mov %%ebx, %0\n\t"
-    "mov %%ecx, %1\n\t"
-    "movq %%mm1, [%2]\n\t"
-    ".align 16\n"
-    "mmx_brightblock_loop:\n\t"
-    "pxor %%mm0, %%mm0\n\t"
-    "punpcklbw %%mm0, [%%eax]\n\t"
-
-    "pmulhw %%mm0, %%mm1\n\t"
-    "packuswb %%mm0, %%mm0\n\t"
-
-    "movd [%%eax], %%mm0\n\t"
-    "add %%eax, 4\n\t"
-
-    "dec %%ecx\n\t"
-    "jnz mmx_brightblock_loop\n\t"
-    "emms"
-    :/* no outputs */
-    :"m"(p), "m"(l), "m"(poo)
-    :"eax", "ecx"
-  );
-#endif // _MSC_VER
-}
-
-
 int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
 {
   smp_begin(1,visdata,isBeat,framebuffer,fbout,w,h);
@@ -276,15 +219,11 @@ void C_THISCLASS::smp_render(int this_thread, int max_threads, char[2][2][576], 
   {
     if (!exclude)
     {
-#if 1 // def NO_MMX
       while (l--)
 	    {
         int pix=*p;
         *p++ = red_tab[(pix>>16)&0xff] | green_tab[(pix>>8)&0xff] | blue_tab[pix&0xff];
 	    }
-#else
-      mmx_brighten_block(p,rm,gm,bm,l);
-#endif
     }
     else
     {
