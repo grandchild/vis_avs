@@ -175,8 +175,8 @@ void my_getViewport(RECT *r, RECT *sr) {
   {
 	  HINSTANCE h=LoadLibrary("user32.dll");
 	  if (h) {
-      HMONITOR (WINAPI *Mfr)(LPCRECT lpcr, DWORD dwFlags) = (HMONITOR (WINAPI *)(LPCRECT, DWORD)) GetProcAddress(h, "MonitorFromRect");
-      BOOL (WINAPI *Gmi)(HMONITOR mon, LPMONITORINFO lpmi) = (BOOL (WINAPI *)(HMONITOR,LPMONITORINFO)) GetProcAddress(h,"GetMonitorInfoA");    
+      HMONITOR (WINAPI *Mfr)(LPCRECT lpcr, DWORD dwFlags) = FORCE_FUNCTION_CAST(HMONITOR (WINAPI *)(LPCRECT, DWORD)) GetProcAddress(h, "MonitorFromRect");
+      BOOL (WINAPI *Gmi)(HMONITOR mon, LPMONITORINFO lpmi) = FORCE_FUNCTION_CAST(BOOL (WINAPI *)(HMONITOR,LPMONITORINFO)) GetProcAddress(h,"GetMonitorInfoA");
 			if (Mfr && Gmi) {
 			  HMONITOR hm;
 			  hm=Mfr(sr,MONITOR_DEFAULTTONULL);
@@ -225,7 +225,7 @@ void SetTransparency(HWND hWnd, int enable, int amount)
 			SetWindowLong(hWnd, GWL_EXSTYLE, dwLong | WS_EX_LAYERED);
 		h=LoadLibrary("USER32.DLL");
 		if(h!=NULL) {
-			a=(void (__stdcall *)(HWND,int,int,int))GetProcAddress(h,"SetLayeredWindowAttributes");
+			a=FORCE_FUNCTION_CAST(void (__stdcall *)(HWND,int,int,int))GetProcAddress(h,"SetLayeredWindowAttributes");
 			if(a!=NULL) 
 				a(hWnd, RGB(0,0,0), amount, LWA_ALPHA);
 			FreeLibrary(h);

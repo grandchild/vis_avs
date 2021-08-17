@@ -280,14 +280,14 @@ void C_RLibrary::initdll()
         else FreeLibrary(hlib);
 #else
         int (*retr)(HINSTANCE hDllInstance, char **info, int *create);
-        retr = (int (*)(HINSTANCE, char ** ,int *)) GetProcAddress(hlib,"_AVS_APE_RetrFuncEXT2");
+        retr = FORCE_FUNCTION_CAST(int (*)(HINSTANCE, char ** ,int *)) GetProcAddress(hlib,"_AVS_APE_RetrFuncEXT2");
         if (retr && retr(hlib,&inf,&cre))
         {
           _add_dll(hlib,(class C_RBASE *(__cdecl *)(char *))cre,inf,1, NULL);
         }
         else
         {
-          retr = (int (*)(HINSTANCE, char ** ,int *)) GetProcAddress(hlib,"_AVS_APE_RetrFunc");
+          retr = FORCE_FUNCTION_CAST(int (*)(HINSTANCE, char ** ,int *)) GetProcAddress(hlib,"_AVS_APE_RetrFunc");
           if (retr && retr(hlib,&inf,&cre))
           {
             _add_dll(hlib,(class C_RBASE *(__cdecl *)(char *))cre,inf,0, NULL);

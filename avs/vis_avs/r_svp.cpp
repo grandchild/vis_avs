@@ -78,9 +78,9 @@ void C_THISCLASS::SetLibrary()
   if (hLibrary)
   {
     VisInfo* (*qm)(void);
-    qm=(struct _VisInfo *(__cdecl *)(void))GetProcAddress(hLibrary,"QueryModule");
+    qm=FORCE_FUNCTION_CAST(VisInfo*(*)(void))GetProcAddress(hLibrary,"QueryModule");
     if (!qm)
-      qm=(struct _VisInfo *(__cdecl *)(void))GetProcAddress(hLibrary,"?QueryModule@@YAPAUUltraVisInfo@@XZ");
+      qm=FORCE_FUNCTION_CAST(VisInfo*(*)(void))GetProcAddress(hLibrary,"?QueryModule@@YAPAUUltraVisInfo@@XZ");
 
     if (!qm || !(vi=qm()))
     {
