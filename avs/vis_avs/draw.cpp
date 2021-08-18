@@ -143,7 +143,7 @@ static void DD_CreateFullscreenOverlayWindow()
   static int inited=0;
   if(!inited)
   {
-  	WNDCLASS wc={0,};
+  	WNDCLASS wc = {};
   	wc.style = CS_DBLCLKS|CS_VREDRAW|CS_HREDRAW;
   	wc.lpfnWndProc = FSOverlayWndProc;
   	wc.hInstance = g_hInstance;
@@ -183,7 +183,8 @@ void DD_CreateSurfaces(int w, int h, int fsh, int fs, int fsbpp, int flip, int d
 #ifdef RESIZE_ONRESIZE
     HRESULT han;
     int ll=!!last_used;
-    DDSURFACEDESC d={sizeof(d),};
+    DDSURFACEDESC d={};
+    d.dwSize = sizeof(d);
   	if (config_reuseonresize && g_w && g_h && g_lpRenderSurf[ll] &&
         (han = g_lpRenderSurf[ll]->Lock(NULL,&d,DDLOCK_WAIT,NULL)) == DD_OK) 
     {
@@ -263,7 +264,8 @@ void DD_CreateSurfaces(int w, int h, int fsh, int fs, int fsbpp, int flip, int d
 			}
 			else
 			{
-				DDSURFACEDESC DDsd={sizeof(DDsd),};
+				DDSURFACEDESC DDsd={};
+				DDsd.dwSize = sizeof(DDsd);
 				DDsd.dwFlags = DDSD_CAPS;
 				DDsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
         if (g_fs_flip&1) 
@@ -278,7 +280,8 @@ void DD_CreateSurfaces(int w, int h, int fsh, int fs, int fsbpp, int flip, int d
 				}
 				else
 				{
-          DDBLTFX ddbfx={sizeof(ddbfx),};
+          DDBLTFX ddbfx={};
+          ddbfx.dwSize = sizeof(ddbfx);
           g_lpPrimSurf->Blt(NULL,NULL,NULL,DDBLT_WAIT|DDBLT_COLORFILL,&ddbfx);
           if (g_fs_flip&1)
           {
@@ -308,7 +311,8 @@ void DD_CreateSurfaces(int w, int h, int fsh, int fs, int fsbpp, int flip, int d
   int wh;
   for (wh = 0; wh < 2; wh ++)
 	{
-		DDSURFACEDESC DDsd={sizeof(DDsd),};
+		DDSURFACEDESC DDsd={};
+		DDsd.dwSize = sizeof(DDsd);
 		DDsd.dwFlags = DDSD_CAPS|DDSD_WIDTH|DDSD_HEIGHT|DDSD_PITCH|DDSD_PIXELFORMAT;
 		DDsd.dwWidth=resize_w;
 		DDsd.dwHeight=resize_h;
@@ -333,7 +337,8 @@ void DD_CreateSurfaces(int w, int h, int fsh, int fs, int fsbpp, int flip, int d
 		}
 
 #ifdef RESIZE_ONRESIZE
-    DDSURFACEDESC d={sizeof(d),};
+    DDSURFACEDESC d={};
+    d.dwSize = sizeof(d);
     HRESULT han;
   	if (fb_save_use && g_lpRenderSurf[wh] &&
         (han = g_lpRenderSurf[wh]->Lock(NULL,&d,DDLOCK_WAIT,NULL)) == DD_OK) 
@@ -855,11 +860,13 @@ void DDraw_Resize(int w, int h, int dsize)
 
 static void *g_lpsurf[2];
 
-static DDSURFACEDESC d={sizeof(d),};
-static DDSURFACEDESC d2={sizeof(d),};
+static DDSURFACEDESC d;
+static DDSURFACEDESC d2;
 
 void DDraw_Enter(int *w, int *h, int **fb1, int **fb2)
 {
+  d.dwSize = sizeof(d);
+  d2.dwSize = sizeof(d2);
 	HRESULT han;
   if (nodraw) 
   {
@@ -1247,7 +1254,8 @@ void DDraw_Exit(int which)
     {      
       if (fsy>0 && ((cfg_fs_fps&1) || (statustext_life&&!(cfg_fs_fps&8)))) // clear portions of backbuffer if necessary
       {
-        DDBLTFX ddbfx={sizeof(ddbfx),};
+        DDBLTFX ddbfx={};
+        ddbfx.dwSize = sizeof(ddbfx);
         int ty=min(fsy,16);
         RECT r2={0,0,g_w,ty};
         g_lpPrimSurfBack->Blt(&r2,NULL,NULL,DDBLT_WAIT|DDBLT_COLORFILL,&ddbfx);
@@ -1258,12 +1266,14 @@ void DDraw_Exit(int which)
 #ifndef NO_X86ASM
 		  if (!(g_fs_flip&8) && !g_windowed_dsize) // homemade bltshit
       {
-	      DDSURFACEDESC d={sizeof(d),};
+	      DDSURFACEDESC d={};
+	      d.dwSize = sizeof(d);
         HRESULT han;
 	      han = g_lpPrimSurfBack->Lock(NULL,&d,DDLOCK_WAIT,NULL);
         if (han == DDERR_SURFACELOST)
         {
-          DDBLTFX ddbfx={sizeof(ddbfx),};
+          DDBLTFX ddbfx={};
+          ddbfx.dwSize = sizeof(ddbfx);
           g_lpPrimSurfBack->Restore();
           g_lpPrimSurfBack->Blt(NULL,NULL,NULL,DDBLT_WAIT|DDBLT_COLORFILL,&ddbfx);
           han = g_lpPrimSurfBack->Lock(NULL,&d,DDLOCK_WAIT,NULL);
@@ -1309,7 +1319,8 @@ slow_fs_non32bpp:
 	    }
 		  if (g_lpPrimSurfBack->Blt(NULL,g_lpRenderSurf[which],&r,DDBLT_WAIT,NULL) == DDERR_SURFACELOST)
 		  {
-        DDBLTFX ddbfx={sizeof(ddbfx),};
+        DDBLTFX ddbfx={};
+        ddbfx.dwSize = sizeof(ddbfx);
 			  if (g_fs_flip&1)
         {
           g_lpPrimSurfBack->Restore();
@@ -1392,7 +1403,8 @@ slow_fs_non32bpp:
     if(g_overlay_init_ok)
     {
       LPDDSURFACEDESC pd=(which==0?&d:&d2);
-	    DDSURFACEDESC dd={sizeof(dd),};
+	    DDSURFACEDESC dd={};
+	    dd.dwSize = sizeof(dd);
       if (g_fs) if (!(cfg_fs_flip&2)) g_lpDD->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN,0);
 
 	    if (g_lpddsOverlay->Lock(NULL,&dd,DDLOCK_WAIT,NULL) != DD_OK) 

@@ -39,7 +39,8 @@ int win32_dlgproc_colormodifier(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
       {
         RECT r;
         HMENU hMenu;
-        MENUITEMINFO i={sizeof(i),};
+        MENUITEMINFO i={};
+        i.cbSize = sizeof(i);
         hMenu=CreatePopupMenu();
         int x;
         for (x = 0; x < sizeof(g_this->presets)/sizeof(g_this->presets[0]); x ++)

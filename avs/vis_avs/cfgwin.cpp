@@ -201,12 +201,13 @@ static void recursiveAddDirList(HMENU menu, UINT *id, char *path, int pathlen)
       {
         wsprintf(dirmask,"%s\\%s",path,d.cFileName);
 
-        MENUITEMINFO i={sizeof(i),};
-        i.fType=MFT_STRING;
+        MENUITEMINFO i={};
+        i.cbSize = sizeof(i);
         i.fMask=MIIM_TYPE|MIIM_ID;
+        i.fType=MFT_STRING;
+        i.wID=*id;
 			  i.dwTypeData = dirmask+pathlen+1;
 			  i.cch = strlen(i.dwTypeData);
-        i.wID=*id;
         InsertMenuItem(menu,*id+2-1025,TRUE,&i);
 			  (*id)++;
 
@@ -259,7 +260,8 @@ static BOOL CALLBACK DlgProc_Preset(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
       {
         case IDC_BUTTON3:
           {
-            MENUITEMINFO i={sizeof(i),};
+            MENUITEMINFO i={};
+            i.cbSize = sizeof(i);
     
             HMENU hMenu;
             hMenu=CreatePopupMenu();
@@ -287,7 +289,9 @@ static BOOL CALLBACK DlgProc_Preset(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             }
             else if (x >= 1025)
             {
-			        MENUITEMINFO mi={sizeof(mi),MIIM_TYPE,};
+			        MENUITEMINFO mi={};
+			        mi.cbSize = sizeof(mi);
+			        mi.fMask = MIIM_TYPE;
 			        mi.dwTypeData=config_pres_subdir;
 			        mi.cch = sizeof(config_pres_subdir);
 			        GetMenuItemInfo(hMenu,x,FALSE,&mi);     
@@ -756,7 +760,10 @@ static void _insertintomenu2(HMENU hMenu, int wid, int id, char *str)
   int x;
   for (x=0; x < 4096; x ++)
   {
-	  MENUITEMINFO mi={sizeof(mi),MIIM_DATA|MIIM_TYPE|MIIM_SUBMENU,MFT_STRING};
+	  MENUITEMINFO mi={};
+	  mi.cbSize = sizeof(mi);
+	  mi.fMask = MIIM_DATA|MIIM_TYPE|MIIM_SUBMENU;
+	  mi.fType = MFT_STRING;
     char c[512];
 	  mi.dwTypeData=c;
 	  mi.cch = 512;
@@ -765,10 +772,11 @@ static void _insertintomenu2(HMENU hMenu, int wid, int id, char *str)
       break;
   }
 
-  MENUITEMINFO i={sizeof(i),};
-  i.wID = wid;
+  MENUITEMINFO i={};
+  i.cbSize = sizeof(i);
   i.fMask=MIIM_TYPE|MIIM_DATA|MIIM_ID;
   i.fType=MFT_STRING;
+  i.wID = wid;
   i.dwItemData=id;
   i.dwTypeData=str;
   i.cch=strlen(str);
@@ -780,7 +788,10 @@ static HMENU _findsubmenu(HMENU hmenu, char *str)
   int x;
   for (x=0; x < 4096; x ++)
   {
-	  MENUITEMINFO mi={sizeof(mi),MIIM_DATA|MIIM_TYPE|MIIM_SUBMENU,MFT_STRING};
+	  MENUITEMINFO mi={};
+	  mi.cbSize = sizeof(mi);
+	  mi.fMask = MIIM_DATA|MIIM_TYPE|MIIM_SUBMENU;
+	  mi.fType = MFT_STRING;
     char c[512];
 	  mi.dwTypeData=c;
 	  mi.cch = 512;
@@ -807,7 +818,8 @@ static void _insertintomenu(HMENU hMenu, int wid, int id, char *str)
 
       if (!(hs=_findsubmenu(hMenu,first)))
       {
-        MENUITEMINFO i={sizeof(i),};
+        MENUITEMINFO i={};
+        i.cbSize = sizeof(i);
         i.fMask=MIIM_TYPE|MIIM_SUBMENU|MIIM_DATA|MIIM_ID;
         i.fType=MFT_STRING;
 				i.dwTypeData = first;
@@ -864,7 +876,8 @@ int dosavePreset(HWND hwndDlg)
 {
   int r=1;
 	char temp[2048];
-	OPENFILENAME l={sizeof(l),0};
+	OPENFILENAME l={};
+	l.lStructSize = sizeof(l);
 	char buf1[2048],buf2[2048];
   temp[0]=0;
 	GetCurrentDirectory(sizeof(buf2),buf2);
@@ -1031,7 +1044,11 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
             {
               if (d.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY && d.cFileName[0] != '.')
               {
-                MENUITEMINFO mi={sizeof(mi),MIIM_SUBMENU|MIIM_TYPE,MFT_STRING,MFS_DEFAULT };
+                MENUITEMINFO mi={};
+                mi.cbSize = sizeof(mi);
+                mi.fMask = MIIM_SUBMENU|MIIM_TYPE;
+                mi.fType = MFT_STRING;
+                mi.fState = MFS_DEFAULT;
                 mi.hSubMenu=CreatePopupMenu();
                 mi.dwTypeData=d.cFileName;
                 mi.cch = strlen(d.cFileName);
@@ -1041,11 +1058,15 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
               else if (!stricmp(extension(d.cFileName),"avs"))
               {
 				        extension(d.cFileName)[-1]=0;
-                MENUITEMINFO i={sizeof(i),MIIM_TYPE|MIIM_DATA|MIIM_ID,MFT_STRING,MFS_DEFAULT };
+                MENUITEMINFO i={};
+                i.cbSize = sizeof(i);
+                i.fMask = MIIM_TYPE|MIIM_DATA|MIIM_ID;
+                i.fType = MFT_STRING;
+                i.fState = MFS_DEFAULT;
+				        i.wID=presetTreeCount++;
+                i.dwItemData=0xFFFFFFFF;//preset
 				        i.dwTypeData = d.cFileName;
 				        i.cch = strlen(d.cFileName);
-                i.dwItemData=0xFFFFFFFF;//preset
-				        i.wID=presetTreeCount++;
 				        InsertMenuItem((HMENU)wParam,insert_pos++,TRUE,&i);
               }
 			      } while (FindNextFile(h,&d));
@@ -1130,7 +1151,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
     case WM_MOUSEMOVE:
       if (g_dragsource_item) 
       {
-        TVHITTESTINFO hti={0,};
+        TVHITTESTINFO hti={};
         HWND hwnd=GetDlgItem(hwndDlg,IDC_TREE1);
         hti.pt.x=(int)LOWORD(lParam);
         hti.pt.y=(int)HIWORD(lParam);
@@ -1170,7 +1191,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
           else
           {
             SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
-  			    TV_ITEM i={TVIF_HANDLE|TVIF_PARAM,h,0,0,0,0,0};
+  			    TV_ITEM i={TVIF_HANDLE|TVIF_PARAM,h,0,0,0,0,0,0,0,0};
   				  TreeView_GetItem(hwnd,&i);
             if (i.lParam)
             {
@@ -1213,7 +1234,11 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
               }
               if (!g_dragplace)
               {
-                TV_INSERTSTRUCT is={parenth,h,{TVIF_PARAM|TVIF_TEXT|TVIF_CHILDREN,0,0,0,"<move here>",0,0,0,0,(int)0}};
+                TV_INSERTSTRUCT is={};
+                is.hParent = parenth;
+                is.hInsertAfter = h;
+                is.item.mask = TVIF_PARAM|TVIF_TEXT|TVIF_CHILDREN;
+                is.item.pszText = "<move here>";
                 g_dragplace=TreeView_InsertItem(hwnd,&is);
                 if (g_dragplaceisbelow==2)
                   SendMessage(hwnd,TVM_EXPAND,TVE_EXPAND,(long)parenth);
@@ -1245,13 +1270,13 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
           HTREEITEM dest_handle=h,  // handle of item to insert above. NULL if folder.
                     dest_parent_handle=TreeView_GetParent(hwnd,h);  // handle of parent
           {
-				    TV_ITEM i={TVIF_HANDLE|TVIF_PARAM,dest_handle,0,0,0,0,0};
+				    TV_ITEM i={TVIF_HANDLE|TVIF_PARAM,dest_handle,0,0,0,0,0,0,0,0};
 				    TreeView_GetItem(hwnd,&i);
             dest=(C_RenderListClass::T_RenderListType *)i.lParam;
           }
           if (dest_parent_handle)
           {
-				    TV_ITEM i={TVIF_HANDLE|TVIF_PARAM,dest_parent_handle,0,0,0,0,0};
+				    TV_ITEM i={TVIF_HANDLE|TVIF_PARAM,dest_parent_handle,0,0,0,0,0,0,0,0};
 				    TreeView_GetItem(hwnd,&i);
             dest_parent=(C_RenderListClass::T_RenderListType *)i.lParam;
           }
@@ -1263,12 +1288,12 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
             dest=NULL;
           }
 
-				  TV_ITEM i={TVIF_HANDLE|TVIF_PARAM|TVIF_STATE,g_dragsource_item,0,TVIS_EXPANDED,0,0,0};
+				  TV_ITEM i={TVIF_HANDLE|TVIF_PARAM|TVIF_STATE,g_dragsource_item,0,TVIS_EXPANDED,0,0,0,0,0,0};
 				  TreeView_GetItem(hwnd,&i);
           int expand=i.state&TVIS_EXPANDED;
           source=(C_RenderListClass::T_RenderListType *)i.lParam;
 
-				  TV_ITEM i2={TVIF_HANDLE|TVIF_PARAM,g_dragsource_parent,0,0,0,0,0};
+				  TV_ITEM i2={TVIF_HANDLE|TVIF_PARAM,g_dragsource_parent,0,0,0,0,0,0,0,0};
 				  TreeView_GetItem(hwnd,&i2);
           source_parent=(C_RenderListClass::T_RenderListType *)i2.lParam;
 
@@ -1307,7 +1332,12 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
             treeview_hack=1;
             TreeView_DeleteItem(hwnd,g_dragsource_item);
 
-            TV_INSERTSTRUCT is={dest_parent_handle,0,{TVIF_PARAM|TVIF_TEXT|TVIF_CHILDREN,0,0,0,source->render->get_desc(),0,0,0,source->effect_index==LIST_ID?1:0,(int)source}};
+            TV_INSERTSTRUCT is={};
+            is.hParent = dest_parent_handle;
+            is.item.mask = TVIF_PARAM|TVIF_TEXT|TVIF_CHILDREN;
+            is.item.pszText = source->render->get_desc();
+            is.item.cChildren = source->effect_index==LIST_ID ? 1 : 0;
+            is.item.lParam = (int)source;
             
             if (dest_handle)
             {
@@ -1373,7 +1403,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
 				  HTREEITEM hTreeItem = TreeView_GetSelection(p->hdr.hwndFrom);
           if (hTreeItem)
           {
-				    TV_ITEM i={TVIF_HANDLE|TVIF_PARAM,hTreeItem,0,0,0,0,0};
+				    TV_ITEM i={TVIF_HANDLE|TVIF_PARAM,hTreeItem,0,0,0,0,0,0,0,0};
 				    TreeView_GetItem(p->hdr.hwndFrom,&i);
             C_RenderListClass::T_RenderListType *tp=(C_RenderListClass::T_RenderListType *)i.lParam;
 
@@ -1470,7 +1500,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
         return 0;
 				case IDC_ADD:
 					{
-            C_RenderListClass::T_RenderListType ren={0};
+            C_RenderListClass::T_RenderListType ren={};
             RECT r;
             presetTreeMenu=CreatePopupMenu();
 
@@ -1503,7 +1533,8 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
             int preset_base=presetTreeCount=p;
             // add presets
             {
-              MENUITEMINFO i={sizeof(i),};
+              MENUITEMINFO i={};
+              i.cbSize = sizeof(i);
               i.hSubMenu=presetTreeMenu;
               i.fMask=MIIM_SUBMENU|MIIM_TYPE|MIIM_ID;
               i.fType=MFT_STRING;
@@ -1529,8 +1560,11 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
                 {
                   if (d.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY && d.cFileName[0] != '.')
                   {
-                    MENUITEMINFO mi={sizeof(mi),MIIM_SUBMENU|MIIM_TYPE,MFT_STRING,MFS_DEFAULT
-                    };
+                    MENUITEMINFO mi={};
+                    mi.cbSize = sizeof(mi);
+                    mi.fMask = MIIM_SUBMENU|MIIM_TYPE;
+                    mi.fType = MFT_STRING;
+                    mi.fState = MFS_DEFAULT;
                     mi.hSubMenu=CreatePopupMenu();
                     mi.dwTypeData=d.cFileName;
                     mi.cch = strlen(d.cFileName);
@@ -1540,11 +1574,15 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
                   else if (!stricmp(extension(d.cFileName),"avs"))
                   {
 				            extension(d.cFileName)[-1]=0;
-                    MENUITEMINFO i={sizeof(i),MIIM_DATA|MIIM_TYPE|MIIM_ID,MFT_STRING,MFS_DEFAULT };
+                    MENUITEMINFO i={};
+                    i.cbSize = sizeof(i);
+                    i.fMask = MIIM_DATA|MIIM_TYPE|MIIM_ID;
+                    i.fType = MFT_STRING;
+                    i.fState = MFS_DEFAULT;
+				            i.wID=presetTreeCount++;
+                    i.dwItemData=0xffffffff;
 				            i.dwTypeData = d.cFileName;
 				            i.cch = strlen(d.cFileName);
-                    i.dwItemData=0xffffffff;
-				            i.wID=presetTreeCount++;
 				            InsertMenuItem(presetTreeMenu,insert_pos++,TRUE,&i);
                   }
 			          } while (FindNextFile(h,&d));
@@ -1581,7 +1619,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
               }
               else 
               {
-			          MENUITEMINFO mi={sizeof(mi),MIIM_DATA,};
+			          MENUITEMINFO mi={};
+			          mi.cbSize = sizeof(mi);
+			          mi.fMask = MIIM_DATA;
                 GetMenuItemInfo(hAddMenu,t,FALSE,&mi);
                 if (mi.dwItemData != 0xffffffff) // effect
                 {
@@ -1598,7 +1638,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
                 HTREEITEM parenthandle=g_hroot;
                 if (hTreeItem)
                 {
-				          TV_ITEM i={TVIF_HANDLE|TVIF_PARAM,hTreeItem,0,0,0,0,0};
+				          TV_ITEM i={TVIF_HANDLE|TVIF_PARAM,hTreeItem,0,0,0,0,0,0,0,0};
 				          TreeView_GetItem(GetDlgItem(hwndDlg,IDC_TREE1),&i);
                   C_RenderListClass::T_RenderListType *tp=(C_RenderListClass::T_RenderListType *)i.lParam;
                   if (tp->effect_index == LIST_ID)
@@ -1611,7 +1651,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
                     HTREEITEM hParent=TreeView_GetParent(GetDlgItem(hwndDlg,IDC_TREE1),hTreeItem);
                     if (hParent && hParent != TVI_ROOT)
                     {
-                      TV_ITEM i2={TVIF_HANDLE|TVIF_PARAM,hParent,0,0,0,0,0};
+                      TV_ITEM i2={TVIF_HANDLE|TVIF_PARAM,hParent,0,0,0,0,0,0,0,0};
 				              TreeView_GetItem(GetDlgItem(hwndDlg,IDC_TREE1),&i2);
                       C_RenderListClass::T_RenderListType *tparent=(C_RenderListClass::T_RenderListType *)i2.lParam;
                       parentrender=(C_RenderListClass *)tparent->render;
@@ -1627,7 +1667,12 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
 								LeaveCriticalSection(&g_render_cs);
                 C_RenderListClass::T_RenderListType *newt=(C_RenderListClass::T_RenderListType *)malloc(sizeof(C_RenderListClass::T_RenderListType));
                 *newt=ren;
-                TV_INSERTSTRUCT is={parenthandle,0,{TVIF_PARAM|TVIF_TEXT|TVIF_CHILDREN,0,0,0,ren.render->get_desc(),0,0,0,newt->effect_index==LIST_ID?1:0,(int)newt}};
+                TV_INSERTSTRUCT is={};
+                is.hParent = parenthandle;
+                is.item.mask = TVIF_PARAM|TVIF_TEXT|TVIF_CHILDREN;
+                is.item.pszText = ren.render->get_desc();
+                is.item.cChildren = newt->effect_index==LIST_ID? 1 : 0;
+                is.item.lParam = (int)newt;
                 if (!hTreeItem || parenthandle==hTreeItem) is.hInsertAfter=TVI_FIRST;
                 else 
                 {
@@ -1670,14 +1715,18 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
             else if (hTreeItem)
             {
               C_RenderListClass *parentrender;
-				      TV_ITEM i={TVIF_HANDLE|TVIF_PARAM,hTreeItem,0,0,0,0,0};
+				      TV_ITEM i={};
+              i.mask = TVIF_HANDLE|TVIF_PARAM;
+              i.hItem = hTreeItem;
 				      if (TreeView_GetItem(GetDlgItem(hwndDlg,IDC_TREE1),&i))
               {
                 C_RenderListClass::T_RenderListType *tp=(C_RenderListClass::T_RenderListType *)i.lParam;
                 HTREEITEM hParent=TreeView_GetParent(GetDlgItem(hwndDlg,IDC_TREE1),hTreeItem);
                 if (hParent != NULL)
                 {
-                  TV_ITEM i2={TVIF_HANDLE|TVIF_PARAM,hParent,0,0,0,0,0};
+                  TV_ITEM i2={};
+                  i2.mask = TVIF_HANDLE|TVIF_PARAM;
+                  i2.hItem = hParent;
 				          TreeView_GetItem(GetDlgItem(hwndDlg,IDC_TREE1),&i2);
                   C_RenderListClass::T_RenderListType *tparent=(C_RenderListClass::T_RenderListType *)i2.lParam;
                   parentrender=(C_RenderListClass*)tparent->render;
@@ -1699,13 +1748,15 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
 				return 0;
 				case IDC_CLONESEL:
 					{
-            C_RenderListClass::T_RenderListType ren={0,};
+            C_RenderListClass::T_RenderListType ren={};
             int insert_pos=-1;
 
 	          HTREEITEM hTreeItem = TreeView_GetSelection(GetDlgItem(hwndDlg,IDC_TREE1));
             if (hTreeItem && hTreeItem != g_hroot)
             {
-				      TV_ITEM i={TVIF_HANDLE|TVIF_PARAM,hTreeItem,0,0,0,0,0};
+				      TV_ITEM i={};
+				      i.mask = TVIF_HANDLE|TVIF_PARAM;
+				      i.hItem = hTreeItem;
 				      TreeView_GetItem(GetDlgItem(hwndDlg,IDC_TREE1),&i);
               C_RenderListClass::T_RenderListType *tp=(C_RenderListClass::T_RenderListType *)i.lParam;
               ren.effect_index=tp->effect_index;
@@ -1716,7 +1767,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
 
                 if (hParent && hParent != TVI_ROOT)
                 {
-                  TV_ITEM i2={TVIF_HANDLE|TVIF_PARAM,hParent,0,0,0,0,0};
+                  TV_ITEM i2={};
+                  i2.mask = TVIF_HANDLE|TVIF_PARAM;
+                  i2.hItem = hParent;
 				          TreeView_GetItem(GetDlgItem(hwndDlg,IDC_TREE1),&i2);
                   C_RenderListClass::T_RenderListType *tparent=(C_RenderListClass::T_RenderListType *)i2.lParam;
                   C_RenderListClass *parentrender=(C_RenderListClass *)tparent->render;
@@ -1736,8 +1789,13 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
                   
                   C_RenderListClass::T_RenderListType *newt=(C_RenderListClass::T_RenderListType *)malloc(sizeof(C_RenderListClass::T_RenderListType));
                   *newt=ren;
-                  TV_INSERTSTRUCT is={hParent,0,{TVIF_PARAM|TVIF_TEXT|TVIF_CHILDREN,0,0,0,ren.render->get_desc(),0,0,0,newt->effect_index==LIST_ID?1:0,(int)newt}};
+                  TV_INSERTSTRUCT is={};
+                  is.hParent = hParent;
                   is.hInsertAfter=hTreeItem;
+                  is.item.mask = TVIF_PARAM|TVIF_TEXT|TVIF_CHILDREN;
+                  is.item.pszText = ren.render->get_desc();
+                  is.item.cChildren = newt->effect_index==LIST_ID? 1 : 0;
+                  is.item.lParam = (int)newt;
                   HTREEITEM newh=TreeView_InsertItem(GetDlgItem(hwndDlg,IDC_TREE1),&is);
                   TreeView_Select(GetDlgItem(hwndDlg,IDC_TREE1),newh,TVGN_CARET);
                   if (ren.effect_index == LIST_ID) 
@@ -1754,7 +1812,8 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
 				case IDC_LOAD:
           {
 						char temp[2048];
-						OPENFILENAME l={sizeof(l),0};
+						OPENFILENAME l={};
+						l.lStructSize = sizeof(l);
 						char buf1[2048],buf2[2048];
 						GetCurrentDirectory(sizeof(buf2),buf2);
 						strcpy(buf1,g_path);
@@ -1826,7 +1885,9 @@ static void _do_free(HWND hwnd, HTREEITEM h)
 {
   while (h)
   {
-	  TV_ITEM i={TVIF_HANDLE|TVIF_PARAM,h,0,0,0,0,0};
+	  TV_ITEM i={};
+	  i.mask = TVIF_HANDLE|TVIF_PARAM;
+	  i.hItem = h;
   	TreeView_GetItem(hwnd,&i);
     if (i.lParam) free((void*)i.lParam);
     HTREEITEM h2=TreeView_GetChild(hwnd,h);

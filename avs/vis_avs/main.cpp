@@ -113,7 +113,8 @@ static winampVisModule *getModule(int which)
 		config,
 		init,
 		render, 
-		quit
+		quit,
+		NULL
 	};
 	if (which==0) return &mod;
 	return 0;

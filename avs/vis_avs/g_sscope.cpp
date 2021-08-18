@@ -127,7 +127,8 @@ int win32_dlgproc_superscope(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
       {
         RECT r;
         HMENU hMenu;
-        MENUITEMINFO i={sizeof(i),};
+        MENUITEMINFO i={};
+        i.cbSize = sizeof(i);
         hMenu=CreatePopupMenu();
         int x;
         for (x = 0; x < sizeof(g_this->presets)/sizeof(g_this->presets[0]); x ++)

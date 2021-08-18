@@ -429,7 +429,7 @@ int cfg_fs_dblclk=1;
 
 int Wnd_Init(struct winampVisModule *this_mod)
 {
-	WNDCLASS wc={0,};
+	WNDCLASS wc={};
 	g_mod=this_mod;
 	wc.style = CS_DBLCLKS|CS_VREDRAW|CS_HREDRAW;
 	wc.lpfnWndProc = WndProc;
@@ -798,7 +798,9 @@ int findInMenu(HMENU parent, HMENU sub, UINT id, char *buf, int buf_len)
   bufadd[0]='\\';
   for (x = 0; x < l; x ++)
   {
-    MENUITEMINFO mi={sizeof(mi),MIIM_SUBMENU|MIIM_TYPE|MIIM_ID,};
+    MENUITEMINFO mi={};
+    mi.cbSize = sizeof(mi);
+    mi.fMask = MIIM_SUBMENU|MIIM_TYPE|MIIM_ID;
     mi.dwTypeData=bufadd+1;
     mi.cch=buf_len - (bufadd-buf+2);
     GetMenuItemInfo(parent,x,TRUE,&mi);
@@ -983,12 +985,12 @@ void DoPopupMenu() {
     presetTreeMenu=CreatePopupMenu();
 
     {
-      MENUITEMINFO i={sizeof(i),};
+      MENUITEMINFO i={};
+      i.cbSize = sizeof(i);
       i.fMask=MIIM_TYPE|MIIM_DATA|MIIM_ID;
       i.fType=MFT_STRING;
-      i.dwItemData=0;
-
 		  i.wID = 1024;
+      i.dwItemData=0;
 		  i.dwTypeData="Fullscreen";
 		  i.cch=strlen("Fullscreen");
 		  InsertMenuItem(presetTreeMenu,insert_pos++,TRUE,&i);
@@ -1034,8 +1036,11 @@ void DoPopupMenu() {
       {
         if (d.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY && d.cFileName[0] != '.')
         {
-          MENUITEMINFO mi={sizeof(mi),MIIM_SUBMENU|MIIM_TYPE,MFT_STRING,MFS_DEFAULT
-          };
+          MENUITEMINFO mi={};
+          mi.cbSize = sizeof(mi);
+          mi.fMask = MIIM_SUBMENU|MIIM_TYPE;
+          mi.fType = MFT_STRING;
+          mi.fState = MFS_DEFAULT;
           mi.hSubMenu=CreatePopupMenu();
           mi.dwTypeData=d.cFileName;
           mi.cch = strlen(d.cFileName);
@@ -1045,7 +1050,11 @@ void DoPopupMenu() {
         else if (!stricmp(extension(d.cFileName),"avs"))
         {
 				  extension(d.cFileName)[-1]=0;
-          MENUITEMINFO i={sizeof(i),MIIM_TYPE|MIIM_ID,MFT_STRING,MFS_DEFAULT };
+          MENUITEMINFO i={};
+          i.cbSize = sizeof(i);
+          i.fMask = MIIM_TYPE|MIIM_ID;
+          i.fType = MFT_STRING;
+          i.fState = MFS_DEFAULT;
 				  i.dwTypeData = d.cFileName;
 				  i.cch = strlen(d.cFileName);
 				  i.wID=presetTreeCount++;
@@ -1251,7 +1260,11 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
             {
               if (d.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY && d.cFileName[0] != '.')
               {
-                MENUITEMINFO mi={sizeof(mi),MIIM_SUBMENU|MIIM_TYPE,MFT_STRING,MFS_DEFAULT };
+                MENUITEMINFO mi={};
+                mi.cbSize = sizeof(mi);
+                mi.fMask = MIIM_SUBMENU|MIIM_TYPE;
+                mi.fType = MFT_STRING;
+                mi.fState = MFS_DEFAULT;
                 mi.hSubMenu=CreatePopupMenu();
                 mi.dwTypeData=d.cFileName;
                 mi.cch = strlen(d.cFileName);
@@ -1261,10 +1274,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
               else if (!stricmp(extension(d.cFileName),"avs"))
               {
 				        extension(d.cFileName)[-1]=0;
-                MENUITEMINFO i={sizeof(i),MIIM_TYPE|MIIM_ID,MFT_STRING,MFS_DEFAULT };
+                MENUITEMINFO i={};
+                i.cbSize = sizeof(i);
+                i.fMask = MIIM_TYPE|MIIM_ID;
+                i.fType = MFT_STRING;
+                i.fState = MFS_DEFAULT;
+				        i.wID=presetTreeCount++;
 				        i.dwTypeData = d.cFileName;
 				        i.cch = strlen(d.cFileName);
-				        i.wID=presetTreeCount++;
 				        InsertMenuItem((HMENU)wParam,insert_pos++,TRUE,&i);
               }
 			      } while (FindNextFile(h,&d));
