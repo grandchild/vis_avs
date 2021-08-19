@@ -10,7 +10,6 @@ int win32_dlgproc_dotfountain(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPar
 {
   C_THISCLASS* g_this = (C_THISCLASS*)g_current_render;
 
-	int *a=NULL;
 	switch (uMsg)
 	{
 		case WM_COMMAND:

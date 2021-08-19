@@ -38,5 +38,5 @@ int DDraw_IsFullScreen(void);
 void DDraw_EnumDispModes(HWND);
 double DDraw_translatePoint(POINT p, int isY);
 
-void DDraw_SetStatusText(char *text, int life=0);
+void DDraw_SetStatusText(const char *text, int life=0);
 int DDraw_IsMode(int w, int h, int bpp);

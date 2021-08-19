@@ -33,10 +33,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef LASER
 
-static C_THISCLASS *g_ConfigThis; // global configuration dialog pointer 
-static HINSTANCE g_hDllInstance; // global DLL instance pointer (not needed in this example, but could be useful)
-
-
 C_THISCLASS::C_THISCLASS() // set up default configuration
 {
   framecount=0;

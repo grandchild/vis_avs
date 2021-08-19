@@ -230,8 +230,7 @@ void C_THISCLASS::CalcWaterSludge(int npage, int density)
 int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
 {
   if (!enabled) return 0;
-  int l,i;
-  l=w*h;
+  int i;
 
   if(buffer_w!=w||buffer_h!=h) {
 	  for(i=0;i<2;i++) {

@@ -312,8 +312,10 @@ void Wnd_GoWindowed(HWND hwnd)
 #endif
 
 		if (cfg_cancelfs_on_deactivate) ShowCursor(TRUE);
-    int tm=(GetWindowLong(g_mod->hwndParent,GWL_EXSTYLE)&WS_EX_TOPMOST)==WS_EX_TOPMOST;
 
+#if defined(WA3_COMPONENT) || !defined(WA2_EMBED)
+    int tm=(GetWindowLong(g_mod->hwndParent,GWL_EXSTYLE)&WS_EX_TOPMOST)==WS_EX_TOPMOST;
+#endif
 #ifdef WA3_COMPONENT
     SetWindowPos(hwnd,tm?HWND_TOPMOST:HWND_NOTOPMOST,0,0,cfg_w,cfg_h,SWP_NOACTIVATE);
     SetTimer(hwnd,66,500,NULL);
@@ -609,7 +611,6 @@ static void WriteInt(char *name, int value)
 
 void Wnd_Quit(void)	
 {
-  extern HWND g_hwndDlg;
   g_in_destroy=1;
 #ifdef WA2_EMBED
   SendMessage(g_mod->hwndParent, WM_WA_IPC, 0, IPC_SETVISWND);
@@ -1772,9 +1773,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
       if (!DDraw_IsFullScreen()) 
       {
         PAINTSTRUCT ps;
+#if !defined(WA3_COMPONENT) && !defined(WA2_EMBED)
         HDC hdc=BeginPaint(hwnd,&ps);
-#ifndef WA3_COMPONENT
-#ifndef WA2_EMBED
         RECT r;
         HDC tempdc=CreateCompatibleDC(hdc);
         GetClientRect(hwnd,&r);
@@ -1800,7 +1800,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
         SelectObject(tempdc,oldbm);
         DeleteObject(tempbm);
         DeleteObject(tempdc);
-#endif
+#else
+        BeginPaint(hwnd,&ps);
 #endif
         EndPaint(hwnd,&ps);
         return 0;

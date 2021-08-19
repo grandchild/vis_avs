@@ -98,7 +98,9 @@ static double * megabuf(double ***blocks, double which)
   return &error;
 }
 
+#ifdef _MSC_VER
 static double * (*__megabuf)(double ***,double) = &megabuf;
+#endif
 NAKED void _asm_megabuf(void)
 {
 #ifdef _MSC_VER

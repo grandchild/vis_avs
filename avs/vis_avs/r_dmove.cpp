@@ -215,7 +215,6 @@ int C_THISCLASS::smp_begin(int max_threads, char visdata[2][2][576], int isBeat,
   if (need_recompile)
   {
     int x;
-    int err=0;
     EnterCriticalSection(&rcs);
     if (!var_b || g_reset_vars_on_recompile)
     {

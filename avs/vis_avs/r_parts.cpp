@@ -85,7 +85,6 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int*, int
   if (isBeat&0x80000000) return 0;
 	int xp,yp;
 	int ss=min(h/2,(w*3)/8);
-	int oc6 = colors;
 
 	if (isBeat)
 	{

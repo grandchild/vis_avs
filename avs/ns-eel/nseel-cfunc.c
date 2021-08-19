@@ -82,7 +82,9 @@ static double nseel_sig(double x, double constraint)
 // a pushad+popad surrounding the call
 
 
+#ifdef _MSC_VER
 static double (*__asin)(double) = &asin;
+#endif
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_asin(void)
 {
@@ -90,7 +92,9 @@ NAKED void nseel_asm_asin(void)
 }
 NAKED void nseel_asm_asin_end(void) {}
 
+#ifdef _MSC_VER
 static double (*__acos)(double) = &acos;
+#endif
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_acos(void)
 {
@@ -99,7 +103,9 @@ NAKED void nseel_asm_acos(void)
 NAKED void nseel_asm_acos_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
+#ifdef _MSC_VER
 static double (*__atan)(double) = &atan;
+#endif
 NAKED void nseel_asm_atan(void)
 {
   CALL1(atan);
@@ -107,7 +113,9 @@ NAKED void nseel_asm_atan(void)
 NAKED void nseel_asm_atan_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
+#ifdef _MSC_VER
 static double (*__atan2)(double,double) = &atan2;
+#endif
 NAKED void nseel_asm_atan2(void)
 {
   CALL2(atan2);
@@ -116,7 +124,9 @@ NAKED void nseel_asm_atan2_end(void) {}
 
 
 //---------------------------------------------------------------------------------------------------------------
+#ifdef _MSC_VER
 static double (*__nseel_sig)(double,double) = &nseel_sig;
+#endif
 NAKED void nseel_asm_sig(void)
 {
   CALL2(nseel_sig);
@@ -124,7 +134,9 @@ NAKED void nseel_asm_sig(void)
 NAKED void nseel_asm_sig_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
+#ifdef _MSC_VER
 static double (*__nseel_rand)(double) = &nseel_rand;
+#endif
 NAKED void nseel_asm_rand(void)
 {
   CALL1(nseel_rand);
@@ -132,7 +144,9 @@ NAKED void nseel_asm_rand(void)
 NAKED void nseel_asm_rand_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
+#ifdef _MSC_VER
 static double (*__nseel_band)(double,double) = &nseel_band;
+#endif
 NAKED void nseel_asm_band(void)
 {
   CALL2(nseel_band);
@@ -140,7 +154,9 @@ NAKED void nseel_asm_band(void)
 NAKED void nseel_asm_band_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
+#ifdef _MSC_VER
 static double (*__nseel_bor)(double,double) = &nseel_bor;
+#endif
 NAKED void nseel_asm_bor(void)
 {
   CALL2(nseel_bor);
@@ -148,7 +164,9 @@ NAKED void nseel_asm_bor(void)
 NAKED void nseel_asm_bor_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
+#ifdef _MSC_VER
 static double (* __pow)(double,double) = &pow;
+#endif
 NAKED void nseel_asm_pow(void)
 {
   CALL2(pow);
@@ -156,7 +174,9 @@ NAKED void nseel_asm_pow(void)
 NAKED void nseel_asm_pow_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
+#ifdef _MSC_VER
 static double (*__exp)(double) = &exp;
+#endif
 NAKED void nseel_asm_exp(void)
 {
   CALL1(exp);
@@ -164,7 +184,7 @@ NAKED void nseel_asm_exp(void)
 NAKED void nseel_asm_exp_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
-#if !defined(_MSC_VER) || _MSC_VER < 1928
+#if defined(_MSC_VER) && _MSC_VER < 1928
 static double (*__floor)(double) = &floor;
 #endif
 NAKED void nseel_asm_floor(void)
@@ -175,7 +195,7 @@ NAKED void nseel_asm_floor_end(void) {}
 
 
 //---------------------------------------------------------------------------------------------------------------
-#if !defined(_MSC_VER) || _MSC_VER < 1928
+#if defined(_MSC_VER) && _MSC_VER < 1928
 static double (*__ceil)(double) = &ceil;
 #endif
 NAKED void nseel_asm_ceil(void)

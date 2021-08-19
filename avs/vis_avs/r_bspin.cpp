@@ -91,7 +91,6 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 		double s=(double)ss;
 		int c_x = (!y?w/2-ss/2:w/2+ss/2);
 		int a=0,d=0;
-		int nc=1;
 		int oc6 = colors[y];
 		for (x = 0; x < 44; x ++)
 		{

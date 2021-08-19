@@ -121,7 +121,6 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 		  {
 			  int yh = y_pos*h / 2;
         if (y_pos==2) yh=h/4;
-			  int ys = yh+(int)(yscale*128.0f);
 			  for (x = 0; x < w; x ++)
 			  {
           float r=x*xscale;
@@ -180,7 +179,6 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
       break;
       case 1: // line analyzer
 		  {
-			  int yh = 0;
 			  int h2=h/2;
 			  int lx,ly,ox,oy;
 			  float xs= 1.0f/xscale*(288.0f/200.f);

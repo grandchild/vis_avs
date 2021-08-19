@@ -9,7 +9,6 @@ int win32_dlgproc_rotstar(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
   C_THISCLASS* g_this = (C_THISCLASS*)g_current_render;
 
-	int *a=NULL;
 	switch (uMsg)
 	{
 		case WM_DRAWITEM:

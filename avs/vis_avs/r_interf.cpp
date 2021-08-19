@@ -137,7 +137,6 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int *fbou
   int pnts=nPoints;
 	int x,y;
 	int i;
-	int mask=0;
 	float s;
 
   if (isBeat&0x80000000) return 0;
@@ -178,7 +177,6 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int *fbou
   int *outp=fbout;
   for (y = 0; y < h; y ++)
   {
-    int yp=ypoints[i];
     int yoffs[MAX_POINTS];
     for (i = 0; i < pnts; i ++)
     {

@@ -57,7 +57,7 @@ int g_w, g_h, g_dsw, g_dsh;
 extern HWND g_hwnd;
 static CRITICAL_SECTION g_cs;
 static int g_windowed_dsize;
-static int g_initted, g_fs_flip, g_fs_height, g_fs_w, g_fs_h;
+static int g_fs_flip, g_fs_height, g_fs_w, g_fs_h;
 static int nodraw=0;
 extern int inWharf;
 #ifdef RESIZE_ONRESIZE
@@ -121,7 +121,7 @@ static LRESULT CALLBACK FSOverlayWndProc(HWND hwnd, UINT message, WPARAM wParam,
   case WM_PAINT:
     {
       PAINTSTRUCT ps;
-      HDC hdc=BeginPaint(hwnd,&ps);
+      BeginPaint(hwnd,&ps);
       RECT r;
       GetClientRect(hwnd,&r);
       int rv=0xff&(cfg_bkgnd_render_color>>16), gv=0xff&(cfg_bkgnd_render_color>>8), bv=0xff&cfg_bkgnd_render_color;
@@ -961,7 +961,7 @@ char statustext[256];
 DWORD statustext_life;
 int statustext_len;
 
-void DDraw_SetStatusText(char *text, int life)
+void DDraw_SetStatusText(const char *text, int life)
 {
   strcpy(statustext,text);
   statustext_len=life?life:2000;

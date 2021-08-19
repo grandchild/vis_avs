@@ -147,7 +147,7 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int *fbou
   double theta=((rot_dir-32))*rot_rev_pos;
 	double temp;
 	int ds_dx, dt_dx, ds_dy, dt_dy, s, t, sstart, tstart;
-	int x, offset=0;
+	int x;
 
 	temp = cos((theta)*M_PI/180.0)*zoom;
 	ds_dx = (int) (temp*65536.0);
@@ -170,7 +170,6 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int *fbou
 		if (dt) t %= dt;
     if (s < 0) s+=ds; if (t < 0) t+=dt;
 		x = w;
-		offset = y*w;
 
 
 #define DO_LOOP(Z) while (x--) { Z; s += ds_dx; t += dt_dx; }

@@ -346,7 +346,6 @@ int C_THISCLASS::smp_begin(int max_threads, char visdata[2][2][576], int isBeat,
       double *pw = registerVar("sw");
       double *ph = registerVar("sh");
       int codehandle=0;
-      int offs=0;
       int is_rect = trans_effect == 32767 ? rectangular : descriptions[trans_effect].uses_rect;
       *pw=w;
       *ph=h;

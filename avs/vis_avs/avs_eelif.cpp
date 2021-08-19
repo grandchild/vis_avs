@@ -148,7 +148,9 @@ static double getmouse(double which)
   return 0.0;
 }
 
+#ifdef _MSC_VER
 static double (*__getosc)(double,double,double) = &getosc;
+#endif
 NAKED void _asm_getosc(void)
 {
   CALL3(getosc);
@@ -156,7 +158,9 @@ NAKED void _asm_getosc(void)
 NAKED void _asm_getosc_end(void) {}
 
 
+#ifdef _MSC_VER
 static double (*__getspec)(double,double,double) = &getspec;
+#endif
 NAKED void _asm_getspec(void)
 {
   CALL3(getspec);
@@ -164,7 +168,9 @@ NAKED void _asm_getspec(void)
 NAKED void _asm_getspec_end(void) {}
 
 
+#ifdef _MSC_VER
 static double (*__gettime)(double) = &gettime;
+#endif
 NAKED void _asm_gettime(void)
 {
   CALL1(gettime);
@@ -172,7 +178,9 @@ NAKED void _asm_gettime(void)
 NAKED void _asm_gettime_end(void) {}
 
 
+#ifdef _MSC_VER
 static double (*__getmouse)(double) = &getmouse;
+#endif
 NAKED void _asm_getmouse(void)
 {
   CALL1(getmouse);
@@ -180,7 +188,9 @@ NAKED void _asm_getmouse(void)
 NAKED void _asm_getmouse_end(void) {}
 
 
+#ifdef _MSC_VER
 static double (*__setmousepos)(double,double) = &setmousepos;
+#endif
 NAKED void _asm_setmousepos(void)
 {
   CALL2(setmousepos);
@@ -325,7 +335,9 @@ static double * gmegabuf(double which)
   return &error;
 }
 
+#ifdef _MSC_VER
 static double* (*__gmegabuf)(double) = &gmegabuf;
+#endif
 NAKED void _asm_gmegabuf(void)
 {
 #ifdef _MSC_VER

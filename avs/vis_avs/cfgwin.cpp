@@ -108,51 +108,11 @@ extern HWND g_hwnd;
 extern embedWindowState myWindowState;
 #endif
 
-/*
-HINSTANCE g_hDllInstance;
-HWND g_hwndParent;
-HANDLE hcfgThread;
-DWORD WINAPI cfgwnd_thread(LPVOID p)
-{
-	g_hwndDlg=CreateDialog(g_hDllInstance,MAKEINTRESOURCE(IDD_DIALOG1),NULL,dlgProc);
-  while (1)
-  {
-    MSG msg;
-    if (!GetMessage(&msg,NULL,0,0)) break;
-    if (!IsDialogMessage(g_hwndDlg,&msg)) DispatchMessage(&msg);
-  }
-  return 0;
-}
-*/
+
 static unsigned int ExtractWindowsVersion(void)
 {
-	unsigned int dwVersion,dwWindowsMajorVersion,dwWindowsMinorVersion,WindowsType,dwBuild;
-
-	dwVersion = GetVersion();
-
-	// Get major and minor version numbers of Windows
-
-	dwWindowsMajorVersion =  (DWORD)(LOBYTE(LOWORD(dwVersion)));
-	dwWindowsMinorVersion =  (DWORD)(HIBYTE(LOWORD(dwVersion)));
-
-	// Get build numbers for Windows NT or Win32s
-	if (dwVersion < 0x80000000)                // Windows NT
-		{
-		dwBuild = (DWORD)(HIWORD(dwVersion));
-		WindowsType = 0x4; // VER_WINNT
-		}
-	else if (dwWindowsMajorVersion < 4)        // Win32s
-	    {
-	    dwBuild = (DWORD)(HIWORD(dwVersion) & ~0x8000);
-	    WindowsType = 0x2; // VER_WIN32S
-	    }
-	else         // Windows 95 -- No build numbers provided
-	    {
-	    dwBuild =  0;
-	    WindowsType = 0x1; // VER_WIN95
-	    }
-
-	return dwWindowsMajorVersion;
+  // Get major version number of Windows
+	return (DWORD)(LOBYTE(LOWORD(GetVersion())));
 }
 
 void CfgWnd_Create(struct winampVisModule *this_mod)
@@ -1310,7 +1270,6 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lPara
           {
             C_RenderListClass *s=(C_RenderListClass *)source_parent->render;
             C_RenderListClass *d=(C_RenderListClass *)dest_parent->render;
-            int os=0;
             int a=s->findRender(source);
             int b=d->findRender(dest);
             int err=1;

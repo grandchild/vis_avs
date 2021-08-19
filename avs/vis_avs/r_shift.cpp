@@ -116,7 +116,6 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
   //pow(sin(d),dpos)*1.7
   if (need_recompile)
   {
-    int err=0;
     int x;
     EnterCriticalSection(&rcs);
     if (!var_b || g_reset_vars_on_recompile)

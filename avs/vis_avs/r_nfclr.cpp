@@ -65,11 +65,8 @@ C_THISCLASS::~C_THISCLASS()
 {
 }
 	
-int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int*, int w, int h)
+int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int*, int w, int h)
 {
-	int p=0;
-	char *t=(char *)&visdata[1][0][0];
-	int np=0;
   if (isBeat&0x80000000) return 0;
 
 	if (isBeat)

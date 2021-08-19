@@ -88,20 +88,11 @@ int  C_THISCLASS::save_config(unsigned char *data) // write configuration to dat
 
 int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int*, int w, int h)
 {
-	int i,j;
+	int i;
 	int c;
-  char center_channel[576];
-  unsigned char *fa_data;
 
   if (!enabled) return 0;
   if (isBeat&0x80000000) return 0;
-
-  if (which_ch >=2)
-  {
-    for (j = 0; j < 576; j ++) center_channel[j]=visdata[1][0][j]/2+visdata[1][1][j]/2;
-    fa_data=(unsigned char *)center_channel;
-  }
-  else fa_data=(unsigned char *)&visdata[1][which_ch][0];
 
   x++;
 	x %= w;

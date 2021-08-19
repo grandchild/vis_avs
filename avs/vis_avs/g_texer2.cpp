@@ -17,7 +17,6 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_COMMAND:
         {
             int wNotifyCode = HIWORD(wParam);
-            int wID = LOWORD(wParam);
             HWND h = (HWND) lParam;
 
             if (wNotifyCode == CBN_SELCHANGE) {

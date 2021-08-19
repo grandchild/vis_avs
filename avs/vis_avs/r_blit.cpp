@@ -476,7 +476,6 @@ int C_THISCLASS::blitter_normal(int *framebuffer, int *fbout, int w, int h, int 
 	  {
 		  int s_x=isx;
 		  unsigned int *src = ((unsigned int *) framebuffer)+(s_y>>16)*w;
-      int ypart=(s_y>>8)&0xff;
 		  s_y+=ds_x;
 		  if (!blend) 
 		  {
@@ -522,7 +521,6 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int *fbou
 {
   if (isBeat&0x80000000) return 0;
 	int f_val;
-	unsigned int *dest=(unsigned int *) fbout;
 
 	if (isBeat && beatch) 
 	{

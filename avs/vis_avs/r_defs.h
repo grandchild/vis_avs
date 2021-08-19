@@ -229,7 +229,6 @@ static unsigned int __inline BLEND_MUL(unsigned int a, unsigned int b)
 
 static __inline void BLEND_LINE(int *fb, int color)
 {
-  int bm=g_line_blend_mode&0xff;
   switch (g_line_blend_mode&0xff)
   {
     case 1: *fb=BLEND(*fb,color); break;

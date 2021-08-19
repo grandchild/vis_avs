@@ -16,7 +16,6 @@ int win32_dlgproc_simple(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
           IDC_OSC,IDC_LINES,
           IDC_OSC,IDC_SOLID,
         };
-	int *a=NULL;
 	switch (uMsg)
 	{
 		case WM_DRAWITEM:

@@ -306,8 +306,6 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                 goto skippart;
             }
 
-            int imagewidth = iw;
-
             // Prepare filter color
             T2_PREP_MASK_COLOR
 
@@ -315,7 +313,6 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                 case OUT_REPLACE:
                 {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
-                    __int64 *p = &mmxxor;
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -339,7 +336,6 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                 case OUT_ADDITIVE:
                 {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
-                    __int64 *p = &mmxxor;
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -366,11 +362,9 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
 
                 case OUT_MAXIMUM:
                 {
-                    int maxmask = 0xFFFFFF;
                     int signmask = 0x808080;
                     T2_SCALE_MINMAX_SIGNMASK
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
-                    __int64 *p = &mmxxor;
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -428,7 +422,6 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                 case OUT_5050:
                 {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
-                    __int64 *p = &mmxxor;
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -462,7 +455,6 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                 case OUT_SUB1:
                 {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
-                    __int64 *p = &mmxxor;
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -496,7 +488,6 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                 case OUT_SUB2:
                 {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
-                    __int64 *p = &mmxxor;
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -526,7 +517,6 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                 case OUT_MULTIPLY:
                 {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
-                    __int64 *p = &mmxxor;
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -569,7 +559,6 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                     int t = ((*g_extinfo->lineblendmode) & 0xFF00)>>8;
                     T2_SCALE_BLEND_AND_STORE_ALPHA
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
-                    __int64 *p = &mmxxor;
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -613,7 +602,6 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
                 case OUT_XOR:
                 {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
-                    __int64 *p = &mmxxor;
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -640,10 +628,8 @@ void C_Texer2::DrawParticle(int *framebuffer, int *texture, int w, int h, double
 
                 case OUT_MINIMUM:
                 {
-                    int maxmask = 0xFFFFFF;
                     int signmask = 0x808080;
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
-                    __int64 *p = &mmxxor;
                     int tot = r2.right - r2.left;
                     int *outp = &framebuffer[r2.top*(w+1)+r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {

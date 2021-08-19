@@ -369,7 +369,6 @@ memset(halfDiscriminated, 0, TCHistSize*sizeof(int));
 // Called whenever isBeat was true in render
 BOOL TCHistStep(BeatType *t, int *_halfDiscriminated, int *_hdPos, DWORD *_lastTC, DWORD TC, int Type)
 {
-int i=0;
 int offI;
 DWORD thisLen;
 BOOL learning = ReadyToLearn();
@@ -473,7 +472,6 @@ int v;
 double sc=0;
 int mx=0;
 float et;
-int smSum=0, smN=0;
 
 if (!ReadyToLearn())
 	return;
@@ -683,7 +681,6 @@ int refineBeat(int isBeat)
 			}
 		if (TCNow < predictionLastTC + (60000 / predictionBpm)*0.3)
 			{
-			int b;
 			resyncout = TRUE;
 			b = (int)((float)predictionBpm * 0.98);
 			}
