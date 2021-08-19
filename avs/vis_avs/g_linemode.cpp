@@ -14,7 +14,7 @@ int win32_dlgproc_setrendermode(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 	{
 		case WM_INITDIALOG:
       {
-        int x;
+        unsigned int x;
         for (x = 0; x<sizeof(g_this->line_blendmodes)/sizeof(g_this->line_blendmodes[0]); x ++)
         {
           SendDlgItemMessage(hwndDlg,IDC_COMBO1,CB_ADDSTRING,0,(LPARAM)g_this->line_blendmodes[x]);

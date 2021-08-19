@@ -34,7 +34,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <windows.h>
 #include <string>
 
-#define LIST_ID 0xfffffffe
+#define LIST_ID -2  // 0xfffffffe
 
 extern unsigned char blendtable[256][256];
 extern BOOL blendtableInited;

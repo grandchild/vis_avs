@@ -41,5 +41,5 @@ class C_CONVOLUTION : public C_RBASE
 		int oldprotect;					// needed for virtual protect stuff
 		int drawstate;					// 0 not allocated 1 creating 2 created
 		bool updatedraw;				// true if draw needs updating
-		unsigned int codelength;		// length of draw
+		int codelength;					// length of draw
 };

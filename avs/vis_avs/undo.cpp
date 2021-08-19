@@ -31,7 +31,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "undo.h"
 #include "render.h"
 
-int C_UndoStack::list_pos;
+unsigned int C_UndoStack::list_pos;
 C_UndoItem *C_UndoStack::list[256];
 
 C_UndoItem::C_UndoItem() : data(NULL), length(0), isdirty(true)
@@ -125,7 +125,7 @@ void C_UndoStack::saveundo(int is2)
 void C_UndoStack::cleardirty()
 {
   // If we're clearing the dirty bit, we only clear it on the current item.
-  if (list_pos >= 0 && list_pos < sizeof(list)/sizeof(list[0]) && list[list_pos])
+  if (list_pos < sizeof(list)/sizeof(list[0]) && list[list_pos])
   {
     list[list_pos]->isdirty = 0;
   }
@@ -133,7 +133,7 @@ void C_UndoStack::cleardirty()
 
 bool C_UndoStack::isdirty()
 {
-  if (list_pos >= 0 && list_pos < sizeof(list)/sizeof(list[0]) && list[list_pos])
+  if (list_pos < sizeof(list)/sizeof(list[0]) && list[list_pos])
     return list[list_pos]->isdirty;
   return false;
 }
@@ -168,7 +168,7 @@ void C_UndoStack::redo()
 void C_UndoStack::clear()
 {
   list_pos=0;
-  int x;
+  unsigned int x;
   for (x = 0; x < sizeof(list)/sizeof(list[0]); x ++)
   {
     delete list[x];

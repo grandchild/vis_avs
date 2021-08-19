@@ -394,7 +394,7 @@ void DD_CreateSurfaces(int w, int h, int fsh, int fs, int fsbpp, int flip, int d
     // init overlay stuff
     DDSURFACEDESC   ddsdOverlay;
     HRESULT         ddrval;
-    int             i;
+    unsigned int    i;
 
     // It's currently not possible to query for pixel formats supported by the
     // overlay hardware (though GetFourCCCodes() usually provides a partial 

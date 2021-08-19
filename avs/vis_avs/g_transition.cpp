@@ -14,7 +14,7 @@ int win32_dlgproc_transition(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 	{
 		case WM_INITDIALOG:
       {
-			int x;
+			unsigned int x;
       for (x = 0; x < sizeof(g_render_transition->transitionmodes)/sizeof(g_render_transition->transitionmodes[0]); x ++)
 	      SendDlgItemMessage(hwndDlg,IDC_TRANSITION,CB_ADDSTRING,0,(LPARAM)g_render_transition->transitionmodes[x]);
       SendDlgItemMessage(hwndDlg,IDC_TRANSITION,CB_SETCURSEL,(WPARAM)cfg_transition_mode&0x7fff,0);

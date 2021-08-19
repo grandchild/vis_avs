@@ -124,9 +124,9 @@ DWORD WINAPI cfgwnd_thread(LPVOID p)
   return 0;
 }
 */
-static int ExtractWindowsVersion(void)
+static unsigned int ExtractWindowsVersion(void)
 {
-	int dwVersion,dwWindowsMajorVersion,dwWindowsMinorVersion,WindowsType,dwBuild;
+	unsigned int dwVersion,dwWindowsMajorVersion,dwWindowsMinorVersion,WindowsType,dwBuild;
 
 	dwVersion = GetVersion();
 

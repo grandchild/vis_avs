@@ -32,6 +32,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory.h>
 #include <stdlib.h>
 #include <math.h>
+#include "../util.h"
 #include "r_defs.h"
 #include "avs_eelif.h"
 
@@ -171,9 +172,9 @@ void C_THISCLASS::load_config(unsigned char *data, int len) // read configuratio
 	if (len-pos >= 4) { halign=GET_INT(); pos+=4; }
 	if (len-pos >= 4) { onbeatSpeed=GET_INT(); pos+=4; }
 	if (len-pos >= 4) { normSpeed=GET_INT(); pos+=4; }
-	if (len-pos >= sizeof(cf)) { memcpy(&cf, data+pos, sizeof(cf)); pos+=sizeof(cf);}
+	if (len-pos >= ssizeof32(cf)) { memcpy(&cf, data+pos, sizeof(cf)); pos+=sizeof(cf);}
 	cf.lpLogFont = &lf;
-	if (len-pos >= sizeof(lf)) { memcpy(&lf, data+pos, sizeof(lf)); pos+=sizeof(lf);}
+	if (len-pos >= ssizeof32(lf)) { memcpy(&lf, data+pos, sizeof(lf)); pos+=sizeof(lf);}
 	if (len-pos >= 4) { size=GET_INT(); pos+=4; }
 	if (size > 0 && len-pos >= size)
 		{

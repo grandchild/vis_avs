@@ -52,7 +52,7 @@ C_THISCLASS::C_THISCLASS() // set up default configuration
   oldy=0;
   staticgrain=0;
   depthBuffer=NULL;
-  int x;
+  unsigned int x;
   for (x = 0 ;x < sizeof(randtab); x ++)
     randtab[x]=rand()&255;
   randtab_pos=rand()%sizeof(randtab);

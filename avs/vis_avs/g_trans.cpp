@@ -14,7 +14,7 @@ int win32_dlgproc_movement(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 	{
 		case WM_INITDIALOG:
       {
-        int x;
+        unsigned int x;
         for (x = 0; x < sizeof(g_this->descriptions)/sizeof(g_this->descriptions[0]); x ++) 
         {
           SendDlgItemMessage(hwndDlg,IDC_LIST1,LB_ADDSTRING,0,(long)(g_this->descriptions[x].list_desc));

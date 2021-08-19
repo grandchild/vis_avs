@@ -32,7 +32,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "c__base.h"
 
 #define MOD_NAME "Unknown Render Object"
-#define UNKN_ID 0xffffffff
+#define UNKN_ID -1  // 0xffffffff
 
 
 class C_UnknClass : public C_RBASE {

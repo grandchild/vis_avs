@@ -13,7 +13,7 @@ int win32_dlgproc_chanshift(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 	{
 		case WM_COMMAND:
 			if (HIWORD(wParam) == BN_CLICKED) {
-				for (int i=0;i<sizeof(ids)/sizeof(ids[0]);i++)
+				for (unsigned int i=0;i<sizeof(ids)/sizeof(ids[0]);i++)
 					if (IsDlgButtonChecked(hwndDlg, ids[i]))
 						g_ConfigThis->config.mode = ids[i];
 				g_ConfigThis->config.onbeat = IsDlgButtonChecked(hwndDlg, IDC_ONBEAT) ? 1 : 0;

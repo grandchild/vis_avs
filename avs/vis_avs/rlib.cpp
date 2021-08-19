@@ -28,6 +28,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 #include <windows.h>
+#include "../util.h"
 #include "r_defs.h"
 #include "c__base.h"
 #include "c_unkn.h"
@@ -354,7 +355,7 @@ C_RBASE *C_RLibrary::CreateRenderer(int *which, int *has_r2)
         }
       }
     }
-    for (x = 0; x < sizeof(NamedApeToBuiltinTrans)/sizeof(NamedApeToBuiltinTrans[0]); x ++)
+    for (x = 0; x < ssizeof32(NamedApeToBuiltinTrans)/ssizeof32(NamedApeToBuiltinTrans[0]); x ++)
     {
       if (!strncmp(p,NamedApeToBuiltinTrans[x].id,32))
       {

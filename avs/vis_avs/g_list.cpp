@@ -55,7 +55,7 @@ int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
       {
 #ifndef LASER
         {
-          int x;
+          unsigned int x;
           for (x = 0; x < sizeof(g_this->blendmodes)/sizeof(g_this->blendmodes[0]); x ++)
           {
             SendDlgItemMessage(hwndDlg,IDC_COMBO1,CB_ADDSTRING,0,(LPARAM)g_this->blendmodes[x]);

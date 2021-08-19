@@ -29,6 +29,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "c_chanshift.h"
 #include <time.h>
+#include "../util.h"
 #include "r_defs.h"
 
 
@@ -478,7 +479,7 @@ char *C_THISCLASS::get_desc(void)
 void C_THISCLASS::load_config(unsigned char *data, int len) 
 {
 	srand(time(0));
-	if (len <= sizeof(channelShiftConfig))
+	if (len <= ssizeof32(channelShiftConfig))
 		memcpy(&this->config, data, len);
 }
 

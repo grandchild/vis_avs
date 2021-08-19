@@ -4,6 +4,7 @@
 #include "r_defs.h"
 #include "r_texer2.h"
 #include "../gcc-hacks.h"
+#include "../util.h"
 
 
 // extended APE api support
@@ -1714,7 +1715,7 @@ char *C_Texer2::get_desc(void)
 
 void C_Texer2::load_config(unsigned char *data, int len)
 {
-    if (len >= sizeof(texer2_apeconfig))
+    if (len >= ssizeof32(texer2_apeconfig))
         memcpy(&this->config, data, sizeof(texer2_apeconfig));
     if (this->config.version < TEXER_II_VERSION_V2_81D
         || this->config.version > TEXER_II_VERSION_CURRENT) {

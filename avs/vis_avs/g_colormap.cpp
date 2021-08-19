@@ -1,3 +1,4 @@
+#include "../util.h"
 #include "c__defs.h"
 #include "g__lib.h"
 #include "g__defs.h"
@@ -605,7 +606,7 @@ void load_map_file(C_ColorMap* colormap, int map_index) {
     colors_offset = 4/*CLM1*/ + 4/*length*/;
     if(length < 0
         || length > COLORMAP_MAX_COLORS
-        || length != (bytes_read - colors_offset) / sizeof(map_color)
+        || length != (int)((bytes_read - colors_offset) / sizeof(map_color))
     ) {
         MessageBox(colormap->dialog, "Corrupt CLM file!", "Warning", MB_ICONWARNING);
         length = (bytes_read - colors_offset) / sizeof(map_color);

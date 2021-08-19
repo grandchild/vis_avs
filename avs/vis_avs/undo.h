@@ -74,7 +74,7 @@ class C_UndoStack
     // sorry to do this mig, but that doubly linked lists made me scared. I think it
     // wasn't actually the source of my bug (I later fixed it), but doubly linked lists
     // are just plain hard to get right. :)
-    static int list_pos;
+    static unsigned int list_pos;
     static C_UndoItem *list[256]; // only keep 256 elements in list at a time
 };
 

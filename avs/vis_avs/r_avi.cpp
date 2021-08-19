@@ -29,6 +29,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "c_avi.h"
 #include <stdlib.h>
+#include "../util.h"
 #include "r_defs.h"
 
 
@@ -112,7 +113,7 @@ void C_THISCLASS::load_config(unsigned char *data, int len) // read configuratio
 	if (len-pos >= 4) { enabled=GET_INT(); pos+=4; }
 	if (len-pos >= 4) { blend=GET_INT(); pos+=4; }
 	if (len-pos >= 4) { blendavg=GET_INT(); pos+=4; }
-	while (data[pos] && len-pos > 0 && p-ascName < sizeof(ascName)-1) *p++=data[pos++];
+	while (data[pos] && len-pos > 0 && p-ascName < ssizeof32(ascName)-1) *p++=data[pos++];
 	*p=0; pos++;
 	if (len-pos >= 4) { adapt=GET_INT(); pos+=4; }
 	if (len-pos >= 4) { persist=GET_INT(); pos+=4; }

@@ -299,7 +299,7 @@ void C_CONVOLUTION::createdraw(void)
 	draw = (FunctionType) new BYTE[MAX_DRAW_SIZE];
 	if (enabled)
 	{
-		unsigned int iloopstart,jloopstart;	// addresses to loop back to
+		int iloopstart,jloopstart;	// addresses to loop back to
 		codelength = 0;
 		// function header (nonstandard stack - see stack.txt)
 		appenddraw(0x53)	// push ebx
@@ -380,7 +380,7 @@ void C_CONVOLUTION::createdraw(void)
 			iloopstart = codelength;
 			for (int pass=0;pass<(twopass?2:1);pass++)
 			{
-				int lasty = -1;						// the last f***data[i][1] looked at
+				unsigned int lasty = 0xffffffff;	// the last f***data[i][1] looked at (initialize with impossible value)
 				appenddraw(0x0F)	// movq mm0, mm7
 				appenddraw(0x7F)
 				appenddraw(0xF8)
@@ -526,7 +526,7 @@ void C_CONVOLUTION::createdraw(void)
 					}
 				}
 				// go through the neg values
-				lasty = -1;
+				lasty = 0xffffffff;
 				for (int i=0; i<numneg; i++)
 				{	
 					if (fnegdata[pass][i][1]==7)	// see if this the bias entry

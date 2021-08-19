@@ -413,7 +413,7 @@ void quit3(void)
 static unsigned int WINAPI RenderThread(LPVOID)
 {
   int framedata[FPS_NF]={0,};
-	int framedata_pos=0;
+	unsigned int framedata_pos=0;
   int s=0;
 	char vis_data[2][2][576];
   FILETIME ft;

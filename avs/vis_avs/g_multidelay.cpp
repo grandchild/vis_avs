@@ -37,7 +37,7 @@ int win32_dlgproc_multidelay(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 				if(IsDlgButtonChecked(hwndDlg,objectcode)==1)
 				{
 					g_Delay->mode = objectcode - 1100;
-					for (int i=1100;i<1103;i++)	if (objectcode != i) CheckDlgButton(hwndDlg,i,BST_UNCHECKED);
+					for (unsigned int i=1100;i<1103;i++)	if (objectcode != i) CheckDlgButton(hwndDlg,i,BST_UNCHECKED);
 				}
 			    return 0;
 			}
@@ -88,7 +88,7 @@ int win32_dlgproc_multidelay(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 				if(IsDlgButtonChecked(hwndDlg,objectcode)==1)
 				{
 					g_Delay->activebuffer = objectcode - 1000;
-					for (int i=1000;i<1006;i++)	if (objectcode != i) CheckDlgButton(hwndDlg,i,BST_UNCHECKED);
+					for (unsigned int i=1000;i<1006;i++)	if (objectcode != i) CheckDlgButton(hwndDlg,i,BST_UNCHECKED);
 				}
 			    return 0;
 			}
