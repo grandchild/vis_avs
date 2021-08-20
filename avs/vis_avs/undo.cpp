@@ -114,7 +114,7 @@ void C_UndoStack::saveundo(int is2)
     if (list_pos == sizeof(list)/sizeof(list[0])-1)
     {
       delete list[0];
-      memcpy(list,list+1,sizeof(list)/sizeof(list[0])-1);
+      memmove(list,list+1,sizeof(list)/sizeof(list[0])-1);
       list_pos--;
     }
     list[++list_pos]=item;
