@@ -691,23 +691,6 @@ static char *preprocessCode(compileContext *ctx, char *expression)
   return buf;
 }
 
-static void movestringover(char *str, int amount)
-{
-  char tmp[1024+8];
-
-  int l=(int)strlen(str);
-  l=min(1024-amount-1,l);
-
-  memcpy(tmp,str,l+1);
-
-  while (l >= 0 && tmp[l]!='\n') l--;
-  l++;
-
-  tmp[l]=0;//ensure we null terminate
-
-  memcpy(str+amount,tmp,l+1);
-}
-
 //------------------------------------------------------------------------------
 NSEEL_CODEHANDLE NSEEL_code_compile(NSEEL_VMCTX _ctx, char *_expression)
 {
