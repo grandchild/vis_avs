@@ -27,8 +27,9 @@ switch (uMsg)
     if (g_ConfigThis->blend) CheckDlgButton(hwndDlg,IDC_ADDITIVE,BST_CHECKED);
     if (g_ConfigThis->blendavg) CheckDlgButton(hwndDlg,IDC_5050,BST_CHECKED);
     if (g_ConfigThis->adapt) CheckDlgButton(hwndDlg,IDC_ADAPT,BST_CHECKED);
-    if (!g_ConfigThis->adapt && !g_ConfigThis->blend && !g_ConfigThis->blendavg)
-		CheckDlgButton(hwndDlg,IDC_REPLACE,BST_CHECKED);
+    if (!g_ConfigThis->adapt && !g_ConfigThis->blend && !g_ConfigThis->blendavg) {
+    	CheckDlgButton(hwndDlg,IDC_REPLACE,BST_CHECKED);
+    }
 		EnableWindows(hwndDlg, g_ConfigThis);
 	  loadComboBox(GetDlgItem(hwndDlg,OBJ_COMBO),"*.AVI",g_ConfigThis->ascName);
 		return 1;

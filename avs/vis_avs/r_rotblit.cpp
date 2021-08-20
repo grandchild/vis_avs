@@ -168,7 +168,8 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int *fbou
   {
 		if (ds) s %= ds;
 		if (dt) t %= dt;
-    if (s < 0) s+=ds; if (t < 0) t+=dt;
+    if (s < 0) s+=ds;
+    if (t < 0) t+=dt;
 		x = w;
 
 

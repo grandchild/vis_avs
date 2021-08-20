@@ -26,7 +26,7 @@ switch (uMsg)
 		{
 		if (LOWORD(wParam) == IDC_MAX)
 			g_ConfigThis->smax = SendDlgItemMessage(hwndDlg, IDC_MAX, TBM_GETPOS, 0, 0);
-			return 0;
+		return 0;
 		}
 	case WM_COMMAND:
 	  if ((LOWORD(wParam) == IDC_CHECK1) ||

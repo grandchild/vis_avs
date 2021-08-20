@@ -192,7 +192,7 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int*, int
         int n=w;
         while (n--)
           *fbp = BLEND_ADAPT(*fbp, fbp[j], divis);
-          ++fbp;
+        ++fbp;
       }
 		  else 
       {

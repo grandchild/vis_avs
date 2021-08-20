@@ -44,7 +44,7 @@ int win32_dlgproc_mirror(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
 		{
 		if (LOWORD(wParam) == IDC_SLOWER)
 			g_ConfigThis->slower = SendDlgItemMessage(hwndDlg, IDC_SLOWER, TBM_GETPOS, 0, 0);
-			return 0;
+		return 0;
 		}
     case WM_COMMAND:
       if (LOWORD(wParam) == IDC_CHECK1)
