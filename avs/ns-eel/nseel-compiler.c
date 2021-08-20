@@ -322,9 +322,9 @@ static int *findFBlock(char *p)
 
 /* Return the reverse offset in bytes from the end(!) of the function to the start of
    the trap UD2 instruction that GCC generates at the end of naked functions. */
-static int rfind_ud2_trap_epilog_size(char* fn_end, char* fn_begin) {
+static int rfind_ud2_trap_epilog_size(unsigned char* fn_end, unsigned char* fn_begin) {
   char found_second_byte = 0;
-  for (char* p = fn_end; p >= fn_begin; p--) {
+  for (unsigned char* p = fn_end; p >= fn_begin; p--) {
     if (*p == UD2_SECOND_BYTE) {
       found_second_byte = 1;
     } else if (found_second_byte && *p == UD2_FIRST_BYTE) {
@@ -604,7 +604,7 @@ int nseel_createCompiledFunction1(compileContext *ctx, int fntype, int fn, int c
   memcpy(block+4, func1, size);
   memcpy(block+size+4,(void*)myfunc,size2);
 #ifdef __GNUC__
-  write_gcc_naked_function_trap_padding_jmp(block + size + 4, size2);
+  write_gcc_naked_function_trap_padding_jmp((unsigned char*)(block + size + 4), size2);
 #endif
   if (preProc) preProc(block+size+4,size2,ctx->userfunc_data);
 
