@@ -1772,7 +1772,7 @@ int  C_Texer2::save_config(unsigned char *data)
     tot += l;
     *((int *)p) = l;
     p+=4;
-    strncpy(p, code.init, l);
+    memcpy(p, code.init, l);
     p+=l;
 
     // Frame
@@ -1780,7 +1780,7 @@ int  C_Texer2::save_config(unsigned char *data)
     tot += l;
     *((int *)p) = l;
     p+=4;
-    strncpy(p, code.frame, l);
+    memcpy(p, code.frame, l);
     p+=l;
 
     // Beat
@@ -1788,7 +1788,7 @@ int  C_Texer2::save_config(unsigned char *data)
     tot += l;
     *((int *)p) = l;
     p+=4;
-    strncpy(p, code.beat, l);
+    memcpy(p, code.beat, l);
     p+=l;
 
     // Point
@@ -1796,7 +1796,7 @@ int  C_Texer2::save_config(unsigned char *data)
     tot += l;
     *((int *)p) = l;
     p+=4;
-    strncpy(p, code.point, l);
+    memcpy(p, code.point, l);
     p+=l;
 
     return sizeof(texer2_apeconfig) + tot;
