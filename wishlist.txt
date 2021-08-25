@@ -161,3 +161,9 @@ Render / TexerII
     * Rotate sprites. ("r" per-point variable?)
     * Why not "rz" right away, and add "rx" & "ry" to skew the image? Which perspective to use?
     * Bug: image filenames starting with "_" are buggy (because they are sorted before the default image).
+
+
+Input / Audio handling
+
+    * Enable equalizer-/compressor-effects on input spectrum-data
+    * Audio-Data over network - process audio-callbacks on another machine.
