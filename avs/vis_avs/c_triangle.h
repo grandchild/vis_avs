@@ -2,6 +2,7 @@
 
 #include <windows.h>
 
+#include "ape.h"
 #include "c__base.h"
 
 #define MOD_NAME "Render / Triangle"
@@ -16,44 +17,6 @@
 #define OUT_ADJUSTABLE 7
 #define OUT_XOR 8
 #define OUT_MINIMUM 9
-
-struct Code {
-    char* init;
-    char* frame;
-    char* beat;
-    char* point;
-    Code() {
-        init = new char[1];
-        frame = new char[1];
-        beat = new char[1];
-        point = new char[1];
-        init[0] = frame[0] = beat[0] = point[0] = 0;
-    }
-    ~Code() {
-        delete[] init;
-        delete[] frame;
-        delete[] beat;
-        delete[] point;
-    }
-};
-
-class C_Triangle : public C_RBASE {
-   public:
-    C_Triangle();
-    virtual ~C_Triangle();
-    virtual int render(char visdata[2][2][576],
-                       int isBeat,
-                       int* framebuffer,
-                       int* fbout,
-                       int w,
-                       int);
-    virtual char* get_desc();
-    virtual void load_config(unsigned char* data, int len);
-    virtual int save_config(unsigned char* data);
-    Code code;
-
-   protected:
-};
 
 struct TriangleVars {
     double* w;
@@ -79,4 +42,68 @@ struct TriangleVars {
     double* z1;
     double* zbuf;
     double* zbclear;
+};
+
+struct TriangleCode {
+    TriangleVars vars;
+    VM_CONTEXT vm_context;
+
+    char* init_str;
+    char* frame_str;
+    char* beat_str;
+    char* point_str;
+    VM_CODEHANDLE init;
+    VM_CODEHANDLE frame;
+    VM_CODEHANDLE beat;
+    VM_CODEHANDLE point;
+
+    TriangleCode() {
+        init_str = new char[1];
+        frame_str = new char[1];
+        beat_str = new char[1];
+        point_str = new char[1];
+        init_str[0] = frame_str[0] = beat_str[0] = point_str[0] = 0;
+    }
+    ~TriangleCode() {
+        delete[] init_str;
+        delete[] frame_str;
+        delete[] beat_str;
+        delete[] point_str;
+    }
+    void recompile();
+};
+
+class TriangleDepthBuffer {
+   public:
+    u_int w;
+    u_int h;
+    double* buffer;
+
+    TriangleDepthBuffer(u_int w, u_int h) {
+        this->w = w;
+        this->h = h;
+        this->buffer = new double[w * h];
+    }
+    ~TriangleDepthBuffer() { delete[] this->buffer; }
+};
+
+class C_Triangle : public C_RBASE {
+   public:
+    C_Triangle();
+    virtual ~C_Triangle();
+    virtual int render(char visdata[2][2][576],
+                       int isBeat,
+                       int* framebuffer,
+                       int* fbout,
+                       int w,
+                       int);
+    virtual char* get_desc();
+    virtual void load_config(unsigned char* data, int len);
+    virtual int save_config(unsigned char* data);
+    TriangleCode code;
+
+   protected:
+    static u_int instance_count;
+    static TriangleDepthBuffer* depth_buffer;
+    bool need_depth_buffer = false;
 };
