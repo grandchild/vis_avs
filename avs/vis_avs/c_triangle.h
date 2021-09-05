@@ -44,9 +44,9 @@ struct TriangleVars {
     double* zbclear;
 };
 
-struct TriangleCode {
+class TriangleCode {
+   public:
     TriangleVars vars;
-    VM_CONTEXT vm_context;
 
     char* init_str;
     char* frame_str;
@@ -56,6 +56,9 @@ struct TriangleCode {
     VM_CODEHANDLE frame;
     VM_CODEHANDLE beat;
     VM_CODEHANDLE point;
+
+    bool need_recompile;
+    bool need_init;
 
     TriangleCode() {
         init_str = new char[1];
@@ -70,7 +73,11 @@ struct TriangleCode {
         delete[] beat_str;
         delete[] point_str;
     }
-    void recompile();
+    void recompile_if_needed();
+    void run(VM_CODEHANDLE code, char visdata[2][2][576]);
+
+   private:
+    VM_CONTEXT vm_context;
 };
 
 class TriangleDepthBuffer {
@@ -79,12 +86,13 @@ class TriangleDepthBuffer {
     u_int h;
     double* buffer;
 
-    TriangleDepthBuffer(u_int w, u_int h) {
-        this->w = w;
-        this->h = h;
+    TriangleDepthBuffer(u_int w, u_int h) : w(w), h(h) {
         this->buffer = new double[w * h];
+        memset(this->buffer, 0, w * h * sizeof(double));
     }
     ~TriangleDepthBuffer() { delete[] this->buffer; }
+
+    void reset_if_needed(u_int w, u_int h, bool clear);
 };
 
 class C_Triangle : public C_RBASE {
@@ -96,7 +104,7 @@ class C_Triangle : public C_RBASE {
                        int* framebuffer,
                        int* fbout,
                        int w,
-                       int);
+                       int h);
     virtual char* get_desc();
     virtual void load_config(unsigned char* data, int len);
     virtual int save_config(unsigned char* data);
@@ -105,5 +113,54 @@ class C_Triangle : public C_RBASE {
    protected:
     static u_int instance_count;
     static TriangleDepthBuffer* depth_buffer;
+
     bool need_depth_buffer = false;
+
+    void init_depthbuffer_if_needed(int w, int h);
+    void draw_triangle(int* framebuffer,
+                       int w,
+                       int h,
+                       int points[3][2],
+                       double z1,
+                       u_int color);
+};
+
+class Edge {
+   public:
+    int x1;
+    int y1;
+    int x2;
+    int y2;
+    int y_length;
+
+    Edge(int p1[2], int p2[2]) {
+        if (p1[1] <= p2[1]) {
+            this->x1 = p1[0];
+            this->y1 = p1[1];
+            this->x2 = p2[0];
+            this->y2 = p2[1];
+        } else {
+            this->x1 = p2[0];
+            this->y1 = p2[1];
+            this->x2 = p1[0];
+            this->y2 = p1[1];
+        }
+        this->y_length = this->y2 - this->y1;
+    }
+};
+
+class Span {
+   public:
+    int x1;
+    int x2;
+
+    Span(int x1, int x2) {
+        if (x1 <= x2) {
+            this->x1 = x1;
+            this->x2 = x2;
+        } else {
+            this->x1 = x2;
+            this->x2 = x1;
+        }
+    }
 };
