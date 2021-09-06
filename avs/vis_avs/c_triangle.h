@@ -44,37 +44,34 @@ struct TriangleVars {
     double* zbclear;
 };
 
+class TriangleCodeSection {
+    char _name[6];
+
+   public:
+    char* string;
+    VM_CODEHANDLE code;
+    bool need_recompile;
+
+    TriangleCodeSection(char* name);
+    ~TriangleCodeSection();
+    void set(char* str, u_int length);
+    bool recompile_if_needed(VM_CONTEXT vm_context);
+    void run(char visdata[2][2][576]);
+};
+
 class TriangleCode {
    public:
-    TriangleVars vars;
-
-    char* init_str;
-    char* frame_str;
-    char* beat_str;
-    char* point_str;
-    VM_CODEHANDLE init;
-    VM_CODEHANDLE frame;
-    VM_CODEHANDLE beat;
-    VM_CODEHANDLE point;
-
-    bool need_recompile;
+    struct TriangleVars vars;
+    TriangleCodeSection init;
+    TriangleCodeSection frame;
+    TriangleCodeSection beat;
+    TriangleCodeSection point;
     bool need_init;
 
-    TriangleCode() {
-        init_str = new char[1];
-        frame_str = new char[1];
-        beat_str = new char[1];
-        point_str = new char[1];
-        init_str[0] = frame_str[0] = beat_str[0] = point_str[0] = 0;
-    }
-    ~TriangleCode() {
-        delete[] init_str;
-        delete[] frame_str;
-        delete[] beat_str;
-        delete[] point_str;
-    }
+    TriangleCode();
+    ~TriangleCode();
+    void register_variables();
     void recompile_if_needed();
-    void run(VM_CODEHANDLE code, char visdata[2][2][576]);
 
    private:
     VM_CONTEXT vm_context;
@@ -125,6 +122,7 @@ class C_Triangle : public C_RBASE {
                        u_int color);
 };
 
+/** A line connecting two vertices of a triangle. */
 class Edge {
    public:
     int x1;
@@ -146,21 +144,5 @@ class Edge {
             this->y2 = p1[1];
         }
         this->y_length = this->y2 - this->y1;
-    }
-};
-
-class Span {
-   public:
-    int x1;
-    int x2;
-
-    Span(int x1, int x2) {
-        if (x1 <= x2) {
-            this->x1 = x1;
-            this->x2 = x2;
-        } else {
-            this->x1 = x2;
-            this->x2 = x1;
-        }
     }
 };
