@@ -88,7 +88,7 @@ C_GLibrary::C_GLibrary() {
     ADD_APE_COMPONENT("Acko.net: Texer II",           TEXERII,        texer2);
     ADD_APE_COMPONENT("Trans: Normalise",             NORMALISE,      normalise);
     ADD_APE_COMPONENT_PREP("Color Map",               COLORMAP,       colormap);
-    ADD_APE_COMPONENT("Virtal Effect: Addborders",    ADDBORDERS,     addborders);
+    ADD_APE_COMPONENT("Virtual Effect: Addborders",   ADDBORDERS,     addborders);
     // clang-format on
     this->size = i;
 
