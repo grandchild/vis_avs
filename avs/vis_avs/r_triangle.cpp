@@ -72,7 +72,6 @@ int C_Triangle::render(char visdata[2][2][576],
     *this->code.vars.green3 = 1.0f;
     *this->code.vars.blue3 = 1.0f;
     if (this->code.need_init) {
-        printf("Running init\n");
         this->code.init.run(visdata);
         this->code.need_init = false;
     }
@@ -81,7 +80,6 @@ int C_Triangle::render(char visdata[2][2][576],
         this->code.beat.run(visdata);
     }
     int triangle_count = *this->code.vars.n;
-    printf("n: %d", triangle_count);
     this->depth_buffer->reset_if_needed(w, h, *this->code.vars.zbclear != 0.0);
     if (triangle_count > 0) {
         double step = 0.0f;
@@ -113,8 +111,7 @@ int C_Triangle::render(char visdata[2][2][576],
             color_bytes[1] = *this->code.vars.green1 * 255.0f;
             color_bytes[2] = *this->code.vars.red1 * 255.0f;
 
-            // this->draw_triangle(framebuffer, w, h, points, *this->code.vars.z1,
-            // color);
+            this->draw_triangle(framebuffer, w, h, points, *this->code.vars.z1, color);
         }
     }
 
@@ -186,8 +183,8 @@ void C_Triangle::draw_triangle(int* framebuffer,
         short_edges[1] = tmp;
     }
     // Render all spans between the long edge and the two short edges in succession.
-    int span_direction = long_edge->x2 < short_edges[0]->x2 ? 1 : -1;
-
+    // int span_direction = long_edge->x2 < short_edges[0]->x2 ? 1 : -1;
+    int y = max(long_edge->y1, 0);
     for (u_int e = 0; e < TRIANGLE_NUM_SHORT_EDGES; e++) {
         Edge* short_edge = short_edges[e];
         int short_edge_y_length = short_edge->y2 - short_edge->y1;
@@ -195,22 +192,23 @@ void C_Triangle::draw_triangle(int* framebuffer,
             continue;
         }
         int short_edge_x_length = short_edge->x2 - short_edge->x1;
-        int y = long_edge->y1;
-        int y0 = 0;
-        if (y < 0) {
-            y0 = -y;
-            y = 0;
-        }
-        for (; y <= short_edge->y2 && y < h; y++, y0++) {
-            int long_span_x =
-                (long_edge_x_length * y0) / long_edge_y_length + long_edge->x1;
-            int short_span_x =
-                (short_edge_x_length * y0) / short_edge_y_length + short_edge->x1;
-            int x = long_span_x;
-            while ((x < 0 || x >= w) && x != short_span_x) {
-                x += span_direction;
+        for (; y <= short_edge->y2 && y < h; y++) {
+            int span_x1 =
+                (long_edge_x_length * (y - long_edge->y1)) / long_edge_y_length
+                + long_edge->x1;
+            int span_x2 =
+                (short_edge_x_length * (y - short_edge->y1)) / short_edge_y_length
+                + short_edge->x1;
+            if (span_x1 > span_x2) {
+                int tmp = span_x1;
+                span_x1 = span_x2;
+                span_x2 = tmp;
             }
-            for (; x != short_span_x; x += span_direction) {
+            int x = span_x1;
+            while ((x < 0 || x >= w) && x < span_x2) {
+                x++;
+            }
+            for (; x <= span_x2; x++) {
                 framebuffer[x + y * w] = (int)color;
             }
         }
@@ -232,8 +230,8 @@ void TriangleDepthBuffer::reset_if_needed(u_int w, u_int h, bool clear) {
 }
 
 // Code
-TriangleCode::TriangleCode() :
-    init("init"), frame("frame"), beat("beat"), point("point"), vm_context(NULL) {}
+TriangleCode::TriangleCode()
+    : init("init"), frame("frame"), beat("beat"), point("point"), vm_context(NULL) {}
 
 TriangleCode::~TriangleCode() {
     if (g_triangle_extinfo && this->vm_context) {
@@ -278,8 +276,8 @@ void TriangleCode::recompile_if_needed() {
         if (this->vm_context == NULL) {
             return;
         }
+        this->register_variables();
     }
-    this->register_variables();
     if (this->init.recompile_if_needed(this->vm_context)) {
         this->need_init = true;
     }
@@ -290,8 +288,8 @@ void TriangleCode::recompile_if_needed() {
 
 // Code Section
 
-TriangleCodeSection::TriangleCodeSection(char* name) :
-    code(NULL), need_recompile(false) {
+TriangleCodeSection::TriangleCodeSection(char* name)
+    : code(NULL), need_recompile(false) {
     strncpy(this->_name, name, 5);
     this->_name[5] = '\0';
     this->string = new char[1];
