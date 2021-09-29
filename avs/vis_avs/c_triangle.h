@@ -1,9 +1,9 @@
 #pragma once
 
-#include <windows.h>
-
 #include "ape.h"
 #include "c__base.h"
+
+#include <windows.h>
 
 #define MOD_NAME "Render / Triangle"
 
@@ -18,7 +18,7 @@
 #define OUT_XOR 8
 #define OUT_MINIMUM 9
 
-struct TriangleVars {
+typedef struct {
     double* w;
     double* h;
     double* n;
@@ -42,26 +42,26 @@ struct TriangleVars {
     double* z1;
     double* zbuf;
     double* zbclear;
-};
+} TriangleVars;
 
 class TriangleCodeSection {
-    char _name[6];
-
    public:
     char* string;
     VM_CODEHANDLE code;
     bool need_recompile;
 
-    TriangleCodeSection(char* name);
+    TriangleCodeSection();
     ~TriangleCodeSection();
     void set(char* str, u_int length);
     bool recompile_if_needed(VM_CONTEXT vm_context);
     void run(char visdata[2][2][576]);
+
+   private:
 };
 
 class TriangleCode {
    public:
-    struct TriangleVars vars;
+    TriangleVars vars;
     TriangleCodeSection init;
     TriangleCodeSection frame;
     TriangleCodeSection beat;
@@ -72,6 +72,7 @@ class TriangleCode {
     ~TriangleCode();
     void register_variables();
     void recompile_if_needed();
+    void init_variables(int w, int h);
 
    private:
     VM_CONTEXT vm_context;
@@ -81,16 +82,21 @@ class TriangleDepthBuffer {
    public:
     u_int w;
     u_int h;
-    double* buffer;
+    u_int* buffer;
 
     TriangleDepthBuffer(u_int w, u_int h) : w(w), h(h) {
-        this->buffer = new double[w * h];
-        memset(this->buffer, 0, w * h * sizeof(double));
+        this->buffer = new u_int[w * h];
+        memset(this->buffer, 0, w * h * sizeof(u_int));
     }
     ~TriangleDepthBuffer() { delete[] this->buffer; }
 
     void reset_if_needed(u_int w, u_int h, bool clear);
 };
+
+typedef struct {
+    int x;
+    int y;
+} Vertex;
 
 class C_Triangle : public C_RBASE {
    public:
@@ -115,11 +121,31 @@ class C_Triangle : public C_RBASE {
 
     void init_depthbuffer_if_needed(int w, int h);
     void draw_triangle(int* framebuffer,
+                       int* fbout,
                        int w,
                        int h,
                        int points[3][2],
+                       bool use_depthbuffer,
                        double z1,
+                       u_int blendmode,
+                       u_int adjustable_blend,
                        u_int color);
+    inline void draw_pixel(int* source_fb,
+                           int* dest_fb,
+                           int pixel_index,
+                           u_int blendmode,
+                           u_int adjustable_blend,
+                           u_int color);
+    void draw_triangle2(int* framebuffer,
+                        int* fbout,
+                        int w,
+                        int h,
+                        Vertex vertices[3],
+                        bool use_depthbuffer,
+                        double z1,
+                        u_int blendmode,
+                        u_int adjustable_blend,
+                        u_int color);
 };
 
 /** A line connecting two vertices of a triangle. */

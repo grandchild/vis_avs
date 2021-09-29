@@ -1,4 +1,5 @@
 #include "c_triangle.h"
+
 #include "r_defs.h"
 
 #define MAX_CODE_LEN (1 << 16)  // 64k is the maximum component size in AVS
@@ -14,7 +15,7 @@ APEinfo* g_triangle_extinfo;
 TriangleDepthBuffer* C_Triangle::depth_buffer = NULL;
 u_int C_Triangle::instance_count = 0;
 
-C_Triangle::C_Triangle() : code() {
+C_Triangle::C_Triangle() {
     this->instance_count += 1;
     if (this->depth_buffer == NULL) {
         this->need_depth_buffer = true;
@@ -49,28 +50,12 @@ inline int w2p(double x, double width_half) { return (int)((x + 1.0) * width_hal
 int C_Triangle::render(char visdata[2][2][576],
                        int is_beat,
                        int* framebuffer,
-                       int*,
+                       int* fbout,
                        int w,
                        int h) {
     this->init_depthbuffer_if_needed(w, h);
     this->code.recompile_if_needed();
-    *this->code.vars.w = w;
-    *this->code.vars.h = h;
-    *this->code.vars.x1 = 0.0f;
-    *this->code.vars.y1 = 0.0f;
-    *this->code.vars.x2 = 0.0f;
-    *this->code.vars.y2 = 0.0f;
-    *this->code.vars.x3 = 0.0f;
-    *this->code.vars.y3 = 0.0f;
-    *this->code.vars.red1 = 1.0f;
-    *this->code.vars.green1 = 1.0f;
-    *this->code.vars.blue1 = 1.0f;
-    *this->code.vars.red2 = 1.0f;
-    *this->code.vars.green2 = 1.0f;
-    *this->code.vars.blue2 = 1.0f;
-    *this->code.vars.red3 = 1.0f;
-    *this->code.vars.green3 = 1.0f;
-    *this->code.vars.blue3 = 1.0f;
+    this->code.init_variables(w, h);
     if (this->code.need_init) {
         this->code.init.run(visdata);
         this->code.need_init = false;
@@ -81,6 +66,8 @@ int C_Triangle::render(char visdata[2][2][576],
     }
     int triangle_count = *this->code.vars.n;
     this->depth_buffer->reset_if_needed(w, h, *this->code.vars.zbclear != 0.0);
+    u_int blendmode = *g_triangle_extinfo->lineblendmode & 0xff;
+    u_int adjustable_blend = *g_triangle_extinfo->lineblendmode >> 8 & 0xff;
     if (triangle_count > 0) {
         double step = 0.0f;
         if (triangle_count > 1) {
@@ -96,13 +83,13 @@ int C_Triangle::render(char visdata[2][2][576],
             if (*this->code.vars.skip != 0.0) {
                 continue;
             }
-            int points[3][2] = {
+            Vertex vertices[3] = {
                 {w2p(*this->code.vars.x1, w_half), w2p(*this->code.vars.y1, h_half)},
                 {w2p(*this->code.vars.x2, w_half), w2p(*this->code.vars.y2, h_half)},
                 {w2p(*this->code.vars.x3, w_half), w2p(*this->code.vars.y3, h_half)},
             };
             for (int p = 0; p < 3; p++) {
-                framebuffer[points[p][0] + points[p][1] * w] = 0xff;
+                framebuffer[vertices[p].x + vertices[p].y * w] = 0xff;
             }
 
             unsigned int color;
@@ -111,11 +98,20 @@ int C_Triangle::render(char visdata[2][2][576],
             color_bytes[1] = *this->code.vars.green1 * 255.0f;
             color_bytes[2] = *this->code.vars.red1 * 255.0f;
 
-            this->draw_triangle(framebuffer, w, h, points, *this->code.vars.z1, color);
+            this->draw_triangle2(framebuffer,
+                                 fbout,
+                                 w,
+                                 h,
+                                 vertices,
+                                 *this->code.vars.zbuf != 0.0f,
+                                 *this->code.vars.z1,
+                                 blendmode,
+                                 adjustable_blend,
+                                 color);
         }
     }
 
-    return 0;
+    return blendmode == OUT_REPLACE ? 0 : 1;
 }
 
 /**
@@ -145,10 +141,14 @@ int C_Triangle::render(char visdata[2][2][576],
  * depth-buffer value at that pixel.
  */
 void C_Triangle::draw_triangle(int* framebuffer,
+                               int* fbout,
                                int w,
                                int h,
                                int points[3][2],
+                               bool use_depthbuffer,
                                double z1,
+                               u_int blendmode,
+                               u_int adjustable_blend,
                                u_int color) {
     Edge edges[3] = {
         Edge(points[0], points[1]),
@@ -204,34 +204,242 @@ void C_Triangle::draw_triangle(int* framebuffer,
                 span_x1 = span_x2;
                 span_x2 = tmp;
             }
+            if (span_x1 > w || span_x2 < 0) {
+                continue;
+            }
             int x = span_x1;
-            while ((x < 0 || x >= w) && x < span_x2) {
+            while (x < 0 && x < span_x2) {
                 x++;
             }
-            for (; x <= span_x2; x++) {
-                framebuffer[x + y * w] = (int)color;
+            for (; x <= span_x2 && x >= 0 && x < w; x++) {
+                int pixel_index = x + y * w;
+                if (use_depthbuffer) {
+                    uint64_t z1int = 0;
+                    if (z1 > 40000) {
+                        z1int = (uint64_t)40000 * 100000;
+                    } else if (z1 > 0) {
+                        z1int = (uint64_t)z1 * 100000.0;
+                    }
+                    if (z1int < this->depth_buffer->buffer[pixel_index]) {
+                        continue;
+                    } else {
+                        this->depth_buffer->buffer[pixel_index] = z1int;
+                    }
+                }
+                this->draw_pixel(framebuffer,
+                                 fbout,
+                                 pixel_index,
+                                 blendmode,
+                                 adjustable_blend,
+                                 color);
             }
         }
     }
 }
 
+inline void C_Triangle::draw_pixel(int* source_fb,
+                                   int* dest_fb,
+                                   int pixel_index,
+                                   u_int blendmode,
+                                   u_int adjustable_blend,
+                                   u_int color) {
+    switch (blendmode) {
+        case OUT_REPLACE: {
+            source_fb[pixel_index] = color;
+            break;
+        }
+        case OUT_ADDITIVE: {
+            dest_fb[pixel_index] = BLEND(color, source_fb[pixel_index]);
+            break;
+        }
+        case OUT_MAXIMUM: {
+            dest_fb[pixel_index] = BLEND_MAX(color, source_fb[pixel_index]);
+            break;
+        }
+        case OUT_5050: {
+            dest_fb[pixel_index] = BLEND_AVG(color, source_fb[pixel_index]);
+            break;
+        }
+        case OUT_SUB1: {
+            dest_fb[pixel_index] = BLEND_SUB(source_fb[pixel_index], color);
+            break;
+        }
+        case OUT_SUB2: {
+            dest_fb[pixel_index] = BLEND_SUB(color, source_fb[pixel_index]);
+            break;
+        }
+        case OUT_MULTIPLY: {
+            dest_fb[pixel_index] = BLEND_MUL(color, source_fb[pixel_index]);
+            break;
+        }
+        case OUT_ADJUSTABLE: {
+            dest_fb[pixel_index] =
+                BLEND_ADJ(color, source_fb[pixel_index], adjustable_blend);
+            break;
+        }
+        case OUT_XOR: {
+            dest_fb[pixel_index] = color ^ source_fb[pixel_index];
+            break;
+        }
+        case OUT_MINIMUM: {
+            dest_fb[pixel_index] = BLEND_MIN(color, source_fb[pixel_index]);
+            break;
+        }
+    }
+}
+
+void C_Triangle::draw_triangle2(int* framebuffer,
+                                int* fbout,
+                                int w,
+                                int h,
+                                Vertex vertices[3],
+                                bool use_depthbuffer,
+                                double z1,
+                                u_int blendmode,
+                                u_int adjustable_blend,
+                                u_int color) {
+    // Sort vertices by y value
+    Vertex tmp_vertex;
+    char p12 = vertices[0].y <= vertices[1].y;
+    char p13 = vertices[0].y <= vertices[2].y;
+    char p23 = vertices[1].y <= vertices[2].y;
+    char p = p12 + p13 * 2 + p23 * 4;
+    switch (p) {
+        case 0: {
+            // 321
+            tmp_vertex = vertices[2];
+            vertices[2] = vertices[0];
+            vertices[0] = tmp_vertex;
+            break;
+        }
+        case 1: {
+            // 312
+            tmp_vertex = vertices[2];
+            vertices[2] = vertices[1];
+            vertices[1] = vertices[0];
+            vertices[0] = tmp_vertex;
+            break;
+        }
+        case 3: {
+            // 132
+            tmp_vertex = vertices[2];
+            vertices[2] = vertices[1];
+            vertices[1] = tmp_vertex;
+            break;
+        }
+        case 4: {
+            // 231
+            tmp_vertex = vertices[2];
+            vertices[2] = vertices[0];
+            vertices[0] = vertices[1];
+            vertices[1] = tmp_vertex;
+            break;
+        }
+        case 6: {
+            // 213
+            tmp_vertex = vertices[1];
+            vertices[1] = vertices[0];
+            vertices[0] = tmp_vertex;
+            break;
+        }
+        case 7:   // 123 -- NOOP
+        default:  // p = 0b010 and p = 0b101 are impossible
+            break;
+    }
+    int y = max(0, min(h, vertices[0].y));
+    int midy = max(0, min(h, vertices[1].y));
+    int endy = max(0, min(h, vertices[2].y));
+    int fb_index = w * y;
+    Vertex v1 = vertices[0];
+    Vertex v2 = vertices[1];
+    Vertex v3 = vertices[2];
+    for (; y < midy && y < h; fb_index += w, y++) {
+        if (y == v1.y || y == v2.y || y == v3.y) {
+            continue;
+        }
+        int startx = ((v2.x - v1.x) * (y - v1.y)) / (v2.y - v1.y) + v1.x;
+        int endx = ((v3.x - v1.x) * (y - v1.y)) / (v3.y - v1.y) + v1.x;
+        if (startx > endx) {
+            int tmp = startx;
+            startx = endx;
+            endx = tmp;
+        }
+        if (endx < 0 || startx >= w) {
+            continue;
+        }
+        startx = max(startx, 0);
+        endx = min(endx, w - 1);
+        fb_index += startx;
+        int fb_endx = fb_index + (endx - startx);
+        for (; fb_index <= fb_endx; fb_index++) {
+            if (use_depthbuffer) {
+                uint64_t z1int = 0;
+                if (z1 > 40000) {
+                    z1int = (uint64_t)40000 * 100000;
+                } else if (z1 > 0) {
+                    z1int = (uint64_t)z1 * 100000.0;
+                }
+                if (z1int < this->depth_buffer->buffer[fb_index]) {
+                    continue;
+                } else {
+                    this->depth_buffer->buffer[fb_index] = z1int;
+                }
+            }
+            this->draw_pixel(
+                framebuffer, fbout, fb_index, blendmode, adjustable_blend, color);
+        }
+        fb_index -= endx + 1;
+    }
+    for (; y < endy && y < h; fb_index += w, y++) {
+        int startx = ((v3.x - v2.x) * (y - v2.y)) / (v3.y - v2.y) + v2.x;
+        int endx = ((v3.x - v1.x) * (y - v1.y)) / (v3.y - v1.y) + v1.x;
+        if (startx > endx) {
+            int tmp = startx;
+            startx = endx;
+            endx = tmp;
+        }
+        if (endx < 0 || startx >= w) {
+            continue;
+        }
+        startx = max(startx, 0);
+        endx = min(endx, w - 1);
+        fb_index += startx;
+        int fb_endx = fb_index + (endx - startx);
+        for (; fb_index <= fb_endx; fb_index++) {
+            if (use_depthbuffer) {
+                uint64_t z1int = 0;
+                if (z1 > 40000) {
+                    z1int = (uint64_t)40000 * 100000;
+                } else if (z1 > 0) {
+                    z1int = (uint64_t)z1 * 100000.0;
+                }
+                if (z1int < this->depth_buffer->buffer[fb_index]) {
+                    continue;
+                } else {
+                    this->depth_buffer->buffer[fb_index] = z1int;
+                }
+            }
+            this->draw_pixel(
+                framebuffer, fbout, fb_index, blendmode, adjustable_blend, color);
+        }
+        fb_index -= endx + 1;
+    }
+}
+
 void TriangleDepthBuffer::reset_if_needed(u_int w, u_int h, bool clear) {
     // TODO: lock(triangle_depth_buffer)
-    if (this->w != w || this->h != h) {
+    if (clear || this->w != w || this->h != h) {
         // TODO [feature]: The existing depth-buffer could be resized here.
-        delete[] this->buffer;
+        free(this->buffer);
         this->w = w;
         this->h = h;
-        this->buffer = new double[w * h];
-    } else if (clear) {
-        memset(this->buffer, 0, w * h * sizeof(double));
+        this->buffer = (u_int*)calloc(w * h, sizeof(u_int));
     }
     // TODO: unlock(triangle_depth_buffer)
 }
 
 // Code
-TriangleCode::TriangleCode()
-    : init("init"), frame("frame"), beat("beat"), point("point"), vm_context(NULL) {}
+TriangleCode::TriangleCode() : vm_context(NULL) {}
 
 TriangleCode::~TriangleCode() {
     if (g_triangle_extinfo && this->vm_context) {
@@ -277,6 +485,7 @@ void TriangleCode::recompile_if_needed() {
             return;
         }
         this->register_variables();
+        *this->vars.n = 0.0f;
     }
     if (this->init.recompile_if_needed(this->vm_context)) {
         this->need_init = true;
@@ -286,12 +495,30 @@ void TriangleCode::recompile_if_needed() {
     this->point.recompile_if_needed(this->vm_context);
 }
 
+/**/
+void TriangleCode::init_variables(int w, int h) {
+    *this->vars.w = w;
+    *this->vars.h = h;
+    *this->vars.x1 = 0.0f;
+    *this->vars.y1 = 0.0f;
+    *this->vars.x2 = 0.0f;
+    *this->vars.y2 = 0.0f;
+    *this->vars.x3 = 0.0f;
+    *this->vars.y3 = 0.0f;
+    *this->vars.red1 = 1.0f;
+    *this->vars.green1 = 1.0f;
+    *this->vars.blue1 = 1.0f;
+    *this->vars.red2 = 1.0f;
+    *this->vars.green2 = 1.0f;
+    *this->vars.blue2 = 1.0f;
+    *this->vars.red3 = 1.0f;
+    *this->vars.green3 = 1.0f;
+    *this->vars.blue3 = 1.0f;
+}
+
 // Code Section
 
-TriangleCodeSection::TriangleCodeSection(char* name)
-    : code(NULL), need_recompile(false) {
-    strncpy(this->_name, name, 5);
-    this->_name[5] = '\0';
+TriangleCodeSection::TriangleCodeSection() : code(NULL), need_recompile(false) {
     this->string = new char[1];
     this->string[0] = '\0';
 }
