@@ -125,16 +125,13 @@ wine /my/path/to/Winamp/winamp.exe
 
 ## Building & Running on Windows
 
-Don't. But if you must there are to ways to build
+Open the folder with Visual Studio, it should automatically detect the CMake configurations.
 
-1. open the folder with Visual Studio
-2. use the generate_project_files.bat script, which produces a 32-bit only Visual Studio project using CMake.
+If you don't want to do this, there are some caveats to using CMake itself directly:
 
-If you don't want to do either, but use CMake in some other way here are some caveats to be aware of:
-
-* CMake GUI doesn't work and doesn't tell you why it doesn't work.
-* CMake doesn't work very well if you don't clean out the generated files first. Visual Studio handles this for you.
-* Nothing builds under 64-bit with the MS compiler due to __asm blocks
+* Use -DCMAKE_GENERATOR_PLATFORM=Win32 to get a 32-bit project (Nothing builds under 64-bit with the MS compiler due to __asm blocks (yet))
+* CMake GUI doesn't work and doesn't tell you why it doesn't work. It is recommended to avoid it.
+* CMake doesn't rebuild the project very well if you don't clean out the generated files first. Visual Studio handles this for you.
 * There are crashes in evallib using the latest compilers, which rules out pretty much any AVS preset from working (currently)
 
 ## Conventions
