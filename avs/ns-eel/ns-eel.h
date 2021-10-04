@@ -39,8 +39,8 @@ extern "C" {
 typedef void (*NSEEL_PPPROC)(void *data, int data_size, void **userfunc_data);
 
 int NSEEL_init(); // returns 0 on success
-#define NSEEL_addfunction(name,nparms,code,len) NSEEL_addfunctionex((name),(nparms),(code),(len),0)
-void NSEEL_addfunctionex(char *name, int nparms, int code_startaddr, int code_len, NSEEL_PPPROC pproc);
+#define NSEEL_addfunction(name,nparms,code_start,code_end) NSEEL_addfunctionex((name),(nparms),(code_start),(code_end),NULL)
+void NSEEL_addfunctionex(char *name, int nparms, void(*code_startaddr)(), void(*code_endaddr)(), NSEEL_PPPROC pproc);
 void NSEEL_quit();
 int *NSEEL_getstats(); // returns a pointer to 5 ints... source bytes, static code bytes, call code bytes, data bytes, number of code handles
 double *NSEEL_getglobalregs();

@@ -116,6 +116,7 @@ NAKED void _asm_megabuf(void)
 
   __asm { mov eax, __nextBlock } // this is custom, returning pointer
   __asm { mov esp, ebp }
+  _MARK_FUNCTION_END
 #else
   __asm__ __volatile__ (
     "mov  %%edx, 0xffffffff\n\t"        // placeholder for blocks pointer (replaced

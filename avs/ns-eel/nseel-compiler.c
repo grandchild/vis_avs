@@ -193,7 +193,7 @@ int NSEEL_init() // returns 0 on success
 /* Register a function by name, with number of parameters, code start address, length of
    the code section in bytes, and optional preprocessing function. Pass 0 for pproc to
    skip preprocessing. */
-void NSEEL_addfunctionex(char *name, int nparms, int code_startaddr, int code_len, NSEEL_PPPROC pproc)
+void NSEEL_addfunctionex(char *name, int nparms, void(*code_startaddr)(), void(*code_endaddr)(), NSEEL_PPPROC pproc)
 {
   if (!fnTableUser || !(fnTableUser_size&7))
   {
@@ -203,8 +203,8 @@ void NSEEL_addfunctionex(char *name, int nparms, int code_startaddr, int code_le
   {
     fnTableUser[fnTableUser_size].nParams = nparms;
     fnTableUser[fnTableUser_size].name = name;
-    fnTableUser[fnTableUser_size].afunc = (void *)code_startaddr;
-    fnTableUser[fnTableUser_size].func_e = (void *)(code_startaddr + code_len);
+    fnTableUser[fnTableUser_size].afunc = code_startaddr;
+    fnTableUser[fnTableUser_size].func_e = code_endaddr;
     fnTableUser[fnTableUser_size].pProc = (NSEEL_PPPROC) pproc;
     fnTableUser_size++;
   }
@@ -215,25 +215,6 @@ void NSEEL_quit()
   free(fnTableUser);
   fnTableUser_size=0;
   fnTableUser=0;
-}
-
-//---------------------------------------------------------------------------------------------------------------
-static void *realAddress(void *fn, void *fn_e, int *size)
-{
-#ifdef DISABLED_DEBUG
-  char *ptr = (char *)fn;
-  int beg=(*(int *)(ptr+1))+5;
-
-  int extrasize=(int)nseel_asm_exec2_end - (int)nseel_asm_exec2;
-  int extrabeg=(*(int *)(((char *)nseel_asm_exec2)+1))+5;
-
-  *size=((int)fn_e - (int)fn) - (extrasize-extrabeg) - beg;
-  return ptr + beg;
-#else
-  // Release Mode
-  *size  = (int)fn_e - (int) fn;
-  return fn;
-#endif
 }
 
 //---------------------------------------------------------------------------------------------------------------
@@ -303,10 +284,83 @@ static void *__newBlock(llBlock **start, int size)
 #define X86_RET 0xC3
 
 #define X86_NOP 0x90
-#define X86_NEAR_JMP 0xEB
-#define SIZE_X86_NEAR_JMP_BYTES 2
+#define X86_SHORT_JMP 0xEB
+#define X86_NEAR_JMP 0xE9
+#define SIZE_X86_NEAR_JMP (1 /*opcode*/ + 4 /*address*/)
+#define X86_INT3 0xCC
+#define SIZE_X86_SHORT_JMP_BYTES 2
 #define UD2_FIRST_BYTE 0x0F
 #define UD2_SECOND_BYTE 0x0B
+
+//---------------------------------------------------------------------------------------------------------------
+#ifdef _MSC_VER
+/* For debug builds MSVC puts functions into a jump table, and since we want the actual
+   code block for the compiled function we have to follow that JMP instruction. The
+   relative address is encoded in the 4 bytes after the 1 byte opcode. */
+void* resolve_msvc_jumptable_function_address(void* fn) {
+    unsigned char* c_fn = (char*)fn;
+    if (*c_fn != X86_NEAR_JMP) {
+        return fn;
+    }
+    return (unsigned int)fn + SIZE_X86_NEAR_JMP + (*(int*)&c_fn[1]);
+}
+
+/* MSVC padds naked functions with INT3 breakpoint traps. But we need to execute several
+   bits of code made from naked functions one after the other. So we need the actual end
+   of the function. Since MSVC relocates functions at will, the "*_end" function
+   pointers which work for GCC aren't reliable. */
+
+#define MAX_FUNCTION_SIZE 1024  // This is a high number, functions are much smaller.
+
+/* Find the length in bytes of the function by searching forward for a double UD2
+   instruction placed at the end of all functions through the _MARK_FUNCTION_END macro
+   (see ns-eel-addfuncs.h).
+
+   NOTE: It's conceivable, but unlikely, that the function code may contain the bytes
+   0F-0B-0F-0B (two times UD2). In that case the size detection would fail, with
+   unpredictable results. */
+static int find_msvc_naked_function_size(unsigned char* fn) {
+    char match_state = 0;
+    for (unsigned char* p = fn; p < fn + MAX_FUNCTION_SIZE; p++) {
+        if (*p == UD2_FIRST_BYTE && (match_state == 0 || match_state == 2)) {
+            match_state++;
+        } else if (*p == UD2_SECOND_BYTE) {
+            if (match_state == 1) {
+                match_state++;
+            } else if (match_state == 3) {
+                return p - fn - 3;
+            } else {
+                match_state = 0;
+            }
+        } else {
+            match_state = 0;
+        }
+    }
+}
+#endif
+
+static void* realAddress(void* fn, void* fn_e, int* size)
+{
+#ifdef DISABLED_DEBUG
+    char* ptr = (char*)fn;
+    int beg = (*(int*)(ptr + 1)) + 5;
+
+    int extrasize = (int)nseel_asm_exec2_end - (int)nseel_asm_exec2;
+    int extrabeg = (*(int*)(((char*)nseel_asm_exec2) + 1)) + 5;
+
+    *size = ((int)fn_e - (int)fn) - (extrasize - extrabeg) - beg;
+    return ptr + beg;
+#else
+    // Release Mode
+#ifdef _MSC_VER
+    fn = resolve_msvc_jumptable_function_address(fn);
+    *size = find_msvc_naked_function_size(fn);
+#else
+    *size = (int)fn_e - (int)fn;
+#endif
+    return fn;
+#endif
+}
 
 //---------------------------------------------------------------------------------------------------------------
 static int *findFBlock(char *p)
@@ -346,9 +400,9 @@ void write_gcc_naked_function_trap_padding_jmp(unsigned char* code, int size2) {
       // TODO: better error handling here. Code generation should fail!
       return;
     } else if(epilog_size > 2) {
-      code[size2 - epilog_size] = X86_NEAR_JMP;
+      code[size2 - epilog_size] = X86_SHORT_JMP;
       code[size2 - epilog_size + 1] = (unsigned char)epilog_size
-                                      - SIZE_X86_NEAR_JMP_BYTES;
+                                      - SIZE_X86_SHORT_JMP_BYTES;
     } else if(epilog_size == 2) {
       code[size2 - epilog_size] = X86_NOP;
       code[size2 - epilog_size + 1] = X86_NOP;
@@ -436,7 +490,7 @@ int nseel_createCompiledFunction3(compileContext *ctx, int fntype, int fn, int c
 
   if (fntype == MATH_FN && fn == 0) // special case: IF
   {
-    void *func3;
+    int func3;
     int size;
     int *ptr;
     char *block;
@@ -453,13 +507,14 @@ int nseel_createCompiledFunction3(compileContext *ctx, int fntype, int fn, int c
 
     ctx->l_stats[2]+=sizes2+sizes3+2;
     
-    func3 = realAddress(nseel_asm_if,nseel_asm_if_end,&size);
+    NSEEL_PPPROC preProc;
+    func3 = nseel_getFunctionAddress(fntype, fn, &size, &preProc);
 
     block=(char *)newTmpBlock(4+sizes1+size);
     ((int*)block)[0]=sizes1+size;
     memcpy(block+4,(char*)code1+4,sizes1);
     ptr=(int *)(block+4+sizes1);
-    memcpy(ptr,func3,size);
+    memcpy(ptr,(void*)func3,size);
 #ifdef __GNUC__
     write_gcc_naked_function_trap_padding_jmp((unsigned char*)ptr, size);
 #endif
@@ -524,7 +579,7 @@ int nseel_createCompiledFunction2(compileContext *ctx, int fntype, int fn, int c
 #ifdef NSEEL_LOOPFUNC_SUPPORT
   if (fntype == MATH_FN && fn == 1) // special case: REPEAT
   {
-    void *func3;
+    int func3;
     int size;
     int *ptr;
     char *block;
@@ -537,13 +592,13 @@ int nseel_createCompiledFunction2(compileContext *ctx, int fntype, int fn, int c
 
     ctx->l_stats[2]+=sizes2+2;
     
-    func3 = realAddress(nseel_asm_repeat,nseel_asm_repeat_end,&size);
+    func3 = nseel_getFunctionAddress(fntype, fn, &size, NULL);
 
     block=(char *)newTmpBlock(4+sizes1+size);
     ((int*)block)[0]=sizes1+size;
     memcpy(block+4,(char*)code1+4,sizes1);
     ptr=(int *)(block+4+sizes1);
-    memcpy(ptr,func3,size);
+    memcpy(ptr,(void*)func3,size);
 #ifdef __GNUC__
     write_gcc_naked_function_trap_padding_jmp((unsigned char*)ptr, size);
 #endif
@@ -849,6 +904,7 @@ void NSEEL_code_execute(NSEEL_CODEHANDLE code)
       and ebx, ~31
       mov edi, ebx
       call eax
+
       popad
     }
 #else

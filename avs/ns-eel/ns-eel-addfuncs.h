@@ -91,10 +91,15 @@ be sure to preserve edi, too.
 #define CALL2_PFASTCALL(FUNC) _ARGS2; *__nextBlock = __##FUNC(parm_a, parm_b); _LEAVE
 #define CALL3_PFASTCALL(FUNC) _ARGS3; *__nextBlock = __##FUNC(parm_a, parm_b, parm_c); _LEAVE
 
+#define _MARK_FUNCTION_END \
+  __asm { UD2 } \
+  __asm { UD2 }
+
 #define _LEAVE \
   __asm { mov eax, esi } \
   __asm { add esi, 8 }  \
-  __asm { mov esp, ebp }
+  __asm { mov esp, ebp } \
+  _MARK_FUNCTION_END
 
 
 #else  // GCC
@@ -178,6 +183,9 @@ be sure to preserve edi, too.
   "mov  %%eax, %%esi\n\t"      \
   "add  %%esi, 8\n\t"          \
   "mov  %%esp, %%ebp\n\t"
+
+// Used only for MSVC, see above
+#define _MARK_FUNCTION_END
 
 #endif
 

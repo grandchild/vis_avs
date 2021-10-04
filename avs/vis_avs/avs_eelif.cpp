@@ -205,14 +205,14 @@ void AVS_EEL_IF_init()
 {
   InitializeCriticalSection(&g_eval_cs);
   NSEEL_init();
-  NSEEL_addfunction("getosc",3,(int)_asm_getosc,(int)_asm_getosc_end-(int)_asm_getosc);
-  NSEEL_addfunction("getspec",3,(int)_asm_getspec,(int)_asm_getspec_end-(int)_asm_getspec);
-  NSEEL_addfunction("gettime",1,(int)_asm_gettime,(int)_asm_gettime_end-(int)_asm_gettime);
-  NSEEL_addfunction("getkbmouse",1,(int)_asm_getmouse,(int)_asm_getmouse_end-(int)_asm_getmouse);
-  NSEEL_addfunction("setmousepos",2,(int)_asm_setmousepos,(int)_asm_setmousepos_end-(int)_asm_setmousepos);
+  NSEEL_addfunction("getosc",3,_asm_getosc,_asm_getosc_end);
+  NSEEL_addfunction("getspec",3,_asm_getspec,_asm_getspec_end);
+  NSEEL_addfunction("gettime",1,_asm_gettime,_asm_gettime_end);
+  NSEEL_addfunction("getkbmouse",1,_asm_getmouse,_asm_getmouse_end);
+  NSEEL_addfunction("setmousepos",2,_asm_setmousepos,_asm_setmousepos_end);
 #ifdef AVS_MEGABUF_SUPPORT
-    NSEEL_addfunctionex("megabuf",1,(int)_asm_megabuf,(int)_asm_megabuf_end-(int)_asm_megabuf,megabuf_ppproc);
-    NSEEL_addfunction("gmegabuf",1,(int)_asm_gmegabuf,(int)_asm_gmegabuf_end-(int)_asm_gmegabuf);
+    NSEEL_addfunctionex("megabuf",1,_asm_megabuf,_asm_megabuf_end,megabuf_ppproc);
+    NSEEL_addfunction("gmegabuf",1,_asm_gmegabuf,_asm_gmegabuf_end);
 #endif
 }
 void AVS_EEL_IF_quit()
@@ -350,6 +350,7 @@ NAKED void _asm_gmegabuf(void)
 
   __asm { mov eax, __nextBlock } // this is custom, returning pointer
   __asm { mov esp, ebp }
+  _MARK_FUNCTION_END
 #else
   __asm__ __volatile__ (
     "mov  %%ebp, %%esp\n\t"         // new stack frame

@@ -212,6 +212,7 @@ NAKED void nseel_asm_ceil_end(void) {}
 // do nothing, eh
 NAKED void nseel_asm_exec2(void)
 {
+    _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_exec2_end(void) { }
 
@@ -275,6 +276,7 @@ NAKED void nseel_asm_invsqrt(void)
     :"eax", "edx", "esi", "ecx"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_invsqrt_end(void) {}
 
@@ -301,6 +303,7 @@ NAKED void nseel_asm_sin(void)
     : : :"eax", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_sin_end(void) {}
 
@@ -326,6 +329,7 @@ NAKED void nseel_asm_cos(void)
     : : :"eax", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_cos_end(void) {}
 
@@ -353,6 +357,7 @@ NAKED void nseel_asm_tan(void)
     : : : "eax", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_tan_end(void) {}
 
@@ -378,6 +383,7 @@ NAKED void nseel_asm_sqr(void)
     : : : "eax", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_sqr_end(void) {}
 
@@ -405,6 +411,7 @@ NAKED void nseel_asm_sqrt(void)
     : : : "eax", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_sqrt_end(void) {}
 
@@ -437,6 +444,7 @@ NAKED void nseel_asm_log(void)
     : : : "eax", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_log_end(void) {}
 
@@ -468,6 +476,7 @@ NAKED void nseel_asm_log10(void)
     : : : "eax", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_log10_end(void) {}
 
@@ -493,6 +502,7 @@ NAKED void nseel_asm_abs(void)
     : : : "eax", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_abs_end(void) {}
 
@@ -513,6 +523,7 @@ NAKED void nseel_asm_assign(void)
     : : : "eax", "ebx"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_assign_end(void) {}
 
@@ -538,6 +549,7 @@ NAKED void nseel_asm_add(void)
     : : : "eax", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_add_end(void) {}
 
@@ -563,6 +575,7 @@ NAKED void nseel_asm_sub(void)
     : : : "eax", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_sub_end(void) {}
 
@@ -588,6 +601,7 @@ NAKED void nseel_asm_mul(void)
     : : : "eax", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_mul_end(void) {}
 
@@ -613,6 +627,7 @@ NAKED void nseel_asm_div(void)
     : : : "eax", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_div_end(void) {}
 
@@ -670,6 +685,7 @@ NAKED void nseel_asm_mod(void)
     : "eax", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_mod_end(void) {}
 
@@ -709,6 +725,7 @@ NAKED void nseel_asm_or(void)
     : : : "eax", "ebx", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_or_end(void) {}
 
@@ -750,6 +767,7 @@ NAKED void nseel_asm_and(void)
     : : : "eax", "ebx", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_and_end(void) {}
 
@@ -769,6 +787,7 @@ NAKED void nseel_asm_uplus(void) // this is the same as doing nothing, it seems
     mov nextBlock, ebx
   }
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_uplus_end(void) {}
 
@@ -798,6 +817,7 @@ NAKED void nseel_asm_uminus(void)
     : : : "eax", "ebx", "ecx", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_uminus_end(void) {}
 
@@ -851,6 +871,7 @@ zero:
     : "eax", "ecx", "edx", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_sign_end(void) {}
 
@@ -890,6 +911,7 @@ NAKED void nseel_asm_bnot(void)
     : "eax", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_bnot_end(void) {}
 
@@ -934,6 +956,7 @@ NAKED void nseel_asm_if(void)
     : "eax", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_if_end(void) {}
 
@@ -991,6 +1014,7 @@ skip:
     :"eax", "ecx", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_repeat_end(void) {}
 #endif
@@ -1031,6 +1055,7 @@ NAKED void nseel_asm_equal(void)
     :"eax", "ebx", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_equal_end(void) {}
 
@@ -1066,6 +1091,7 @@ NAKED void nseel_asm_below(void)
     :"eax", "ebx", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_below_end(void) {}
 
@@ -1102,6 +1128,7 @@ NAKED void nseel_asm_above(void)
     :"eax", "ebx", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_above_end(void) {}
 
@@ -1143,6 +1170,7 @@ NAKED void nseel_asm_min(void)
     :"eax", "ebx", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_min_end(void) {}
 
@@ -1181,6 +1209,7 @@ NAKED void nseel_asm_max(void)
     :"eax", "ebx", "esi"
   );
 #endif
+  _MARK_FUNCTION_END
 }
 NAKED void nseel_asm_max_end(void) {}
 
