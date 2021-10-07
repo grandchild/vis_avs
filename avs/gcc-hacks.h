@@ -9,14 +9,10 @@ extern "C" {
 // __attribute__.
 #ifdef _MSC_VER
 
-#define NAKED __declspec(naked)
-
 // Special case for a GCC warning, see below. No effect with MSVC
 #define FORCE_FUNCTION_CAST(x) (x)
 
 #else  // _MSC_VER
-
-#define NAKED __attribute__((naked))
 
 // GCCs -Wcast-function-type is a bit overzealous when casting dynamic library function
 // pointers (whose signatures _will_ be mismatched most of the time). The warning can be

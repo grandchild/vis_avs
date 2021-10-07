@@ -59,7 +59,9 @@ char *NSEEL_code_getcodeerror(NSEEL_VMCTX ctx);
 void NSEEL_code_execute(NSEEL_CODEHANDLE code);
 void NSEEL_code_free(NSEEL_CODEHANDLE code);
 int *NSEEL_code_getstats(NSEEL_CODEHANDLE code); // 4 ints...source bytes, static code bytes, call code bytes, data bytes
-  
+
+
+#define NAKED __declspec(naked)
 
 
 // configuration:
