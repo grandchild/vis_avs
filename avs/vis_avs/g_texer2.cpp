@@ -68,9 +68,9 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     g_ConfigThis->Recompile();
                     break;
                 default:
-                    delete buf;
                     break;
                 }
+                delete buf;
             }
             return 1;
         }
