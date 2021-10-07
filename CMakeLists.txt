@@ -12,7 +12,6 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(
         -g
         -O2
-        -Wno-write-strings  # Don't complain when converting string literals to char*.
         -masm=intel         # Use Intel instead of AT&T inline assembly syntax.
         -march=native       # Convolution-Filter uses inlined mmintrin.h functions, and
                             # a pentium4 arch seems to be roughly the minimum for that.
@@ -23,6 +22,9 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         # -fprofile-generate  # Profile-guided optimization, pass 1
         # -fprofile-use       # Profile-guided optimization, pass 2
         -Wall -Wextra
+        -Wno-write-strings  # Don't complain when converting string literals to char*.
+        # -fsanitize=address  # Detect memory leaks & stack corruption at runtime.
+                            # Doesn't work with some inline asm at the moment.
         # -save-temps         # Save intermediate assembly files created during
                             # compilation for debugging. The .s files will be output
                             # into the base build directory.
