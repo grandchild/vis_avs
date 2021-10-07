@@ -55,6 +55,8 @@ class TriangleCodeSection {
     void set(char* str, u_int length);
     bool recompile_if_needed(VM_CONTEXT vm_context);
     void run(char visdata[2][2][576]);
+    int load(char* src, u_int max_len);
+    int save(char* dest, u_int max_len);
 
    private:
 };
@@ -121,31 +123,19 @@ class C_Triangle : public C_RBASE {
 
     void init_depthbuffer_if_needed(int w, int h);
     void draw_triangle(int* framebuffer,
-                       int* fbout,
                        int w,
                        int h,
-                       int points[3][2],
+                       Vertex vertices[3],
                        bool use_depthbuffer,
                        double z1,
                        u_int blendmode,
                        u_int adjustable_blend,
                        u_int color);
     inline void draw_pixel(int* source_fb,
-                           int* dest_fb,
                            int pixel_index,
                            u_int blendmode,
                            u_int adjustable_blend,
                            u_int color);
-    void draw_triangle2(int* framebuffer,
-                        int* fbout,
-                        int w,
-                        int h,
-                        Vertex vertices[3],
-                        bool use_depthbuffer,
-                        double z1,
-                        u_int blendmode,
-                        u_int adjustable_blend,
-                        u_int color);
 };
 
 /** A line connecting two vertices of a triangle. */

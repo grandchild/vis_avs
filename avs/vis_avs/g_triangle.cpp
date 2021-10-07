@@ -1,10 +1,12 @@
-#include <windows.h>
+#include "c_triangle.h"
 
 #include "c__defs.h"
-#include "c_triangle.h"
 #include "g__defs.h"
 #include "g__lib.h"
 #include "resource.h"
+
+#include <stdio.h>
+#include <windows.h>
 
 int win32_dlgproc_triangle(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     C_Triangle* config_this = (C_Triangle*)g_current_render;
