@@ -92,6 +92,21 @@ target_link_libraries(vis_avs
            # https://docs.microsoft.com/en-us/windows/win32/multimedia/avifile-functions-and-macros
 )
 
+if(WIN32)
+    get_filename_component(WINAMP_DIR "[HKEY_CURRENT_USER\\SOFTWARE\\Winamp]" ABSOLUTE)
+    if(WINAMP_DIR STREQUAL "")
+        set(WINAMP_DIR "" CACHE PATH "Winamp installation directory (contains winamp.exe)." FORCE)
+    endif()
+    if(EXISTS "${WINAMP_DIR}")
+        add_custom_command(TARGET vis_avs POST_BUILD
+            COMMENT "Copy AVS .dll to Winamp plugins directory"
+            COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:vis_avs>" "${WINAMP_DIR}/Plugins"
+        )
+    else()
+        message(WARNING "Winamp installation directory ('${WINAMP_DIR}') not found or not set. Skipped creating debug task.")
+    endif()
+endif()
+
 #[[
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # These dependent DLLs are introduced by mingw32 and should be next to winamp.exe.
