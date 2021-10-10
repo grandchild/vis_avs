@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 project(vis_avs VERSION 2.82)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    add_compile_options(/W4)
+    add_compile_options(/W4 /MP)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0.0")
         message(SEND_ERROR
