@@ -123,6 +123,21 @@ cp /usr/i686-w64-mingw32/bin/lib{gcc_s_dw2-1,ssp-0,stdc++-6,winpthread-1}.dll /m
 wine /my/path/to/Winamp/winamp.exe
 ```
 
+## Building & Running on Windows
+
+### Build
+
+Open the folder with Visual Studio, it should automatically detect the CMake
+configurations.
+
+If you don't want to do this, there are some caveats to using CMake itself directly:
+
+* Use `-DCMAKE_GENERATOR_PLATFORM=Win32` to get a 32-bit project. Nothing builds under
+  64-bit with the MS compiler due to `__asm` blocks (yet).
+* CMake doesn't rebuild the project very well if you don't clean out the generated files
+  first. Visual Studio handles this for you.
+* Using the CMake GUI is not recommended.
+
 
 ## Conventions
 
