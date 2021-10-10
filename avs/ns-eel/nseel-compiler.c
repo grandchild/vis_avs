@@ -437,7 +437,9 @@ int nseel_createCompiledValue(compileContext *ctx, double value, double *addrVal
 //---------------------------------------------------------------------------------------------------------------
 static int nseel_getFunctionAddress(int fntype, int fn, int *size, NSEEL_PPPROC *pProc)
 {
-  *pProc = NULL;
+  if(pProc) {
+    *pProc = NULL;
+  }
   switch (fntype)
   {
     case MATH_SIMPLE:
@@ -473,7 +475,7 @@ static int nseel_getFunctionAddress(int fntype, int fn, int *size, NSEEL_PPPROC 
           if (size) *size=0;
           return 0;
         }
-        if (p->pProc) *pProc=p->pProc;
+        if (p->pProc && pProc) *pProc=p->pProc;
         return (int)realAddress(p->afunc,p->func_e,size);
       }
   }   
@@ -507,8 +509,7 @@ int nseel_createCompiledFunction3(compileContext *ctx, int fntype, int fn, int c
 
     ctx->l_stats[2]+=sizes2+sizes3+2;
     
-    NSEEL_PPPROC preProc;
-    func3 = nseel_getFunctionAddress(fntype, fn, &size, &preProc);
+    func3 = nseel_getFunctionAddress(fntype, fn, &size, NULL);
 
     block=(char *)newTmpBlock(4+sizes1+size);
     ((int*)block)[0]=sizes1+size;
