@@ -138,6 +138,17 @@ If you don't want to do this, there are some caveats to using CMake itself direc
   first. Visual Studio handles this for you.
 * Using the CMake GUI is not recommended.
 
+### Run With Winamp
+
+If you properly installed Winamp2 with the installer the project import should pickup
+the installation location for you and will copy the output `vis_avs.dll` into the
+`Winamp/Plugins` directory for you. You can then:
+
+* Start Winamp
+* Debug > Attach to process (`Ctrl`+`Alt`+`P`), search for "winamp"
+* Launch AVS by double-clicking the small oscilloscope/spectrum vis on the left of
+  Winamp's main window
+
 
 ## Conventions
 
