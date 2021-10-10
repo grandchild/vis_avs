@@ -8,11 +8,14 @@
 
 /build*/
 /cmake-build*/
+/out/
 /*wine*/
 /dist/
 
 # IDEs
 .idea/
+.vs/
+*.VC.db
 
 # test files
 .gdb_history
