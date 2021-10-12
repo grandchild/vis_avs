@@ -47,18 +47,18 @@ typedef struct {
 class TriangleCodeSection {
    public:
     char* string;
-    VM_CODEHANDLE code;
     bool need_recompile;
 
     TriangleCodeSection();
     ~TriangleCodeSection();
     void set(char* str, u_int length);
     bool recompile_if_needed(VM_CONTEXT vm_context);
-    void run(char visdata[2][2][576]);
+    void exec(char visdata[2][2][576]);
     int load(char* src, u_int max_len);
     int save(char* dest, u_int max_len);
 
    private:
+    VM_CODEHANDLE code;
 };
 
 class TriangleCode {
@@ -86,18 +86,15 @@ class TriangleDepthBuffer {
     u_int h;
     u_int* buffer;
 
-    TriangleDepthBuffer(u_int w, u_int h) : w(w), h(h) {
-        this->buffer = new u_int[w * h];
-        memset(this->buffer, 0, w * h * sizeof(u_int));
-    }
-    ~TriangleDepthBuffer() { delete[] this->buffer; }
-
+    TriangleDepthBuffer(u_int w, u_int h);
+    ~TriangleDepthBuffer();
     void reset_if_needed(u_int w, u_int h, bool clear);
 };
 
 typedef struct {
     int x;
     int y;
+    uint64_t z;
 } Vertex;
 
 class C_Triangle : public C_RBASE {
@@ -115,27 +112,34 @@ class C_Triangle : public C_RBASE {
     virtual int save_config(unsigned char* data);
     TriangleCode code;
 
-   protected:
+   private:
     static u_int instance_count;
     static TriangleDepthBuffer* depth_buffer;
-
     bool need_depth_buffer = false;
-
     void init_depthbuffer_if_needed(int w, int h);
-    void draw_triangle(int* framebuffer,
-                       int w,
-                       int h,
-                       Vertex vertices[3],
-                       bool use_depthbuffer,
-                       double z1,
-                       u_int blendmode,
-                       u_int adjustable_blend,
-                       u_int color);
-    inline void draw_pixel(int* source_fb,
-                           int pixel_index,
+    inline void draw_triangle(int* framebuffer,
+                              int w,
+                              int h,
+                              Vertex vertices[3],
+                              bool use_depthbuffer,
+                              u_int blendmode,
+                              u_int adjustable_blend,
+                              u_int color);
+    inline void draw_line(int* framebuffer,
+                          int fb_index,
+                          int startx,
+                          int endx,
+                          uint64_t z,
+                          int w,
+                          bool use_depthbuffer,
+                          u_int blendmode,
+                          u_int adjustable_blend,
+                          u_int color);
+    inline void draw_pixel(int* pixel,
                            u_int blendmode,
                            u_int adjustable_blend,
                            u_int color);
+    inline void sort_vertices(Vertex vertices[3]);
 };
 
 /** A line connecting two vertices of a triangle. */
