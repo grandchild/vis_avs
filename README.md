@@ -32,6 +32,7 @@ integrated as builtin effects instead.
     [here](https://www.deviantart.com/tomylobo/art/Normalise-APE-10334263).
   * _Colormap_, originally by [Steven Wittens](https://acko.net).
   * _AddBorders_, originally by [Goebish](https://github.com/goebish).
+  * _Triangle_, originally by [TomyLobo](https://github.com/TomyLobo).
 * 🥵 Performance is generally the same as the official build, but can be a bit slower
   for some effects. A few effects have gained faster SSE3-enabled versions.
 * 🧨 APE files are crashing AVS or preventing it from starting. Rename or remove .ape
