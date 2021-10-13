@@ -2029,6 +2029,29 @@ BEGIN
                     ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL
 END
 
+IDD_CFG_EELTRANS DIALOG 0, 0, 230, 213
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Activate AVSTrans Support",IDC_EELTRANS_ENABLED,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,6,20,103,13
+    CONTROL         "Activate Code Logging",IDC_EELTRANS_LOG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,6,6,89,13
+    CONTROL         "Translate first level",IDC_EELTRANS_TRANSFIRST,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,17,35,103,13
+    CONTROL         "Read Comment Codes",IDC_EELTRANS_READCOMMENTCODES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,17,50,103,13
+    LTEXT           "Using Translator v",IDC_STATIC,17,68,59,8
+    LTEXT           "0.00.00",IDC_EELTRANS_VERSION,76,68,34,8
+    EDITTEXT        IDC_EELTRANS_CODE,6,88,221,124,ES_MULTILINE |
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL
+    LTEXT           "Global code:",IDC_STATIC,6,80,43,8
+    EDITTEXT        IDC_EELTRANS_EDIT_LOGPATH,95,6,132,12,ES_AUTOHSCROLL
+    LTEXT           "You only need one instance of this component per preset. Please delete either one.",
+                    IDC_STATIC,152,6,75,50
+END
+
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // DESIGNINFO
