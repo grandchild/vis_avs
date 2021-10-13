@@ -5,7 +5,6 @@
 #include "g__lib.h"
 #include "resource.h"
 
-#include <stdio.h>
 #include <windows.h>
 
 int win32_dlgproc_triangle(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
