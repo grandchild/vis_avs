@@ -23,9 +23,10 @@ jobs:
       - name: Make
         shell: cmd
         run: |-
-          msbuild "%GITHUB_WORKSPACE%/build/vis_avs.sln" /m
+          msbuild "%GITHUB_WORKSPACE%/build/vis_avs.sln" -m
+          copy build/Debug/vis_avs.dll vis_avs_281d_msvc_debug.dll
 
       - uses: actions/upload-artifact@v2.2.4
         with:
           name: vis_avs_msvc
-          path: build/Debug/vis_avs.dll
+          path: vis_avs_281d_msvc_debug.dll
