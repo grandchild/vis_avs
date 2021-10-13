@@ -85,6 +85,8 @@
 #define IDD_CFG_COLORMAP_COLOR_POSITION 177
 #define IDD_CFG_ADDBORDERS              178
 #define IDD_CFG_TRIANGLE                179
+#define IDD_CFG_EELTRANS                180
+#define IDD_CFG_EELTRANS_ERR            181
 #define IDC_EFFECTS                     1000
 #define IDC_ENABLED                     1001
 #define IDC_FBCLEAR                     1002
@@ -498,6 +500,15 @@
 #define IDC_TRIANGLE_FRAME              1305
 #define IDC_TRIANGLE_BEAT               1306
 #define IDC_TRIANGLE_POINT              1307
+#define IDC_EELTRANS_ENABLED            1308
+#define IDC_EELTRANS_LOG_ENABLED        1309
+#define IDC_EELTRANS_VERSION_PREFIX     1310
+#define IDC_EELTRANS_VERSION            1311
+#define IDC_EELTRANS_TRANSFIRST         1312
+#define IDC_EELTRANS_READCOMMENTCODES   1313
+#define IDC_EELTRANS_CODE               1314
+#define IDC_EELTRANS_LOGPATH            1315
+#define IDC_EELTRANS_NOTFIRST_MESSAGE   1316
 #define IDM_DISPLAY                     40001
 #define IDM_PRESETS                     40002
 #define IDM_TRANS                       40003
@@ -517,9 +528,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        180
+#define _APS_NEXT_RESOURCE_VALUE        182
 #define _APS_NEXT_COMMAND_VALUE         40015
-#define _APS_NEXT_CONTROL_VALUE         1308
+#define _APS_NEXT_CONTROL_VALUE         1317
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

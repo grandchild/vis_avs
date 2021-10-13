@@ -90,6 +90,7 @@ C_GLibrary::C_GLibrary() {
     ADD_APE_COMPONENT_PREP("Color Map",               COLORMAP,       colormap);
     ADD_APE_COMPONENT("Virtual Effect: Addborders",   ADDBORDERS,     addborders);
     ADD_APE_COMPONENT("Render: Triangle",             TRIANGLE,       triangle);
+    ADD_APE_COMPONENT("Misc: AVSTrans Automation",    EELTRANS,       eeltrans);
     // clang-format on
     this->size = i;
 

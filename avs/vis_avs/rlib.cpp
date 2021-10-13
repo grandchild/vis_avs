@@ -212,6 +212,7 @@ void C_RLibrary::initbuiltinape(void)
   ADD2(R_ColorMap,"Color Map");
   ADD2(R_AddBorders,"Virtual Effect: Addborders");
   ADD_EXT(R_Triangle,"Render: Triangle");
+  ADD_EXT(R_EelTrans, "Misc: AVSTrans Automation");
 #endif
 #undef ADD
 #undef ADD2

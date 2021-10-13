@@ -71,6 +71,7 @@ DECL_HANDLER(normalise);
 DECL_HANDLER(colormap); DECL_UIPREP(colormap);
 DECL_HANDLER(addborders);
 DECL_HANDLER(triangle);
+DECL_HANDLER(eeltrans);
 
 typedef struct {
     // This should match the render component id number. If compoonent is an APE,
