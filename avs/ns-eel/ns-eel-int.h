@@ -85,6 +85,9 @@ typedef struct
   int l_stats[4]; // source bytes, static code bytes, call code bytes, data bytes
 
   void *userfunc_data[64];
+
+  char* (*precompile_hook)(NSEEL_VMCTX ctx, char*);
+  void (*postcompile_hook)(void);
 }
 compileContext;
 

@@ -50,7 +50,8 @@ double *NSEEL_getglobalregs()
 }
 
 
-
+static char*(*nseel_precompile_hook)(NSEEL_VMCTX ctx, char* code);
+static void(*nseel_postcompile_hook)(void);
 
 #define LLB_DSIZE (65536-64)
 typedef struct _llBlock {
@@ -747,6 +748,18 @@ static char *preprocessCode(compileContext *ctx, char *expression)
   return buf;
 }
 
+void NSEEL_set_compile_hooks(char*(*precompile_hook)(NSEEL_VMCTX ctx, char* expression),
+                             void(*postcompile_hook)(void)) {
+  if(precompile_hook || postcompile_hook) {
+    nseel_precompile_hook = precompile_hook;
+    nseel_postcompile_hook = postcompile_hook;
+  }
+}
+void NSEEL_unset_compile_hooks() {
+  nseel_precompile_hook = NULL;
+  nseel_postcompile_hook = NULL;
+}
+
 //------------------------------------------------------------------------------
 NSEEL_CODEHANDLE NSEEL_code_compile(NSEEL_VMCTX _ctx, char *_expression)
 {
@@ -758,6 +771,10 @@ NSEEL_CODEHANDLE NSEEL_code_compile(NSEEL_VMCTX _ctx, char *_expression)
   startPtr *startpts=NULL;
 
   if (!ctx || !_expression || !*_expression) return 0;
+
+  if (nseel_precompile_hook != NULL) {
+    _expression = nseel_precompile_hook(_ctx, _expression);
+  }
 
   ctx->last_error_string[0]=0;
   ctx->blocks_head=0;
@@ -874,8 +891,13 @@ NSEEL_CODEHANDLE NSEEL_code_compile(NSEEL_VMCTX _ctx, char *_expression)
 
   free(expression_start);
 
+  if (nseel_postcompile_hook != NULL) {
+    nseel_postcompile_hook();
+  }
+
   return (NSEEL_CODEHANDLE)handle;
 }
+
 
 //------------------------------------------------------------------------------
 void NSEEL_code_execute(NSEEL_CODEHANDLE code)

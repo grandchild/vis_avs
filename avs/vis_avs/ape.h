@@ -27,10 +27,7 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-
-#ifndef _APE_H_
-#define _APE_H_
-
+#pragma once
 
 //extended APE stuff
 
@@ -89,8 +86,9 @@ typedef struct
                                                           // w and h should be the current width and height
                                                           // n should be 0-7
 
+  // requires ver >= 4
+  // Introduced specifically for EELTrans/AVSTrans -- allows modifying all EEL code right before it's being compiled by EEL.
+  void (*set_compile_hooks)(char*(*precompile_hook)(VM_CONTEXT ctx, char* code), void (*postcompile_hook)(void));
+  void (*unset_compile_hooks)(void);
+
 } APEinfo;
-
-
-
-#endif//_APE_H_

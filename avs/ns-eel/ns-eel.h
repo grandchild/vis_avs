@@ -59,7 +59,8 @@ char *NSEEL_code_getcodeerror(NSEEL_VMCTX ctx);
 void NSEEL_code_execute(NSEEL_CODEHANDLE code);
 void NSEEL_code_free(NSEEL_CODEHANDLE code);
 int *NSEEL_code_getstats(NSEEL_CODEHANDLE code); // 4 ints...source bytes, static code bytes, call code bytes, data bytes
-
+void NSEEL_set_compile_hooks(char*(*precompile_hook)(NSEEL_VMCTX ctx, char* expression), void(*postcompile_hook)(void));
+void NSEEL_unset_compile_hooks();
 
 #define NAKED __declspec(naked)
 

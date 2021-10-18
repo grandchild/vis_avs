@@ -166,7 +166,7 @@ static const struct
 
 static APEinfo ext_info=
 {
-  3,
+  4,
   0,
   &g_line_blend_mode,
   NSEEL_VM_alloc,
@@ -178,6 +178,8 @@ static APEinfo ext_info=
   NSEEL_code_free,
   NULL,
   getGlobalBuffer,
+  NSEEL_set_compile_hooks,
+  NSEEL_unset_compile_hooks,
 };
 
 void C_RLibrary::initbuiltinape(void)
