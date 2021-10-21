@@ -1,109 +1,45 @@
 #include "c_eeltrans.h"
-#include "r_eeltrans.h"
 
 #include "../ns-eel/ns-eel.h"
 #include "r_defs.h"
 
 #include <stdio.h>  // for logging
+#include <vector>
 #include <windows.h>
 
-APEinfo* g_extinfo = 0;
+enum EnumMode { mLinear = 0, mAssign, mExec, mPlus };
 
-mylist* root = NULL;
-int listcount = 0;
+APEinfo* g_eeltrans_extinfo = 0;
 
-int addtolist(int newentry) {
-    mylist* newroot = new mylist();
-    newroot->value = newentry;
-    newroot->next = root;
-    root = newroot;
-    return ++listcount;
-}
+char* C_EelTrans::logpath = NULL;
+bool C_EelTrans::log_enabled = false;
+bool C_EelTrans::translate_enabled = false;
+bool C_EelTrans::translate_firstlevel = false;
+bool C_EelTrans::read_comment_codes = false;
+bool C_EelTrans::need_new_first_instance = true;
+int C_EelTrans::num_instances = 0;
 
-int isinlist(int val) {
-    mylist* tmp = root;
-    int num = listcount;
-    while (tmp) {
-        if (val == tmp->value) {
-            return num;
-        }
-        tmp = tmp->next;
-        num--;
-    }
-    return 0;
-}
+std::set<C_EelTrans*> C_EelTrans::instances;
 
-void clearelem(mylist* bla) {
-    if (bla) {
-        clearelem(bla->next);
-        delete[] bla;
-    }
-}
-
-void clearlist() {
-    clearelem(root);
-    root = NULL;
-    listcount = 0;
-}
-
-// global configuration dialog pointer
-static C_EelTrans* g_ConfigThis;
-
-int enabled_avstrans = 0;
-int enabled_log = 0;
-char* logpath = NULL;
-
-#define defMode mExec
-#define defFilterComments 1
-bool defTransFirst = false;
-int ReadCommentCodes = 1;
-
-int hacked = 0;
-bool notify = true;
-
-void* tmp_eip_inner;
-void* tmp_eip_outer;
-void* tmp_ctx;
-void* patchloc;
-char* tmp_expression;
+std::vector<void*> comp_ctxs;
 char* newbuf;
-DWORD oldaccess;
 
-/*
-unsigned short *acp2unicode(char *InputString) {
-        int oldlen = strlen(InputString)+1;
-        int newlen = MultiByteToWideChar(CP_THREAD_ACP,0,InputString,oldlen,NULL,0);
-        unsigned short *buffer = new unsigned short[newlen];
-        MultiByteToWideChar(CP_THREAD_ACP,0,InputString,oldlen,buffer,newlen);
-        //delete[] InputString;
-        return buffer;
-}
-
-char *unicode2acp(unsigned short *InputString) {
-        int oldlen = wcslen(InputString)+1;
-        int newlen =
-WideCharToMultiByte(CP_THREAD_ACP,0,InputString,oldlen,NULL,0,NULL,NULL); char *buffer =
-new char[newlen];
-        WideCharToMultiByte(CP_THREAD_ACP,0,InputString,oldlen,buffer,newlen,NULL,NULL);
-        //delete[] InputString;
-        return buffer;
-}
-*/
-
-int compnum(int ctx) {
-    int pos = isinlist(ctx);
-    if (pos) {
-        return pos;
-    } else {
-        return addtolist(ctx);
+unsigned int compnum(void* ctx) {
+    unsigned int i = 0;
+    for (; i < comp_ctxs.size(); i++) {
+        if (comp_ctxs[i] == ctx) {
+            return i;
+        }
     }
+    comp_ctxs.push_back(ctx);
+    return i;
 }
 
-char* event_compile_start(int ctx, char* _expression) {
-    static int lastctx = 0;
+char* C_EelTrans::pre_compile_hook(void* ctx, char* expression) {
+    static void* lastctx = 0;
     static int num = 0;
-    if (_expression) {
-        if (enabled_log) {
+    if (expression) {
+        if (C_EelTrans::log_enabled) {
             if (ctx == lastctx) {
                 num = (num % 4) + 1;
             } else {
@@ -114,7 +50,7 @@ char* event_compile_start(int ctx, char* _expression) {
             sprintf(filename, "%s\\comp%02dpart%d.log", logpath, compnum(ctx), num);
             FILE* logfile = fopen(filename, "w");
             if (logfile) {
-                fprintf(logfile, "%s", _expression);
+                fprintf(logfile, "%s", expression);
                 fclose(logfile);
             } else {
                 if (!CreateDirectory(logpath, NULL)) {
@@ -123,263 +59,47 @@ char* event_compile_start(int ctx, char* _expression) {
                         "Could not create log directory, deactivating Code Logger.",
                         "Code Logger Error",
                         0);
-                    enabled_log = 0;
+                    C_EelTrans::log_enabled = 0;
                 }
             }
         }
-        if (enabled_avstrans && (strncmp(_expression, "//$notrans", 10) != 0)) {
-            std::string tmp = translate(_expression, defMode, defTransFirst);
+        if (C_EelTrans::translate_enabled
+            && (strncmp(expression, "//$notrans", 10) != 0)) {
+            std::string tmp =
+                translate(expression, mExec, C_EelTrans::translate_firstlevel);
             newbuf = new char[tmp.size() + 1];
             strcpy(newbuf, tmp.c_str());
             return newbuf;
         }
     }
-    return _expression;
+    return expression;
 }
 
-void event_compile_done() {
-    if (enabled_avstrans) {
-        delete[] newbuf;
+void C_EelTrans::post_compile_hook() { delete[] newbuf; }
+
+std::string C_EelTrans::all_code() {
+    std::string all;
+    for (auto it : C_EelTrans::instances) {
+        all += it->code;
     }
-}
-
-NAKED void hook_after() {
-#ifdef _MSC_VER
-    __asm {
-        pushad
-        call event_compile_done
-        popad
-        jmp tmp_eip_outer
-    }
-#else
-    __asm__ __volatile__(
-        "pushad\n\t"
-        "call %[event_compile_done]\n\t"
-        "popad\n\t"
-        "jmp %[tmp_eip_outer]\n\t"
-        :
-        :
-        [event_compile_done] "m"(event_compile_done), [tmp_eip_outer] "m"(tmp_eip_outer)
-        :);
-#endif
-}
-
-NAKED void hook_before() {
-#ifdef _MSC_VER
-    // clang-format off
-    __asm {
-        pop tmp_eip_inner
-        pop tmp_eip_outer
-        pop tmp_ctx
-        pop tmp_expression
-
-        push tmp_expression
-        push tmp_ctx
-        call event_compile_start
-        add esp, 8
-        push eax
-
-        push tmp_ctx
-        mov eax,offset hook_after
-        push eax
-
-        // stuff from the original proc
-        /*01CEF330 83 EC 18   */ sub         esp, 0x18
-        /*01CEF333 53         */ push        ebx
-        /*01CEF334 8B 5C 24 20*/ mov         ebx,dword ptr [esp + 0x20]
-
-        jmp tmp_eip_inner
-    }  // clang-format on
-#else
-    __asm__ __volatile__(
-        "pop   %[tmp_eip_inner]\n\t"
-        "pop   %[tmp_eip_outer]\n\t"
-        "pop   %[tmp_ctx]\n\t"
-        "pop   %[tmp_expression]\n\t"
-
-        "push  %[tmp_expression]\n\t"
-        "push  %[tmp_ctx]\n\t"
-        "call  %[event_compile_start]\n\t"
-        "add   %%esp, 8\n\t"
-        "push  %%eax\n\t"
-
-        "push  %[tmp_ctx]\n\t"
-        "mov   %%eax, offset %[hook_after]\n\t"
-        "push  %%eax\n\t"
-
-        // stuff from the original proc
-        "sub   %%esp, 0x18\n\t"
-        "push  %%ebx\n\t"
-        "mov   %%ebx, dword ptr [%%esp + 0x20]\n\t"
-
-        "jmp   %[tmp_eip_inner]"
-        :
-        : [tmp_eip_inner] "m"(tmp_eip_inner),
-          [tmp_eip_outer] "m"(tmp_eip_outer),
-          [tmp_ctx] "m"(tmp_ctx),
-          [tmp_expression] "m"(tmp_expression),
-          [event_compile_start] "m"(event_compile_start),
-          [hook_after] "m"(hook_after)
-        : "eax", "ebx");
-#endif
-}
-
-/*
- 1. Get the location of compileVMcode() function (a.k.a. NSEEL_code_compile()) in the
-    APEinfo struct (at offset 28 / 0x1c).
- 2. Overwrite the first 8 bytes (which contain 3 instructions) with a call to
-    hook_before(). Our patch is 7 bytes long, but at that point the next byte is the
-    fourth byte of a mov instruction we have already started overwriting. Hence we need
-    to write that byte too with a 1 byte NOP instruction to avoid unwanted behavior.
- 3. Now, whenever NSEEL_code_compile() is called, hook_before() is called at the start
-    and can call event_compile_start() to take the code string and modify it before it's
-    passed to the compiler.
-*/
-NAKED void h00kit() {
-#ifdef _MSC_VER
-    __asm {  // get address
-        mov eax,dword ptr [g_extinfo]
-        mov eax,dword ptr [eax + 0x1C]
-
-        mov patchloc,eax
-        pushad
-    }
-#else
-    __asm__ __volatile__(
-        "mov %%eax, dword ptr %[g_extinfo]\n\t"
-        "mov %%eax, dword ptr [%%eax + 0x1C]\n\t"
-        "mov %[patchloc], %%eax\n\t"
-        "pushad\n\t"
-        : [patchloc] "=m"(patchloc)
-        : [g_extinfo] "m"(g_extinfo)
-        : "eax");
-#endif
-
-    VirtualProtect(patchloc, 8, PAGE_EXECUTE_READWRITE, &oldaccess);
-
-#ifdef _MSC_VER
-    __asm {
-        popad
-
-        mov byte ptr[eax],0xB8  // MOV eax,i32
-        lea ebx,hook_before
-        mov dword ptr[eax+1],ebx  // i32=hook_before
-        mov byte ptr[eax+5],0xFF  // CALL r32
-        mov byte ptr[eax+6],0xD0  // r32=eax
-        mov byte ptr[eax+7],0x90  // NOP
-        pushad
-    }
-#else
-    __asm__ __volatile__(
-        "popad\n\t"
-        "mov byte ptr [%%eax], 0xB8\nt\t"
-        "lea %%ebx, %[hook_before]\n\t"
-        "mov dword ptr [%%eax + 1], %%ebx\nt\t"
-        "mov byte ptr [%%eax + 5], 0xFF\nt\t"
-        "mov byte ptr [%%eax + 6], 0xD0\nt\t"
-        "mov byte ptr [%%eax + 7], 0x90\nt\t"
-        "pushad\n\t"
-        :
-        : [hook_before] "m"(hook_before)
-        : "eax", "ebx");
-
-#endif
-
-    VirtualProtect(patchloc, 8, oldaccess, &oldaccess);
-
-#ifdef _MSC_VER
-    __asm {
-        popad
-        ret
-    }
-#else
-    __asm__ __volatile__(
-        "popad\n\t"
-        "ret\n\t");
-#endif
-}
-
-NAKED void unh00kit() {
-#ifdef _MSC_VER
-    __asm { pushad }
-#else
-    __asm__ __volatile__("pushad\n\t");
-#endif
-    VirtualProtect(patchloc, 8, PAGE_EXECUTE_READWRITE, &oldaccess);
-
-#ifdef _MSC_VER
-    __asm {
-        popad
-        mov eax,patchloc
-        mov byte ptr[eax],0x83  // \.
-        mov byte ptr[eax+1],0xEC  //  >-- sub esp,18h
-        mov byte ptr[eax+2],0x18  // /
-        
-        mov byte ptr[eax+3],0x53  // push ebx
-        
-        mov byte ptr[eax+4],0x8B  // \.
-        mov byte ptr[eax+5],0x5C  //  \__ mov ebx,dword ptr [esp+20h]
-        mov byte ptr[eax+6],0x24  //  /
-        mov byte ptr[eax+7],0x20  // /
-        pushad
-    }
-#else
-    __asm__ __volatile__(
-        "popad\n\t"
-        "mov %%eax, %[patchloc]\n\t"
-        "mov byte ptr [%%eax], 0x83\n\t"
-        "mov byte ptr [%%eax + 1], 0xEC\n\t"
-        "mov byte ptr [%%eax + 2], 0x18\n\t"
-
-        "mov byte ptr [%%eax + 3], 0x53\n\t"
-
-        "mov byte ptr [%%eax + 4], 0x8B\n\t"
-        "mov byte ptr [%%eax + 5], 0x5C\n\t"
-        "mov byte ptr [%%eax + 6], 0x24\n\t"
-        "mov byte ptr [%%eax + 7], 0x20\n\t"
-        "pushad\n\t"
-        :
-        : [patchloc] "m"(patchloc)
-        : "eax");
-#endif
-
-    VirtualProtect(patchloc, 8, oldaccess, &oldaccess);
-
-#ifdef _MSC_VER
-    __asm {
-        popad
-        ret
-    }
-#else
-    __asm__ __volatile__(
-        "popad\n\t"
-        "ret\n\t");
-#endif
+    return all;
 }
 
 // set up default configuration
 C_EelTrans::C_EelTrans() {
-    // get module file name into string apepath
-    char* c_apepath = new char[MAX_PATH];
-    GetModuleFileName(g_hDllInstance, c_apepath, MAX_PATH);
-    apepath = c_apepath;
-    delete[] c_apepath;
+    if (this->need_new_first_instance) {
+        this->need_new_first_instance = false;
+        this->translate_enabled = 0;
+        this->log_enabled = 0;
 
-    // remove the file name from the path
-    apepath.erase(apepath.rfind('\\'));
+        this->translate_firstlevel = 0;
+        this->read_comment_codes = 1;
+        this->instances.insert(this);
+        this->code = "";
 
-    if (notify) {
-        notify = false;
-        enabled_avstrans = 0;
-        enabled_log = 0;
+        this->is_first_instance = true;
 
-        defTransFirst = 0;
-        ReadCommentCodes = 1;
-        autoprefix[this] = "";
-
-        itsme = true;
-
-        string filename = apepath + "\\eeltrans.ini";
+        std::string filename = std::string(g_path) + "\\eeltrans.ini";
         FILE* ini = fopen(filename.c_str(), "r");
         if (logpath) delete[] logpath;
         if (ini) {
@@ -393,89 +113,39 @@ C_EelTrans::C_EelTrans() {
             strcpy(logpath, "C:\\avslog");
         }
 
-        h00kit();
+        g_eeltrans_extinfo->set_compile_hooks(this->pre_compile_hook,
+                                              this->post_compile_hook);
     } else {
-        itsme = false;
+        this->is_first_instance = false;
     }
-    hacked++;
+    this->num_instances++;
 }
 
 // virtual destructor
 C_EelTrans::~C_EelTrans() {
-    hacked--;
-    if (this->itsme) {
-        notify = true;
-        std::string filename = apepath + "\\eeltrans.ini";
+    this->num_instances--;
+    if (this->is_first_instance) {
+        this->need_new_first_instance = true;
+        std::string filename = std::string(g_path) + "\\eeltrans.ini";
         FILE* ini = fopen(filename.c_str(), "w");
         if (ini) {
             fprintf(ini, "%s", logpath);
             fclose(ini);
         }
     }
-    if (hacked == 0) {
-        autoprefix[this] = "";
-        unh00kit();
-        clearlist();
+    if (this->num_instances == 0) {
+        g_eeltrans_extinfo->unset_compile_hooks();
     }
+    this->instances.erase(this);
 }
 
-int C_EelTrans::render(char visdata[2][2][576],
-                       int isBeat,
-                       int* framebuffer,
-                       int* fbout,
-                       int w,
-                       int h) {
-#ifdef _DEBUGgy
-    static bool firstrun = false;
-    if (!firstrun) {
-        firstrun = true;
-        VM_CONTEXT vmc = g_extinfo->allocVM();
-        compileContext* ctx = (compileContext*)vmc;
-        VM_CODEHANDLE cod = g_extinfo->compileVMcode(vmc, "gmegabuf(0)");
-        codeHandleType* cht = (codeHandleType*)cod;
-        char* output = new char[1024];
-        memset(output, 0, 1024);
-
-        void* foo = *((void**)(((unsigned char*)cht->code) + 25));
-        static double*(NSEEL_CGEN_CALL * __megabuf)(double***, double*);
-        __asm {
-            mov eax,foo
-            mov __megabuf,eax
-        }
-        void (*blub)(void) = (void (*)(void))(cht->code);
-        blub();
-        sprintf(output, "%X", __megabuf);
-        MessageBox(NULL, output, "debug output", 0);
-        delete[] output;
-        g_extinfo->freeCode(cod);
-        g_extinfo->freeVM(vmc);
-    }
-#endif
-    if (notify) {
-        if (!itsme) {
-            notify = false;
-            itsme = true;
-        }
+int C_EelTrans::render(char[2][2][576], int, int*, int*, int, int) {
+    if (this->need_new_first_instance && !this->is_first_instance) {
+        this->need_new_first_instance = false;
+        this->is_first_instance = true;
     }
     return 0;
 }
-
-// HWND C_EelTrans::conf(HINSTANCE hInstance,
-//                        HWND hwndParent)  // return NULL if no config dialog possible
-// {
-//     g_ConfigThis = this;
-//     HWND cnf;
-//     if (itsme) {
-//         cnf =
-//             CreateDialog(hInstance, MAKEINTRESOURCE(IDD_CONFIG), hwndParent,
-//             g_DlgProc);
-//     } else {
-//         cnf = CreateDialog(
-//             hInstance, MAKEINTRESOURCE(IDD_CONF_ERR), hwndParent, g_DlgProc);
-//     }
-//     SetDlgItemText(cnf, IDC_VERSION, AVSTransVer);
-//     return cnf;
-// }
 
 char* C_EelTrans::get_desc(void) { return MOD_NAME; }
 
@@ -492,45 +162,46 @@ void C_EelTrans::load_config(unsigned char* data, int len) {
 
     // always ensure there is data to be loaded
     if (len - pos >= 4) {
-        enabled_avstrans = GET_INT();
+        this->translate_enabled = GET_INT();
         pos += 4;
     }
     if (len - pos >= 4) {
-        enabled_log = GET_INT();
+        this->log_enabled = GET_INT();
         pos += 4;
     }
     if (len - pos >= 4) {
-        defTransFirst = (GET_INT() != 0);
+        this->translate_firstlevel = (GET_INT() != 0);
         pos += 4;
     }
     if (len - pos >= 4) {
-        ReadCommentCodes = GET_INT();
+        this->read_comment_codes = GET_INT();
         pos += 4;
     }
+    this->instances.insert(this);
     if (len > pos) {
-        autoprefix[g_ConfigThis] = (char*)(data + pos);
+        this->code = (char*)(data + pos);
     } else {
-        autoprefix[g_ConfigThis] = "";
+        this->code = "";
     }
 }
 
 int C_EelTrans::save_config(unsigned char* data) {
     int pos = 0;
 
-    PUT_INT(enabled_avstrans);
+    PUT_INT(this->translate_enabled);
     pos += 4;
 
-    PUT_INT(enabled_log);
+    PUT_INT(this->log_enabled);
     pos += 4;
 
-    PUT_INT(((int)defTransFirst));
+    PUT_INT(((int)this->translate_firstlevel));
     pos += 4;
 
-    PUT_INT(ReadCommentCodes);
+    PUT_INT(this->read_comment_codes);
     pos += 4;
 
-    strcpy((char*)(data + pos), autoprefix[this].c_str());
-    pos += autoprefix.size() + 1;
+    strcpy((char*)(data + pos), this->code.c_str());
+    pos += this->code.length() + 1;
 
     return pos;
 }
@@ -544,4 +215,10 @@ C_RBASE* R_EelTrans(char* desc) {
     return (C_RBASE*)new C_EelTrans();
 }
 
-void R_EelTrans_SetExtInfo(HINSTANCE hDllInstance, APEinfo* ptr) { g_extinfo = ptr; }
+void R_EelTrans_SetExtInfo(APEinfo* ptr) { g_eeltrans_extinfo = ptr; }
+
+std::string translate(std::string input, EnumMode defMode, bool defTransFirst) {
+    (void)defMode;
+    (void)defTransFirst;
+    return input;
+}
