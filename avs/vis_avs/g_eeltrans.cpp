@@ -18,11 +18,23 @@ int win32_dlgproc_eeltrans(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
         case WM_INITDIALOG:
             SetDlgItemText(hwndDlg, IDC_EELTRANS_LOGPATH, g_EelTransThis->logpath);
             SetDlgItemText(hwndDlg, IDC_EELTRANS_CODE, g_EelTransThis->code.c_str());
+            SetDlgItemText(hwndDlg, IDC_EELTRANS_VERSION, EELTRANS_VERSION);
 
             SET_CHECKBOX(IDC_EELTRANS_LOG_ENABLED, log_enabled);
             SET_CHECKBOX(IDC_EELTRANS_ENABLED, translate_enabled);
             SET_CHECKBOX(IDC_EELTRANS_TRANSFIRST, translate_firstlevel);
             SET_CHECKBOX(IDC_EELTRANS_READCOMMENTCODES, read_comment_codes);
+            if (g_EelTransThis->is_first_instance) {
+                ShowWindow(GetDlgItem(hwndDlg, IDC_EELTRANS_NOTFIRST_MESSAGE), SW_HIDE);
+            } else {
+                ShowWindow(GetDlgItem(hwndDlg, IDC_EELTRANS_LOGPATH), SW_HIDE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_EELTRANS_ENABLED), false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_EELTRANS_LOG_ENABLED), false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_EELTRANS_TRANSFIRST), false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_EELTRANS_READCOMMENTCODES), false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_EELTRANS_VERSION_PREFIX), false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_EELTRANS_VERSION), false);
+            }
             return 1;
 
         case WM_DESTROY:
@@ -31,8 +43,8 @@ int win32_dlgproc_eeltrans(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
         case WM_COMMAND:
             if (HIWORD(wParam) == EN_CHANGE) {
                 int l = GetWindowTextLength((HWND)lParam);
-                char* buf = new char[l];
-                GetWindowText((HWND)lParam, buf, l);
+                char* buf = new char[l + 1];
+                GetWindowText((HWND)lParam, buf, l + 1);
 
                 switch (LOWORD(wParam)) {
                     case IDC_EELTRANS_LOGPATH:
