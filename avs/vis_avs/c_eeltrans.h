@@ -26,6 +26,7 @@ class C_EelTrans : public C_RBASE {
 
     static char* pre_compile_hook(void* ctx, char* expression);
     static void post_compile_hook();
+    static std::string all_code();
 
     static char* logpath;
     static bool log_enabled;
@@ -40,4 +41,6 @@ class C_EelTrans : public C_RBASE {
     std::string code;
 };
 
-char* translate(char const* input, EnumMode mode, bool translate_firstlevel);
+std::string translate(std::string prefix_code,
+                      char const* input,
+                      bool translate_firstlevel);

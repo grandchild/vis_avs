@@ -7,8 +7,6 @@
 #include <vector>
 #include <windows.h>
 
-enum EnumMode { mLinear = 0, mAssign, mExec, mPlus };
-
 APEinfo* g_eeltrans_extinfo = 0;
 
 char* C_EelTrans::logpath = NULL;
@@ -65,8 +63,8 @@ char* C_EelTrans::pre_compile_hook(void* ctx, char* expression) {
         }
         if (C_EelTrans::translate_enabled
             && (strncmp(expression, "//$notrans", 10) != 0)) {
-            std::string tmp =
-                translate(expression, mExec, C_EelTrans::translate_firstlevel);
+            std::string tmp = translate(
+                C_EelTrans::all_code(), expression, C_EelTrans::translate_firstlevel);
             newbuf = new char[tmp.size() + 1];
             strcpy(newbuf, tmp.c_str());
             return newbuf;
@@ -216,9 +214,3 @@ C_RBASE* R_EelTrans(char* desc) {
 }
 
 void R_EelTrans_SetExtInfo(APEinfo* ptr) { g_eeltrans_extinfo = ptr; }
-
-std::string translate(std::string input, EnumMode defMode, bool defTransFirst) {
-    (void)defMode;
-    (void)defTransFirst;
-    return input;
-}
