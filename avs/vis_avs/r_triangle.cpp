@@ -174,14 +174,14 @@ void C_Triangle::draw_triangle(int* framebuffer,
     Vertex v2 = vertices[1];
     Vertex v3 = vertices[2];
     int y = max(0, min(h, v1.y));
-    int midy = max(0, min(h, v2.y));
-    int endy = max(0, min(h, v3.y));
+    if (y == v1.y) {
+        y++;
+    }
+    int midy = max(-1, min(h - 1, v2.y));
+    int endy = max(-1, min(h, v3.y));
     int fb_index = w * y;
 
     for (; y <= midy; fb_index += w, y++) {
-        if (y == v1.y) {
-            continue;
-        }
         int startx = ((v2.x - v1.x) * (y - v1.y)) / (v2.y - v1.y) + v1.x;
         int endx = ((v3.x - v1.x) * (y - v1.y)) / (v3.y - v1.y) + v1.x;
         this->draw_line(framebuffer,
