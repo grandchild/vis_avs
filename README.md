@@ -27,6 +27,8 @@ integrated as builtin effects instead.
     [here](https://github.com/tholden/AVSConvolutionFilter).
   * _TexerII_, by [Steven Wittens](https://acko.net). Original committed to this repo
     [here](https://github.com/grandchild/vis_avs/commit/ddd97ba7).
+  * _AVSTrans_, by [TomyLobo](https://github.com/TomyLobo). Original
+    [here](https://github.com/TomyLobo/eeltrans). Refactored for this repo.
 * 🎂 Former plugin effects rewritten from scratch as builtin-APEs:
   * _Normalise_, originally by [TomyLobo](https://github.com/TomyLobo),
     [here](https://www.deviantart.com/tomylobo/art/Normalise-APE-10334263).
