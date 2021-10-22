@@ -9,6 +9,7 @@
 #include <vector>
 
 #define EELTRANS_TMP_PLACEHOLDER_STR "cahghagahS8Jee4"
+#define NEWLINE "\r\n"
 
 const static std::string VAR_PATTERN =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.";
@@ -100,10 +101,10 @@ static void split(std::vector<std::string>& output,
 }
 
 static void spec_trim(std::string& s) {
-    unsigned int r = s.find_first_not_of(" \x0D\x0A\r\n");
+    unsigned int r = s.find_first_not_of(" \x0D\x0A" NEWLINE);
     if (r != std::string::npos) {
         s.erase(0, r);
-        r = s.find_last_not_of(" \x0D\x0A\r\n");
+        r = s.find_last_not_of(" \x0D\x0A" NEWLINE);
         if (r != std::string::npos) s.erase(r + 1);
     } else {
         s = "";
@@ -364,7 +365,7 @@ std::string Translator::transform_code(std::string input, int indent, bool do_pa
         tmp_item = in_field[i];
         spec_trim(tmp_item);
         if (!tmp_item.empty()) {
-            tmp_linear_form += tmp_item + ";\r\n";
+            tmp_linear_form += tmp_item + ";" NEWLINE;
             tmp_item = this->parse_command(tmp_item, indent);
             split(tmp_field, tmp_item, "=", 2);  // a=b=c; changed here (3->2)
             switch (tmp_field.size()) {
@@ -386,12 +387,12 @@ std::string Translator::transform_code(std::string input, int indent, bool do_pa
                 default:  // Syntax Error
                     tmp_item = "ERR->" + tmp_item + "<-ERR";
             }
-            tmp_assign_form += tmp_item + ";\r\n";
+            tmp_assign_form += tmp_item + ";" NEWLINE;
             out_field.push_back(tmp_item);
         }
     }
     if (do_parse) {
-        join(tmp_plus_form, out_field, "+\r\n" + std::string(indent, ' '));
+        join(tmp_plus_form, out_field, "+" NEWLINE + std::string(indent, ' '));
         while (out_field.size() > 1) {
             make_execs(out_field);
         }
@@ -401,8 +402,8 @@ std::string Translator::transform_code(std::string input, int indent, bool do_pa
             tmp_exec_form = out_field[0];
         }
     } else {
-        join(tmp_exec_form, out_field, ";\r\n");
-        join(tmp_plus_form, out_field, ";\r\n");
+        join(tmp_exec_form, out_field, ";" NEWLINE);
+        join(tmp_plus_form, out_field, ";" NEWLINE);
     }
 
     switch (this->mode) {
@@ -493,7 +494,7 @@ std::string Translator::handle_preprocessor(std::string input) {
                 if (incifstr) {
                     std::ostringstream incstrstr;
                     incstrstr << incifstr.rdbuf();
-                    return ";\r\n" + incstrstr.str() + "\r\n;";
+                    return ";" NEWLINE + incstrstr.str() + NEWLINE ";";
                 }
             }
         }
@@ -570,7 +571,7 @@ void Translator::read_settings_from_comments(std::string& input) {
                         }
                         break;
                     case '/':
-                        r2 = input.find("\r\n", r);
+                        r2 = input.find(NEWLINE, r);
                         if (r2 != std::string::npos) {
                             this->handle_comment(input.substr(r + 2, r2 - r - 2));
                             input.erase(r, r2 - r + 2);
@@ -587,7 +588,7 @@ void Translator::read_settings_from_comments(std::string& input) {
                 }
                 break;
             case '#':
-                r2 = input.find("\r\n", r);
+                r2 = input.find(NEWLINE, r);
                 if (r2 != std::string::npos) {
                     input.replace(
                         r,
@@ -611,12 +612,12 @@ void Translator::read_settings_from_comments(std::string& input) {
 
 std::string Translator::translate(std::string prefix_code, std::string input) {
     std::string translate_output;
-    std::string translate_input = prefix_code + "\r\n" + input;
+    std::string translate_input = prefix_code + NEWLINE + input;
 
     this->read_settings_from_comments(translate_input);
     this->do_replacements(translate_input);
     translate_output = this->transform_code(translate_input, 0, this->trans_first);
-    input += ";\r\n";
+    input += ";" NEWLINE;
     string_replace(input, "dummyequaldummy", "=");
     string_replace(input, "dummysemicolondummy", ";");
     string_replace(input, "[", "(");
