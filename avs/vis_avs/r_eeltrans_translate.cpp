@@ -13,7 +13,11 @@
 const static std::string VAR_PATTERN =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.";
 
-enum ReplacementMode { r_case_sensitive = 0, r_case_insensitive, r_c_style };
+enum ReplacementMode {
+    REPLACE_CASE_SENSITIVE = 0,
+    REPLACE_CASE_INSENSITIVE,
+    REPLACE_C_STYLE
+};
 
 class Replacement {
    public:
@@ -28,7 +32,7 @@ class Replacement {
     void c_style_replace(std::string& input);
 };
 
-enum TranslateMode { m_linear = 0, m_assign, m_exec, m_plus };
+enum TranslateMode { MODE_LINEAR = 0, MODE_ASSIGN, MODE_EXEC, MODE_PLUS };
 
 class Translator {
     TranslateMode mode;
@@ -133,7 +137,7 @@ static void string_replace_insensitive(std::string& input,
     }
 }
 
-static unsigned int parsebracket(const std::string& input) {
+static unsigned int parse_bracket(const std::string& input) {
     int brackets = 0;
     for (unsigned int i = 0; i < input.size(); ++i) {
         switch (input[i]) {
@@ -243,7 +247,7 @@ void Replacement::c_style_replace(std::string& input) {
         tmp += input.substr(0, r);
         com_mid = input.substr(r);
 
-        r2 = parsebracket(com_mid);
+        r2 = parse_bracket(com_mid);
         if (r2 != std::string::npos) {
             com_last = com_mid.substr(r2 + 1);
             com_mid = com_mid.substr(0, r2 + 1);
@@ -302,15 +306,15 @@ void Replacement::c_style_replace(std::string& input) {
 void Translator::do_replacements(std::string& input) {
     for (auto r : this->replacements) {
         switch (r.mode) {
-            case r_case_sensitive:
+            case REPLACE_CASE_SENSITIVE:
                 string_replace(input, r.from, r.to);
                 break;
 
-            case r_case_insensitive:
+            case REPLACE_CASE_INSENSITIVE:
                 string_replace_insensitive(input, r.from, r.to);
                 break;
 
-            case r_c_style:
+            case REPLACE_C_STYLE:
                 r.c_style_replace(input);
                 break;
         }
@@ -405,16 +409,16 @@ std::string Translator::transform_code(std::string input, int indent, bool do_pa
     }
 
     switch (this->mode) {
-        case m_linear:
+        case MODE_LINEAR:
             return tmp_linear_form;
 
-        case m_assign:
+        case MODE_ASSIGN:
             return tmp_assign_form;
 
-        case m_exec:
+        case MODE_EXEC:
             return tmp_exec_form;
 
-        case m_plus:
+        case MODE_PLUS:
             return tmp_plus_form;
 
         default:
@@ -430,7 +434,7 @@ std::string Translator::parse_command(std::string input, int indent) {
     std::string cmd_name, cmd_params;
     r = input.find('(');
     if (r != std::string::npos) {
-        r2 = parsebracket(input);
+        r2 = parse_bracket(input);
         if (r2 == std::string::npos) {
             string_replace(input, "=", "dummyequaldummy");
             string_replace(input, ";", "dummysemicolondummy");
@@ -480,8 +484,8 @@ std::string Translator::handle_preprocessor(std::string input) {
                 this->replacements.push_back(Replacement(
                     tmp[1],
                     tmp[2],
-                    (tmp[1].find('(') == std::string::npos) ? r_case_insensitive
-                                                            : r_c_style));
+                    (tmp[1].find('(') == std::string::npos) ? REPLACE_CASE_INSENSITIVE
+                                                            : REPLACE_C_STYLE));
             }
             return "";
         } else if (tmp[0] == "include") {
@@ -515,13 +519,13 @@ void Translator::handle_comment(std::string const& comment) {
 
         if (left == "avstrans_mode") {
             if (right == "linear")
-                this->mode = m_linear;
+                this->mode = MODE_LINEAR;
             else if (right == "assign")
-                this->mode = m_assign;
+                this->mode = MODE_ASSIGN;
             else if (right == "exec")
-                this->mode = m_exec;
+                this->mode = MODE_EXEC;
             else if (right == "plus")
-                this->mode = m_plus;
+                this->mode = MODE_PLUS;
         } else if (left == "avstrans_filtercomments") {
             if ((right == "0") || (right == "no") || (right == "off"))
                 this->filter_comments = false;
@@ -537,21 +541,21 @@ void Translator::handle_comment(std::string const& comment) {
             tmp = right.substr(r + 2, right.size());
             if (!tmp.empty()) {
                 this->replacements.push_back(
-                    Replacement(right.substr(0, r), tmp, r_case_insensitive));
+                    Replacement(right.substr(0, r), tmp, REPLACE_CASE_INSENSITIVE));
             }
         } else if (left == "avstrans_replacement_casesens") {
             r = right.find("->");
             tmp = right.substr(r + 2, right.size());
             if (!tmp.empty()) {
                 this->replacements.push_back(
-                    Replacement(right.substr(0, r - 1), tmp, r_case_sensitive));
+                    Replacement(right.substr(0, r - 1), tmp, REPLACE_CASE_SENSITIVE));
             }
         } else if (left == "avstrans_replacement_cstyle") {
             r = right.find("->");
             tmp = right.substr(r + 2, right.size());
             if (!tmp.empty()) {
                 this->replacements.push_back(
-                    Replacement(right.substr(0, r - 1), tmp, r_c_style));
+                    Replacement(right.substr(0, r - 1), tmp, REPLACE_C_STYLE));
             }
         }
     }
@@ -632,6 +636,6 @@ std::string Translator::translate(std::string prefix_code, std::string input) {
 std::string translate(std::string prefix_code,
                       char const* input,
                       bool translate_firstlevel) {
-    Translator translator(m_exec, /*filter_comments*/ true, translate_firstlevel);
+    Translator translator(MODE_EXEC, translate_firstlevel);
     return translator.translate(prefix_code, input);
 }
