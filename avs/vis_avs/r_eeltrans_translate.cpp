@@ -36,7 +36,6 @@ enum TranslateMode { MODE_LINEAR = 0, MODE_ASSIGN, MODE_EXEC, MODE_PLUS };
 
 class Translator {
     TranslateMode mode;
-    bool filter_comments;
     bool trans_first;
     std::vector<Replacement> replacements;
 
@@ -49,10 +48,8 @@ class Translator {
     std::string handle_preprocessor(std::string input);
 
    public:
-    Translator(TranslateMode mode, bool filter_comments, bool translate_firstlevel)
-        : mode(mode),
-          filter_comments(filter_comments),
-          trans_first(translate_firstlevel){};
+    Translator(TranslateMode mode, bool translate_firstlevel)
+        : mode(mode), trans_first(translate_firstlevel){};
     std::string translate(std::string prefix_code, std::string input);
 };
 
@@ -526,11 +523,6 @@ void Translator::handle_comment(std::string const& comment) {
                 this->mode = MODE_EXEC;
             else if (right == "plus")
                 this->mode = MODE_PLUS;
-        } else if (left == "avstrans_filtercomments") {
-            if ((right == "0") || (right == "no") || (right == "off"))
-                this->filter_comments = false;
-            else if ((right == "1") || (right == "on") || (right == "yes"))
-                this->filter_comments = true;
         } else if (left == "avstrans_transfirst") {
             if ((right == "0") || (right == "no") || (right == "off"))
                 this->trans_first = false;
