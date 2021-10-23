@@ -74,13 +74,12 @@ DECL_HANDLER(triangle);
 DECL_HANDLER(eeltrans);
 
 typedef struct {
-    // This should match the render component id number. If compoonent is an APE,
-    // which are identified by strings, this is -1. Note that -2 is the special
-    // code for an 2.81+ extended EL again. All other ids are positive.
+    // This should match the render component id number. If component is an APE, which
+    // are identified by strings, this is -1. Note that -2 is the special code for an
+    // 2.81+ extended EL again. All other ids are positive.
     int id;
-    // This should match the render component unique id string, if component is of
-    // APE type (plugin or builtin). If it's a standard component, this is a NULL
-    // pointer.
+    // This should match the render component unique id string, if component is of APE
+    // type (plugin or builtin). If it's a standard component, this is a NULL pointer.
     char idstring[COMPONENT_IDSTRING_LEN];
     // A dialog resource id for the component config UI.
     int dialog_resource_id;
