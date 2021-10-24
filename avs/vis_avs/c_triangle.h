@@ -3,8 +3,6 @@
 #include "ape.h"
 #include "c__base.h"
 
-#include <windows.h>
-
 #define MOD_NAME "Render / Triangle"
 
 #define OUT_REPLACE 0
@@ -51,11 +49,11 @@ class TriangleCodeSection {
 
     TriangleCodeSection();
     ~TriangleCodeSection();
-    void set(char* str, u_int length);
+    void set(char* str, unsigned int length);
     bool recompile_if_needed(VM_CONTEXT vm_context);
     void exec(char visdata[2][2][576]);
-    int load(char* src, u_int max_len);
-    int save(char* dest, u_int max_len);
+    int load(char* src, unsigned int max_len);
+    int save(char* dest, unsigned int max_len);
 
    private:
     VM_CODEHANDLE code;
@@ -82,13 +80,13 @@ class TriangleCode {
 
 class TriangleDepthBuffer {
    public:
-    u_int w;
-    u_int h;
-    u_int* buffer;
+    unsigned int w;
+    unsigned int h;
+    unsigned int* buffer;
 
-    TriangleDepthBuffer(u_int w, u_int h);
+    TriangleDepthBuffer(unsigned int w, unsigned int h);
     ~TriangleDepthBuffer();
-    void reset_if_needed(u_int w, u_int h, bool clear);
+    void reset_if_needed(unsigned int w, unsigned int h, bool clear);
 };
 
 typedef struct {
@@ -113,7 +111,7 @@ class C_Triangle : public C_RBASE {
     TriangleCode code;
 
    private:
-    static u_int instance_count;
+    static unsigned int instance_count;
     static TriangleDepthBuffer* depth_buffer;
     bool need_depth_buffer = false;
     void init_depthbuffer_if_needed(int w, int h);
@@ -122,9 +120,9 @@ class C_Triangle : public C_RBASE {
                               int h,
                               Vertex vertices[3],
                               bool use_depthbuffer,
-                              u_int blendmode,
-                              u_int adjustable_blend,
-                              u_int color);
+                              unsigned int blendmode,
+                              unsigned int adjustable_blend,
+                              unsigned int color);
     inline void draw_line(int* framebuffer,
                           int fb_index,
                           int startx,
@@ -132,13 +130,13 @@ class C_Triangle : public C_RBASE {
                           uint64_t z,
                           int w,
                           bool use_depthbuffer,
-                          u_int blendmode,
-                          u_int adjustable_blend,
-                          u_int color);
+                          unsigned int blendmode,
+                          unsigned int adjustable_blend,
+                          unsigned int color);
     inline void draw_pixel(int* pixel,
-                           u_int blendmode,
-                           u_int adjustable_blend,
-                           u_int color);
+                           unsigned int blendmode,
+                           unsigned int adjustable_blend,
+                           unsigned int color);
     inline void sort_vertices(Vertex vertices[3]);
 };
 
