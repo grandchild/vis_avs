@@ -139,28 +139,3 @@ class C_Triangle : public C_RBASE {
                            unsigned int color);
     inline void sort_vertices(Vertex vertices[3]);
 };
-
-/** A line connecting two vertices of a triangle. */
-class Edge {
-   public:
-    int x1;
-    int y1;
-    int x2;
-    int y2;
-    int y_length;
-
-    Edge(int p1[2], int p2[2]) {
-        if (p1[1] <= p2[1]) {
-            this->x1 = p1[0];
-            this->y1 = p1[1];
-            this->x2 = p2[0];
-            this->y2 = p2[1];
-        } else {
-            this->x1 = p2[0];
-            this->y1 = p2[1];
-            this->x2 = p1[0];
-            this->y2 = p1[1];
-        }
-        this->y_length = this->y2 - this->y1;
-    }
-};
