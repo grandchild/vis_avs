@@ -36,6 +36,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../ns-eel/megabuf.h"
 #endif
 
+static double* gmegabuf(double);
 static void gmegabuf_cleanup();
 void _asm_gmegabuf(void);
 void _asm_gmegabuf_end(void);
@@ -298,6 +299,9 @@ void AVS_EEL_IF_VM_free(NSEEL_VMCTX ctx)
   NSEEL_VM_free(ctx);
 }
 
+double AVS_EEL_IF_gmb_value(int index) {
+  return *gmegabuf((double)index);
+}
 
 
 
