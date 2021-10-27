@@ -213,6 +213,7 @@ void C_RLibrary::initbuiltinape(void)
   ADD2(R_AddBorders,"Virtual Effect: Addborders");
   ADD_EXT(R_Triangle,"Render: Triangle");
   ADD_EXT(R_EelTrans, "Misc: AVSTrans Automation");
+  ADD_EXT(R_GlobalVars, "Jheriko: Global");
 #endif
 #undef ADD
 #undef ADD2

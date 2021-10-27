@@ -87,6 +87,7 @@
 #define IDD_CFG_TRIANGLE                179
 #define IDD_CFG_EELTRANS                180
 #define IDD_CFG_EELTRANS_ERR            181
+#define IDD_CFG_GLOBALVARS              182
 #define IDC_EFFECTS                     1000
 #define IDC_ENABLED                     1001
 #define IDC_FBCLEAR                     1002
@@ -509,6 +510,28 @@
 #define IDC_EELTRANS_CODE               1314
 #define IDC_EELTRANS_LOGPATH            1315
 #define IDC_EELTRANS_NOTFIRST_MESSAGE   1316
+#define IDC_GLOBALVARS_LOAD_ONCE        1317
+#define IDC_GLOBALVARS_LOAD_FRAME       1318
+#define IDC_GLOBALVARS_LOAD_CODE        1319
+#define IDC_GLOBALVARS_LOAD_NONE        1320
+#define IDC_GLOBALVARS_BOX_LOADSAVE     1321
+#define IDC_GLOBALVARS_LABEL_LOADSAVE   1322
+#define IDC_GLOBALVARS_FILEPATH         1323
+#define IDC_GLOBALVARS_ENLARGE_INIT     1324
+#define IDC_GLOBALVARS_CODE_INIT        1325
+#define IDC_GLOBALVARS_ENLARGE_FRAME    1326
+#define IDC_GLOBALVARS_CODE_FRAME       1327
+#define IDC_GLOBALVARS_ENLARGE_BEAT     1328
+#define IDC_GLOBALVARS_CODE_BEAT        1329
+#define IDC_GLOBALVARS_CODE_LARGE       1330
+#define IDC_GLOBALVARS_LABEL_REG_RANGE  1331
+#define IDC_GLOBALVARS_REG_RANGE        1332
+#define IDC_GLOBALVARS_LABEL_BUF_RANGE  1333
+#define IDC_GLOBALVARS_BUF_RANGE        1334
+#define IDC_GLOBALVARS_REG_RANGE_ERR    1335
+#define IDC_GLOBALVARS_BUF_RANGE_ERR    1336
+#define IDC_GLOBALVARS_SAVE_NOW         1337
+#define IDC_GLOBALVARS_HELP             1338
 #define IDM_DISPLAY                     40001
 #define IDM_PRESETS                     40002
 #define IDM_TRANS                       40003
@@ -528,9 +551,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        182
+#define _APS_NEXT_RESOURCE_VALUE        183
 #define _APS_NEXT_COMMAND_VALUE         40015
-#define _APS_NEXT_CONTROL_VALUE         1317
+#define _APS_NEXT_CONTROL_VALUE         1339
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -91,6 +91,7 @@ C_GLibrary::C_GLibrary() {
     ADD_APE_COMPONENT("Virtual Effect: Addborders",   ADDBORDERS,     addborders);
     ADD_APE_COMPONENT("Render: Triangle",             TRIANGLE,       triangle);
     ADD_APE_COMPONENT("Misc: AVSTrans Automation",    EELTRANS,       eeltrans);
+    ADD_APE_COMPONENT("Jheriko: Global",              GLOBALVARS,     globalvars);
     // clang-format on
     this->size = i;
 
