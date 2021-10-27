@@ -35,6 +35,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../ns-eel/megabuf.h"
 #endif
 
+#include <windows.h>
+
 void AVS_EEL_IF_init();
 void AVS_EEL_IF_quit();
 
