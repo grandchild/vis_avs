@@ -11,7 +11,7 @@
 APEinfo* g_globalvars_extinfo = NULL;
 
 const int C_GlobalVars::max_regs_index = 99;
-const int C_GlobalVars::max_gmb_index = MEGABUF_BLOCKS * MEGABUF_ITEMSPERBLOCK;
+const int C_GlobalVars::max_gmb_index = MEGABUF_BLOCKS * MEGABUF_ITEMSPERBLOCK - 1;
 
 C_GlobalVars::C_GlobalVars()
     : load_option(GLOBALVARS_LOAD_NONE),
@@ -271,14 +271,13 @@ void C_GlobalVars::load_config(unsigned char* data, int len) {
         return;
     }
     this->reg_ranges_str = &str[pos];
-    this->check_set_range(this->reg_ranges_str, this->reg_ranges, 99);
+    this->check_set_range(this->reg_ranges_str, this->reg_ranges, this->max_gmb_index);
     pos += strnlen(&str[pos], max(0, len - pos)) + 1;
     if (pos >= len) {
         return;
     }
     this->buf_ranges_str = &str[pos];
-    this->check_set_range(
-        this->buf_ranges_str, this->buf_ranges, MEGABUF_BLOCKS * MEGABUF_ITEMSPERBLOCK);
+    this->check_set_range(this->buf_ranges_str, this->buf_ranges, this->max_gmb_index);
 }
 
 int C_GlobalVars::save_config(unsigned char* data) {
