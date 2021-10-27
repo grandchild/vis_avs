@@ -1,5 +1,6 @@
 #include "c_triangle.h"
 
+#include "avs_eelif.h"
 #include "r_defs.h"
 
 #include <math.h>
@@ -75,8 +76,8 @@ int C_Triangle::render(char visdata[2][2][576],
     this->init_depthbuffer_if_needed(w, h);
     this->code.recompile_if_needed();
     if (this->code.need_init) {
+        this->code.init_variables(w, h, is_beat & IS_BEAT_MASK);
         this->code.init.exec(visdata);
-        this->code.init_variables(w, h);
         this->code.need_init = false;
     }
     this->code.frame.exec(visdata);
@@ -367,138 +368,46 @@ void TriangleDepthBuffer::reset_if_needed(u_int w, u_int h, bool clear) {
 }
 
 /* Code */
-TriangleCode::TriangleCode() : vm_context(NULL) {}
-
-TriangleCode::~TriangleCode() {
-    if (g_triangle_extinfo && this->vm_context) {
-        g_triangle_extinfo->freeVM(this->vm_context);
-        this->vm_context = NULL;
-    }
+void TriangleVars::register_variables(void* vm_context) {
+    this->w = NSEEL_VM_regvar(vm_context, "w");
+    this->h = NSEEL_VM_regvar(vm_context, "h");
+    this->n = NSEEL_VM_regvar(vm_context, "n");
+    this->x1 = NSEEL_VM_regvar(vm_context, "x1");
+    this->y1 = NSEEL_VM_regvar(vm_context, "y1");
+    this->x2 = NSEEL_VM_regvar(vm_context, "x2");
+    this->y2 = NSEEL_VM_regvar(vm_context, "y2");
+    this->x3 = NSEEL_VM_regvar(vm_context, "x3");
+    this->y3 = NSEEL_VM_regvar(vm_context, "y3");
+    this->red1 = NSEEL_VM_regvar(vm_context, "red1");
+    this->green1 = NSEEL_VM_regvar(vm_context, "green1");
+    this->blue1 = NSEEL_VM_regvar(vm_context, "blue1");
+    this->red2 = NSEEL_VM_regvar(vm_context, "red2");
+    this->green2 = NSEEL_VM_regvar(vm_context, "green2");
+    this->blue2 = NSEEL_VM_regvar(vm_context, "blue2");
+    this->red3 = NSEEL_VM_regvar(vm_context, "red3");
+    this->green3 = NSEEL_VM_regvar(vm_context, "green3");
+    this->blue3 = NSEEL_VM_regvar(vm_context, "blue3");
 }
 
-void TriangleCode::register_variables() {
-    if (!g_triangle_extinfo || !this->vm_context) {
-        return;
-    }
-    g_triangle_extinfo->resetVM(this->vm_context);
-    this->vars.w = g_triangle_extinfo->regVMvariable(this->vm_context, "w");
-    this->vars.h = g_triangle_extinfo->regVMvariable(this->vm_context, "h");
-    this->vars.n = g_triangle_extinfo->regVMvariable(this->vm_context, "n");
-    this->vars.i = g_triangle_extinfo->regVMvariable(this->vm_context, "i");
-    this->vars.skip = g_triangle_extinfo->regVMvariable(this->vm_context, "skip");
-    this->vars.x1 = g_triangle_extinfo->regVMvariable(this->vm_context, "x1");
-    this->vars.y1 = g_triangle_extinfo->regVMvariable(this->vm_context, "y1");
-    this->vars.red1 = g_triangle_extinfo->regVMvariable(this->vm_context, "red1");
-    this->vars.green1 = g_triangle_extinfo->regVMvariable(this->vm_context, "green1");
-    this->vars.blue1 = g_triangle_extinfo->regVMvariable(this->vm_context, "blue1");
-    this->vars.x2 = g_triangle_extinfo->regVMvariable(this->vm_context, "x2");
-    this->vars.y2 = g_triangle_extinfo->regVMvariable(this->vm_context, "y2");
-    this->vars.red2 = g_triangle_extinfo->regVMvariable(this->vm_context, "red2");
-    this->vars.green2 = g_triangle_extinfo->regVMvariable(this->vm_context, "green2");
-    this->vars.blue2 = g_triangle_extinfo->regVMvariable(this->vm_context, "blue2");
-    this->vars.x3 = g_triangle_extinfo->regVMvariable(this->vm_context, "x3");
-    this->vars.y3 = g_triangle_extinfo->regVMvariable(this->vm_context, "y3");
-    this->vars.red3 = g_triangle_extinfo->regVMvariable(this->vm_context, "red3");
-    this->vars.green3 = g_triangle_extinfo->regVMvariable(this->vm_context, "green3");
-    this->vars.blue3 = g_triangle_extinfo->regVMvariable(this->vm_context, "blue3");
-    this->vars.z1 = g_triangle_extinfo->regVMvariable(this->vm_context, "z1");
-    this->vars.zbuf = g_triangle_extinfo->regVMvariable(this->vm_context, "zbuf");
-    this->vars.zbclear = g_triangle_extinfo->regVMvariable(this->vm_context, "zbclear");
-}
-
-void TriangleCode::recompile_if_needed() {
-    if (this->vm_context == NULL) {
-        this->vm_context = g_triangle_extinfo->allocVM();
-        if (this->vm_context == NULL) {
-            return;
-        }
-        this->register_variables();
-        *this->vars.n = 0.0f;
-    }
-    if (this->init.recompile_if_needed(this->vm_context)) {
-        this->need_init = true;
-    }
-    this->frame.recompile_if_needed(this->vm_context);
-    this->beat.recompile_if_needed(this->vm_context);
-    this->point.recompile_if_needed(this->vm_context);
-}
-
-void TriangleCode::init_variables(int w, int h) {
-    *this->vars.w = w;
-    *this->vars.h = h;
-    *this->vars.x1 = 0.0f;
-    *this->vars.y1 = 0.0f;
-    *this->vars.x2 = 0.0f;
-    *this->vars.y2 = 0.0f;
-    *this->vars.x3 = 0.0f;
-    *this->vars.y3 = 0.0f;
-    *this->vars.red1 = 1.0f;
-    *this->vars.green1 = 1.0f;
-    *this->vars.blue1 = 1.0f;
-    *this->vars.red2 = 1.0f;
-    *this->vars.green2 = 1.0f;
-    *this->vars.blue2 = 1.0f;
-    *this->vars.red3 = 1.0f;
-    *this->vars.green3 = 1.0f;
-    *this->vars.blue3 = 1.0f;
-}
-
-/* Code Section */
-TriangleCodeSection::TriangleCodeSection()
-    : string(new char[1]), need_recompile(false), code(NULL) {
-    this->string[0] = '\0';
-}
-
-TriangleCodeSection::~TriangleCodeSection() {
-    delete[] this->string;
-    if (g_triangle_extinfo) {
-        g_triangle_extinfo->freeCode(this->code);
-    }
-    this->code = NULL;
-}
-
-/** `length` must include the zero byte! */
-void TriangleCodeSection::set(char* string, u_int length) {
-    delete[] this->string;
-    this->string = new char[length];
-    strncpy(this->string, string, length);
-    this->string[length - 1] = '\0';
-    this->need_recompile = true;
-}
-
-bool TriangleCodeSection::recompile_if_needed(VM_CONTEXT vm_context) {
-    if (!g_triangle_extinfo || !this->need_recompile) {
-        return false;
-    }
-    g_triangle_extinfo->freeCode(this->code);
-    this->code = g_triangle_extinfo->compileVMcode(vm_context, this->string);
-    this->need_recompile = false;
-    return true;
-}
-
-void TriangleCodeSection::exec(char visdata[2][2][576]) {
-    if (!this->code) {
-        return;
-    }
-    g_triangle_extinfo->executeCode(code, visdata);
-}
-
-int TriangleCodeSection::load(char* src, u_int max_len) {
-    u_int code_len = strnlen(src, max_len);
-    this->set(src, code_len + 1);
-    return code_len + 1;
-}
-
-int TriangleCodeSection::save(char* dest, u_int max_len) {
-    u_int code_len = strnlen(this->string, max_len);
-    bool code_too_long = code_len == max_len;
-    if (code_too_long) {
-        strncpy(dest, this->string, code_len);
-        dest[code_len] = '\0';
-    } else {
-        strncpy(dest, this->string, code_len + 1);
-    }
-    return code_len + 1;
+void TriangleVars::init_variables(int w, int h, int /* is_beat */, ...) {
+    *this->w = w;
+    *this->h = h;
+    *this->n = 0.0f;
+    *this->x1 = 0.0f;
+    *this->y1 = 0.0f;
+    *this->x2 = 0.0f;
+    *this->y2 = 0.0f;
+    *this->x3 = 0.0f;
+    *this->y3 = 0.0f;
+    *this->red1 = 1.0f;
+    *this->green1 = 1.0f;
+    *this->blue1 = 1.0f;
+    *this->red2 = 1.0f;
+    *this->green2 = 1.0f;
+    *this->blue2 = 1.0f;
+    *this->red3 = 1.0f;
+    *this->green3 = 1.0f;
+    *this->blue3 = 1.0f;
 }
 
 /* Config Loading & Effect Registration */

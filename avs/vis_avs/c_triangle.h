@@ -16,7 +16,8 @@
 #define OUT_XOR 8
 #define OUT_MINIMUM 9
 
-typedef struct {
+class TriangleVars : public VarsBase {
+   public:
     double* w;
     double* h;
     double* n;
@@ -40,42 +41,9 @@ typedef struct {
     double* z1;
     double* zbuf;
     double* zbclear;
-} TriangleVars;
 
-class TriangleCodeSection {
-   public:
-    char* string;
-    bool need_recompile;
-
-    TriangleCodeSection();
-    ~TriangleCodeSection();
-    void set(char* str, unsigned int length);
-    bool recompile_if_needed(VM_CONTEXT vm_context);
-    void exec(char visdata[2][2][576]);
-    int load(char* src, unsigned int max_len);
-    int save(char* dest, unsigned int max_len);
-
-   private:
-    VM_CODEHANDLE code;
-};
-
-class TriangleCode {
-   public:
-    TriangleVars vars;
-    TriangleCodeSection init;
-    TriangleCodeSection frame;
-    TriangleCodeSection beat;
-    TriangleCodeSection point;
-    bool need_init;
-
-    TriangleCode();
-    ~TriangleCode();
-    void register_variables();
-    void recompile_if_needed();
-    void init_variables(int w, int h);
-
-   private:
-    VM_CONTEXT vm_context;
+    virtual void register_variables(void*);
+    virtual void init_variables(int, int, int, ...);
 };
 
 class TriangleDepthBuffer {
@@ -108,7 +76,7 @@ class C_Triangle : public C_RBASE {
     virtual char* get_desc();
     virtual void load_config(unsigned char* data, int len);
     virtual int save_config(unsigned char* data);
-    TriangleCode code;
+    ComponentCode<TriangleVars> code;
 
    private:
     static unsigned int instance_count;
