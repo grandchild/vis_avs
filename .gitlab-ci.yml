@@ -1,0 +1,27 @@
+# This file is a template, and might need editing before it works on your project.
+# To contribute improvements to CI/CD templates, please follow the Development guide at:
+# https://docs.gitlab.com/ee/development/cicd/templates.html
+# This specific template is located at:
+# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/C++.gitlab-ci.yml
+
+# use the official gcc image, based on debian
+# can use verions as well, like gcc:5.2
+# see https://hub.docker.com/_/gcc/
+
+image: gcc:8
+
+build:
+  stage: build
+  before_script:
+    - apt update && apt -y install gcc-mingw-w64 g++-mingw-w64 cmake make
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake -D CMAKE_TOOLCHAIN_FILE=../CMake-MingWcross-toolchain.txt ..
+    - make
+  artifacts:
+    paths:
+      - build/vis_avs.dll
+  cache:
+    paths:
+      - "build/"
