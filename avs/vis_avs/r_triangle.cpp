@@ -372,6 +372,7 @@ void TriangleVars::register_variables(void* vm_context) {
     this->w = NSEEL_VM_regvar(vm_context, "w");
     this->h = NSEEL_VM_regvar(vm_context, "h");
     this->n = NSEEL_VM_regvar(vm_context, "n");
+    this->i = NSEEL_VM_regvar(vm_context, "i");
     this->x1 = NSEEL_VM_regvar(vm_context, "x1");
     this->y1 = NSEEL_VM_regvar(vm_context, "y1");
     this->x2 = NSEEL_VM_regvar(vm_context, "x2");
@@ -393,6 +394,8 @@ void TriangleVars::init_variables(int w, int h, int /* is_beat */, ...) {
     *this->w = w;
     *this->h = h;
     *this->n = 0.0f;
+    // Edge case compatibility with original Triangle APE:
+    // "i" is _not_ reset before the frame code -> i = 1.0 + 1/(n-1)
     *this->x1 = 0.0f;
     *this->y1 = 0.0f;
     *this->x2 = 0.0f;
