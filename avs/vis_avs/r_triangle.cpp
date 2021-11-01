@@ -373,21 +373,25 @@ void TriangleVars::register_variables(void* vm_context) {
     this->h = NSEEL_VM_regvar(vm_context, "h");
     this->n = NSEEL_VM_regvar(vm_context, "n");
     this->i = NSEEL_VM_regvar(vm_context, "i");
+    this->skip = NSEEL_VM_regvar(vm_context, "skip");
     this->x1 = NSEEL_VM_regvar(vm_context, "x1");
     this->y1 = NSEEL_VM_regvar(vm_context, "y1");
-    this->x2 = NSEEL_VM_regvar(vm_context, "x2");
-    this->y2 = NSEEL_VM_regvar(vm_context, "y2");
-    this->x3 = NSEEL_VM_regvar(vm_context, "x3");
-    this->y3 = NSEEL_VM_regvar(vm_context, "y3");
     this->red1 = NSEEL_VM_regvar(vm_context, "red1");
     this->green1 = NSEEL_VM_regvar(vm_context, "green1");
     this->blue1 = NSEEL_VM_regvar(vm_context, "blue1");
+    this->x2 = NSEEL_VM_regvar(vm_context, "x2");
+    this->y2 = NSEEL_VM_regvar(vm_context, "y2");
     this->red2 = NSEEL_VM_regvar(vm_context, "red2");
     this->green2 = NSEEL_VM_regvar(vm_context, "green2");
     this->blue2 = NSEEL_VM_regvar(vm_context, "blue2");
+    this->x3 = NSEEL_VM_regvar(vm_context, "x3");
+    this->y3 = NSEEL_VM_regvar(vm_context, "y3");
     this->red3 = NSEEL_VM_regvar(vm_context, "red3");
     this->green3 = NSEEL_VM_regvar(vm_context, "green3");
     this->blue3 = NSEEL_VM_regvar(vm_context, "blue3");
+    this->z1 = NSEEL_VM_regvar(vm_context, "z1");
+    this->zbuf = NSEEL_VM_regvar(vm_context, "zbuf");
+    this->zbclear = NSEEL_VM_regvar(vm_context, "zbclear");
 }
 
 void TriangleVars::init_variables(int w, int h, int /* is_beat */, ...) {
