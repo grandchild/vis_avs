@@ -535,7 +535,7 @@
 #define IDC_GLOBALVARS_HELP             1338
 #define IDC_MULTIFILTER_ENABLED         1339
 #define IDC_MULTIFILTER_EFFECT          1340
-#define IDC_MULTIFILTER_ONBEAT          1341
+#define IDC_MULTIFILTER_TOGGLEONBEAT    1341
 #define IDM_DISPLAY                     40001
 #define IDM_PRESETS                     40002
 #define IDM_TRANS                       40003

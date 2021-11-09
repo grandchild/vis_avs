@@ -17,7 +17,7 @@ enum MultiFilterEffect {
 typedef struct {
     int32_t enabled;
     int32_t effect;
-    int32_t on_beat;
+    int32_t toggle_on_beat;
 } multifilter_config;
 
 class C_MultiFilter : public C_RBASE {
@@ -40,6 +40,8 @@ class C_MultiFilter : public C_RBASE {
     void chrome(int* framebuffer, unsigned int fb_length);
     void chrome_sse2(int* framebuffer, unsigned int fb_length);
     void infroot_borderconvo(int* framebuffer, int w, int h);
+
+    bool toggle_state;
 
    public:
     const char* effects[MULTIFILTER_NUM_EFFECTS] = {

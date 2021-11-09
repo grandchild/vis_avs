@@ -6,7 +6,8 @@
 
 #include <emmintrin.h>  // SSE2 SIMD intrinsics
 
-C_MultiFilter::C_MultiFilter() : config({true, MULTIFILTER_CHROME, false}) {}
+C_MultiFilter::C_MultiFilter()
+    : config({true, MULTIFILTER_CHROME, false}), toggle_state(false) {}
 
 C_MultiFilter::~C_MultiFilter() {}
 
@@ -19,8 +20,13 @@ int C_MultiFilter::render(char[2][2][576],
     if (!this->config.enabled) {
         return 0;
     }
-    if (this->config.enabled && this->config.on_beat && !is_beat) {
-        return 0;
+    if (this->config.enabled && this->config.toggle_on_beat) {
+        if (is_beat) {
+            this->toggle_state = !this->toggle_state;
+        }
+        if (!this->toggle_state) {
+            return 0;
+        }
     }
     if (this->config.effect <= MULTIFILTER_TRIPLE_CHROME) {
         this->chrome_sse2(framebuffer, w * h);
@@ -204,7 +210,7 @@ void C_MultiFilter::load_config(unsigned char* data, int len) {
     else {
         this->config.enabled = true;
         this->config.effect = MULTIFILTER_CHROME;
-        this->config.on_beat = false;
+        this->config.toggle_on_beat = false;
     }
 }
 

@@ -29,8 +29,8 @@ int win32_dlgproc_multifilter(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                                CB_SETCURSEL,
                                config_this->config.effect,
                                0);
-            if (config_this->config.on_beat) {
-                CheckDlgButton(hwndDlg, IDC_MULTIFILTER_ONBEAT, BST_CHECKED);
+            if (config_this->config.toggle_on_beat) {
+                CheckDlgButton(hwndDlg, IDC_MULTIFILTER_TOGGLEONBEAT, BST_CHECKED);
             }
             return 1;
         }
@@ -45,9 +45,9 @@ int win32_dlgproc_multifilter(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                         config_this->config.enabled =
                             IsDlgButtonChecked(hwndDlg, IDC_MULTIFILTER_ENABLED);
                         break;
-                    case IDC_MULTIFILTER_ONBEAT:
-                        config_this->config.on_beat =
-                            IsDlgButtonChecked(hwndDlg, IDC_MULTIFILTER_ONBEAT);
+                    case IDC_MULTIFILTER_TOGGLEONBEAT:
+                        config_this->config.toggle_on_beat =
+                            IsDlgButtonChecked(hwndDlg, IDC_MULTIFILTER_TOGGLEONBEAT);
                         break;
                 }
             }
