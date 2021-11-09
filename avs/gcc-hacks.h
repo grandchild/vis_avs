@@ -4,15 +4,12 @@
 extern "C" {
 #endif
 
-// Naked functions are emitted without prolog or epilog (e.g. for compiler
-// construction). GCC has no naked attribute for __declspec, but an
-// __attribute__.
 #ifdef _MSC_VER
 
 // Special case for a GCC warning, see below. No effect with MSVC
 #define FORCE_FUNCTION_CAST(x) (x)
 
-#else  // _MSC_VER
+#elif defined(__GNUC__)
 
 // GCCs -Wcast-function-type is a bit overzealous when casting dynamic library function
 // pointers (whose signatures _will_ be mismatched most of the time). The warning can be
@@ -21,10 +18,11 @@ extern "C" {
 // enabled for the cases where it might actually catch something.
 #define FORCE_FUNCTION_CAST(x) (x)(void (*)())
 
+// These are built-in in MSVC
 int min(int a, int b);
 int max(int a, int b);
 
-#endif  // _MSC_VER
+#endif  // compilers
 
 #ifdef __cplusplus
 }
