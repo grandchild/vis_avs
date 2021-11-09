@@ -2092,6 +2092,24 @@ BEGIN
    PUSHBUTTON       "?", IDC_GLOBALVARS_HELP, 212, 199, 16, 14
 END
 
+IDD_CFG_MULTIFILTER DIALOG 0, 0, 232, 215
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Enabled", IDC_MULTIFILTER_ENABLED, "Button", BS_AUTOCHECKBOX |
+                    WS_TABSTOP, 5, 5, 84, 10
+    CTEXT           "Multi Filter APE   --   written by Jheriko.\nFeel free to use it in your own work.\nhttp://jheriko.deviantart.com",
+                    IDC_STATIC, 5, 185, 225, 25, WS_EX_STATICEDGE | WS_GROUP
+    LTEXT           "Filter Type:", IDC_STATIC, 5, 20, 75, 10
+    COMBOBOX        IDC_MULTIFILTER_EFFECT, 5, 30, 220, 65, CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Toggle On Beat", IDC_MULTIFILTER_ONBEAT, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 5, 45, 70, 10
+    CONTROL         "Reactive Alpha Blend", IDC_STATIC, "Button", BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP, 5, 65, 110, 10
+    CONTROL         "Interpolate", IDC_STATIC, "Button", BS_AUTOCHECKBOX | WS_DISABLED |
+                    WS_TABSTOP, 5, 55, 105, 10
+END
 
 
 /////////////////////////////////////////////////////////////////////////////

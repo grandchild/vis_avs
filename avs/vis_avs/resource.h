@@ -88,6 +88,7 @@
 #define IDD_CFG_EELTRANS                180
 #define IDD_CFG_EELTRANS_ERR            181
 #define IDD_CFG_GLOBALVARS              182
+#define IDD_CFG_MULTIFILTER             183
 #define IDC_EFFECTS                     1000
 #define IDC_ENABLED                     1001
 #define IDC_FBCLEAR                     1002
@@ -532,6 +533,9 @@
 #define IDC_GLOBALVARS_BUF_RANGE_ERR    1336
 #define IDC_GLOBALVARS_SAVE_NOW         1337
 #define IDC_GLOBALVARS_HELP             1338
+#define IDC_MULTIFILTER_ENABLED         1339
+#define IDC_MULTIFILTER_EFFECT          1340
+#define IDC_MULTIFILTER_ONBEAT          1341
 #define IDM_DISPLAY                     40001
 #define IDM_PRESETS                     40002
 #define IDM_TRANS                       40003
@@ -551,9 +555,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        183
+#define _APS_NEXT_RESOURCE_VALUE        184
 #define _APS_NEXT_COMMAND_VALUE         40015
-#define _APS_NEXT_CONTROL_VALUE         1339
+#define _APS_NEXT_CONTROL_VALUE         1342
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

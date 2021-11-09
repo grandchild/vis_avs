@@ -214,6 +214,7 @@ void C_RLibrary::initbuiltinape(void)
   ADD_EXT(R_Triangle,"Render: Triangle");
   ADD_EXT(R_EelTrans, "Misc: AVSTrans Automation");
   ADD_EXT(R_GlobalVars, "Jheriko: Global");
+  ADD2(R_MultiFilter, "Jheriko : MULTIFILTER");
 #endif
 #undef ADD
 #undef ADD2

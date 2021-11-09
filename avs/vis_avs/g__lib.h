@@ -73,6 +73,7 @@ DECL_HANDLER(addborders);
 DECL_HANDLER(triangle);
 DECL_HANDLER(eeltrans);
 DECL_HANDLER(globalvars);
+DECL_HANDLER(multifilter);
 
 typedef struct {
     // This should match the render component id number. If component is an APE, which
