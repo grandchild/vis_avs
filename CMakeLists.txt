@@ -3,7 +3,13 @@ cmake_minimum_required(VERSION 3.10)
 project(vis_avs VERSION 2.82)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    add_compile_options(/W4 /MP)
+    add_compile_options(
+        /W4                 # Warning level 4 (maximum)
+        /MP                 # Multithreaded compilation
+        /Zc:__cplusplus     # Define the actual C++ standard in __cplusplus, instead of
+                            # a backwards-compatible "199711L".
+                            # https://devblogs.microsoft.com/cppblog/msvc-now-correctly-reports-__cplusplus/
+    )
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0.0")
         message(SEND_ERROR
