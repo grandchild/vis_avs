@@ -1,6 +1,5 @@
 #include "c_picture2.h"
 
-#include "avs.h"
 #include "c__defs.h"
 #include "files.h"
 #include "g__defs.h"
