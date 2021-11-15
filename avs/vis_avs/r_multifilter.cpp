@@ -164,7 +164,7 @@ inline void C_MultiFilter::chrome_sse2(int* framebuffer, unsigned int fb_length)
 inline void C_MultiFilter::infroot_borderconvo(int* framebuffer, int w, int h) {
     /*
     "Infinite root" basically means that the output of a pixel will be white for all
-     pixel values except when it's completely black. This is useful for masking.
+    pixel values except when it's completely black. This is useful for masking.
 
     A "small border convolution" could be expected to be something like
 
