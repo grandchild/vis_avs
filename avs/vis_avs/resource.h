@@ -89,6 +89,7 @@
 #define IDD_CFG_EELTRANS_ERR            181
 #define IDD_CFG_GLOBALVARS              182
 #define IDD_CFG_MULTIFILTER             183
+#define IDD_CFG_PICTUREII               184
 #define IDC_EFFECTS                     1000
 #define IDC_ENABLED                     1001
 #define IDC_FBCLEAR                     1002
@@ -536,6 +537,15 @@
 #define IDC_MULTIFILTER_ENABLED         1339
 #define IDC_MULTIFILTER_EFFECT          1340
 #define IDC_MULTIFILTER_TOGGLEONBEAT    1341
+#define IDC_PICTUREII_SOURCE            1342
+#define IDC_PICTUREII_OUTPUT            1343
+#define IDC_PICTUREII_ADJUSTABLE        1344
+#define IDC_PICTUREII_BILINEAR          1345
+#define IDC_PICTUREII_BEAT_OUTPUT       1346
+#define IDC_PICTUREII_BEAT_ADJUSTABLE   1347
+#define IDC_PICTUREII_BEAT_BILINEAR     1348
+#define IDC_PICTUREII_URL               1349
+#define IDC_PICTUREII_ERROR             1350
 #define IDM_DISPLAY                     40001
 #define IDM_PRESETS                     40002
 #define IDM_TRANS                       40003
@@ -555,9 +565,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        184
+#define _APS_NEXT_RESOURCE_VALUE        185
 #define _APS_NEXT_COMMAND_VALUE         40015
-#define _APS_NEXT_CONTROL_VALUE         1342
+#define _APS_NEXT_CONTROL_VALUE         1351
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -2111,6 +2111,35 @@ BEGIN
                     WS_TABSTOP, 5, 55, 105, 10
 END
 
+IDD_CFG_PICTUREII DIALOG 0, 0, 231, 216
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Source", IDC_STATIC, 5, 5, 220, 30
+    GROUPBOX        "About Picture II", IDC_STATIC, 5, 165, 220, 47
+    CTEXT           "Picture II was made by Steven Wittens (UnConeD).",
+                    IDC_STATIC, 29, 177, 177, 10
+    LTEXT           "For more information, visit http://avs.acko.net", IDC_STATIC,
+                    42, 187, 177, 10
+    GROUPBOX        "Output", IDC_STATIC, 5, 40, 220, 45
+    COMBOBOX        IDC_PICTUREII_OUTPUT, 10, 51, 210, 108, CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_PICTUREII_SOURCE, 10, 16, 210, 90, CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Bilinear Filtering", IDC_PICTUREII_BILINEAR, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 12, 70, 73, 10
+    CONTROL         "Slider1", IDC_PICTUREII_ADJUSTABLE, "msctls_trackbar32", TBS_BOTH |
+                    TBS_NOTICKS | WS_TABSTOP, 90, 66, 130, 15
+    GROUPBOX        "Output On-Beat", IDC_STATIC, 5, 90, 220, 45
+    COMBOBOX        IDC_PICTUREII_BEAT_OUTPUT, 10, 101, 210, 108, CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Bilinear Filtering", IDC_PICTUREII_BEAT_BILINEAR, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 12, 120, 73, 10
+    CONTROL         "Slider1", IDC_PICTUREII_BEAT_ADJUSTABLE, "msctls_trackbar32",
+                    TBS_BOTH | TBS_NOTICKS | WS_TABSTOP, 90, 116, 130, 15
+    LTEXT           "", IDC_PICTUREII_ERROR, 10, 199, 210, 9
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

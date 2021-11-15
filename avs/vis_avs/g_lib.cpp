@@ -93,6 +93,7 @@ C_GLibrary::C_GLibrary() {
     ADD_APE_COMPONENT("Misc: AVSTrans Automation",    EELTRANS,       eeltrans);
     ADD_APE_COMPONENT("Jheriko: Global",              GLOBALVARS,     globalvars);
     ADD_APE_COMPONENT("Jheriko : MULTIFILTER",        MULTIFILTER,    multifilter);
+    ADD_APE_COMPONENT("Picture II",                   PICTUREII,      picture2);
     // clang-format on
     this->size = i;
 
