@@ -1,7 +1,6 @@
 #include "files.h"
 
 #include <cstring>
-#include <filesystem>
 #include <thread>
 
 #if defined(__linux__) && !defined(FORCE_CPP_FILESYSTEM_API)
@@ -11,7 +10,10 @@
 #include <windows.h>
 #endif
 
+#if defined(FORCE_CPP_FILESYSTEM_API) && __cplusplus >= 201703L
+#include <filesystem>
 namespace fs = std::filesystem;
+#endif
 
 bool matches_file_suffix(std::string file, char** suffixes, int num_suffixes) {
     for (int i = 0; i < num_suffixes; i++) {
