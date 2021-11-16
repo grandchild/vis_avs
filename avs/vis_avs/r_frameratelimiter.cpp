@@ -4,7 +4,10 @@
 #include <thread>
 
 C_FramerateLimiter::C_FramerateLimiter()
-    : enabled(true), framerate_limit(30), time_diff(1000 / 30) {}
+    : enabled(true),
+      framerate_limit(30),
+      time_diff(1000 / 30),
+      last_time(this->now()) {}
 
 C_FramerateLimiter::~C_FramerateLimiter() {}
 
