@@ -46,7 +46,7 @@ C_Picture2::~C_Picture2() {
     }
 }
 
-void add_file_callback(const char* file, void* data) {
+static void add_file_callback(const char* file, void* data) {
     C_Picture2* picture2 = (C_Picture2*)data;
     size_t filename_length = strnlen(file, MAX_PATH);
     char* filename = (char*)calloc(filename_length + 1, sizeof(char));
