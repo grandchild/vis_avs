@@ -48,7 +48,6 @@ integrated as builtin effects instead.
 
 ### The Future
 
-* 🌠 Recreate more APEs
 * 🪓 Separate Windows UI code from the renderer
 * 📟 Standalone port (probably SDL2-based)
 * 🐧 Linux port
