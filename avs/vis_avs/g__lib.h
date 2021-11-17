@@ -76,6 +76,7 @@ DECL_HANDLER(globalvars);
 DECL_HANDLER(multifilter);
 DECL_HANDLER(picture2);
 DECL_HANDLER(frameratelimiter);
+DECL_HANDLER(texer);
 
 typedef struct {
     // This should match the render component id number. If component is an APE, which

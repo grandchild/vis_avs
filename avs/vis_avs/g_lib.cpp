@@ -95,6 +95,7 @@ C_GLibrary::C_GLibrary() {
     ADD_APE_COMPONENT("Jheriko : MULTIFILTER",        MULTIFILTER,    multifilter);
     ADD_APE_COMPONENT("Picture II",                   PICTUREII,      picture2);
     ADD_APE_COMPONENT("VFX FRAMERATE LIMITER",        FPSLIMITER,     frameratelimiter);
+    ADD_APE_COMPONENT("Texer",                        TEXER,          texer);
     // clang-format on
     this->size = i;
 

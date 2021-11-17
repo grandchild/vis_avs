@@ -91,6 +91,7 @@
 #define IDD_CFG_MULTIFILTER             183
 #define IDD_CFG_PICTUREII               184
 #define IDD_CFG_FPSLIMITER              185
+#define IDD_CFG_TEXER                   186
 #define IDC_EFFECTS                     1000
 #define IDC_ENABLED                     1001
 #define IDC_FBCLEAR                     1002
@@ -550,6 +551,14 @@
 #define IDC_FPSLIMITER_ENABLED          1351
 #define IDC_FPSLIMITER_FPS_SLIDER       1352
 #define IDC_FPSLIMITER_FPS_LABEL        1353
+#define IDC_TEXER_IMAGE                 1354
+#define IDC_TEXER_INPUT_IGNORE          1355
+#define IDC_TEXER_INPUT_REPLACE         1356
+#define IDC_TEXER_OUTPUT_NORMAL         1357
+#define IDC_TEXER_OUTPUT_MASKED         1358
+#define IDC_TEXER_NUM_PARTICLES         1359
+#define IDC_TEXER_NUM_PARTICLES_LABEL   1360
+#define IDC_TEXER_ERROR                 1361
 #define IDM_DISPLAY                     40001
 #define IDM_PRESETS                     40002
 #define IDM_TRANS                       40003
@@ -569,9 +578,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        186
+#define _APS_NEXT_RESOURCE_VALUE        187
 #define _APS_NEXT_COMMAND_VALUE         40015
-#define _APS_NEXT_CONTROL_VALUE         1354
+#define _APS_NEXT_CONTROL_VALUE         1362
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

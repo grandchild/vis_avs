@@ -39,6 +39,7 @@ integrated as builtin effects instead.
   * _GlobalVariables_, originally by [Semi Essessi](https://github.com/semiessessi).
   * _MultiFilter_, originally by [Semi Essessi](https://github.com/semiessessi).
   * _FramerateLimiter_, originally by [Goebish](https://github.com/goebish).
+  * _Texer_, originally by [Steven Wittens](https://acko.net).
 * 🥵 Performance is generally the same as the official build, but can be a bit slower
   for some effects. A few effects have gained faster SSE3-enabled versions.
 * 🧨 APE files are crashing AVS or preventing it from starting. Rename or remove .ape
