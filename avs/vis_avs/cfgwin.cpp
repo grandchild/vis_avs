@@ -34,7 +34,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "g__defs.h"
 #include "g__lib.h"
 #include "vis.h"
-#include "cfgwnd.h"
+#include "cfgwin.h"
 #include "resource.h"
 #include "render.h"
 #include "rlib.h"

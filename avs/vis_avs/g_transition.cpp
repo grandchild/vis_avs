@@ -5,7 +5,7 @@
 #include <windows.h>
 #include <commctrl.h>
 #include "render.h"
-#include "cfgwnd.h"
+#include "cfgwin.h"
 
 
 int win32_dlgproc_transition(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)

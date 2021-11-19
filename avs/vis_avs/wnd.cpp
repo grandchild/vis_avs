@@ -33,7 +33,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vis.h"
 #include "draw.h"
 #include "wnd.h"
-#include "cfgwnd.h"
+#include "cfgwin.h"
 #include "r_defs.h"
 #include "resource.h"
 #include "render.h"

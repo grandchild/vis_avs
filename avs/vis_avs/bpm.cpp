@@ -36,7 +36,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "r_defs.h"
 #include "render.h"
 #include "vis.h"
-#include "cfgwnd.h"
+#include "cfgwin.h"
 #include "resource.h"
 #include "bpm.h"
 

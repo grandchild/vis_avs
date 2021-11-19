@@ -31,7 +31,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <process.h>
 #include "draw.h"
-#include "cfgwnd.h"
+#include "cfgwin.h"
 #include "r_defs.h"
 #include "render.h"
 #include <math.h>
