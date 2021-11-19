@@ -27,6 +27,10 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+#pragma once
+
+#include <windows.h>
+
 int Wnd_Init(struct winampVisModule *this_mod);
 void Wnd_Quit(void);
 void SetTransparency(HWND hWnd, int enable, int amount);

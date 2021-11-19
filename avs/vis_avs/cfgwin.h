@@ -27,6 +27,8 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+#include <windows.h>
+
 void CfgWnd_Create(struct winampVisModule *this_mod);
 void CfgWnd_Destroy(void);
 

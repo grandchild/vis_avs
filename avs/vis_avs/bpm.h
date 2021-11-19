@@ -30,6 +30,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef __BPM_H
 #define __BPM_H
 
+#include <windows.h>
+
 #define BEAT_REAL						1
 #define BEAT_GUESSED				2
 
