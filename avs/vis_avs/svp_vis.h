@@ -51,6 +51,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // that is required to have a body.
 
 
+#include <stdbool.h>
 
 #define ALPHA_MASK	0xFF000000
 #define RED_MASK	0x00FF0000
@@ -101,7 +102,7 @@ typedef struct _VisInfo
 
 	void	(*Initialize)(void);		// Called some time before your plugin is asked to render for
 										// the first time
-	BOOL	(*Render)( unsigned long *Video, int width, int height, int pitch, VisData* pVD);
+	bool	(*Render)( unsigned long *Video, int width, int height, int pitch, VisData* pVD);
 										// Called for each frame. Pitch is in pixels and can be negative.
 										// Render like this:
 										// for (y = 0; y < height; y++)
@@ -116,11 +117,11 @@ typedef struct _VisInfo
 										//    _ASSERT( x >= 0 && x < width && y >= 0 && y < height );
 										//	  Video[y*pitch+x] = Pixel;
 										// }
-	BOOL	(*SaveSettings)( char* FileName );
+	bool	(*SaveSettings)( char* FileName );
 										// Use WritePrivateProfileString to save settings when this is called
 										// Example:
 										// WritePrivateProfileString("my plugin", "brightness", "3", FileName);
-	BOOL	(*OpenSettings)( char* FileName );
+	bool	(*OpenSettings)( char* FileName );
 										// Use GetPrivateProfileString similarly:
 										// char BrightnessBuffer[256];
 										// GetPrivateProfileString("my plugin", "brightness", "3", BrightnessBuffer, sizeof(BrightnessBuffer), FileName);
