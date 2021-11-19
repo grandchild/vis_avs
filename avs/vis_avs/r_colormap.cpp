@@ -107,14 +107,21 @@ void C_ColorMap::add_map_color(int map_index, unsigned int position, int color) 
         return;
     }
     map_color* new_map_colors = new map_color[this->maps[map_index].length + 1];
-    for(unsigned int i = 0, a = 0; i < this->maps[map_index].length; i++) {
-        if(a == 0 && position >= this->maps[map_index].colors[i].position) {
+    int added = 0;
+    if(position < this->maps[map_index].colors[0].position) {
+        new_map_colors[0].position = position;
+        new_map_colors[0].color = color;
+        new_map_colors[0].color_id = this->get_new_id();
+        added = 1;
+    }
+    for(unsigned int i = 0; i < this->maps[map_index].length; i++) {
+        if(added == 0 && position >= this->maps[map_index].colors[i].position) {
             new_map_colors[i].position = position;
             new_map_colors[i].color = color;
             new_map_colors[i].color_id = this->get_new_id();
-            a = 1;
+            added = 1;
         }
-        new_map_colors[i + a] = this->maps[map_index].colors[i];
+        new_map_colors[i + added] = this->maps[map_index].colors[i];
     }
     map_color* old_map_colors = this->maps[map_index].colors;
     this->maps[map_index].colors = new_map_colors;
