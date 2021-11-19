@@ -1,0 +1,184 @@
+### C/C++ clang-format style settings for vis_avs
+
+# It's highly encouraged to set your editor to run clang-format automatically when
+# saving a file. This way, you won't have to worry about the file failing style checks
+# later.
+
+# Run `clang-format -style=google -dump-config` to see what the defaults are.
+BasedOnStyle: google
+
+ColumnLimit: 88
+IndentWidth: 4
+UseTab: Never
+
+# Pointers are aligned with the type, not the variable/parameter name. 
+PointerAlignment: Left
+# Clang-format homogenizes alignment to whatever was most used in the file before, but
+# we want to enforce our alignment so we have to turn that off explicitly.
+DerivePointerAlignment: false
+
+# Break calculations like on paper, so the operator isn't hidden away at the end of
+# lines:
+#
+#     int a = b
+#         + c
+#         - d;
+#
+# and especially:
+#
+#     if(long < condition
+#         && another == condition
+#         || this + that > 0) {}
+#
+BreakBeforeBinaryOperators: NonAssignment
+
+# Moving the ":" into the first initializer line makes initializer lists stand apart
+# more from the body of the constructor:
+#
+#     C_Effect::C_Effect()
+#         : foo(false),
+#           bar(true) {
+#         this->count++;
+#     }
+#
+BreakConstructorInitializers: BeforeColon
+BreakInheritanceList: BeforeColon
+
+# Ideally, long parameter lists would be formatted similar to what python-black does:
+#
+#     void func(
+#         int a,
+#         int b,
+#         int c
+#     ) {
+#         int x = 0;
+#     }
+#
+# But, sadly, clang-format cannot break between the last parameter and the closing
+# parenthesis. We could set AlignAfterOpenBracket to "AlwaysBreak" and get:
+#
+#     void func(
+#         int a,
+#         int b,
+#         int c) {
+#         int x = 0;
+#     }
+#
+# But now it's hard to see that c and x are in completely different scopes, especially
+# if they had longer names.
+#
+# So we reluctantly go for:
+#
+#     void func(int a,
+#               int b,
+#               int c) {
+#         int x = 0;
+#     }
+#
+# instead, which is not as pretty, but still has a visual break between the parameter
+# list and the leading variable declarations.
+AlignAfterOpenBracket: Align  # AlwaysBreak
+AllowAllParametersOfDeclarationOnNextLine: false
+BinPackArguments: false
+BinPackParameters: false
+
+# This has no effect since its only available for Javascript right now, but it may come
+# to C++ at some point? It's what we would like to have at least. Enforces trailing
+# commas for container literals. So this:
+#
+#     int arr[] = {1, 2};
+#
+# becomes:
+#
+#     int arr[] = {
+#         1,
+#         2,
+#     };
+#
+InsertTrailingCommas: Wrapped
+
+# For an AVS effect in r_foo.cpp the main #includes are c_foo.h and (sometimes) r_foo.h.
+# Make clang-format aware of these, so that it sorts them at the top. But clang-format
+# only supports suffixes so this a bit hacky: Sort _any_ c_*.h or r_*.h header to the
+# top, not just the main header. But other c_*/r_* headers aren't routinely included, so
+# we can get away with it.
+#
+# r_defs.h is handled as a special case, because it's the utility include that's in
+# almost every file. It should be sorted at the top of the "foo.h" include section for
+# local headers.
+#
+# The clang-format docs are a bit confusing regarding SortPriority. SortPriority is the
+# order within a grouping (as defined by Priority), but it has some weird behavior. A
+# good safety measure seems to be that SortPriority values should be eaual or larger
+# than their group's Priority value to take effect. Note: The default value for
+# SortPriority is that it's equal to Priority.
+#
+# The result looks like this:
+#
+#     #include "c_foo.h"
+#     #include "r_foo.h"
+#
+#     #include "r_defs.h"
+#
+#     #include "image.h"
+#
+#     #include <math.h>
+#     #include <string>
+#
+#     #include <lib/lib.h>
+#
+IncludeCategories:
+  # The first match found when going through this list is applied, so we need to put the
+  # rule for specific headers at the top, so it doesn't match the r_*.h rule below.
+  - Regex:        '"r_defs\.h"'
+    Priority:     5
+  - Regex:        '"g__(lib|defs).h"'
+    Priority:     5
+    SortPriority: 6
+
+  # The headers for the current component. "r_*.h" files are only rarely used, for
+  # things that are relevant _only_ to the render .cpp file but not to the UI code.
+  - Regex:        '"c_[^_].*\.h"'
+    Priority:     0
+  - Regex:        '"r_[^_].*\.h"'
+    Priority:     0
+    SortPriority: 2
+
+  # Regular local headers. Again, we have to match foo/bar.h before matching the less
+  # specific foo.h.
+  - Regex:        '^".+/.+.h"'
+    Priority:     15
+  - Regex:        '^".+\.h"'
+    Priority:     10
+
+  # Standard headers last
+  - Regex:        '<.+/.+>'
+    Priority:     25
+  - Regex:        '<windows.h>'
+    Priority:     20
+  - Regex:        '<.+>'
+    Priority:     20
+    SortPriority: 21
+
+# In general, comments that break the line length should be on a separate line. But if
+# need be, prefer
+#
+#     int foo = bar + baz;  // really quite
+#                           // long comment
+#
+# over
+#
+#     int foo = bar
+#               + baz;  // really quite long
+#                       // comment
+#
+# (The default value is 300, which makes breaking assignments and function calls more
+# likely. This setting inverts that.)
+PenaltyBreakComment: 1
+
+# Vertically align lists of macros:
+#
+#     #define FOO     1
+#     #define BAR_BAZ 2
+#
+AlignConsecutiveMacros: AcrossComments
