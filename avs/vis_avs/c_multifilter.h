@@ -4,7 +4,7 @@
 
 #include <windows.h>
 
-#define MOD_NAME "Trans / Multi Filter"
+#define MOD_NAME                "Trans / Multi Filter"
 #define MULTIFILTER_NUM_EFFECTS 4
 
 enum MultiFilterEffect {

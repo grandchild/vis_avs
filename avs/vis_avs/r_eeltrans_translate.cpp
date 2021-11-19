@@ -9,7 +9,7 @@
 #include <vector>
 
 #define EELTRANS_TMP_PLACEHOLDER_STR "cahghagahS8Jee4"
-#define NEWLINE "\r\n"
+#define NEWLINE                      "\r\n"
 
 const static std::string VAR_PATTERN =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.";

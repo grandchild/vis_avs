@@ -1,12 +1,13 @@
 #include "c_globalvars.h"
 
-#include "avs_eelif.h"
 #include "r_defs.h"
+
+#include "avs_eelif.h"
 
 #include <algorithm>
 
 #define MAX_COMPONENT_SAVE_LEN (1 << 16)  // 64k is the maximum component size in AVS
-#define IS_BEAT_MASK 0x01  // something else might be encoded in the higher bytes
+#define IS_BEAT_MASK           0x01  // something else might be encoded in the higher bytes
 
 APEinfo* g_globalvars_extinfo = NULL;
 

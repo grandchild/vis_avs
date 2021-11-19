@@ -1,6 +1,7 @@
 #include "c_texer.h"
 
 #include "r_defs.h"  // g_path
+
 #include "files.h"
 #include "image.h"
 #include "pixel_format.h"

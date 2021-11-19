@@ -2,22 +2,22 @@
 
 #include "c__base.h"
 
-#include <vector>
 #include <windows.h>  // CRITICAL_SECTION
+#include <vector>
 
 #define MOD_NAME "Render / Picture II"
 
-#define OUT_REPLACE 0
-#define OUT_ADDITIVE 1
-#define OUT_MAXIMUM 2
-#define OUT_MINIMUM 3
-#define OUT_5050 4
-#define OUT_SUB1 5
-#define OUT_SUB2 6
-#define OUT_MULTIPLY 7
-#define OUT_XOR 8
+#define OUT_REPLACE    0
+#define OUT_ADDITIVE   1
+#define OUT_MAXIMUM    2
+#define OUT_MINIMUM    3
+#define OUT_5050       4
+#define OUT_SUB1       5
+#define OUT_SUB2       6
+#define OUT_MULTIPLY   7
+#define OUT_XOR        8
 #define OUT_ADJUSTABLE 9
-#define OUT_IGNORE 10
+#define OUT_IGNORE     10
 
 struct picture2_config {
     char image[MAX_PATH];

@@ -1,12 +1,13 @@
 #include "c_frameratelimiter.h"
 
-#include "c__defs.h"
 #include "g__defs.h"
 #include "g__lib.h"
+
+#include "c__defs.h"
 #include "resource.h"
 
-#include <commctrl.h>
 #include <windows.h>
+#include <commctrl.h>
 
 int win32_dlgproc_frameratelimiter(HWND hwndDlg,
                                    UINT uMsg,

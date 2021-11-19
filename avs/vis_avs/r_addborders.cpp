@@ -1,7 +1,7 @@
 /* Reconstructed from scratch. Original APE by Goebish (https://github.com/goebish) */
 #include "c_addborders.h"
-#include "r_defs.h"
 
+#include "r_defs.h"
 
 C_AddBorders::C_AddBorders() {
     this->enabled = false;
@@ -11,8 +11,12 @@ C_AddBorders::C_AddBorders() {
 
 C_AddBorders::~C_AddBorders() {}
 
-
-int C_AddBorders::render(char visdata[2][2][576], int is_beat, int *framebuffer, int *fbout, int w, int h) {
+int C_AddBorders::render(char visdata[2][2][576],
+                         int is_beat,
+                         int* framebuffer,
+                         int* fbout,
+                         int w,
+                         int h) {
     (void)visdata;
     (void)is_beat;
     (void)fbout;
@@ -50,12 +54,11 @@ int C_AddBorders::render(char visdata[2][2][576], int is_beat, int *framebuffer,
     return 0;
 }
 
-char *C_AddBorders::get_desc(void) {
-    return MOD_NAME;
-}
+char* C_AddBorders::get_desc(void) { return MOD_NAME; }
 
-#define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))
-void C_AddBorders::load_config(unsigned char *data, int len) {
+#define GET_INT() \
+    (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
+void C_AddBorders::load_config(unsigned char* data, int len) {
     int pos = 0;
     if (len - pos >= 4) {
         this->enabled = GET_INT();
@@ -81,8 +84,12 @@ void C_AddBorders::load_config(unsigned char *data, int len) {
     }
 }
 
-#define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=((y)>>8)&255; data[pos+2]=((y)>>16)&255; data[pos+3]=((y)>>24)&255
-int  C_AddBorders::save_config(unsigned char *data) {
+#define PUT_INT(y)                     \
+    data[pos] = (y)&255;               \
+    data[pos + 1] = ((y) >> 8) & 255;  \
+    data[pos + 2] = ((y) >> 16) & 255; \
+    data[pos + 3] = ((y) >> 24) & 255
+int C_AddBorders::save_config(unsigned char* data) {
     int pos = 0;
     PUT_INT((int)this->enabled);
     pos += 4;
@@ -92,10 +99,10 @@ int  C_AddBorders::save_config(unsigned char *data) {
     return 12;
 }
 
-C_RBASE *R_AddBorders(char *desc) {
+C_RBASE* R_AddBorders(char* desc) {
     if (desc) {
-        strcpy(desc,MOD_NAME); 
-        return NULL; 
+        strcpy(desc, MOD_NAME);
+        return NULL;
     }
-    return (C_RBASE *) new C_AddBorders();
+    return (C_RBASE*)new C_AddBorders();
 }

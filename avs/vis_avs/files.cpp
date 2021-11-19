@@ -43,7 +43,7 @@ bool matches_file_suffix(std::string file, char** suffixes, int num_suffixes) {
  * To top it off, we _only_ use this for the `recursive=true` mode on linux.
  * But it _is_ very fast.
  */
-#define MAX_PATH 260
+#define MAX_PATH              260
 // The maximum number of open file descriptors allowed for `ftw()` is roughly correlated
 // to the expected depth of the file subtree. 15 seems more than enough. If the tree is
 // deeper nothing bad will happen, `ftw()` will just get slower.

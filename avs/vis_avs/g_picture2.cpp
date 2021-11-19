@@ -1,14 +1,15 @@
 #include "c_picture2.h"
 
-#include "c__defs.h"
-#include "files.h"
 #include "g__defs.h"
 #include "g__lib.h"
+
+#include "c__defs.h"
+#include "files.h"
 #include "resource.h"
 
+#include <windows.h>
 #include <commctrl.h>
 #include <thread>
-#include <windows.h>
 
 int win32_dlgproc_picture2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     C_Picture2* config_this = (C_Picture2*)g_current_render;

@@ -4,27 +4,29 @@
 Copyright 2005 Nullsoft, Inc.
 All rights reserved.
 
-Redistribution and use in source and binary forms, with or without modification, 
+Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
   * Redistributions of source code must retain the above copyright notice,
-    this list of conditions and the following disclaimer. 
+    this list of conditions and the following disclaimer.
 
   * Redistributions in binary form must reproduce the above copyright notice,
     this list of conditions and the following disclaimer in the documentation
-    and/or other materials provided with the distribution. 
+    and/or other materials provided with the distribution.
 
-  * Neither the name of Nullsoft nor the names of its contributors may be used to 
-    endorse or promote products derived from this software without specific prior written permission. 
- 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR 
-IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND 
-FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR 
-CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT 
-OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  * Neither the name of Nullsoft nor the names of its contributors may be used to
+    endorse or promote products derived from this software without specific prior
+    written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
+THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 #ifndef _WAFE_H_
@@ -34,15 +36,15 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ** By Justin Frankel.
 ** Copyright (C) 1997-1999, Nullsoft Inc.
 ** Last updated: JAN.8.1999.
-** 
+**
 ** Introduction
 ** -----------------------
 ** This file describes a means to easily communicate to Winamp
-** via the classic Win32 Message API. 
+** via the classic Win32 Message API.
 **
 ** These definitions/code assume C/C++. Porting to VB/Delphi shouldn't
 ** be too hard.
-** 
+**
 ** First, you find the HWND of the Winamp main window. From a plug-in
 ** you can easily extract this from the plug-in structure (hMainWindow,
 ** hwndParent, whatever). For external apps, use:
@@ -51,7 +53,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **
 ** (note: I know, we're in Winamp 2.x, but it's 1.x for compatibility)
 **
-** Once you have the hwnd_winamp, it's a good idea to check the version 
+** Once you have the hwnd_winamp, it's a good idea to check the version
 ** number. To do this, you send a WM_WA_IPC message to hwnd_winamp.
 ** Note that WM_WA_IPC is defined as Win32's WM_USER.
 **
@@ -76,7 +78,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ** (for the version check, command_data is 0).
 */
 
-
 #define IPC_DELETE 101
 
 /*
@@ -84,7 +85,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **
 ** You can use IPC_DELETE to clear Winamp's internal playlist.
 */
-
 
 #define IPC_STARTPLAY 102
 
@@ -94,38 +94,34 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ** Using IPC_STARTPLAY is like hitting 'Play' in Winamp, mostly.
 */
 
-
 #define IPC_ISPLAYING 104
 
 /*
 ** int res = SendMessage(hwnd_winamp,WM_WA_IPC,0,IPC_ISPLAYING);
 **
 ** IPC_ISPLAYING returns the status of playback.
-** If it returns 1, it is playing. if it returns 3, it is paused, 
+** If it returns 1, it is playing. if it returns 3, it is paused,
 ** if it returns 0, it is not playing.
 */
-
 
 #define IPC_GETOUTPUTTIME 105
 
 /*
 ** int res = SendMessage(hwnd_winamp,WM_WA_IPC,mode,IPC_GETOUTPUTTIME);
 **
-** IPC_GETOUTPUTTIME returns the position in milliseconds of the 
+** IPC_GETOUTPUTTIME returns the position in milliseconds of the
 ** current song (mode = 0), or the song length, in seconds (mode = 1).
 ** Returns -1 if not playing or error.
 */
-
 
 #define IPC_JUMPTOTIME 106
 
 /* (requires Winamp 1.60+)
 ** SendMessage(hwnd_winamp,WM_WA_IPC,ms,IPC_JUMPTOTIME);
-** IPC_JUMPTOTIME sets the position in milliseconds of the 
+** IPC_JUMPTOTIME sets the position in milliseconds of the
 ** current song (approximately).
 ** Returns -1 if not playing, 1 on eof, or 0 if successful
 */
-
 
 #define IPC_WRITEPLAYLIST 120
 
@@ -138,7 +134,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ** using a front-end (instead of a plug-in)
 */
 
-
 #define IPC_SETPLAYLISTPOS 121
 
 /* (requires Winamp 2.0+)
@@ -146,7 +141,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **
 ** IPC_SETPLAYLISTPOS sets the playlsit position to 'position'.
 */
-
 
 #define IPC_SETVOLUME 122
 
@@ -156,7 +150,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ** IPC_SETVOLUME sets the volume of Winamp (from 0-255).
 */
 
-
 #define IPC_SETPANNING 123
 
 /* (requires Winamp 2.0+)
@@ -164,7 +157,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **
 ** IPC_SETPANNING sets the panning of Winamp (from 0 (left) to 255 (right)).
 */
-
 
 #define IPC_GETLISTLENGTH 124
 
@@ -175,31 +167,28 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ** tracks.
 */
 
-
 #define IPC_SETSKIN 200
 
 /* (requires Winamp 2.04+, only usable from plug-ins (not external apps))
 ** SendMessage(hwnd_winamp,WM_WA_IPC,(WPARAM)"skinname",IPC_SETSKIN);
 **
-** IPC_SETSKIN sets the current skin to "skinname". Note that skinname 
-** can be the name of a skin, a skin .zip file, with or without path. 
-** If path isn't specified, the default search path is the winamp skins 
+** IPC_SETSKIN sets the current skin to "skinname". Note that skinname
+** can be the name of a skin, a skin .zip file, with or without path.
+** If path isn't specified, the default search path is the winamp skins
 ** directory.
 */
-
 
 #define IPC_GETSKIN 201
 
 /* (requires Winamp 2.04+, only usable from plug-ins (not external apps))
 ** SendMessage(hwnd_winamp,WM_WA_IPC,(WPARAM)skinname_buffer,IPC_GETSKIN);
 **
-** IPC_GETSKIN puts the directory where skin bitmaps can be found 
+** IPC_GETSKIN puts the directory where skin bitmaps can be found
 ** into  skinname_buffer.
 ** skinname_buffer must be MAX_PATH characters in length.
 ** When using a .zip'd skin file, it'll return a temporary directory
 ** where the ZIP was decompressed.
 */
-
 
 #define IPC_EXECPLUG 202
 
@@ -210,9 +199,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ** the format of this string can be:
 ** "vis_whatever.dll"
 ** "vis_whatever.dll,0" // (first mod, file in winamp plug-in dir)
-** "C:\\dir\\vis_whatever.dll,1" 
+** "C:\\dir\\vis_whatever.dll,1"
 */
-
 
 #define IPC_GETPLAYLISTFILE 211
 
@@ -223,7 +211,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ** returns a pointer to it. returns NULL on error.
 */
 
-
 #define IPC_GETPLAYLISTTITLE 212
 
 /* (requires Winamp 2.04+, only usable from plug-ins (not external apps))
@@ -232,7 +219,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ** IPC_GETPLAYLISTTITLE gets the title of the playlist entry [index].
 ** returns a pointer to it. returns NULL on error.
 */
-
 
 #define IPC_GETLISTPOS 125
 
@@ -243,8 +229,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ** only faster since it doesn't have to write out the list. Heh, silly me.
 */
 
-
-#define IPC_GETINFO 126 
+#define IPC_GETINFO 126
 
 /* (requires Winamp 2.05+)
 ** int inf=SendMessage(hwnd_winamp,WM_WA_IPC,mode,IPC_GETINFO);
@@ -258,13 +243,12 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ** 2         Channels (i.e. 2)
 */
 
-
-#define IPC_GETEQDATA 127 
+#define IPC_GETEQDATA 127
 
 /* (requires Winamp 2.05+)
 ** int data=SendMessage(hwnd_winamp,WM_WA_IPC,pos,IPC_GETEQDATA);
 **
-** IPC_GETEQDATA queries the status of the EQ. 
+** IPC_GETEQDATA queries the status of the EQ.
 ** The value returned depends on what 'pos' is set to:
 ** Value      Meaning
 ** ------------------
@@ -273,7 +257,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ** 11         Enabled. zero if disabled, nonzero if enabled.
 ** 12         Autoload. zero if disabled, nonzero if enabled.
 */
-
 
 #define IPC_SETEQDATA 128
 
@@ -305,7 +288,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **
 */
 
-
 #define IPC_CHDIR 103
 
 /*
@@ -319,49 +301,47 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **
 */
 
-
 /**************************************************************************/
 
 /*
-** Finally there are some WM_COMMAND messages that you can use to send 
+** Finally there are some WM_COMMAND messages that you can use to send
 ** Winamp misc commands.
-** 
+**
 ** To send these, use:
 **
 ** SendMessage(hwnd_winamp, WM_COMMAND,command_name,0);
 */
 
-#define WINAMP_OPTIONS_EQ               40036 // toggles the EQ window
-#define WINAMP_OPTIONS_PLEDIT           40040 // toggles the playlist window
-#define WINAMP_VOLUMEUP                 40058 // turns the volume up a little
-#define WINAMP_VOLUMEDOWN               40059 // turns the volume down a little
-#define WINAMP_FFWD5S                   40060 // fast forwards 5 seconds
-#define WINAMP_REW5S                    40061 // rewinds 5 seconds
+#define WINAMP_OPTIONS_EQ     40036  // toggles the EQ window
+#define WINAMP_OPTIONS_PLEDIT 40040  // toggles the playlist window
+#define WINAMP_VOLUMEUP       40058  // turns the volume up a little
+#define WINAMP_VOLUMEDOWN     40059  // turns the volume down a little
+#define WINAMP_FFWD5S         40060  // fast forwards 5 seconds
+#define WINAMP_REW5S          40061  // rewinds 5 seconds
 
-// the following are the five main control buttons, with optionally shift 
+// the following are the five main control buttons, with optionally shift
 // or control pressed
 // (for the exact functions of each, just try it out)
-#define WINAMP_BUTTON1                  40044
-#define WINAMP_BUTTON2                  40045
-#define WINAMP_BUTTON3                  40046
-#define WINAMP_BUTTON4                  40047
-#define WINAMP_BUTTON5                  40048
-#define WINAMP_BUTTON1_SHIFT            40144
-#define WINAMP_BUTTON2_SHIFT            40145
-#define WINAMP_BUTTON3_SHIFT            40146
-#define WINAMP_BUTTON4_SHIFT            40147
-#define WINAMP_BUTTON5_SHIFT            40148
-#define WINAMP_BUTTON1_CTRL             40154
-#define WINAMP_BUTTON2_CTRL             40155
-#define WINAMP_BUTTON3_CTRL             40156
-#define WINAMP_BUTTON4_CTRL             40157
-#define WINAMP_BUTTON5_CTRL             40158
+#define WINAMP_BUTTON1       40044
+#define WINAMP_BUTTON2       40045
+#define WINAMP_BUTTON3       40046
+#define WINAMP_BUTTON4       40047
+#define WINAMP_BUTTON5       40048
+#define WINAMP_BUTTON1_SHIFT 40144
+#define WINAMP_BUTTON2_SHIFT 40145
+#define WINAMP_BUTTON3_SHIFT 40146
+#define WINAMP_BUTTON4_SHIFT 40147
+#define WINAMP_BUTTON5_SHIFT 40148
+#define WINAMP_BUTTON1_CTRL  40154
+#define WINAMP_BUTTON2_CTRL  40155
+#define WINAMP_BUTTON3_CTRL  40156
+#define WINAMP_BUTTON4_CTRL  40157
+#define WINAMP_BUTTON5_CTRL  40158
 
-#define WINAMP_FILE_PLAY                40029 // pops up the load file(s) box
-#define WINAMP_OPTIONS_PREFS            40012 // pops up the preferences
-#define WINAMP_OPTIONS_AOT              40019 // toggles always on top
-#define WINAMP_HELP_ABOUT               40041 // pops up the about box :)
-
+#define WINAMP_FILE_PLAY     40029  // pops up the load file(s) box
+#define WINAMP_OPTIONS_PREFS 40012  // pops up the preferences
+#define WINAMP_OPTIONS_AOT   40019  // toggles always on top
+#define WINAMP_HELP_ABOUT    40041  // pops up the about box :)
 
 /*
 ** EOF.. Enjoy.

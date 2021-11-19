@@ -2,10 +2,7 @@
 #ifndef _TIMING_H_
 #define _TIMING_H_
 
-
 //#define TIMING
-
-
 
 #if defined(TIMING) && !defined(__alpha)
 #ifdef __cplusplus
@@ -18,8 +15,8 @@ void _timingLeave(int);
 #ifdef __cplusplus
 }
 #endif
-#define timingPrint() _timingPrint()
-#define timingInit() _timingInit()
+#define timingPrint()  _timingPrint()
+#define timingInit()   _timingInit()
 #define timingLeave(x) _timingLeave(x)
 #define timingEnter(x) _timingEnter(x)
 #else

@@ -3,13 +3,12 @@
 #include <windows.h>
 #include <string>
 
-
-#define APE_ID_BASE 16384
+#define APE_ID_BASE                 16384
 #define UI_COMPONENT_LIST_ALLOC_LEN 80
-#define COMPONENT_IDSTRING_LEN 32
+#define COMPONENT_IDSTRING_LEN      32
 
 #define DECL_HANDLER(NAME) extern int win32_dlgproc_##NAME(HWND, UINT, WPARAM, LPARAM)
-#define DECL_UIPREP(NAME) extern void win32_uiprep_##NAME(HINSTANCE)
+#define DECL_UIPREP(NAME)  extern void win32_uiprep_##NAME(HINSTANCE)
 
 DECL_HANDLER(unknown);
 DECL_HANDLER(root_effectlist);
@@ -68,7 +67,8 @@ DECL_HANDLER(videodelay);
 DECL_HANDLER(convolution);
 DECL_HANDLER(texer2);
 DECL_HANDLER(normalise);
-DECL_HANDLER(colormap); DECL_UIPREP(colormap);
+DECL_HANDLER(colormap);
+DECL_UIPREP(colormap);
 DECL_HANDLER(addborders);
 DECL_HANDLER(triangle);
 DECL_HANDLER(eeltrans);
@@ -96,11 +96,12 @@ typedef struct {
 } C_Win32GuiComponent;
 
 class C_GLibrary {
-  public:
+   public:
     C_GLibrary();
     ~C_GLibrary();
     C_Win32GuiComponent* get(int id_or_idstring, void* render_component);
-  protected:
+
+   protected:
     C_Win32GuiComponent* get_by_idstring(char* idstring);
     C_Win32GuiComponent* components;
     C_Win32GuiComponent unknown;

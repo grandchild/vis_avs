@@ -4,129 +4,146 @@
 Copyright 2005 Nullsoft, Inc.
 All rights reserved.
 
-Redistribution and use in source and binary forms, with or without modification, 
+Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
   * Redistributions of source code must retain the above copyright notice,
-    this list of conditions and the following disclaimer. 
+    this list of conditions and the following disclaimer.
 
   * Redistributions in binary form must reproduce the above copyright notice,
     this list of conditions and the following disclaimer in the documentation
-    and/or other materials provided with the distribution. 
+    and/or other materials provided with the distribution.
 
-  * Neither the name of Nullsoft nor the names of its contributors may be used to 
-    endorse or promote products derived from this software without specific prior written permission. 
- 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR 
-IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND 
-FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR 
-CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT 
-OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  * Neither the name of Nullsoft nor the names of its contributors may be used to
+    endorse or promote products derived from this software without specific prior
+    written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
+THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 // alphachannel safe 11/21/99
 #include "c_fadeout.h"
-#include "r_defs.h"
-#include "timing.h"
 
+#include "r_defs.h"
+
+#include "timing.h"
 
 #ifndef LASER
 
-void C_THISCLASS::maketab(void)
-{
-  int rseek=color&0xff;
-  int gseek=(color>>8)&0xff;
-  int bseek=(color>>16)&0xff;
-  int x;
-  for (x = 0; x < 256; x ++)
-  {
-    int r=x;
-    int g=x;
-    int b=x;
-    if (r <= rseek-fadelen) r+=fadelen;
-    else if (r >= rseek+fadelen) r-=fadelen;
-    else r=rseek;
+void C_THISCLASS::maketab(void) {
+    int rseek = color & 0xff;
+    int gseek = (color >> 8) & 0xff;
+    int bseek = (color >> 16) & 0xff;
+    int x;
+    for (x = 0; x < 256; x++) {
+        int r = x;
+        int g = x;
+        int b = x;
+        if (r <= rseek - fadelen)
+            r += fadelen;
+        else if (r >= rseek + fadelen)
+            r -= fadelen;
+        else
+            r = rseek;
 
-    if (g <= gseek-fadelen) g+=fadelen;
-    else if (g >= gseek+fadelen) g-=fadelen;
-    else g=gseek;
-    if (b <= bseek-fadelen) b+=fadelen;
-    else if (b >= bseek+fadelen) b-=fadelen;
-    else b=bseek;
+        if (g <= gseek - fadelen)
+            g += fadelen;
+        else if (g >= gseek + fadelen)
+            g -= fadelen;
+        else
+            g = gseek;
+        if (b <= bseek - fadelen)
+            b += fadelen;
+        else if (b >= bseek + fadelen)
+            b -= fadelen;
+        else
+            b = bseek;
 
-    fadtab[0][x]=r;
-    fadtab[1][x]=g;
-    fadtab[2][x]=b;
-  }
+        fadtab[0][x] = r;
+        fadtab[1][x] = g;
+        fadtab[2][x] = b;
+    }
 }
 
-#define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=(y>>8)&255; data[pos+2]=(y>>16)&255; data[pos+3]=(y>>24)&255
-#define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))
-void C_THISCLASS::load_config(unsigned char *data, int len)
-{
-	int pos=0;
-	if (len-pos >= 4) { fadelen=GET_INT(); pos+=4; }
-	if (len-pos >= 4) { color=GET_INT(); pos+=4; }
-  maketab();
+#define PUT_INT(y)                   \
+    data[pos] = (y)&255;             \
+    data[pos + 1] = (y >> 8) & 255;  \
+    data[pos + 2] = (y >> 16) & 255; \
+    data[pos + 3] = (y >> 24) & 255
+#define GET_INT() \
+    (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
+void C_THISCLASS::load_config(unsigned char* data, int len) {
+    int pos = 0;
+    if (len - pos >= 4) {
+        fadelen = GET_INT();
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        color = GET_INT();
+        pos += 4;
+    }
+    maketab();
 }
 
-int  C_THISCLASS::save_config(unsigned char *data)
-{
-	int pos=0;
-	PUT_INT(fadelen); pos+=4;
-	PUT_INT(color); pos+=4;
-	return pos;
+int C_THISCLASS::save_config(unsigned char* data) {
+    int pos = 0;
+    PUT_INT(fadelen);
+    pos += 4;
+    PUT_INT(color);
+    pos += 4;
+    return pos;
 }
 
-
-C_THISCLASS::C_THISCLASS()
-{
-  color=0;
-	fadelen=16;
-  maketab();
+C_THISCLASS::C_THISCLASS() {
+    color = 0;
+    fadelen = 16;
+    maketab();
 }
 
-C_THISCLASS::~C_THISCLASS()
-{
-}
-	
-int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int*, int w, int h)
-{
-  if (isBeat&0x80000000) return 0;
-  if (!fadelen) return 0;
-	timingEnter(1);
-	if (
+C_THISCLASS::~C_THISCLASS() {}
+
+int C_THISCLASS::render(char[2][2][576],
+                        int isBeat,
+                        int* framebuffer,
+                        int*,
+                        int w,
+                        int h) {
+    if (isBeat & 0x80000000) return 0;
+    if (!fadelen) return 0;
+    timingEnter(1);
+    if (
 #ifdef NO_MMX
-    1
-#else   
-    color
+        1
+#else
+        color
 #endif
-    )
-	{
-	  unsigned char *t=(unsigned char *)framebuffer;
-	  int x=w*h;
-	  while (x--)
-	  {
-		  t[0]=fadtab[0][t[0]];
-		  t[1]=fadtab[1][t[1]];
-		  t[2]=fadtab[2][t[2]];
-		  t+=4;
-	  }
-  }
+    ) {
+        unsigned char* t = (unsigned char*)framebuffer;
+        int x = w * h;
+        while (x--) {
+            t[0] = fadtab[0][t[0]];
+            t[1] = fadtab[1][t[1]];
+            t[2] = fadtab[2][t[2]];
+            t += 4;
+        }
+    }
 #ifndef NO_MMX
-  else
-  {
-		int l=(w*h);
-		char fadj[8];
-		int x;
-    unsigned char *t=fadtab[0];
-		for (x = 0; x < 8; x ++) fadj[x]=this->fadelen;
-#ifdef _MSC_VER // MSVC asm
-		__asm 
-		{
+    else {
+        int l = (w * h);
+        char fadj[8];
+        int x;
+        unsigned char* t = fadtab[0];
+        for (x = 0; x < 8; x++) fadj[x] = this->fadelen;
+#ifdef _MSC_VER  // MSVC asm
+        __asm {
 			mov edx, l
 			mov edi, framebuffer
 			movq mm7, [fadj]
@@ -183,9 +200,9 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int*, int
 			jnz fadeout_l2
 		_l3:
 			emms
-		}
-#else // _MSC_VER, GCC asm
-        __asm__ __volatile__ (
+        }
+#else   // _MSC_VER, GCC asm
+        __asm__ __volatile__(
             "mov     %%edx, %[l]\n\t"
             "mov     %%edi, %[framebuffer]\n\t"
             "movq    %%mm7, [%[fadj]]\n\t"
@@ -230,22 +247,23 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int *framebuffer, int*, int
             "_l3:\n\t"
             "emms\n\t"
             : /* no outputs */
-            : [l]"m"(l), [framebuffer]"m"(framebuffer), [fadj]"m"(fadj), [t]"m"(t)
-            : "eax", "ebx", "ecx", "edx", "edi", "esi"
-        );
-#endif // _MSC_VER
-  }
+            : [l] "m"(l), [framebuffer] "m"(framebuffer), [fadj] "m"(fadj), [t] "m"(t)
+            : "eax", "ebx", "ecx", "edx", "edi", "esi");
+#endif  // _MSC_VER
+    }
 #endif
-	timingLeave(1);
-  return 0;
+    timingLeave(1);
+    return 0;
 }
 
-C_RBASE *R_FadeOut(char *desc)
-{
-	if (desc) { strcpy(desc,MOD_NAME); return NULL; }
-	return (C_RBASE *) new C_THISCLASS();
+C_RBASE* R_FadeOut(char* desc) {
+    if (desc) {
+        strcpy(desc, MOD_NAME);
+        return NULL;
+    }
+    return (C_RBASE*)new C_THISCLASS();
 }
 
 #else
-C_RBASE *R_FadeOut(char *desc) { return NULL; }
+C_RBASE* R_FadeOut(char* desc) { return NULL; }
 #endif

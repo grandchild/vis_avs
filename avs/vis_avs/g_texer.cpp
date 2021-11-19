@@ -1,12 +1,13 @@
 #include "c_texer.h"
 
-#include "c__defs.h"
 #include "g__defs.h"
 #include "g__lib.h"
+
+#include "c__defs.h"
 #include "resource.h"
 
-#include <commctrl.h>
 #include <windows.h>
+#include <commctrl.h>
 
 int win32_dlgproc_texer(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     C_Texer* config_this = (C_Texer*)g_current_render;

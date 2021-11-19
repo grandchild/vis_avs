@@ -4,7 +4,7 @@
 #include <set>
 #include <string>
 
-#define MOD_NAME "Misc / AVSTrans Automation"
+#define MOD_NAME         "Misc / AVSTrans Automation"
 #define EELTRANS_VERSION "1.25.00"
 
 class C_EelTrans : public C_RBASE {

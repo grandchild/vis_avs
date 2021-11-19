@@ -1,8 +1,9 @@
 #include "c_normalise.h"
-#include "r_defs.h"
-#include <xmmintrin.h>
-#include <emmintrin.h>
 
+#include "r_defs.h"
+
+#include <emmintrin.h>
+#include <xmmintrin.h>
 
 /* This is a tradeoff heuristic used in the SSE2 implementation. Checking more often
 (->lower number) will increase total cost for scan, but will exit (slightly) earlier, if
@@ -11,44 +12,42 @@ colors not already spanning the full brightness range), it's probably safe to us
 fairly large number here.
 Must be divisible by four, or early-exit check condition will never be hit! */
 #define TRY_BAIL_SCAN_EARLY_EVERY_NTH_PIXEL 512
-#define NUM_COLOR_VALUES 256  // 2 ^ BITS_PER_CHANNEL (i.e. 8)
+#define NUM_COLOR_VALUES                    256  // 2 ^ BITS_PER_CHANNEL (i.e. 8)
 
-
-C_Normalise::C_Normalise() {
-    this->enabled = true;
-}
+C_Normalise::C_Normalise() { this->enabled = true; }
 
 C_Normalise::~C_Normalise() {}
 
-int C_Normalise::scan_min_max(
-    int* framebuffer, int fb_length, unsigned char * max_out, unsigned char * min_out
-) {
-    for(int i = 0; i < fb_length; i++) {
+int C_Normalise::scan_min_max(int* framebuffer,
+                              int fb_length,
+                              unsigned char* max_out,
+                              unsigned char* min_out) {
+    for (int i = 0; i < fb_length; i++) {
         unsigned char r = framebuffer[i] >> 16 & 0xff;
         unsigned char g = framebuffer[i] >> 8 & 0xff;
         unsigned char b = framebuffer[i] & 0xff;
         unsigned char rg_max = r > g ? r : g;
         unsigned char max_channel = rg_max > b ? rg_max : b;
-        if(max_channel > *max_out) {
+        if (max_channel > *max_out) {
             *max_out = max_channel;
         }
         unsigned char rg_min = r < g ? r : g;
         unsigned char min_channel = rg_min < b ? rg_min : b;
-        if(min_channel < *min_out) {
+        if (min_channel < *min_out) {
             *min_out = min_channel;
         }
         // We don't use TRY_BAIL_SCAN_EARLY_EVERY_NTH_PIXEL here because it's so cheap.
-        if(*max_out == 0xff && *min_out == 0) {
+        if (*max_out == 0xff && *min_out == 0) {
             return 1;
         }
     }
     return 0;
 }
 
-
-int C_Normalise::scan_min_max_sse2(
-    int* framebuffer, int fb_length, unsigned char * max_out, unsigned char * min_out
-) {
+int C_Normalise::scan_min_max_sse2(int* framebuffer,
+                                   int fb_length,
+                                   unsigned char* max_out,
+                                   unsigned char* min_out) {
     /*
     Assume the framebuffer length is a multiple of 4, which is a given since the AVS
     window can only have a multiple-4 width. Go four 32-bit pixels at a time, and
@@ -58,19 +57,20 @@ int C_Normalise::scan_min_max_sse2(
     __m128i min4 = _mm_set_epi32(0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff);
     __m128i white = _mm_set_epi32(0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff);
     __m128i black = _mm_set_epi32(0x00000000, 0x00000000, 0x00000000, 0x00000000);
-    unsigned int cmp_mask = 0b0111011101110111;  // ignore 4th channel comparison results
+    unsigned int cmp_mask = 0b0111011101110111;  // ignore 4th channel comparison
+                                                 // results
 
-    for(int i = 0; i < fb_length; i += 4) {
+    for (int i = 0; i < fb_length; i += 4) {
         __m128i four_px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
         max4 = _mm_max_epu8(max4, four_px);
         min4 = _mm_min_epu8(min4, four_px);
 
-        if(i % TRY_BAIL_SCAN_EARLY_EVERY_NTH_PIXEL == 0) {
+        if (i % TRY_BAIL_SCAN_EARLY_EVERY_NTH_PIXEL == 0) {
             __m128i maxed_out = _mm_cmpeq_epi8(max4, white);
             __m128i bottomed_out = _mm_cmpeq_epi8(min4, black);
             unsigned int has_maxed_out = _mm_movemask_epi8(maxed_out) & cmp_mask;
             unsigned int has_bottomed_out = _mm_movemask_epi8(bottomed_out) & cmp_mask;
-            if(has_maxed_out != 0 && has_bottomed_out != 0) {
+            if (has_maxed_out != 0 && has_bottomed_out != 0) {
                 return 1;
             }
         }
@@ -80,21 +80,20 @@ int C_Normalise::scan_min_max_sse2(
     unsigned char four_px_min[16];
     _mm_store_si128((__m128i*)four_px_max, max4);
     _mm_store_si128((__m128i*)four_px_min, min4);
-    for(int i = 0; i < 16; i++) {
+    for (int i = 0; i < 16; i++) {
         *max_out = four_px_max[i] > *max_out ? four_px_max[i] : *max_out;
         *min_out = four_px_min[i] < *min_out ? four_px_min[i] : *min_out;
-        if(i % 4 == 2) i++;
+        if (i % 4 == 2) i++;
     }
     return 0;
 }
 
-
-void C_Normalise::make_scale_table(
-    unsigned char max, unsigned char min, unsigned int scale_table_out[]
-) {
-    if(max - min) {
+void C_Normalise::make_scale_table(unsigned char max,
+                                   unsigned char min,
+                                   unsigned int scale_table_out[]) {
+    if (max - min) {
         float diff = (NUM_COLOR_VALUES - 1) / (float)(max - min);
-        for(int i = min, j=0; i <= max; i++, j++) {
+        for (int i = min, j = 0; i <= max; i++, j++) {
             scale_table_out[i] = j * diff;
         }
     } else {
@@ -103,36 +102,34 @@ void C_Normalise::make_scale_table(
 }
 
 void C_Normalise::apply(int* framebuffer, int fb_length, unsigned int scale_table[]) {
-    for(int i = 0; i < fb_length; i++) {
+    for (int i = 0; i < fb_length; i++) {
         unsigned char r = framebuffer[i] & 0xff;
         unsigned char g = (framebuffer[i] & 0xff00) >> 8;
         unsigned char b = (framebuffer[i] & 0xff0000) >> 16;
-        framebuffer[i] = scale_table[r]
-                         | (scale_table[g] << 8)
-                         | (scale_table[b] << 16);
+        framebuffer[i] =
+            scale_table[r] | (scale_table[g] << 8) | (scale_table[b] << 16);
     }
 }
 
-int C_Normalise::render(char[2][2][576], int, int *framebuffer, int*, int w, int h) {
+int C_Normalise::render(char[2][2][576], int, int* framebuffer, int*, int w, int h) {
     unsigned char max = 0;
     unsigned char min = 0xff;
     unsigned int scale_table[NUM_COLOR_VALUES];
     bool no_scaling_needed;
 
-    if(!this->enabled) return 0;
+    if (!this->enabled) return 0;
     no_scaling_needed = this->scan_min_max_sse2(framebuffer, w * h, &max, &min);
-    if(no_scaling_needed) return 0;
+    if (no_scaling_needed) return 0;
     this->make_scale_table(max, min, scale_table);
     this->apply(framebuffer, w * h, scale_table);
     return 0;
 }
 
-char *C_Normalise::get_desc(void) {
-    return MOD_NAME;
-}
+char* C_Normalise::get_desc(void) { return MOD_NAME; }
 
-#define GET_INT() (data[pos]|(data[pos+1]<<8)|(data[pos+2]<<16)|(data[pos+3]<<24))
-void C_Normalise::load_config(unsigned char *data, int len) {
+#define GET_INT() \
+    (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
+void C_Normalise::load_config(unsigned char* data, int len) {
     int pos = 0;
     if (len - pos >= 4) {
         this->enabled = GET_INT();
@@ -141,17 +138,21 @@ void C_Normalise::load_config(unsigned char *data, int len) {
     }
 }
 
-#define PUT_INT(y) data[pos]=(y)&255; data[pos+1]=((y)>>8)&255; data[pos+2]=((y)>>16)&255; data[pos+3]=((y)>>24)&255
-int  C_Normalise::save_config(unsigned char *data) {
+#define PUT_INT(y)                     \
+    data[pos] = (y)&255;               \
+    data[pos + 1] = ((y) >> 8) & 255;  \
+    data[pos + 2] = ((y) >> 16) & 255; \
+    data[pos + 3] = ((y) >> 24) & 255
+int C_Normalise::save_config(unsigned char* data) {
     int pos = 0;
     PUT_INT((int)this->enabled);
     return 4;
 }
 
-C_RBASE *R_Normalise(char *desc) {
+C_RBASE* R_Normalise(char* desc) {
     if (desc) {
-        strcpy(desc,MOD_NAME); 
-        return NULL; 
+        strcpy(desc, MOD_NAME);
+        return NULL;
     }
-    return (C_RBASE *) new C_Normalise();
+    return (C_RBASE*)new C_Normalise();
 }

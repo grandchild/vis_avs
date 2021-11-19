@@ -5,16 +5,16 @@
 
 #define MOD_NAME "Render / Triangle"
 
-#define OUT_REPLACE 0
-#define OUT_ADDITIVE 1
-#define OUT_MAXIMUM 2
-#define OUT_5050 3
-#define OUT_SUB1 4
-#define OUT_SUB2 5
-#define OUT_MULTIPLY 6
+#define OUT_REPLACE    0
+#define OUT_ADDITIVE   1
+#define OUT_MAXIMUM    2
+#define OUT_5050       3
+#define OUT_SUB1       4
+#define OUT_SUB2       5
+#define OUT_MULTIPLY   6
 #define OUT_ADJUSTABLE 7
-#define OUT_XOR 8
-#define OUT_MINIMUM 9
+#define OUT_XOR        8
+#define OUT_MINIMUM    9
 
 class TriangleVars : public VarsBase {
    public:

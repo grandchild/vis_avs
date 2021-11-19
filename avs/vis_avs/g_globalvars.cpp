@@ -1,8 +1,9 @@
 #include "c_globalvars.h"
 
-#include "c__defs.h"
 #include "g__defs.h"
 #include "g__lib.h"
+
+#include "c__defs.h"
 #include "resource.h"
 
 #include <windows.h>

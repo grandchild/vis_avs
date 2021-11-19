@@ -1,6 +1,7 @@
 #include "c_picture2.h"
 
 #include "r_defs.h"
+
 #include "files.h"
 #include "image.h"
 #include "pixel_format.h"

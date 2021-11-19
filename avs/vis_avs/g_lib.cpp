@@ -1,14 +1,16 @@
-#include <string>
-#include "g__lib.h"
 #include "c_list.h"
 #include "c_unkn.h"
+
+#include "g__lib.h"
+
 #include "resource.h"
 
+#include <string>
 
-#define ADD_COMPONENT(ID_NUM, ID_STRING, RES_SUFFIX, HANDLER_SUFFIX)            \
-    this->components[i].id = ID_NUM;                                            \
-    this->components[i].dialog_resource_id = IDD_CFG_ ## RES_SUFFIX;            \
-    this->components[i].ui_handler = (DLGPROC)win32_dlgproc_ ## HANDLER_SUFFIX; \
+#define ADD_COMPONENT(ID_NUM, ID_STRING, RES_SUFFIX, HANDLER_SUFFIX)          \
+    this->components[i].id = ID_NUM;                                          \
+    this->components[i].dialog_resource_id = IDD_CFG_##RES_SUFFIX;            \
+    this->components[i].ui_handler = (DLGPROC)win32_dlgproc_##HANDLER_SUFFIX; \
     i++
 
 #define ADD_STANDARD_COMPONENT(ID_NUM, RES_SUFFIX, HANDLER_SUFFIX) \
@@ -23,13 +25,12 @@
 #define ADD_APE_COMPONENT_PREP(ID_STRING, RES_SUFFIX, HANDLER_AND_PREP_SUFFIX) \
     strncpy(this->components[i].idstring, ID_STRING, COMPONENT_IDSTRING_LEN);  \
     this->components[i].idstring[COMPONENT_IDSTRING_LEN - 1] = '\0';           \
-    this->components[i].uiprep = win32_uiprep_ ## HANDLER_AND_PREP_SUFFIX;     \
+    this->components[i].uiprep = win32_uiprep_##HANDLER_AND_PREP_SUFFIX;       \
     ADD_COMPONENT(-1, ID_STRING, RES_SUFFIX, HANDLER_AND_PREP_SUFFIX)
 
-
 C_GLibrary::C_GLibrary() {
-    this->components = (C_Win32GuiComponent*)calloc(
-        UI_COMPONENT_LIST_ALLOC_LEN, sizeof(C_Win32GuiComponent));
+    this->components = (C_Win32GuiComponent*)calloc(UI_COMPONENT_LIST_ALLOC_LEN,
+                                                    sizeof(C_Win32GuiComponent));
 
     unsigned int i = 0;
     // clang-format off
@@ -116,24 +117,22 @@ C_GLibrary::C_GLibrary() {
     this->root_effectlist.ui_handler = (DLGPROC)win32_dlgproc_root_effectlist;
 }
 
-C_GLibrary::~C_GLibrary() {
-    free(this->components);
-}
+C_GLibrary::~C_GLibrary() { free(this->components); }
 
 C_Win32GuiComponent* C_GLibrary::get(int id_or_idstring, void* render_component) {
-    if(id_or_idstring == -1) {
+    if (id_or_idstring == -1) {
         return &this->unknown;
     }
-    if(id_or_idstring > APE_ID_BASE) {
+    if (id_or_idstring > APE_ID_BASE) {
         return this->get_by_idstring((char*)id_or_idstring);
     }
-    for(unsigned int i=0; i<this->size; i++) {
-        if(this->components[i].id == id_or_idstring) {
+    for (unsigned int i = 0; i < this->size; i++) {
+        if (this->components[i].id == id_or_idstring) {
             return &this->components[i];
         }
     }
-    if(id_or_idstring == LIST_ID) {
-        if(((C_RenderListClass*)render_component)->isroot) {
+    if (id_or_idstring == LIST_ID) {
+        if (((C_RenderListClass*)render_component)->isroot) {
             return &this->root_effectlist;
         } else {
             return &this->effectlist;
@@ -143,14 +142,14 @@ C_Win32GuiComponent* C_GLibrary::get(int id_or_idstring, void* render_component)
 }
 
 C_Win32GuiComponent* C_GLibrary::get_by_idstring(char* idstring) {
-    for(unsigned int i=0; i<this->size; i++) {
-        if(strncmp(this->components[i].idstring, idstring, COMPONENT_IDSTRING_LEN)==0) {
+    for (unsigned int i = 0; i < this->size; i++) {
+        if (strncmp(this->components[i].idstring, idstring, COMPONENT_IDSTRING_LEN)
+            == 0) {
             return &this->components[i];
         }
     }
     return NULL;
 }
-
 
 std::string string_from_dlgitem(HWND hwnd, int dlgItem) {
     int l = SendDlgItemMessage(hwnd, dlgItem, WM_GETTEXTLENGTH, 0, 0);

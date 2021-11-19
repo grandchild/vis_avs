@@ -1,11 +1,12 @@
 #include "c_eeltrans.h"
 
-#include "../ns-eel/ns-eel.h"
 #include "r_defs.h"
 
+#include "../ns-eel/ns-eel.h"
+
+#include <windows.h>
 #include <stdio.h>  // for logging
 #include <vector>
-#include <windows.h>
 
 APEinfo* g_eeltrans_extinfo = 0;
 

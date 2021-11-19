@@ -1,19 +1,20 @@
 #include "c_triangle.h"
 
-#include "avs_eelif.h"
 #include "r_defs.h"
+
+#include "avs_eelif.h"
 
 #include <math.h>
 
-#define MAX_CODE_LEN (1 << 16)  // 64k is the maximum component size in AVS
-#define NUM_COLOR_VALUES 256    // 2 ^ BITS_PER_CHANNEL (i.e. 8)
-#define IS_BEAT_MASK 0x01       // something else might be encoded in the higher bytes
+#define MAX_CODE_LEN     (1 << 16)  // 64k is the maximum component size in AVS
+#define NUM_COLOR_VALUES 256        // 2 ^ BITS_PER_CHANNEL (i.e. 8)
+#define IS_BEAT_MASK     0x01  // something else might be encoded in the higher bytes
 
-#define TRIANGLE_NUM_POINTS 3
-#define TRIANGLE_NUM_SHORT_EDGES 2
+#define TRIANGLE_NUM_POINTS        3
+#define TRIANGLE_NUM_SHORT_EDGES   2
 #define TRIANGLE_NUM_CODE_SECTIONS 4
-#define TRIANGLE_MAX_Z 40000
-#define TRIANGLE_Z_INT_RESOLUTION 100000
+#define TRIANGLE_MAX_Z             40000
+#define TRIANGLE_Z_INT_RESOLUTION  100000
 
 APEinfo* g_triangle_extinfo;
 
