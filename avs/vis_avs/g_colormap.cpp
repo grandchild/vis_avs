@@ -140,10 +140,11 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
                 g_ColormapThis->disable_map_change = 1;
                 SetTimer(hwndDlg, COLORMAP_MAP_CYCLE_TIMER_ID, 250, 0);
                 for(unsigned int i = 0; i< COLORMAP_NUM_MAPS; i++) {
-                    char map_dropdown_name_buf[6] = "Map X";
-                    map_dropdown_name_buf[4] = (char)i + '1';
-                    SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_SELECT, CB_ADDSTRING, 0, (LPARAM)map_dropdown_name_buf);
+                    char map_select_name[6] = "Map X";
+                    map_select_name[4] = (char)i + '1';
+                    SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_SELECT, CB_ADDSTRING, 0, (LPARAM)map_select_name);
                 }
+                // TODO[feature]: This could be more convenient by saving and restoring the last-selected map.
                 SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_SELECT, CB_SETCURSEL, g_ColormapThis->current_map, 0);
                 CheckDlgButton(hwndDlg, IDC_COLORMAP_MAP_ENABLE, g_ColormapThis->maps[g_ColormapThis->current_map].enabled != 0);
                 for(unsigned int i = 0; i < COLORMAP_NUM_CYCLEMODES; i++) {
@@ -164,9 +165,6 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam,LPARAM lParam)
                 SendDlgItemMessage(hwndDlg, IDC_COLORMAP_ADJUSTABLE_SLIDER, TBM_SETRANGE, TRUE, MAKELONG(0, COLORMAP_ADJUSTABLE_BLEND_MAX));
                 SendDlgItemMessage(hwndDlg, IDC_COLORMAP_ADJUSTABLE_SLIDER, TBM_SETPOS, TRUE, g_ColormapThis->config.adjustable_alpha);
 
-                // This overrides the setting of the current map above. bug? quickfix?
-                // TODO[feature]: This could be more convenient by saving and restoring the last-selected map.
-                SendDlgItemMessage(hwndDlg, IDC_COLORMAP_MAP_SELECT, CB_SETCURSEL, 0, 0);
                 SetDlgItemTextA(hwndDlg, IDC_COLORMAP_FILENAME_VIEW, g_ColormapThis->maps[g_ColormapThis->current_map].filename);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_COLORMAP_MAP_CYCLE_SPEED), g_ColormapThis->config.map_cycle_mode != 0);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_COLORMAP_NO_SKIP_FAST_BEATS), g_ColormapThis->config.map_cycle_mode != 0);

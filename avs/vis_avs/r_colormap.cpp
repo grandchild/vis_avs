@@ -622,13 +622,21 @@ void C_ColorMap::load_config(unsigned char *data, int len) {
         success = this->load_map_header(data, len, map_index, pos);
         pos += COLORMAP_SAVE_MAP_HEADER_SIZE;
     }
+    bool found_first_enabled_map = false;
     for(int map_index = 0; map_index < COLORMAP_NUM_MAPS; map_index++) {
         success = this->load_map_colors(data, len, map_index, pos);
         if(!success) {
             break;
         }
+        if(this->maps[map_index].enabled && !found_first_enabled_map) {
+            this->current_map = map_index;
+            found_first_enabled_map = true;
+        }
         this->bake_full_map(map_index);
         pos += this->maps[map_index].length * sizeof(map_color);
+    }
+    if(!found_first_enabled_map) {
+        this->current_map = 0;
     }
 }
 
