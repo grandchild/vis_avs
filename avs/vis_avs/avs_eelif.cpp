@@ -31,8 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "avs_eelif.h"
 
-#include "../gcc-hacks.h"
 #include "../ns-eel/ns-eel-addfuncs.h"
+#include "../platform.h"
 
 #include <windows.h>
 

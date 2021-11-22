@@ -2,7 +2,7 @@
 
 #include "windows.h"
 
-#include "../gcc-hacks.h"
+#include "../platform.h"
 
 // implemented in util.cpp
 void GR_SelectColor(HWND hwnd, int* a);

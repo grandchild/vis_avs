@@ -3,7 +3,7 @@
 
 #include "r_defs.h"
 
-#include "../gcc-hacks.h"
+#include "../platform.h"
 #include "../util.h"
 
 #include <math.h>

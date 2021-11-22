@@ -31,9 +31,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "megabuf.h"
 
-#include "../gcc-hacks.h"
 #include "../ns-eel/ns-eel-int.h"
 #include "../ns-eel/ns-eel.h"
+#include "../platform.h"
 
 #include <stdlib.h>
 

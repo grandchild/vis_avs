@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "c__base.h"
 #include "c__defs.h"
 
-#include "../gcc-hacks.h"
+#include "../platform.h"
 
 #include <windows.h>
 

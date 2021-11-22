@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ns-eel-int.h"
 
-#include "../gcc-hacks.h"
+#include "../platform.h"
 
 #include <ctype.h>
 #include <stdio.h>

@@ -10,6 +10,9 @@ file(GLOB SRC_FILES_VIS_AVS
     avs/vis_avs/*.c
     avs/vis_avs/*.rc
 )
+set(SRC_FILES_VIS_AVS_TARGET
+    avs/platform_win32.c
+)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(
@@ -54,7 +57,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     foreach(FLAG ${AVS_CXX_COMPILER_FLAGS})
         add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${FLAG}>)
     endforeach()
-    # add_link_options(-Wl,--subsystem,windows)
+    set(SRC_FILES_VIS_AVS_COMPILER avs/platform_gcc.c)
 else() # TODO: Clang option
     message(SEND_ERROR "unsupported compiler ${CMAKE_CXX_COMPILER_ID}")
 endif()
@@ -84,7 +87,8 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")  # Remove "lib" prefix from output to get or
 add_library(vis_avs SHARED
     ${SRC_FILES_NS_EEL}
     ${SRC_FILES_VIS_AVS}
-    avs/gcc-hacks.c
+    ${SRC_FILES_VIS_AVS_TARGET}
+    ${SRC_FILES_VIS_AVS_COMPILER}
 )
 
 target_link_libraries(vis_avs
