@@ -3,7 +3,6 @@
 
 #include "r_defs.h"
 
-#include "../platform.h"
 #include "../util.h"
 
 #include <math.h>
@@ -13,7 +12,7 @@
 APEinfo* g_extinfo = 0;
 
 void C_Texer2::Recompile() {
-    EnterCriticalSection(&codestuff);
+    lock(codestuff);
 
     init = true;
 
@@ -44,7 +43,7 @@ void C_Texer2::Recompile() {
     codebeat = g_extinfo->compileVMcode(context, code.beat);
     codepoint = g_extinfo->compileVMcode(context, code.point);
 
-    LeaveCriticalSection(&codestuff);
+    lock_unlock(codestuff);
 }
 
 // set up default configuration
@@ -68,8 +67,8 @@ C_Texer2::C_Texer2(int default_version) {
     config.wrap = examples[0].wrap;
     config.mask = examples[0].mask;
 
-    InitializeCriticalSection(&imageload);
-    InitializeCriticalSection(&codestuff);
+    imageload = lock_init();
+    codestuff = lock_init();
 
     if (g_extinfo) {
         context = g_extinfo->allocVM();
@@ -81,8 +80,8 @@ C_Texer2::C_Texer2(int default_version) {
 // virtual destructor
 C_Texer2::~C_Texer2() {
     if (bmp) DeleteTexture();
-    DeleteCriticalSection(&imageload);
-    DeleteCriticalSection(&codestuff);
+    lock_destroy(imageload);
+    lock_destroy(codestuff);
 
     if (codeinit) g_extinfo->freeCode(codeinit);
     if (codeframe) g_extinfo->freeCode(codeframe);
@@ -93,7 +92,7 @@ C_Texer2::~C_Texer2() {
 }
 
 void C_Texer2::DeleteTexture() {
-    EnterCriticalSection(&imageload);
+    lock(imageload);
     if (bmp) {
         SelectObject(bmpdc, bmpold);
         DeleteObject(bmp);
@@ -105,12 +104,12 @@ void C_Texer2::DeleteTexture() {
         delete this->texbits_rot180;
     }
     bmp = NULL;
-    LeaveCriticalSection(&imageload);
+    lock_unlock(imageload);
 }
 
 extern unsigned char rawData[1323];  // example pic
 void C_Texer2::InitTexture() {
-    EnterCriticalSection(&imageload);
+    lock(imageload);
     if (bmp) DeleteTexture();
     bool loaddefault = false;
     if (strlen(config.img)) {
@@ -194,7 +193,7 @@ void C_Texer2::InitTexture() {
         }
         bmp = (HBITMAP)0xcdcdcdcd;
     }
-    LeaveCriticalSection(&imageload);
+    lock_unlock(imageload);
 }
 
 struct RECTf {
@@ -1565,7 +1564,7 @@ int C_Texer2::render(char visdata[2][2][576],
                      int*,
                      int w,
                      int h) {
-    EnterCriticalSection(&codestuff);
+    lock(codestuff);
 
     *vars.w = w;
     *vars.h = h;
@@ -1592,7 +1591,7 @@ int C_Texer2::render(char visdata[2][2][576],
     int n = RoundToInt((double)*vars.n);
     n = max(0, min(65536, n));
 
-    EnterCriticalSection(&imageload);
+    lock(imageload);
     if (n) {
         double step = 1.0 / (n - 1);
         double i = 0.0;
@@ -1694,8 +1693,8 @@ int C_Texer2::render(char visdata[2][2][576],
         }
     }
 
-    LeaveCriticalSection(&codestuff);
-    LeaveCriticalSection(&imageload);
+    lock_unlock(codestuff);
+    lock_unlock(imageload);
     return 0;
 }
 

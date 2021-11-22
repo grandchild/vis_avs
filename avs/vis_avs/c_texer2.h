@@ -2,6 +2,8 @@
 
 #include "c__base.h"
 
+#include "../platform.h"
+
 #include <windows.h>
 
 #define MOD_NAME "Render / Texer II"
@@ -153,8 +155,8 @@ class C_Texer2 : public C_RBASE {
     int* texbits_rot180;
     bool init;
 
-    CRITICAL_SECTION imageload;
-    CRITICAL_SECTION codestuff;
+    lock_t* imageload;
+    lock_t* codestuff;
 
     char* help_text =
         "Texer II\0"
