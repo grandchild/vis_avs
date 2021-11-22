@@ -2,6 +2,15 @@ cmake_minimum_required(VERSION 3.10)
 
 project(vis_avs VERSION 2.82)
 
+file(GLOB SRC_FILES_NS_EEL
+    avs/ns-eel/*.c
+)
+file(GLOB SRC_FILES_VIS_AVS
+    avs/vis_avs/*.cpp
+    avs/vis_avs/*.c
+    avs/vis_avs/*.rc
+)
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(
         /W4                 # Warning level 4 (maximum)
@@ -51,12 +60,8 @@ else() # TODO: Clang option
 endif()
 
 if(WIN32)
-    if(NOT CMAKE_CROSSCOMPILING)
-        # windows libraries stuff
-
-        if(NOT MSVC)
-            # If using Googletest, don't allow it for MSVC because it doesn't work there
-        endif()
+    if(NOT MSVC)
+        # googletest here because it doesn't work for MSVC
     endif()
 else()
     # link_libraries(#[[...]])
@@ -72,15 +77,6 @@ add_definitions(
     # -DNO_MMX                # Use (usually slower) C equivalents for MMX assembly.
                               # (Initially enabled for quick porting but should be
                               # removed, now that all MMX sections are ported.)
-)
-
-file(GLOB SRC_FILES_NS_EEL
-    avs/ns-eel/*.c
-)
-file(GLOB SRC_FILES_VIS_AVS
-    avs/vis_avs/*.cpp
-    avs/vis_avs/*.c
-    avs/vis_avs/*.rc
 )
 
 set(CMAKE_SHARED_LIBRARY_PREFIX "")  # Remove "lib" prefix from output to get original
