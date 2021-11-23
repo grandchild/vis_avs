@@ -17,7 +17,7 @@ class GlobalVarsVars : public VarsBase {
     double* save;
 
     virtual void register_variables(void*);
-    virtual void init_variables(int, int, int, ...);
+    virtual void init_variables(int, int, int, va_list);
 };
 
 enum GlobalVarsLoadOpts {

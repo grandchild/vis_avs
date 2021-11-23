@@ -395,7 +395,7 @@ void TriangleVars::register_variables(void* vm_context) {
     this->zbclear = NSEEL_VM_regvar(vm_context, "zbclear");
 }
 
-void TriangleVars::init_variables(int w, int h, int /* is_beat */, ...) {
+void TriangleVars::init_variables(int w, int h, int /* is_beat */, va_list) {
     *this->w = w;
     *this->h = h;
     *this->n = 0.0f;

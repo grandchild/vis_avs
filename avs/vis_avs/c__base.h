@@ -88,11 +88,12 @@ class C_RBASE2 : public C_RBASE {
             this->n = NSEEL_VM_regvar(vm_context, "n");
         };
 
-        virtual void init_variables(int w, int h, int is_beat, ...) {
-            *this->stuff = 0.0f;
+        virtual void init_variables(int w, int h, int is_beat, va_list extra_args) {
             *this->w = w;
             *this->h = h;
             *this->n = 0.0f;
+            *this->foo = va_arg(extra_args, int);
+            *this->bar = va_arg(extra_args, double);
         };
     }
 
@@ -110,8 +111,9 @@ class VarsBase {
    public:
     virtual void register_variables(void* vm_context) = 0;
     // Overriding this method is not strictly necessary, but probably helpful.
-    // Pass in additional parameters as needed, and retrieve them with va_args.
-    virtual void init_variables(int w, int h, int is_beat, ...) {
+    // Pass in additional parameters to ComponentCode.init_variables() as needed, and
+    // retrieve them with va_arg() like above.
+    virtual void init_variables(int w, int h, int is_beat, va_list) {
         (void)w, (void)h, (void)is_beat;
     };
 };

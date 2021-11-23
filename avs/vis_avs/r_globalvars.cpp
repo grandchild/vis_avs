@@ -76,7 +76,7 @@ void GlobalVarsVars::register_variables(void* vm_context) {
     this->save = NSEEL_VM_regvar(vm_context, "save");
 }
 
-void GlobalVarsVars::init_variables(int w, int h, int is_beat, ...) {
+void GlobalVarsVars::init_variables(int w, int h, int is_beat, va_list) {
     *this->w = w;
     *this->h = h;
     *this->b = is_beat ? 1.0f : 0.0f;

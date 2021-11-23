@@ -43,7 +43,7 @@ class TriangleVars : public VarsBase {
     double* zbclear;
 
     virtual void register_variables(void*);
-    virtual void init_variables(int, int, int, ...);
+    virtual void init_variables(int, int, int, va_list);
 };
 
 class TriangleDepthBuffer {
