@@ -597,14 +597,12 @@ void C_Texer2::DrawParticle(int* framebuffer,
 #ifdef _MSC_VER
                         __asm {
                             psrlw mm0, 8
-
-                            // save
+                            packuswb mm0, mm0
                             pxor mm0, qword ptr [edi]
                         }
 #else  // GCC
                         "psrlw  %%mm0, 8\n\t"
-
-                        // save
+                        "packuswb %%mm0, %%mm0\n\t"
                         "pxor   %%mm0, qword ptr [%%edi]\n\t"
 #endif
                         T2_SCALE_BLEND_ASM_LEAVE(t2_scale_loop_xor)
