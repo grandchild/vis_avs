@@ -13,10 +13,11 @@ CodeSection::~CodeSection() {
 }
 
 /* `length` must include the zero byte! */
-void CodeSection::set(char* string, u_int length) {
+void CodeSection::set(char* string, unsigned int length) {
     delete[] this->string;
+    length = length == 0 ? 1 : length;
     this->string = new char[length];
-    strncpy(this->string, string, length);
+    strncpy(this->string, string, length - 1);
     this->string[length - 1] = '\0';
     this->need_recompile = true;
 }
