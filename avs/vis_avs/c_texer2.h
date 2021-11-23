@@ -36,59 +36,27 @@ struct texer2_apeconfig {
     int d;
 };
 
-struct Code {
-    char* init;
-    char* frame;
-    char* beat;
-    char* point;
-    Code() {
-        init = new char[1];
-        frame = new char[1];
-        beat = new char[1];
-        point = new char[1];
-        init[0] = frame[0] = beat[0] = point[0] = 0;
-    }
-    ~Code() {
-        delete[] init;
-        delete[] frame;
-        delete[] beat;
-        delete[] point;
-    }
-
-    void SetInit(char* str) {
-        delete init;
-        init = str;
-    }
-    void SetFrame(char* str) {
-        delete frame;
-        frame = str;
-    }
-    void SetBeat(char* str) {
-        delete beat;
-        beat = str;
-    }
-    void SetPoint(char* str) {
-        delete point;
-        point = str;
-    }
-};
-
-struct Vars {
+class Texer2Vars : public VarsBase {
+   public:
     double* n;
     double* i;
     double* x;
     double* y;
+    double* v;
     double* w;
     double* h;
+    double* b;
     double* iw;
     double* ih;
-    double* v;
     double* sizex;
     double* sizey;
     double* red;
     double* green;
     double* blue;
     double* skip;
+
+    virtual void register_variables(void*);
+    virtual void init_variables(int, int, int, va_list);
 };
 
 struct Texer2Example {
@@ -101,9 +69,6 @@ struct Texer2Example {
     int wrap;
     int mask;
 };
-
-typedef void* VM_CONTEXT;
-typedef void* VM_CODEHANDLE;
 
 class C_Texer2 : public C_RBASE {
    public:
@@ -122,7 +87,6 @@ class C_Texer2 : public C_RBASE {
     virtual void InitTexture();
     virtual void DeleteTexture();
 
-    virtual void Recompile();
     virtual void DrawParticle(int* framebuffer,
                               int* texture,
                               int w,
@@ -135,14 +99,7 @@ class C_Texer2 : public C_RBASE {
 
     texer2_apeconfig config;
 
-    VM_CONTEXT context;
-    VM_CODEHANDLE codeinit;
-    VM_CODEHANDLE codeframe;
-    VM_CODEHANDLE codebeat;
-    VM_CODEHANDLE codepoint;
-    Vars vars;
-
-    Code code;
+    ComponentCode<Texer2Vars> code;
 
     HBITMAP bmp;
     HDC bmpdc;
@@ -153,7 +110,6 @@ class C_Texer2 : public C_RBASE {
     int* texbits_flipped;
     int* texbits_mirrored;
     int* texbits_rot180;
-    bool init;
 
     lock_t* imageload;
     lock_t* codestuff;

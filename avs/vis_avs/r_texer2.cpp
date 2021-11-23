@@ -3,50 +3,15 @@
 
 #include "r_defs.h"
 
+#include "avs_eelif.h"
+
 #include "../util.h"
 
 #include <math.h>
 #include <stdio.h>
 
-// extended APE api support
 APEinfo* g_extinfo = 0;
 
-void C_Texer2::Recompile() {
-    lock(codestuff);
-
-    init = true;
-
-    g_extinfo->resetVM(context);
-    vars.n = g_extinfo->regVMvariable(context, "n");
-    vars.i = g_extinfo->regVMvariable(context, "i");
-    vars.x = g_extinfo->regVMvariable(context, "x");
-    vars.y = g_extinfo->regVMvariable(context, "y");
-    vars.v = g_extinfo->regVMvariable(context, "v");
-    vars.w = g_extinfo->regVMvariable(context, "w");
-    vars.h = g_extinfo->regVMvariable(context, "h");
-    vars.iw = g_extinfo->regVMvariable(context, "iw");
-    vars.ih = g_extinfo->regVMvariable(context, "ih");
-    vars.sizex = g_extinfo->regVMvariable(context, "sizex");
-    vars.sizey = g_extinfo->regVMvariable(context, "sizey");
-    vars.red = g_extinfo->regVMvariable(context, "red");
-    vars.green = g_extinfo->regVMvariable(context, "green");
-    vars.blue = g_extinfo->regVMvariable(context, "blue");
-    vars.skip = g_extinfo->regVMvariable(context, "skip");
-
-    if (codeinit) g_extinfo->freeCode(codeinit);
-    if (codeframe) g_extinfo->freeCode(codeframe);
-    if (codebeat) g_extinfo->freeCode(codebeat);
-    if (codepoint) g_extinfo->freeCode(codepoint);
-
-    codeinit = g_extinfo->compileVMcode(context, code.init);
-    codeframe = g_extinfo->compileVMcode(context, code.frame);
-    codebeat = g_extinfo->compileVMcode(context, code.beat);
-    codepoint = g_extinfo->compileVMcode(context, code.point);
-
-    lock_unlock(codestuff);
-}
-
-// set up default configuration
 C_Texer2::C_Texer2(int default_version) {
     memset(&config, 0, sizeof(texer2_apeconfig));
     bmp = 0;
@@ -56,39 +21,24 @@ C_Texer2::C_Texer2(int default_version) {
     texbits_flipped = 0;
     texbits_mirrored = 0;
     texbits_rot180 = 0;
-    init = true;
     config.version = default_version;
 
-    code.SetInit(examples[0].init);
-    code.SetFrame(examples[0].frame);
-    code.SetBeat(examples[0].beat);
-    code.SetPoint(examples[0].point);
+    code.init.set(examples[0].init, strnlen(examples[0].init, 65334) + 1);
+    code.frame.set(examples[0].frame, strnlen(examples[0].frame, 65334) + 1);
+    code.beat.set(examples[0].beat, strnlen(examples[0].beat, 65334) + 1);
+    code.point.set(examples[0].point, strnlen(examples[0].point, 65334) + 1);
     config.resize = examples[0].resize;
     config.wrap = examples[0].wrap;
     config.mask = examples[0].mask;
 
     imageload = lock_init();
     codestuff = lock_init();
-
-    if (g_extinfo) {
-        context = g_extinfo->allocVM();
-        codeinit = codeframe = codebeat = codepoint = 0;
-        Recompile();
-    }
 }
 
-// virtual destructor
 C_Texer2::~C_Texer2() {
     if (bmp) DeleteTexture();
     lock_destroy(imageload);
     lock_destroy(codestuff);
-
-    if (codeinit) g_extinfo->freeCode(codeinit);
-    if (codeframe) g_extinfo->freeCode(codeframe);
-    if (codebeat) g_extinfo->freeCode(codebeat);
-    if (codepoint) g_extinfo->freeCode(codepoint);
-
-    g_extinfo->freeVM(context);
 }
 
 void C_Texer2::DeleteTexture() {
@@ -1557,36 +1507,24 @@ bool overlaps_edge(double wrapped_coord,
 }
 
 int C_Texer2::render(char visdata[2][2][576],
-                     int isBeat,
+                     int is_beat,
                      int* framebuffer,
                      int*,
                      int w,
                      int h) {
     lock(codestuff);
-
-    *vars.w = w;
-    *vars.h = h;
-
-    if (((isBeat & 0x80000000) || (init)) && (codeinit)) {
-        g_extinfo->executeCode(codeinit, visdata);
-        init = false;
+    this->code.recompile_if_needed();
+    this->code.init_variables(w, h, is_beat, this->iw, this->ih);
+    if (this->code.need_init || (is_beat & 0x80000000)) {
+        *this->code.vars.n = 0.0f;
+        this->code.init.exec(visdata);
+        this->code.need_init = false;
     }
-
-    *vars.red = 1.0;
-    *vars.green = 1.0;
-    *vars.blue = 1.0;
-    *vars.sizex = 1.0;
-    *vars.sizey = 1.0;
-    *vars.iw = this->iw;
-    *vars.ih = this->ih;
-
-    if (codeframe) g_extinfo->executeCode(codeframe, visdata);
-
-    if ((isBeat & 0x00000001) && (codebeat)) {
-        g_extinfo->executeCode(codebeat, visdata);
+    this->code.frame.exec(visdata);
+    if ((is_beat & 0x00000001)) {
+        this->code.beat.exec(visdata);
     }
-
-    int n = RoundToInt((double)*vars.n);
+    int n = RoundToInt((double)*this->code.vars.n);
     n = max(0, min(65536, n));
 
     lock(imageload);
@@ -1594,58 +1532,64 @@ int C_Texer2::render(char visdata[2][2][576],
         double step = 1.0 / (n - 1);
         double i = 0.0;
         for (int j = 0; j < n; ++j) {
-            *vars.i = i;
-            *vars.skip = 0.0;
-            *vars.v =
+            *this->code.vars.i = i;
+            *this->code.vars.skip = 0.0;
+            *this->code.vars.v =
                 ((int)visdata[1][0][j * 575 / n] + (int)visdata[1][1][j * 575 / n])
                 / 256.0;
             i += step;
 
-            g_extinfo->executeCode(codepoint, visdata);
+            this->code.point.exec(visdata);
 
             // TODO [cleanup]: invert to if+continue
-            if (*vars.skip == 0.0) {
-                unsigned int color =
-                    min(255, max(0, RoundToInt(255.0f * (double)*vars.blue)));
-                color |= min(255, max(0, RoundToInt(255.0f * (double)*vars.green)))
-                         << 8;
-                color |= min(255, max(0, RoundToInt(255.0f * (double)*vars.red))) << 16;
+            if (*this->code.vars.skip == 0.0) {
+                unsigned int color = min(
+                    255, max(0, RoundToInt(255.0f * (double)*this->code.vars.blue)));
+                color |=
+                    min(255,
+                        max(0, RoundToInt(255.0f * (double)*this->code.vars.green)))
+                    << 8;
+                color |=
+                    min(255, max(0, RoundToInt(255.0f * (double)*this->code.vars.red)))
+                    << 16;
 
                 if (config.mask == 0) color = 0xFFFFFF;
 
                 int* texture = this->texbits_normal;
-                if (*vars.sizex < 0 && *vars.sizey > 0) {
+                if (*this->code.vars.sizex < 0 && *this->code.vars.sizey > 0) {
                     texture = this->texbits_mirrored;
-                } else if (*vars.sizex > 0 && *vars.sizey < 0) {
+                } else if (*this->code.vars.sizex > 0 && *this->code.vars.sizey < 0) {
                     texture = this->texbits_flipped;
-                } else if (*vars.sizex < 0 && *vars.sizey < 0) {
+                } else if (*this->code.vars.sizex < 0 && *this->code.vars.sizey < 0) {
                     texture = this->texbits_rot180;
                 }
 
-                double szx = (double)*vars.sizex;
-                szx = fabs(szx);
-                double szy = (double)*vars.sizey;
-                szy = fabs(szy);
+                double szx = fabs(*this->code.vars.sizex);
+                double szy = fabs(*this->code.vars.sizey);
 
                 // TODO [cleanup]: put more of the above into this if-case, or invert to
                 // if+continue
                 // TODO [bugfix]: really large images would be clipped while still
                 // potentially visible, should be relative to image size
                 if ((szx > .01) && (szy > .01)) {
-                    double x = *vars.x;
-                    double y = *vars.y;
+                    double x = *this->code.vars.x;
+                    double y = *this->code.vars.y;
                     if (config.wrap != 0) {
                         bool overlaps_x, overlaps_y;
                         if (this->config.version == TEXER_II_VERSION_V2_81D) {
                             /* Wrap only once (when crossing +/-1, not when crossing
                              * +/-3 etc. */
-                            x -= wrap_once_diff_to_plusminus1(*vars.x);
-                            y -= wrap_once_diff_to_plusminus1(*vars.y);
-                            overlaps_x = overlaps_edge(*vars.x, szx, this->iw, w);
-                            overlaps_y = overlaps_edge(*vars.y, szy, this->ih, h);
+                            x -= wrap_once_diff_to_plusminus1(*this->code.vars.x);
+                            y -= wrap_once_diff_to_plusminus1(*this->code.vars.y);
+                            overlaps_x =
+                                overlaps_edge(*this->code.vars.x, szx, this->iw, w);
+                            overlaps_y =
+                                overlaps_edge(*this->code.vars.y, szy, this->ih, h);
                         } else {
-                            x = *vars.x - wrap_diff_to_plusminus1(*vars.x);
-                            y = *vars.y - wrap_diff_to_plusminus1(*vars.y);
+                            x = *this->code.vars.x
+                                - wrap_diff_to_plusminus1(*this->code.vars.x);
+                            y = *this->code.vars.y
+                                - wrap_diff_to_plusminus1(*this->code.vars.y);
                             overlaps_x = overlaps_edge(x, szx, this->iw, w);
                             overlaps_y = overlaps_edge(y, szy, this->ih, h);
                         }
@@ -1696,102 +1640,76 @@ int C_Texer2::render(char visdata[2][2][576],
     return 0;
 }
 
+void Texer2Vars::register_variables(void* vm_context) {
+    this->n = NSEEL_VM_regvar(vm_context, "n");
+    this->i = NSEEL_VM_regvar(vm_context, "i");
+    this->x = NSEEL_VM_regvar(vm_context, "x");
+    this->y = NSEEL_VM_regvar(vm_context, "y");
+    this->v = NSEEL_VM_regvar(vm_context, "v");
+    this->b = NSEEL_VM_regvar(vm_context, "b");
+    this->w = NSEEL_VM_regvar(vm_context, "w");
+    this->h = NSEEL_VM_regvar(vm_context, "h");
+    this->iw = NSEEL_VM_regvar(vm_context, "iw");
+    this->ih = NSEEL_VM_regvar(vm_context, "ih");
+    this->sizex = NSEEL_VM_regvar(vm_context, "sizex");
+    this->sizey = NSEEL_VM_regvar(vm_context, "sizey");
+    this->red = NSEEL_VM_regvar(vm_context, "red");
+    this->green = NSEEL_VM_regvar(vm_context, "green");
+    this->blue = NSEEL_VM_regvar(vm_context, "blue");
+    this->skip = NSEEL_VM_regvar(vm_context, "skip");
+}
+
+void Texer2Vars::init_variables(int w, int h, int is_beat, va_list extra_args) {
+    *this->i = 0.0f;
+    *this->x = 0.0f;
+    *this->y = 0.0f;
+    *this->v = 0.0f;
+    *this->w = w;
+    *this->h = h;
+    *this->b = is_beat ? 1.0f : 0.0f;
+    *this->iw = va_arg(extra_args, int);
+    *this->ih = va_arg(extra_args, int);
+    *this->sizex = 1.0f;
+    *this->sizey = 1.0f;
+    *this->red = 1.0f;
+    *this->green = 1.0f;
+    *this->blue = 1.0f;
+    *this->skip = 0.0f;
+}
+
 char* C_Texer2::get_desc(void) { return MOD_NAME; }
 
 void C_Texer2::load_config(unsigned char* data, int len) {
-    if (len >= ssizeof32(texer2_apeconfig))
+    if (len >= ssizeof32(texer2_apeconfig)) {
         memcpy(&this->config, data, sizeof(texer2_apeconfig));
+    }
     if (this->config.version < TEXER_II_VERSION_V2_81D
         || this->config.version > TEXER_II_VERSION_CURRENT) {
         // If the version value is not in the known set, assume an old preset version.
         this->config.version = TEXER_II_VERSION_V2_81D;
     }
-
-    unsigned char* p = &data[sizeof(texer2_apeconfig)];
-    char* buf;
-
-    // Check size
-    if ((p + 4 - data) >= len) return;
-
-    // Init
-    len = max(0, *(int*)p);
-    p += 4;
-    buf = new char[len + 1];
-    if (len) strncpy(buf, (const char*)p, len);
-    p += len;
-    buf[len] = 0;
-    code.SetInit(buf);
-
-    // Frame
-    len = max(0, *(int*)p);
-    p += 4;
-    buf = new char[len + 1];
-    if (len) strncpy(buf, (const char*)p, len);
-    p += len;
-    buf[len] = 0;
-    code.SetFrame(buf);
-
-    // Beat
-    len = max(0, *(int*)p);
-    p += 4;
-    buf = new char[len + 1];
-    if (len) strncpy(buf, (const char*)p, len);
-    p += len;
-    buf[len] = 0;
-    code.SetBeat(buf);
-
-    // Point
-    len = max(0, *(int*)p);
-    p += 4;
-    buf = new char[len + 1];
-    if (len) strncpy(buf, (const char*)p, len);
-    p += len;
-    buf[len] = 0;
-    code.SetPoint(buf);
-
-    Recompile();
+    u_int pos = sizeof(texer2_apeconfig);
+    char* str_data = (char*)data;
+    pos += this->code.init.load_length_prefixed(&str_data[pos], max(0, len - pos));
+    pos += this->code.frame.load_length_prefixed(&str_data[pos], max(0, len - pos));
+    pos += this->code.beat.load_length_prefixed(&str_data[pos], max(0, len - pos));
+    pos += this->code.point.load_length_prefixed(&str_data[pos], max(0, len - pos));
     InitTexture();
 }
 
 int C_Texer2::save_config(unsigned char* data) {
     memcpy(data, &this->config, sizeof(texer2_apeconfig));
-    int l = 0;
-    char* p = (char*)(data + sizeof(texer2_apeconfig));
-    int tot = 16;
-
-    // Init
-    l = strlen(code.init);
-    tot += l;
-    *((int*)p) = l;
-    p += 4;
-    memcpy(p, code.init, l);
-    p += l;
-
-    // Frame
-    l = strlen(code.frame);
-    tot += l;
-    *((int*)p) = l;
-    p += 4;
-    memcpy(p, code.frame, l);
-    p += l;
-
-    // Beat
-    l = strlen(code.beat);
-    tot += l;
-    *((int*)p) = l;
-    p += 4;
-    memcpy(p, code.beat, l);
-    p += l;
-
-    // Point
-    l = strlen(code.point);
-    tot += l;
-    *((int*)p) = l;
-    p += 4;
-    memcpy(p, code.point, l);
-    p += l;
-
-    return sizeof(texer2_apeconfig) + tot;
+    u_int pos = sizeof(texer2_apeconfig);
+    char* str_data = (char*)data;
+    pos += this->code.init.save_length_prefixed(&str_data[pos],
+                                                max(0, MAX_CODE_LEN - 1 - pos));
+    pos += this->code.frame.save_length_prefixed(&str_data[pos],
+                                                 max(0, MAX_CODE_LEN - 1 - pos));
+    pos += this->code.beat.save_length_prefixed(&str_data[pos],
+                                                max(0, MAX_CODE_LEN - 1 - pos));
+    pos += this->code.point.save_length_prefixed(&str_data[pos],
+                                                 max(0, MAX_CODE_LEN - 1 - pos));
+    return pos;
 }
 
 /* APE interface */

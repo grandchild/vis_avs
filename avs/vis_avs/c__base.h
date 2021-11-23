@@ -130,6 +130,8 @@ class CodeSection {
     void exec(char visdata[2][2][576]);
     int load(char* src, unsigned int max_len);
     int save(char* dest, unsigned int max_len);
+    int load_length_prefixed(char* src, unsigned int max_len);
+    int save_length_prefixed(char* src, unsigned int max_len);
 
    private:
     void* code;

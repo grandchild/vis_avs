@@ -6,8 +6,7 @@
 
 #include <algorithm>
 
-#define MAX_COMPONENT_SAVE_LEN (1 << 16)  // 64k is the maximum component size in AVS
-#define IS_BEAT_MASK           0x01  // something else might be encoded in the higher bytes
+#define IS_BEAT_MASK 0x01  // something else might be encoded in the higher bytes
 
 APEinfo* g_globalvars_extinfo = NULL;
 
@@ -288,9 +287,9 @@ int C_GlobalVars::save_config(unsigned char* data) {
     pos += 4;
     // 24 bytes of unused (or unknown?) data
     pos += 24;
-    pos += this->code.init.save(&str[pos], max(0, MAX_COMPONENT_SAVE_LEN - 1 - pos));
-    pos += this->code.frame.save(&str[pos], max(0, MAX_COMPONENT_SAVE_LEN - 1 - pos));
-    pos += this->code.beat.save(&str[pos], max(0, MAX_COMPONENT_SAVE_LEN - 1 - pos));
+    pos += this->code.init.save(&str[pos], max(0, MAX_CODE_LEN - 1 - pos));
+    pos += this->code.frame.save(&str[pos], max(0, MAX_CODE_LEN - 1 - pos));
+    pos += this->code.beat.save(&str[pos], max(0, MAX_CODE_LEN - 1 - pos));
     memcpy(&str[pos], this->filepath.c_str(), this->filepath.length() + 1);
     pos += this->filepath.length() + 1;
     memcpy(&str[pos], this->reg_ranges_str.c_str(), this->reg_ranges_str.length() + 1);

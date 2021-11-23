@@ -39,6 +39,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <windows.h>
 
+#define MAX_CODE_LEN (1 << 16)  // 64k is the maximum component size in AVS
+
 // defined in main.cpp, render.cpp
 extern unsigned char g_blendtable[256][256];
 

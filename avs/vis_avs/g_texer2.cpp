@@ -35,11 +35,11 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             } else if (wNotifyCode == BN_CLICKED) {
                 g_ConfigThis->config.wrap =
-                    IsDlgButtonChecked(hwndDlg, IDC_TEXERII_OWRAP) == BST_CHECKED;
+                    IsDlgButtonChecked(hwndDlg, IDC_TEXERII_WRAP) == BST_CHECKED;
                 g_ConfigThis->config.resize =
-                    IsDlgButtonChecked(hwndDlg, IDC_TEXERII_ORESIZE) == BST_CHECKED;
+                    IsDlgButtonChecked(hwndDlg, IDC_TEXERII_RESIZE) == BST_CHECKED;
                 g_ConfigThis->config.mask =
-                    IsDlgButtonChecked(hwndDlg, IDC_TEXERII_OMASK) == BST_CHECKED;
+                    IsDlgButtonChecked(hwndDlg, IDC_TEXERII_MASK) == BST_CHECKED;
 
                 if (LOWORD(wParam) == IDC_TEXERII_ABOUT) {
                     compilerfunctionlist(hwndDlg, g_ConfigThis->help_text);
@@ -54,21 +54,17 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 GetWindowText(h, buf, l + 1);
 
                 switch (LOWORD(wParam)) {
-                    case IDC_TEXERII_CINIT:
-                        g_ConfigThis->code.SetInit(buf);
-                        g_ConfigThis->Recompile();
+                    case IDC_TEXERII_INIT:
+                        g_ConfigThis->code.init.set(buf, l + 1);
                         break;
-                    case IDC_TEXERII_CFRAME:
-                        g_ConfigThis->code.SetFrame(buf);
-                        g_ConfigThis->Recompile();
+                    case IDC_TEXERII_FRAME:
+                        g_ConfigThis->code.frame.set(buf, l + 1);
                         break;
-                    case IDC_TEXERII_CBEAT:
-                        g_ConfigThis->code.SetBeat(buf);
-                        g_ConfigThis->Recompile();
+                    case IDC_TEXERII_BEAT:
+                        g_ConfigThis->code.beat.set(buf, l + 1);
                         break;
-                    case IDC_TEXERII_CPOINT:
-                        g_ConfigThis->code.SetPoint(buf);
-                        g_ConfigThis->Recompile();
+                    case IDC_TEXERII_POINT:
+                        g_ConfigThis->code.point.set(buf, l + 1);
                         break;
                     default:
                         break;
@@ -114,20 +110,13 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SendDlgItemMessage(hwndDlg, IDC_TEXERII_TEXTURE, CB_SETCURSEL, 0, 0);
         }
 
-            SetDlgItemText(hwndDlg, IDC_TEXERII_CINIT, g_ConfigThis->code.init);
-            SetDlgItemText(hwndDlg, IDC_TEXERII_CFRAME, g_ConfigThis->code.frame);
-            SetDlgItemText(hwndDlg, IDC_TEXERII_CBEAT, g_ConfigThis->code.beat);
-            SetDlgItemText(hwndDlg, IDC_TEXERII_CPOINT, g_ConfigThis->code.point);
-
-            CheckDlgButton(hwndDlg,
-                           IDC_TEXERII_OWRAP,
-                           g_ConfigThis->config.wrap ? BST_CHECKED : BST_UNCHECKED);
-            CheckDlgButton(hwndDlg,
-                           IDC_TEXERII_OMASK,
-                           g_ConfigThis->config.mask ? BST_CHECKED : BST_UNCHECKED);
-            CheckDlgButton(hwndDlg,
-                           IDC_TEXERII_ORESIZE,
-                           g_ConfigThis->config.resize ? BST_CHECKED : BST_UNCHECKED);
+            SetDlgItemText(hwndDlg, IDC_TEXERII_INIT, g_ConfigThis->code.init.string);
+            SetDlgItemText(hwndDlg, IDC_TEXERII_FRAME, g_ConfigThis->code.frame.string);
+            SetDlgItemText(hwndDlg, IDC_TEXERII_BEAT, g_ConfigThis->code.beat.string);
+            SetDlgItemText(hwndDlg, IDC_TEXERII_POINT, g_ConfigThis->code.point.string);
+            CheckDlgButton(hwndDlg, IDC_TEXERII_WRAP, g_ConfigThis->config.wrap);
+            CheckDlgButton(hwndDlg, IDC_TEXERII_MASK, g_ConfigThis->config.mask);
+            CheckDlgButton(hwndDlg, IDC_TEXERII_RESIZE, g_ConfigThis->config.resize);
 
             return 1;
 
@@ -157,26 +146,21 @@ void load_examples(C_Texer2* texer2, HWND dialog, HWND button) {
         return;
     }
     Texer2Example* example = &(texer2->examples[ret - TEXERII_EXAMPLES_FIRST_ID]);
-    texer2->code.SetInit(example->init);
-    texer2->code.SetFrame(example->frame);
-    texer2->code.SetBeat(example->beat);
-    texer2->code.SetPoint(example->point);
+    texer2->code.init.set(example->init, strnlen(example->init, 65534) + 1);
+    texer2->code.frame.set(example->frame, strnlen(example->frame, 65534) + 1);
+    texer2->code.beat.set(example->beat, strnlen(example->beat, 65534) + 1);
+    texer2->code.point.set(example->point, strnlen(example->point, 65534) + 1);
     texer2->config.resize = example->resize;
     texer2->config.wrap = example->wrap;
     texer2->config.mask = example->mask;
-    CheckDlgButton(
-        dialog, IDC_TEXERII_OWRAP, texer2->config.wrap ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(
-        dialog, IDC_TEXERII_OMASK, texer2->config.mask ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(dialog,
-                   IDC_TEXERII_ORESIZE,
-                   texer2->config.resize ? BST_CHECKED : BST_UNCHECKED);
-    SetDlgItemText(dialog, IDC_TEXERII_CINIT, texer2->code.init);
-    SetDlgItemText(dialog, IDC_TEXERII_CFRAME, texer2->code.frame);
-    SetDlgItemText(dialog, IDC_TEXERII_CBEAT, texer2->code.beat);
-    SetDlgItemText(dialog, IDC_TEXERII_CPOINT, texer2->code.point);
+    CheckDlgButton(dialog, IDC_TEXERII_WRAP, texer2->config.wrap);
+    CheckDlgButton(dialog, IDC_TEXERII_MASK, texer2->config.mask);
+    CheckDlgButton(dialog, IDC_TEXERII_RESIZE, texer2->config.resize);
+    SetDlgItemText(dialog, IDC_TEXERII_INIT, texer2->code.init.string);
+    SetDlgItemText(dialog, IDC_TEXERII_FRAME, texer2->code.frame.string);
+    SetDlgItemText(dialog, IDC_TEXERII_BEAT, texer2->code.beat.string);
+    SetDlgItemText(dialog, IDC_TEXERII_POINT, texer2->code.point.string);
     // select the default texture image
     SendDlgItemMessage(dialog, IDC_TEXERII_TEXTURE, CB_SETCURSEL, 0, 0);
-    texer2->Recompile();
     texer2->InitTexture();
 }

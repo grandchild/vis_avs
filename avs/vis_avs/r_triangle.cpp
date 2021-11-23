@@ -6,8 +6,7 @@
 
 #include <math.h>
 
-#define MAX_CODE_LEN     (1 << 16)  // 64k is the maximum component size in AVS
-#define NUM_COLOR_VALUES 256        // 2 ^ BITS_PER_CHANNEL (i.e. 8)
+#define NUM_COLOR_VALUES 256   // 2 ^ BITS_PER_CHANNEL (i.e. 8)
 #define IS_BEAT_MASK     0x01  // something else might be encoded in the higher bytes
 
 #define TRIANGLE_NUM_POINTS        3

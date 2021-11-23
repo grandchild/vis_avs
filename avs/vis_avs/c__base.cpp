@@ -39,22 +39,45 @@ void CodeSection::exec(char visdata[2][2][576]) {
     AVS_EEL_IF_Execute(code, visdata);
 }
 
-int CodeSection::load(char* src, u_int max_len) {
-    u_int code_len = strnlen(src, max_len);
+int CodeSection::load(char* src, unsigned int max_len) {
+    unsigned int code_len = strnlen(src, max_len);
     this->set(src, code_len + 1);
     return code_len + 1;
 }
 
-int CodeSection::save(char* dest, u_int max_len) {
-    u_int code_len = strnlen(this->string, max_len);
+int CodeSection::save(char* dest, unsigned int max_len) {
+    unsigned int code_len = strnlen(this->string, max_len);
     bool code_too_long = code_len == max_len;
     if (code_too_long) {
         strncpy(dest, this->string, code_len);
-        dest[code_len] = '\0';
     } else {
         strncpy(dest, this->string, code_len + 1);
     }
     return code_len + 1;
+}
+
+int CodeSection::load_length_prefixed(char* src, unsigned int max_len) {
+    if (max_len < sizeof(int32_t)) {
+        return 0;
+    }
+    unsigned int code_len = *(int32_t*)src;
+    if (code_len > (max_len - sizeof(int32_t))) {
+        code_len = max_len - sizeof(int32_t);
+    }
+    this->set(&src[sizeof(int32_t)], code_len + 1);
+    return code_len + sizeof(int32_t);
+}
+
+int CodeSection::save_length_prefixed(char* dest, unsigned int max_len) {
+    unsigned int code_len = strnlen(this->string, max_len - sizeof(int32_t));
+    *(int32_t*)dest = code_len;
+    bool code_too_long = code_len == max_len;
+    if (code_too_long) {
+        strncpy(&dest[sizeof(int32_t)], this->string, code_len);
+    } else {
+        strncpy(&dest[sizeof(int32_t)], this->string, code_len + 1);
+    }
+    return code_len + sizeof(int32_t);
 }
 
 ComponentCodeBase::ComponentCodeBase() : vm_context(NULL) {}
