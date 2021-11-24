@@ -18,9 +18,6 @@ typedef void lock_t;
 
 #include <stdlib.h>
 
-// 1 drive letter + 1 colon + 1 backslash + 256 path + 1 terminating null
-#define MAX_PATH 260
-
 // typedef pthread_mutex_t lock_t;
 
 #endif  // OS specifics

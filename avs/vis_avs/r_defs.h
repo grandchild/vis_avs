@@ -39,7 +39,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <windows.h>
 
-#define MAX_CODE_LEN (1 << 16)  // 64k is the maximum component size in AVS
+// 64k is the maximum component size in AVS
+#define MAX_CODE_LEN         (1 << 16)
+// 1 drive letter + 1 colon + 1 backslash + 256 path + 1 terminating null
+#define MAX_PATH             260
+// Same as MAX_PATH now, but while MAX_PATH could be anything, LEGACY_SAVE_PATH_LEN is
+// fixed as part of the legacy preset file format.
+#define LEGACY_SAVE_PATH_LEN 260
 
 // defined in main.cpp, render.cpp
 extern unsigned char g_blendtable[256][256];
