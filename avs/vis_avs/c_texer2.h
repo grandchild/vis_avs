@@ -1,10 +1,12 @@
 #pragma once
 
 #include "c__base.h"
+#include "pixel_format.h"
 
 #include "../platform.h"
 
 #include <windows.h>
+#include <vector>
 
 #define MOD_NAME "Render / Texer II"
 
@@ -29,7 +31,7 @@
 
 struct texer2_apeconfig {
     int version; /* formerly "mode", which was unused. */
-    char img[MAX_PATH];
+    char image[MAX_PATH];
     int resize;
     int wrap;
     int mask;
@@ -84,35 +86,37 @@ class C_Texer2 : public C_RBASE {
     virtual void load_config(unsigned char* data, int len);
     virtual int save_config(unsigned char* data);
 
-    virtual void InitTexture();
-    virtual void DeleteTexture();
+    void find_image_files();
+    void clear_image_files();
+    void load_image();
+    void load_default_image();
+    void delete_image();
 
-    virtual void DrawParticle(int* framebuffer,
-                              int* texture,
-                              int w,
-                              int h,
-                              double x,
-                              double y,
-                              double sizex,
-                              double sizey,
-                              unsigned int color);
+    void DrawParticle(int* framebuffer,
+                      pixel_rgb8* texture,
+                      int w,
+                      int h,
+                      double x,
+                      double y,
+                      double sizex,
+                      double sizey,
+                      unsigned int color);
 
     texer2_apeconfig config;
 
     ComponentCode<Texer2Vars> code;
 
-    HBITMAP bmp;
-    HDC bmpdc;
-    HBITMAP bmpold;
+    static int instance_count;
+    static std::vector<char*> file_list;
     int iw;
     int ih;
-    int* texbits_normal;
-    int* texbits_flipped;
-    int* texbits_mirrored;
-    int* texbits_rot180;
+    pixel_rgb8* image_normal;
+    pixel_rgb8* image_flipped;
+    pixel_rgb8* image_mirrored;
+    pixel_rgb8* image_rot180;
 
-    lock_t* imageload;
-    lock_t* codestuff;
+    lock_t* image_lock;
+    lock_t* code_lock;
 
     char* help_text =
         "Texer II\0"

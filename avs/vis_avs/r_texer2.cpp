@@ -4,6 +4,9 @@
 #include "r_defs.h"
 
 #include "avs_eelif.h"
+#include "files.h"
+#include "image.h"
+#include "pixel_format.h"
 
 #include "../util.h"
 
@@ -12,138 +15,141 @@
 
 APEinfo* g_extinfo = 0;
 
-C_Texer2::C_Texer2(int default_version) {
-    memset(&config, 0, sizeof(texer2_apeconfig));
-    bmp = 0;
-    iw = 0;
-    ih = 0;
-    texbits_normal = 0;
-    texbits_flipped = 0;
-    texbits_mirrored = 0;
-    texbits_rot180 = 0;
-    config.version = default_version;
+int C_Texer2::instance_count = 0;
+std::vector<char*> C_Texer2::file_list;
 
-    code.init.set(examples[0].init, strnlen(examples[0].init, 65334) + 1);
-    code.frame.set(examples[0].frame, strnlen(examples[0].frame, 65334) + 1);
-    code.beat.set(examples[0].beat, strnlen(examples[0].beat, 65334) + 1);
-    code.point.set(examples[0].point, strnlen(examples[0].point, 65334) + 1);
-    config.resize = examples[0].resize;
-    config.wrap = examples[0].wrap;
-    config.mask = examples[0].mask;
-
-    imageload = lock_init();
-    codestuff = lock_init();
+C_Texer2::C_Texer2(int default_version)
+    : config({default_version,
+              "",
+              this->examples[0].resize,
+              this->examples[0].wrap,
+              this->examples[0].mask,
+              0}),
+      iw(0),
+      ih(0),
+      image_normal(0),
+      image_flipped(0),
+      image_mirrored(0),
+      image_rot180(0),
+      image_lock(lock_init()),
+      code_lock(lock_init()) {
+    this->code.init.set(this->examples[0].init,
+                        strnlen(this->examples[0].init, 65334) + 1);
+    this->code.frame.set(this->examples[0].frame,
+                         strnlen(this->examples[0].frame, 65334) + 1);
+    this->code.beat.set(this->examples[0].beat,
+                        strnlen(this->examples[0].beat, 65334) + 1);
+    this->code.point.set(this->examples[0].point,
+                         strnlen(this->examples[0].point, 65334) + 1);
+    this->find_image_files();
 }
 
 C_Texer2::~C_Texer2() {
-    if (bmp) DeleteTexture();
-    lock_destroy(imageload);
-    lock_destroy(codestuff);
+    lock(this->image_lock);
+    if (this->image_normal) {
+        this->delete_image();
+    }
+    lock_unlock(this->image_lock);
+    lock_destroy(this->image_lock);
+    lock_destroy(this->code_lock);
 }
 
-void C_Texer2::DeleteTexture() {
-    lock(imageload);
-    if (bmp) {
-        SelectObject(bmpdc, bmpold);
-        DeleteObject(bmp);
-        DeleteDC(bmpdc);
-        iw = ih = 0;
-        delete this->texbits_normal;
-        delete this->texbits_flipped;
-        delete this->texbits_mirrored;
-        delete this->texbits_rot180;
+static void add_file_callback(const char* file, void* data) {
+    C_Texer2* texer2 = (C_Texer2*)data;
+    size_t filename_length = strnlen(file, MAX_PATH);
+    char* filename = (char*)calloc(filename_length + 1, sizeof(char));
+    strncpy(filename, file, filename_length + 1);
+    texer2->file_list.push_back(filename);
+}
+
+void C_Texer2::find_image_files() {
+    this->clear_image_files();
+    const int num_extensions = 5;
+    char* extensions[num_extensions] = {".bmp", ".png", ".jpg", ".jpeg", ".gif"};
+    find_files_by_extensions(g_path,
+                             extensions,
+                             num_extensions,
+                             add_file_callback,
+                             this,
+                             sizeof(*this),
+                             /*recursive*/ false,
+                             /*background*/ false);
+}
+
+void C_Texer2::clear_image_files() {
+    for (auto file : this->file_list) {
+        free(file);
     }
-    bmp = NULL;
-    lock_unlock(imageload);
+    this->file_list.clear();
+}
+
+void C_Texer2::delete_image() {
+    if (this->image_normal) {
+        iw = 0;
+        ih = 0;
+        delete this->image_normal;
+        delete this->image_flipped;
+        delete this->image_mirrored;
+        delete this->image_rot180;
+    }
 }
 
 extern unsigned char rawData[1323];  // example pic
-void C_Texer2::InitTexture() {
-    lock(imageload);
-    if (bmp) DeleteTexture();
-    bool loaddefault = false;
-    if (strlen(config.img)) {
-        char buf[MAX_PATH];
-
-        wsprintf(buf, "%s\\%s", g_path, config.img);
-
-        HANDLE f = CreateFile(
-            buf, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
-        if (f != INVALID_HANDLE_VALUE) {
-            CloseHandle(f);
-            bmp = (HBITMAP)LoadImage(
-                0, buf, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
-
-            DIBSECTION dib;
-            BITMAPINFO bi;
-
-            GetObject(bmp, sizeof(dib), &dib);
-
-            if (dib.dsBmih.biWidth < 2) {
-                dib.dsBmih.biWidth = 2;
-            }
-            iw = dib.dsBmih.biWidth;
-            if (dib.dsBmih.biHeight < 2) {
-                dib.dsBmih.biHeight = 2;
-            }
-            ih = dib.dsBmih.biHeight;
-
-            bmpdc = CreateCompatibleDC(NULL);
-            bmpold = (HBITMAP)SelectObject(bmpdc, bmp);
-
-            bi.bmiHeader.biSizeImage = iw * ih * 4;
-            bi.bmiHeader.biHeight = -ih;
-            bi.bmiHeader.biWidth = iw;
-            bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-            bi.bmiHeader.biPlanes = 1;
-            bi.bmiHeader.biBitCount = 32;
-            bi.bmiHeader.biCompression = BI_RGB;
-            bi.bmiHeader.biXPelsPerMeter = 0;
-            bi.bmiHeader.biYPelsPerMeter = 0;
-            bi.bmiHeader.biClrUsed = 0xffffff;
-            bi.bmiHeader.biClrImportant = 0xffffff;
-
-            this->texbits_normal = (int*)new unsigned char[bi.bmiHeader.biSizeImage];
-            this->texbits_flipped = (int*)new unsigned char[bi.bmiHeader.biSizeImage];
-            this->texbits_mirrored = (int*)new unsigned char[bi.bmiHeader.biSizeImage];
-            this->texbits_rot180 = (int*)new unsigned char[bi.bmiHeader.biSizeImage];
-            GetDIBits(bmpdc, bmp, 0, ih, texbits_normal, &bi, DIB_RGB_COLORS);
-
-            int y = 0;
-            while (y < ih) {
-                int x = 0;
-                while (x < iw) {
-                    int value = texbits_normal[y * iw + x];
-                    texbits_flipped[(ih - y - 1) * iw + x] = value;
-                    texbits_mirrored[(y + 1) * iw - x - 1] = value;
-                    texbits_rot180[(ih - y) * iw - x - 1] = value;
-                    x++;
-                }
-                y++;
-            }
-        } else {
-            loaddefault = true;
-        }
-    } else {
-        loaddefault = true;
+void C_Texer2::load_image() {
+    lock(this->image_lock);
+    if (this->image_normal) this->delete_image();
+    if (!strlen(this->config.image)) {
+        this->load_default_image();
+        lock_unlock(this->image_lock);
+        return;
     }
-    if (loaddefault) {
-        iw = 21;
-        ih = 21;
-        this->texbits_normal = (int*)new unsigned char[iw * ih * 4];
-        this->texbits_flipped = (int*)new unsigned char[iw * ih * 4];
-        this->texbits_mirrored = (int*)new unsigned char[iw * ih * 4];
-        this->texbits_rot180 = (int*)new unsigned char[iw * ih * 4];
-        for (int i = 0; i < iw * ih; ++i) {
-            // the default image is symmetrical in all directions
-            texbits_normal[i] = *(int*)&rawData[i * 3];
-            texbits_flipped[i] = *(int*)&rawData[i * 3];
-            texbits_mirrored[i] = *(int*)&rawData[i * 3];
-            texbits_rot180[i] = *(int*)&rawData[i * 3];
-        }
-        bmp = (HBITMAP)0xcdcdcdcd;
+    char filename[MAX_PATH];
+    wsprintf(filename, "%s\\%s", g_path, this->config.image);
+    AVS_image* tmp_image = image_load(filename);
+    if (tmp_image->data == NULL || tmp_image->w == 0 || tmp_image->h == 0
+        || tmp_image->error != NULL) {
+        image_free(tmp_image);
+        this->load_default_image();
+        lock_unlock(this->image_lock);
+        return;
     }
-    lock_unlock(imageload);
+    this->iw = tmp_image->w;
+    this->ih = tmp_image->h;
+    int image_size = this->ih * this->iw;
+    this->image_normal = new pixel_rgb8[image_size];
+    this->image_flipped = new pixel_rgb8[image_size];
+    this->image_mirrored = new pixel_rgb8[image_size];
+    this->image_rot180 = new pixel_rgb8[image_size];
+    memcpy(this->image_normal, tmp_image->data, image_size * sizeof(pixel_rgb8));
+    int y = 0;
+    while (y < ih) {
+        int x = 0;
+        while (x < iw) {
+            pixel_rgb8 value = this->image_normal[y * iw + x];
+            this->image_flipped[(ih - y - 1) * iw + x] = value;
+            this->image_mirrored[(y + 1) * iw - x - 1] = value;
+            this->image_rot180[(ih - y) * iw - x - 1] = value;
+            x++;
+        }
+        y++;
+    }
+    lock_unlock(this->image_lock);
+}
+
+void C_Texer2::load_default_image() {
+    this->iw = 21;
+    this->ih = 21;
+    this->image_normal = new pixel_rgb8[this->iw * this->ih];
+    this->image_flipped = new pixel_rgb8[this->iw * this->ih];
+    this->image_mirrored = new pixel_rgb8[this->iw * this->ih];
+    this->image_rot180 = new pixel_rgb8[this->iw * this->ih];
+    for (int i = 0; i < this->iw * this->ih; ++i) {
+        // the default image is symmetrical in all directions
+        image_normal[i] = *(int*)&rawData[i * 3];
+        image_flipped[i] = *(int*)&rawData[i * 3];
+        image_mirrored[i] = *(int*)&rawData[i * 3];
+        image_rot180[i] = *(int*)&rawData[i * 3];
+    }
 }
 
 struct RECTf {
@@ -154,7 +160,7 @@ struct RECTf {
 };
 
 void C_Texer2::DrawParticle(int* framebuffer,
-                            int* texture,
+                            pixel_rgb8* texture,
                             int w,
                             int h,
                             double x,
@@ -177,7 +183,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
     /*   Scaling renderer                                                      */
     /***************************************************************************/
     /***************************************************************************/
-    if (config.resize) {
+    if (this->config.resize) {
         RECTf r;
         // Determine area rectangle,
         // correct with half pixel for correct pixel coverage
@@ -667,7 +673,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
 
         int ty = cy0;
 
-        if (config.mask) {
+        if (this->config.mask) {
             // Second easiest path, masking, but no scaling
             T2_PREP_MASK_COLOR
             switch (*(g_extinfo->lineblendmode) & 0xFF) {
@@ -675,7 +681,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_rep)
 #ifdef _MSC_VER
@@ -710,7 +716,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_add)
 #ifdef _MSC_VER
@@ -752,7 +758,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_MINMAX_MASKS
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_max)
 #ifdef _MSC_VER
@@ -809,7 +815,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_50)
 #ifdef _MSC_VER
@@ -856,7 +862,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_sub1)
 #ifdef _MSC_VER
@@ -895,7 +901,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_sub2)
 #ifdef _MSC_VER
@@ -932,7 +938,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_mul)
 #ifdef _MSC_VER
@@ -982,7 +988,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_adj)
 #ifdef _MSC_VER
@@ -1033,7 +1039,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_xor)
 #ifdef _MSC_VER
@@ -1075,7 +1081,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_MINMAX_MASKS
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_mask_loop_min)
 #ifdef _MSC_VER
@@ -1138,7 +1144,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_rep)
 #ifdef _MSC_VER
@@ -1161,7 +1167,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_add)
 #ifdef _MSC_VER
@@ -1189,7 +1195,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_MINMAX_MASKS
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_max)
 #ifdef _MSC_VER
@@ -1234,7 +1240,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_50)
 #ifdef _MSC_VER
@@ -1269,7 +1275,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_sub1)
 #ifdef _MSC_VER
@@ -1294,7 +1300,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_sub2)
 #ifdef _MSC_VER
@@ -1319,7 +1325,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_mul)
 #ifdef _MSC_VER
@@ -1362,7 +1368,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_adj)
 #ifdef _MSC_VER
@@ -1407,7 +1413,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_xor)
 #ifdef _MSC_VER
@@ -1435,7 +1441,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     T2_NONSCALE_MINMAX_MASKS
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
-                        int* inp = &texture[ty * (iw + 1) + cx0];
+                        pixel_rgb8* inp = &texture[ty * (iw + 1) + cx0];
                         int tot = (r2.right - r2.left);
                         T2_NONSCALE_BLEND_ASM_ENTER(t2_nonscale_nonmask_loop_min)
 #ifdef _MSC_VER
@@ -1512,7 +1518,7 @@ int C_Texer2::render(char visdata[2][2][576],
                      int*,
                      int w,
                      int h) {
-    lock(codestuff);
+    lock(this->code_lock);
     this->code.recompile_if_needed();
     this->code.init_variables(w, h, is_beat, this->iw, this->ih);
     if (this->code.need_init || (is_beat & 0x80000000)) {
@@ -1527,7 +1533,7 @@ int C_Texer2::render(char visdata[2][2][576],
     int n = RoundToInt((double)*this->code.vars.n);
     n = max(0, min(65536, n));
 
-    lock(imageload);
+    lock(this->image_lock);
     if (n) {
         double step = 1.0 / (n - 1);
         double i = 0.0;
@@ -1553,15 +1559,15 @@ int C_Texer2::render(char visdata[2][2][576],
                     min(255, max(0, RoundToInt(255.0f * (double)*this->code.vars.red)))
                     << 16;
 
-                if (config.mask == 0) color = 0xFFFFFF;
+                if (this->config.mask == 0) color = 0xFFFFFF;
 
-                int* texture = this->texbits_normal;
+                pixel_rgb8* texture = this->image_normal;
                 if (*this->code.vars.sizex < 0 && *this->code.vars.sizey > 0) {
-                    texture = this->texbits_mirrored;
+                    texture = this->image_mirrored;
                 } else if (*this->code.vars.sizex > 0 && *this->code.vars.sizey < 0) {
-                    texture = this->texbits_flipped;
+                    texture = this->image_flipped;
                 } else if (*this->code.vars.sizex < 0 && *this->code.vars.sizey < 0) {
-                    texture = this->texbits_rot180;
+                    texture = this->image_rot180;
                 }
 
                 double szx = fabs(*this->code.vars.sizex);
@@ -1574,7 +1580,7 @@ int C_Texer2::render(char visdata[2][2][576],
                 if ((szx > .01) && (szy > .01)) {
                     double x = *this->code.vars.x;
                     double y = *this->code.vars.y;
-                    if (config.wrap != 0) {
+                    if (this->config.wrap != 0) {
                         bool overlaps_x, overlaps_y;
                         if (this->config.version == TEXER_II_VERSION_V2_81D) {
                             /* Wrap only once (when crossing +/-1, not when crossing
@@ -1635,8 +1641,8 @@ int C_Texer2::render(char visdata[2][2][576],
         }
     }
 
-    lock_unlock(codestuff);
-    lock_unlock(imageload);
+    lock_unlock(this->code_lock);
+    lock_unlock(this->image_lock);
     return 0;
 }
 
@@ -1694,7 +1700,7 @@ void C_Texer2::load_config(unsigned char* data, int len) {
     pos += this->code.frame.load_length_prefixed(&str_data[pos], max(0, len - pos));
     pos += this->code.beat.load_length_prefixed(&str_data[pos], max(0, len - pos));
     pos += this->code.point.load_length_prefixed(&str_data[pos], max(0, len - pos));
-    InitTexture();
+    load_image();
 }
 
 int C_Texer2::save_config(unsigned char* data) {
