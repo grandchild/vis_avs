@@ -1,11 +1,10 @@
 #pragma once
 
+#include "r_defs.h"
+
 #include "c__base.h"
 #include "pixel_format.h"
 
-#include "../platform.h"
-
-#include <windows.h>
 #include <vector>
 
 #define MOD_NAME "Render / Texer II"
@@ -31,7 +30,7 @@
 
 struct texer2_apeconfig {
     int version; /* formerly "mode", which was unused. */
-    char image[MAX_PATH];
+    char image[LEGACY_SAVE_PATH_LEN];
     int resize;
     int wrap;
     int mask;
