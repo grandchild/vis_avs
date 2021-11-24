@@ -19,12 +19,12 @@ int C_Texer2::instance_count = 0;
 std::vector<char*> C_Texer2::file_list;
 
 C_Texer2::C_Texer2(int default_version)
-    : config({default_version,
-              "",
-              this->examples[0].resize,
-              this->examples[0].wrap,
-              this->examples[0].mask,
-              0}),
+    : config{default_version,
+             "",
+             this->examples[0].resize,
+             this->examples[0].wrap,
+             this->examples[0].mask,
+             0},
       iw(0),
       ih(0),
       image_normal(0),
