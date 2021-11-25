@@ -1,8 +1,13 @@
 #pragma once
 
-#include "c__base.h"
+#include "r_defs.h"
 
-#include <windows.h>
+#include "c__base.h"
+#include "pixel_format.h"
+
+#include "../platform.h"
+
+#include <vector>
 
 #define MOD_NAME    "Render / Picture"
 #define C_THISCLASS C_PictureClass
@@ -21,19 +26,24 @@ class C_THISCLASS : public C_RBASE {
     virtual char* get_desc() { return MOD_NAME; }
     virtual void load_config(unsigned char* data, int len);
     virtual int save_config(unsigned char* data);
-    void loadPicture(char* name);
-    void freePicture();
+    void find_image_files();
+    void clear_image_files();
+    void load_image();
 
     int enabled;
-    int width, height;
-    HBITMAP hOldBitmap;
-    HBITMAP hb;
-    HBITMAP hb2;
-    HDC hBitmapDC;
-    HDC hBitmapDC2;
-    int lastWidth, lastHeight;
-    int blend, blendavg, adapt, persist;
-    int ratio, axis_ratio;
-    char ascName[MAX_PATH];
+    int width;
+    int height;
+    int blend;
+    int blendavg;
+    int adapt;
+    int persist;
     int persistCount;
+    int ratio;
+    int axis_ratio;
+    char image[LEGACY_SAVE_PATH_LEN];
+    pixel_rgb8* image_data;
+    lock_t* image_lock;
+
+    static std::vector<char*> file_list;
+    static unsigned int instance_count;
 };

@@ -33,46 +33,118 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "r_defs.h"
 
+#include "files.h"
+#include "image.h"
+
 #include <stdlib.h>
 
 #ifndef LASER
 
-C_THISCLASS::C_THISCLASS()  // set up default configuration
-{
-    persistCount = 0;
-    enabled = 1;
-    blend = 0;
-    adapt = 0;
-    blendavg = 1;
-    persist = 6;
-    strcpy(ascName, "");
-    hb = 0;
-    ratio = 0;
-    axis_ratio = 0;
-    hBitmapDC = 0;
-    hBitmapDC2 = 0;
-}
-C_THISCLASS::~C_THISCLASS() { freePicture(); }
+std::vector<char*> C_THISCLASS::file_list;
+unsigned int C_THISCLASS::instance_count = 0;
 
-void C_THISCLASS::loadPicture(char* name) {
-    freePicture();
-
-    char longName[MAX_PATH];
-    wsprintf(longName, "%s\\%s", g_path, name);
-    hb = (HBITMAP)LoadImage(0, longName, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-
-    BITMAP bm;
-    GetObject(hb, sizeof(bm), (LPSTR)&bm);
-    width = bm.bmWidth;
-    height = bm.bmHeight;
-
-    lastWidth = lastHeight = 0;
-}
-void C_THISCLASS::freePicture() {
-    if (hb) {
-        DeleteObject(hb);
-        hb = 0;
+C_THISCLASS::C_THISCLASS()
+    : enabled(1),
+      width(0),
+      height(0),
+      blend(0),
+      blendavg(1),
+      adapt(0),
+      persist(6),
+      persistCount(0),
+      ratio(0),
+      axis_ratio(0),
+      image(""),
+      image_data(NULL),
+      image_lock(lock_init()) {
+    this->instance_count++;
+    if (this->file_list.empty()) {
+        this->find_image_files();
     }
+}
+
+C_THISCLASS::~C_THISCLASS() {
+    free(this->image_data);
+    this->instance_count--;
+    if (this->instance_count == 0) {
+        this->clear_image_files();
+    }
+}
+
+static void add_file_callback(const char* file, void* data) {
+    C_THISCLASS* picture = (C_THISCLASS*)data;
+    size_t filename_length = strnlen(file, MAX_PATH);
+    char* filename = (char*)calloc(filename_length + 1, sizeof(char));
+    strncpy(filename, file, filename_length + 1);
+    picture->file_list.push_back(filename);
+}
+
+void C_THISCLASS::find_image_files() {
+    this->clear_image_files();
+    const int num_extensions = 5;
+    char* extensions[num_extensions] = {".bmp", ".png", ".jpg", ".jpeg", ".gif"};
+    find_files_by_extensions(g_path,
+                             extensions,
+                             num_extensions,
+                             add_file_callback,
+                             this,
+                             sizeof(*this),
+                             /*recursive*/ false,
+                             /*background*/ false);
+}
+
+void C_THISCLASS::clear_image_files() {
+    for (auto file : this->file_list) {
+        free(file);
+    }
+    this->file_list.clear();
+}
+
+void C_THISCLASS::load_image() {
+    char file_path[MAX_PATH];
+    snprintf(file_path, MAX_PATH, "%s\\%s", g_path, this->image);
+    AVS_image* tmp_image = image_load(file_path, AVS_PXL_FMT_RGB8);
+    if (tmp_image->data == NULL || tmp_image->w == 0 || tmp_image->h == 0
+        || tmp_image->error != NULL) {
+        image_free(tmp_image);
+        return;
+    }
+
+    int x_start = 0;
+    int screen_width = this->width;
+    int y_start = 0;
+    int screen_height = this->height;
+    if (ratio) {
+        if (axis_ratio == 0) {
+            // fit x
+            screen_height = tmp_image->h * this->width / tmp_image->w;
+            y_start = (this->height / 2) - (screen_height / 2);
+        } else {
+            // fit y
+            screen_width = tmp_image->w * this->height / tmp_image->h;
+            x_start = (this->width / 2) - (screen_width / 2);
+        }
+    }
+
+    lock(this->image_lock);
+    free(this->image_data);
+    this->image_data =
+        (pixel_rgb8*)malloc(this->width * this->height * sizeof(pixel_rgb8));
+    for (int y = 0; y < this->height; y++) {
+        for (int x = 0; x < this->width; x++) {
+            int source_x = (x - x_start) * tmp_image->w / screen_width;
+            int source_y = (y - y_start) * tmp_image->h / screen_height;
+            if (source_x < 0 || source_x >= tmp_image->w || source_y < 0
+                || source_y >= tmp_image->h) {
+                this->image_data[x + y * this->width] = 0;
+            } else {
+                this->image_data[x + y * this->width] =
+                    ((pixel_rgb8*)tmp_image->data)[source_x + source_y * tmp_image->w];
+            }
+        }
+    }
+    lock_unlock(this->image_lock);
+    image_free(tmp_image);
 }
 
 #define GET_INT() \
@@ -103,7 +175,7 @@ void C_THISCLASS::load_config(unsigned char* data, int len)  // read configurati
         pos += 4;
     }
 
-    char* p = ascName;
+    char* p = image;
     while (data[pos] && len - pos > 0) *p++ = data[pos++];
     *p = 0;
     pos++;
@@ -117,7 +189,9 @@ void C_THISCLASS::load_config(unsigned char* data, int len)  // read configurati
         pos += 4;
     }
 
-    if (*ascName) loadPicture(ascName);
+    if (*image) {
+        this->load_image();
+    }
 }
 
 #define PUT_INT(y)                   \
@@ -140,8 +214,8 @@ int C_THISCLASS::save_config(unsigned char* data)  // write configuration to dat
     pos += 4;
     PUT_INT(persist);
     pos += 4;
-    strcpy((char*)data + pos, ascName);
-    pos += strlen(ascName) + 1;
+    strcpy((char*)data + pos, image);
+    pos += strlen(image) + 1;
     PUT_INT(ratio);
     pos += 4;
     PUT_INT(axis_ratio);
@@ -158,122 +232,44 @@ int C_THISCLASS::save_config(unsigned char* data)  // write configuration to dat
 int C_THISCLASS::render(char[2][2][576],
                         int isBeat,
                         int* framebuffer,
-                        int* fbout,
+                        int*,
                         int w,
                         int h) {
-    if (!enabled) return 0;
-
-    if (!width || !height) return 0;
-
-    if (lastWidth != w || lastHeight != h) {
-        lastWidth = w;
-        lastHeight = h;
-
-        if (hBitmapDC2) {
-            DeleteDC(hBitmapDC2);
-            DeleteObject(hb2);
-            hBitmapDC2 = 0;
-        }
-
-        // Copy the bitmap from hBitmapDC to hBitmapDC2 and stretch it
-        hBitmapDC = CreateCompatibleDC(NULL);
-        hOldBitmap = (HBITMAP)SelectObject(hBitmapDC, hb);
-        hBitmapDC2 = CreateCompatibleDC(NULL);
-        hb2 = CreateCompatibleBitmap(hBitmapDC, w, h);
-        SelectObject(hBitmapDC2, hb2);
-        {
-            HBRUSH b = CreateSolidBrush(0);
-            HPEN p = CreatePen(PS_SOLID, 0, 0);
-            HBRUSH bold;
-            HPEN pold;
-            bold = (HBRUSH)SelectObject(hBitmapDC2, b);
-            pold = (HPEN)SelectObject(hBitmapDC2, p);
-            Rectangle(hBitmapDC2, 0, 0, w, h);
-            SelectObject(hBitmapDC2, bold);
-            SelectObject(hBitmapDC2, pold);
-            DeleteObject(b);
-            DeleteObject(p);
-        }
-        SetStretchBltMode(hBitmapDC2, COLORONCOLOR);
-        int final_height = h, start_height = 0;
-        int final_width = w, start_width = 0;
-        if (ratio) {
-            if (axis_ratio == 0) {
-                // ratio on X axis
-                final_height = height * w / width;
-                start_height = (h / 2) - (final_height / 2);
-            } else {
-                // ratio on Y axis
-                final_width = width * h / height;
-                start_width = (w / 2) - (final_width / 2);
-            }
-        }
-        StretchBlt(hBitmapDC2,
-                   start_width,
-                   start_height,
-                   final_width,
-                   final_height,
-                   hBitmapDC,
-                   0,
-                   0,
-                   width,
-                   height,
-                   SRCCOPY);
-        DeleteDC(hBitmapDC);
-        hBitmapDC = 0;
+    if (!enabled) {
+        return 0;
     }
-    if (isBeat & 0x80000000) return 0;
 
-    // Copy the stretched bitmap to fbout
-    BITMAPINFO bi;
-    bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bi.bmiHeader.biWidth = w;
-    bi.bmiHeader.biHeight = h;
-    bi.bmiHeader.biPlanes = 1;
-    bi.bmiHeader.biBitCount = 32;
-    bi.bmiHeader.biCompression = BI_RGB;
-    bi.bmiHeader.biSizeImage = 0;
-    bi.bmiHeader.biXPelsPerMeter = 0;
-    bi.bmiHeader.biYPelsPerMeter = 0;
-    bi.bmiHeader.biClrUsed = 0;
-    bi.bmiHeader.biClrImportant = 0;
-    GetDIBits(hBitmapDC2, hb2, 0, h, (void*)fbout, &bi, DIB_RGB_COLORS);
+    if (this->image_data == NULL || this->width != w || this->height != h) {
+        this->width = w;
+        this->height = h;
+        this->load_image();
+    }
+    if (this->image_data == NULL) {
+        return 0;
+    }
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
 
-    // Copy the bitmap from fbout to framebuffer applying replace/blend/etc...
-    if (isBeat)
+    if (isBeat) {
         persistCount = persist;
-    else if (persistCount > 0)
+    } else if (persistCount > 0) {
         persistCount--;
+    }
 
-    int *p, *d;
-    int i, j;
-
-    p = fbout;
-    d = framebuffer + w * (h - 1);
-    if (blend || (adapt && (isBeat || persistCount)))
-        for (i = 0; i < h; i++) {
-            for (j = 0; j < w; j++) {
-                *d = BLEND(*p, *d);
-                d++;
-                p++;
-            }
-            d -= w * 2;
+    lock(this->image_lock);
+    if (blend || (adapt && (isBeat || persistCount))) {
+        for (int i = 0; i < w * h; i++) {
+            framebuffer[i] = BLEND(framebuffer[i], this->image_data[i]);
         }
-    else if (blendavg || adapt)
-        for (i = 0; i < h; i++) {
-            for (j = 0; j < w; j++) {
-                *d = BLEND_AVG(*p, *d);
-                d++;
-                p++;
-            }
-            d -= w * 2;
+    } else if (blendavg || adapt) {
+        for (int i = 0; i < w * h; i++) {
+            framebuffer[i] = BLEND_AVG(framebuffer[i], this->image_data[i]);
         }
-    else
-        for (i = 0; i < h; i++) {
-            memcpy(d, p, w * 4);
-            p += w;
-            d -= w;
-        }
+    } else {
+        memcpy(framebuffer, this->image_data, w * h * sizeof(pixel_rgb8));
+    }
+    lock_unlock(this->image_lock);
 
     return 0;
 }

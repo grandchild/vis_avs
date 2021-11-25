@@ -38,8 +38,14 @@ int win32_dlgproc_picture(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
             if (g_ConfigThis->axis_ratio)
                 CheckDlgButton(hwndDlg, IDC_Y_RATIO, BST_CHECKED);
             EnableWindows(hwndDlg, g_ConfigThis);
-            loadComboBox(
-                GetDlgItem(hwndDlg, OBJ_COMBO), "*.BMP", g_ConfigThis->ascName);
+            for (auto file : g_ConfigThis->file_list) {
+                int p = SendDlgItemMessage(
+                    hwndDlg, OBJ_COMBO, CB_ADDSTRING, 0, (LPARAM)file);
+
+                if (strncmp(file, g_ConfigThis->image, MAX_PATH) == 0) {
+                    SendDlgItemMessage(hwndDlg, OBJ_COMBO, CB_SETCURSEL, p, 0);
+                }
+            }
             return 1;
         case WM_NOTIFY:
             if (LOWORD(wParam) == IDC_PERSIST)
@@ -62,15 +68,16 @@ int win32_dlgproc_picture(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                 g_ConfigThis->ratio = IsDlgButtonChecked(hwndDlg, IDC_RATIO) ? 1 : 0;
                 g_ConfigThis->axis_ratio =
                     IsDlgButtonChecked(hwndDlg, IDC_Y_RATIO) ? 1 : 0;
-                g_ConfigThis->lastWidth = -1;
-                g_ConfigThis->lastHeight = -1;
+                g_ConfigThis->width = -1;
+                g_ConfigThis->height = -1;
                 EnableWindows(hwndDlg, g_ConfigThis);
             }
-            if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == OBJ_COMBO)  // handle
-                                                                                 // clicks
-                                                                                 // to
-                                                                                 // combo
-                                                                                 // box
+            if (HIWORD(wParam) == CBN_SELCHANGE
+                && LOWORD(wParam) == OBJ_COMBO)  // handle
+                                                 // clicks
+                                                 // to
+                                                 // combo
+                                                 // box
             {
                 int sel = SendDlgItemMessage(hwndDlg, OBJ_COMBO, CB_GETCURSEL, 0, 0);
                 if (sel != -1) {
@@ -78,9 +85,10 @@ int win32_dlgproc_picture(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                                        OBJ_COMBO,
                                        CB_GETLBTEXT,
                                        sel,
-                                       (LPARAM)g_ConfigThis->ascName);
-                    if (*(g_ConfigThis->ascName))
-                        g_ConfigThis->loadPicture(g_ConfigThis->ascName);
+                                       (LPARAM)g_ConfigThis->image);
+                    if (*(g_ConfigThis->image)) {
+                        g_ConfigThis->load_image();
+                    }
                 }
             }
             return 0;
