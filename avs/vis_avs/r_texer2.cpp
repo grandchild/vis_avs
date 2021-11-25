@@ -134,6 +134,7 @@ void C_Texer2::load_image() {
         y++;
     }
     lock_unlock(this->image_lock);
+    image_free(tmp_image);
 }
 
 void C_Texer2::load_default_image() {
