@@ -197,7 +197,7 @@ int C_THISCLASS::save_config(unsigned char* data) {
 }
 
 C_THISCLASS::C_THISCLASS() {
-    InitializeCriticalSection(&rcs);
+    this->code_lock = lock_init();
     sourcemapped = 0;
     trans_tab = NULL;
     trans_tab_w = trans_tab_h = 0;
@@ -217,7 +217,7 @@ C_THISCLASS::~C_THISCLASS() {
     trans_tab = NULL;
     trans_tab_w = trans_tab_h = 0;
     trans_effect = 0;
-    DeleteCriticalSection(&rcs);
+    lock_destroy(this->code_lock);
 }
 
 int C_THISCLASS::smp_begin(int max_threads,
@@ -362,11 +362,11 @@ int C_THISCLASS::smp_begin(int max_threads,
                                                 : descriptions[trans_effect].uses_rect;
             *pw = w;
             *ph = h;
-            EnterCriticalSection(&rcs);
+            lock(this->code_lock);
             codehandle = compileCode(trans_effect == 32767
                                          ? (char*)effect_exp.c_str()
                                          : descriptions[trans_effect].eval_desc);
-            LeaveCriticalSection(&rcs);
+            lock_unlock(this->code_lock);
             if (codehandle) {
                 double w2 = w / 2;
                 double h2 = h / 2;

@@ -2,6 +2,8 @@
 
 #include "avs_eelif.h"
 
+#include <string.h>
+
 CodeSection::CodeSection() : string(new char[1]), need_recompile(false), code(NULL) {
     this->string[0] = '\0';
 }

@@ -104,7 +104,10 @@ void C_Texer2::load_image() {
         return;
     }
     char filename[MAX_PATH];
-    wsprintf(filename, "%s\\%s", g_path, this->config.image);
+    int printed = snprintf(filename, MAX_PATH, "%s\\%s", g_path, this->config.image);
+    if (printed >= MAX_PATH) {
+        filename[MAX_PATH - 1] = '\0';
+    }
     AVS_image* tmp_image = image_load(filename);
     if (tmp_image->data == NULL || tmp_image->w == 0 || tmp_image->h == 0
         || tmp_image->error != NULL) {
@@ -152,6 +155,13 @@ void C_Texer2::load_default_image() {
         image_rot180[i] = *(int*)&rawData[i * 3];
     }
 }
+
+struct RECT {
+    int left;
+    int top;
+    int right;
+    int bottom;
+};
 
 struct RECTf {
     double left;
@@ -1695,7 +1705,7 @@ void C_Texer2::load_config(unsigned char* data, int len) {
         // If the version value is not in the known set, assume an old preset version.
         this->config.version = TEXER_II_VERSION_V2_81D;
     }
-    u_int pos = sizeof(texer2_apeconfig);
+    unsigned int pos = sizeof(texer2_apeconfig);
     char* str_data = (char*)data;
     pos += this->code.init.load_length_prefixed(&str_data[pos], max(0, len - pos));
     pos += this->code.frame.load_length_prefixed(&str_data[pos], max(0, len - pos));
@@ -1706,7 +1716,7 @@ void C_Texer2::load_config(unsigned char* data, int len) {
 
 int C_Texer2::save_config(unsigned char* data) {
     memcpy(data, &this->config, sizeof(texer2_apeconfig));
-    u_int pos = sizeof(texer2_apeconfig);
+    unsigned int pos = sizeof(texer2_apeconfig);
     char* str_data = (char*)data;
     pos += this->code.init.save_length_prefixed(&str_data[pos],
                                                 max(0, MAX_CODE_LEN - 1 - pos));

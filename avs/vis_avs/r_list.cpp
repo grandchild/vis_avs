@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "render.h"
 #include "undo.h"
 
+#include <windows.h>
 #include <stdio.h>
 
 #define PUT_INT(y)                   \
@@ -253,7 +254,7 @@ C_RenderListClass::C_RenderListClass(int iroot) {
     outblendval = 128;
     ininvert = 0;
 
-    InitializeCriticalSection(&rcs);
+    this->code_lock = lock_init();
     use_code = 0;
     inited = 0;
     need_recompile = 1;
@@ -361,7 +362,7 @@ C_RenderListClass::~C_RenderListClass() {
         codehandle[x] = 0;
     }
     AVS_EEL_QUITINST();
-    DeleteCriticalSection(&rcs);
+    lock_destroy(this->code_lock);
 }
 
 static int __inline depthof(int c, int i) {
@@ -386,7 +387,7 @@ int C_RenderListClass::render(char visdata[2][2][576],
 
     if (!isroot && use_code) {
         if (need_recompile) {
-            EnterCriticalSection(&rcs);
+            lock(this->code_lock);
 
             if (!var_beat || g_reset_vars_on_recompile) {
                 clearVars();
@@ -407,7 +408,7 @@ int C_RenderListClass::render(char visdata[2][2][576],
                 codehandle[x] = compileCode((char*)effect_exp[x].c_str());
             }
 
-            LeaveCriticalSection(&rcs);
+            lock_unlock(this->code_lock);
         }
 
         *var_beat = ((isBeat & 1) && !is_preinit) ? 1.0 : 0.0;
@@ -974,19 +975,10 @@ int C_RenderListClass::insertRender(T_RenderListType* r, int index)  // index=-1
     return x;
 }
 
-void C_RenderListClass::FillBufferCombo(HWND dlg, int ctl) {
-    int i = 0;
-    char txt[64];
-    for (i = 0; i < NBUF; i++) {
-        wsprintf(txt, "Buffer %d", i + 1);
-        SendDlgItemMessage(dlg, ctl, CB_ADDSTRING, 0, (int)txt);
-    }
-}
-
 char C_RenderListClass::sig_str[] = "Nullsoft AVS Preset 0.2\x1a";
 
 int C_RenderListClass::__SavePreset(char* filename) {
-    EnterCriticalSection(&g_render_cs);
+    lock(g_render_cs);
     unsigned char* data = (unsigned char*)calloc(1024 * 1024, 1);
     int success = -1;
     if (data) {
@@ -1003,7 +995,7 @@ int C_RenderListClass::__SavePreset(char* filename) {
                                    FILE_ATTRIBUTE_NORMAL,
                                    NULL);
             if (fp != INVALID_HANDLE_VALUE) {
-                DWORD dw;
+                unsigned long int dw;
                 success = 0;
                 WriteFile(fp, data, pos, &dw, NULL);
                 CloseHandle(fp);
@@ -1013,12 +1005,12 @@ int C_RenderListClass::__SavePreset(char* filename) {
             success = 1;
         free(data);
     }
-    LeaveCriticalSection(&g_render_cs);
+    lock_unlock(g_render_cs);
     return success;
 }
 
 int C_RenderListClass::__LoadPreset(char* filename, int clear) {
-    EnterCriticalSection(&g_render_cs);
+    lock(g_render_cs);
     unsigned char* data = (unsigned char*)calloc(1024 * 1024, 1);
     int success = 1;
     if (clear) clearRenders();
@@ -1032,7 +1024,7 @@ int C_RenderListClass::__LoadPreset(char* filename, int clear) {
                                FILE_ATTRIBUTE_NORMAL,
                                NULL);
         if (fp != INVALID_HANDLE_VALUE) {
-            DWORD len = GetFileSize(fp, NULL);
+            unsigned long int len = GetFileSize(fp, NULL);
             if (len == 0xffffffff) len = 0;
             if (!ReadFile(fp, data, min(len, 1024 * 1024), &len, NULL)) len = 0;
             CloseHandle(fp);
@@ -1052,12 +1044,12 @@ int C_RenderListClass::__LoadPreset(char* filename, int clear) {
         free(data);
     }
     //  else MessageBox(NULL,"Error laoding preset: MALLOC",filename,MB_OK);
-    LeaveCriticalSection(&g_render_cs);
+    lock_unlock(g_render_cs);
     return success;
 }
 
 int C_RenderListClass::__SavePresetToUndo(C_UndoItem& item) {
-    EnterCriticalSection(&g_render_cs);
+    lock(g_render_cs);
     unsigned char* data = (unsigned char*)calloc(1024 * 1024, 1);
     int success = -1;
     if (data) {
@@ -1076,19 +1068,19 @@ int C_RenderListClass::__SavePresetToUndo(C_UndoItem& item) {
             success = 1;
         free(data);
     }
-    LeaveCriticalSection(&g_render_cs);
+    lock_unlock(g_render_cs);
     return success;
 }
 
 int C_RenderListClass::__LoadPresetFromUndo(C_UndoItem& item, int clear) {
-    EnterCriticalSection(&g_render_cs);
+    lock(g_render_cs);
     unsigned char* data = (unsigned char*)calloc(1024 * 1024, 1);
     int success = 1;
     if (clear) clearRenders();
     if (data) {
         if (item.size() < 1024 * 1024) {
             // Get the data from the undo object.
-            DWORD len = item.size();
+            unsigned int len = item.size();
             if (len == 0xffffffff) len = 0;
             memcpy(data, item.get(), item.size());
 
@@ -1102,7 +1094,7 @@ int C_RenderListClass::__LoadPresetFromUndo(C_UndoItem& item, int clear) {
         }
         free(data);
     }
-    LeaveCriticalSection(&g_render_cs);
+    lock_unlock(g_render_cs);
     return success;
 }
 
@@ -1130,12 +1122,12 @@ void C_RenderListClass::smp_Render(int minthreads,
     smp_parms.render = render;
     for (x = 0; x < minthreads; x++) {
         if (x >= smp_parms.threadTop) {
-            DWORD id;
+            unsigned long int id;
             smp_parms.hThreadSignalsStart[x] = CreateEvent(NULL, FALSE, TRUE, NULL);
             smp_parms.hThreadSignalsDone[x] = CreateEvent(NULL, FALSE, FALSE, NULL);
 
             smp_parms.hThreads[x] =
-                CreateThread(NULL, 0, smp_threadProc, (LPVOID)(x), 0, &id);
+                CreateThread(NULL, 0, smp_threadProc, (void*)(x), 0, &id);
             smp_parms.threadTop = x + 1;
         } else
             SetEvent(smp_parms.hThreadSignalsStart[x]);
@@ -1144,9 +1136,9 @@ void C_RenderListClass::smp_Render(int minthreads,
         smp_parms.nthreads, smp_parms.hThreadSignalsDone, TRUE, INFINITE);
 }
 
-DWORD WINAPI C_RenderListClass::smp_threadProc(LPVOID parm) {
+unsigned long int __stdcall C_RenderListClass::smp_threadProc(void* parm) {
     int which = (int)parm;
-    HANDLE hdls[2] = {smp_parms.hThreadSignalsStart[which], smp_parms.hQuitHandle};
+    void* hdls[2] = {smp_parms.hThreadSignalsStart[which], smp_parms.hQuitHandle};
     for (;;) {
         if (WaitForMultipleObjects(2, hdls, FALSE, INFINITE) == WAIT_OBJECT_0 + 1)
             return 0;

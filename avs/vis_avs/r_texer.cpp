@@ -8,6 +8,8 @@
 
 #include "../util.h"  // ssizeof32()
 
+#include <emmintrin.h>  // SSE2 SIMD intrinsics
+
 // IMAGE_DATA_ROW_EXPAND depends on the stepping of the SIMD-enabled render method.
 // Currently 4 pixels are processed at once, so we are at most 3 pixels outside of the
 // image. In the future this might be (8 - 1) if the method is upgraded to use 256-bit
@@ -69,7 +71,10 @@ bool C_Texer::load_image() {
         return true;
     }
     char filename[MAX_PATH];
-    wsprintf(filename, "%s\\%s", g_path, this->image);
+    int printed = snprintf(filename, MAX_PATH, "%s\\%s", g_path, this->image);
+    if (printed >= MAX_PATH) {
+        filename[MAX_PATH - 1] = '\0';
+    }
     AVS_image* tmp_image = image_load(filename);
     if (tmp_image->data == NULL || tmp_image->w == 0 || tmp_image->h == 0
         || tmp_image->error != NULL) {

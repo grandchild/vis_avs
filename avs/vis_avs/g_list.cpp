@@ -5,8 +5,19 @@
 
 #include "resource.h"
 
+#include "../platform.h"
+
 #include <windows.h>
 #include <commctrl.h>
+
+void fill_buffer_combo(HWND dlg, int ctl) {
+    int i = 0;
+    char txt[64];
+    for (i = 0; i < NBUF; i++) {
+        wsprintf(txt, "Buffer %d", i + 1);
+        SendDlgItemMessage(dlg, ctl, CB_ADDSTRING, 0, (int)txt);
+    }
+}
 
 int win32_dlgproc_root_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     C_RenderListClass* g_this = (C_RenderListClass*)g_current_render;
@@ -103,8 +114,8 @@ int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                                (g_this->blendin() == 12) ? SW_NORMAL : SW_HIDE);
                     ShowWindow(GetDlgItem(hwndDlg, IDC_INVERT2),
                                (g_this->blendout() == 12) ? SW_NORMAL : SW_HIDE);
-                    g_this->FillBufferCombo(hwndDlg, IDC_CBBUF1);
-                    g_this->FillBufferCombo(hwndDlg, IDC_CBBUF2);
+                    fill_buffer_combo(hwndDlg, IDC_CBBUF1);
+                    fill_buffer_combo(hwndDlg, IDC_CBBUF2);
                     SendDlgItemMessage(
                         hwndDlg, IDC_CBBUF1, CB_SETCURSEL, (WPARAM)g_this->bufferin, 0);
                     SendDlgItemMessage(hwndDlg,
@@ -143,12 +154,12 @@ int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                 case IDC_EDIT4:
                 case IDC_EDIT5:
                     if (!g_this->isstart && HIWORD(wParam) == EN_CHANGE) {
-                        EnterCriticalSection(&g_this->rcs);
+                        lock(g_this->code_lock);
                         g_this->effect_exp[0] = string_from_dlgitem(hwndDlg, IDC_EDIT4);
                         g_this->effect_exp[1] = string_from_dlgitem(hwndDlg, IDC_EDIT5);
                         g_this->need_recompile = 1;
                         if (LOWORD(wParam) == IDC_EDIT4) g_this->inited = 0;
-                        LeaveCriticalSection(&g_this->rcs);
+                        lock_unlock(g_this->code_lock);
                     }
                     break;
                 case IDC_COMBO1:

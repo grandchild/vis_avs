@@ -81,11 +81,11 @@ int win32_dlgproc_movement(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
         case WM_TIMER:
             if (wParam == 1) {
                 KillTimer(hwndDlg, 1);
-                EnterCriticalSection(&g_this->rcs);
+                lock(g_this->code_lock);
                 g_this->effect = 32767;
                 g_this->effect_exp = string_from_dlgitem(hwndDlg, IDC_EDIT1);
                 g_this->effect_exp_ch = 1;
-                LeaveCriticalSection(&g_this->rcs);
+                lock_unlock(g_this->code_lock);
             }
             return 0;
         case WM_COMMAND:
@@ -123,10 +123,10 @@ int win32_dlgproc_movement(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
 
                     // always reinit =)
                     {
-                        EnterCriticalSection(&g_this->rcs);
+                        lock(g_this->code_lock);
                         g_this->effect_exp = string_from_dlgitem(hwndDlg, IDC_EDIT1);
                         g_this->effect_exp_ch = 1;
-                        LeaveCriticalSection(&g_this->rcs);
+                        lock_unlock(g_this->code_lock);
                     }
                 } else {
                     g_this->effect = t;
@@ -179,11 +179,11 @@ int win32_dlgproc_movement(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                 g_this->rectangular = IsDlgButtonChecked(hwndDlg, IDC_CHECK3) ? 1 : 0;
                 if (SendDlgItemMessage(hwndDlg, IDC_LIST1, LB_GETCURSEL, 0, 0)
                     != sizeof(g_this->descriptions) / sizeof(g_this->descriptions[0])) {
-                    EnterCriticalSection(&g_this->rcs);
+                    lock(g_this->code_lock);
                     g_this->effect = 32767;
                     g_this->effect_exp = string_from_dlgitem(hwndDlg, IDC_EDIT1);
                     g_this->effect_exp_ch = 1;
-                    LeaveCriticalSection(&g_this->rcs);
+                    lock_unlock(g_this->code_lock);
                     SendDlgItemMessage(
                         hwndDlg,
                         IDC_LIST1,

@@ -2,8 +2,6 @@
 
 #include "c__base.h"
 
-#include <windows.h>
-
 #define MOD_NAME "Misc / Framerate Limiter"
 
 class C_FramerateLimiter : public C_RBASE {

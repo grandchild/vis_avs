@@ -33,6 +33,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _WA_IPC_H_
 #define _WA_IPC_H_
 
+#include <windows.h>
+
 /*
 ** This is the modern replacement for the classic 'frontend.h'. Most of these
 ** updates are designed for in-process use, i.e. from a plugin.

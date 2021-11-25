@@ -2,7 +2,8 @@
 
 #include "c__base.h"
 
-#include <windows.h>
+#include "../platform.h"
+
 #include <string>
 
 #define C_THISCLASS C_PulseClass
@@ -36,5 +37,5 @@ class C_THISCLASS : public C_RBASE {
     int codehandle[4];
     int need_recompile;
     int subpixel;
-    CRITICAL_SECTION rcs;
+    lock_t* code_lock;
 };

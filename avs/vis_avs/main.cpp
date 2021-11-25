@@ -39,6 +39,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vis.h"
 #include "wnd.h"
 
+#include "../platform.h"
+
 #include <windows.h>
 #include <math.h>
 #include <process.h>
@@ -76,7 +78,7 @@ HANDLE g_hThread;
 volatile int g_ThreadQuit;
 
 #ifndef WA3_COMPONENT
-static CRITICAL_SECTION g_cs;
+static lock_t* g_cs;
 #endif
 
 static unsigned char g_visdata[2][2][576];
@@ -151,7 +153,7 @@ static void config(struct winampVisModule* this_mod) {
     }
 }
 
-CRITICAL_SECTION g_render_cs;
+lock_t* g_render_cs;
 static int g_is_beat;
 char g_path[1024];
 
@@ -227,9 +229,9 @@ static int init(struct winampVisModule* this_mod) {
     CreateDirectory(g_path, NULL);
 
 #ifndef WA3_COMPONENT
-    InitializeCriticalSection(&g_cs);
+    g_cs = lock_init();
 #endif
-    InitializeCriticalSection(&g_render_cs);
+    g_render_cs = lock_init();
     g_ThreadQuit = 0;
     g_visdata_pstat = 1;
 
@@ -250,7 +252,7 @@ static int init(struct winampVisModule* this_mod) {
 
     initBpm();
 
-    Render_Init(g_hInstance);
+    Render_Init();
 
     CfgWnd_Create(this_mod);
 
@@ -266,9 +268,9 @@ static int render(struct winampVisModule* this_mod) {
 #ifndef WA3_COMPONENT
     int x, avs_beat = 0, b;
     if (g_ThreadQuit) return 1;
-    EnterCriticalSection(&g_cs);
+    lock(g_cs);
     if (g_ThreadQuit) {
-        LeaveCriticalSection(&g_cs);
+        lock_unlock(g_cs);
         return 1;
     }
     if (g_visdata_pstat)
@@ -320,20 +322,18 @@ static int render(struct winampVisModule* this_mod) {
     b = refineBeat(avs_beat);
     if (b) g_is_beat = 1;
     g_visdata_pstat = 0;
-    LeaveCriticalSection(&g_cs);
+    lock_unlock(g_cs);
 #endif
     return 0;
 }
 
-static void quit(struct winampVisModule* this_mod) {
+static void quit(struct winampVisModule*) {
 #define DS(x)
-    // MessageBox(this_mod->hwndParent,x,"AVS Debug",MB_OK)
     if (g_hThread) {
         DS("Waitin for thread to quit\n");
         g_ThreadQuit = 1;
         if (WaitForSingleObject(g_hThread, 10000) != WAIT_OBJECT_0) {
             DS("Terminated thread (BAD!)\n");
-            // MessageBox(NULL,"error waiting for thread to quit","a",MB_TASKMODAL);
             TerminateThread(g_hThread, 0);
         }
         DS("Thread done... calling ddraw_quit\n");
@@ -342,7 +342,7 @@ static void quit(struct winampVisModule* this_mod) {
         DS("Calling cfgwnd_destroy\n");
         CfgWnd_Destroy();
         DS("Calling render_quit\n");
-        Render_Quit(this_mod->hDllInstance);
+        Render_Quit();
 
         DS("Calling wnd_quit\n");
         Wnd_Quit();
@@ -356,9 +356,9 @@ static void quit(struct winampVisModule* this_mod) {
 
         DS("cleaning up critsections\n");
 #ifndef WA3_COMPONENT
-        DeleteCriticalSection(&g_cs);
+        lock_destroy(g_cs);
 #endif
-        DeleteCriticalSection(&g_render_cs);
+        lock_destroy(g_render_cs);
 
         DS("smp_cleanupthreads\n");
         C_RenderListClass::smp_cleanupthreads();
@@ -385,7 +385,7 @@ void quit3(void) {
     if (last_parent) {
         ShowWindow(GetParent(last_parent), SW_SHOWNA);
     }
-    quit(&dummyMod);
+    quit(NULL);
 }
 #endif
 
@@ -445,18 +445,18 @@ static unsigned int WINAPI RenderThread(LPVOID) {
                 } else
                     beat_peak2 = (beat_peak2 * 14) / 16;
             }
-            //     EnterCriticalSection(&g_title_cs);
+            //     lock(g_title_cs);
             beat = refineBeat(beat);
-            //      LeaveCriticalSection(&g_title_cs);
+            //      lock_unlock(g_title_cs);
         }
 
 #else
-        EnterCriticalSection(&g_cs);
+        lock(g_cs);
         memcpy(&vis_data[0][0][0], &g_visdata[0][0][0], 576 * 2 * 2);
         g_visdata_pstat = 1;
         beat = g_is_beat;
         g_is_beat = 0;
-        LeaveCriticalSection(&g_cs);
+        lock_unlock(g_cs);
 #endif
 
         if (!g_ThreadQuit) {
@@ -470,10 +470,10 @@ static unsigned int WINAPI RenderThread(LPVOID) {
                 g_laser_linelist->ClearLineList();
 #endif
 
-                EnterCriticalSection(&g_render_cs);
+                lock(g_render_cs);
                 int t = g_render_transition->render(
                     vis_data, beat, s ? fb2 : fb, s ? fb : fb2, w, h);
-                LeaveCriticalSection(&g_render_cs);
+                lock_unlock(g_render_cs);
                 if (t & 1) s ^= 1;
 
 #ifdef LASER

@@ -1,6 +1,7 @@
 #include "c_frameratelimiter.h"
 
 #include <chrono>
+#include <string.h>
 #include <thread>
 
 C_FramerateLimiter::C_FramerateLimiter()

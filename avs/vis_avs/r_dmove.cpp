@@ -151,7 +151,7 @@ int C_THISCLASS::save_config(unsigned char* data) {
 
 C_THISCLASS::C_THISCLASS() {
     AVS_EEL_INITINST();
-    InitializeCriticalSection(&rcs);
+    this->code_lock = lock_init();
     need_recompile = 1;
     memset(codehandle, 0, sizeof(codehandle));
     m_lasth = m_lastw = 0;
@@ -186,7 +186,7 @@ C_THISCLASS::~C_THISCLASS() {
 
     m_tab = 0;
     m_wmul = 0;
-    DeleteCriticalSection(&rcs);
+    lock_destroy(this->code_lock);
 }
 
 int C_THISCLASS::render(char visdata[2][2][576],
@@ -252,7 +252,7 @@ int C_THISCLASS::smp_begin(int max_threads,
 
     if (need_recompile) {
         int x;
-        EnterCriticalSection(&rcs);
+        lock(this->code_lock);
         if (!var_b || g_reset_vars_on_recompile) {
             clearVars();
             var_d = registerVar("d");
@@ -270,7 +270,7 @@ int C_THISCLASS::smp_begin(int max_threads,
             freeCode(codehandle[x]);
             codehandle[x] = compileCode((char*)effect_exp[x].c_str());
         }
-        LeaveCriticalSection(&rcs);
+        lock_unlock(this->code_lock);
     }
     if (isBeat & 0x80000000) return 0;
     int* fbin = !buffern ? framebuffer : (int*)getGlobalBuffer(w, h, buffern - 1, 0);

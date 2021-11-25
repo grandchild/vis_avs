@@ -37,7 +37,7 @@ C_CONVOLUTION::~C_CONVOLUTION() {
 }
 
 _inline void C_CONVOLUTION::deletedraw(void) {
-    delete[](LPBYTE) draw;
+    delete[](unsigned char*) draw;
     drawstate = 0;
 }
 
@@ -149,10 +149,10 @@ int C_CONVOLUTION::save_config(unsigned char* data) {
     return pos;
 }
 
-#define appenddraw(a)                   \
-    {                                   \
-        ((LPBYTE)draw)[codelength] = a; \
-        codelength++;                   \
+#define appenddraw(a)                           \
+    {                                           \
+        ((unsigned char*)draw)[codelength] = a; \
+        codelength++;                           \
     }
 
 void C_CONVOLUTION::createdraw(void) {
@@ -282,7 +282,7 @@ void C_CONVOLUTION::createdraw(void) {
         usefbout = 1;
     else
         usefbout = 0;
-    draw = (FunctionType) new BYTE[MAX_DRAW_SIZE];
+    draw = (FunctionType) new unsigned char[MAX_DRAW_SIZE];
     if (enabled) {
         int iloopstart, jloopstart;  // addresses to loop back to
         codelength = 0;
@@ -475,15 +475,9 @@ void C_CONVOLUTION::createdraw(void) {
                             }
                         }
                         appenddraw(0x0F)  // punpcklbw mm2, mm7
-                            appenddraw(0x60)
-                                appenddraw(0xD7) if (fposdata[pass][i][2] != 1)  // in
-                                                                                 // which
-                                                                                 // case
-                                                                                 // we
-                                                                                 // can
-                                                                                 // just
-                                                                                 // add
-                        {  // just add
+                            appenddraw(0x60) appenddraw(0xD7)
+                            // in which case we can just add
+                            if (fposdata[pass][i][2] != 1) {  // just add
                             // see if fposdata[pass][i][2] is a power of 2
                             unsigned int j;
                             unsigned char k = 0;
@@ -635,15 +629,9 @@ void C_CONVOLUTION::createdraw(void) {
                             }
                         }
                         appenddraw(0x0F)  // punpcklbw mm2, mm7
-                            appenddraw(0x60)
-                                appenddraw(0xD7) if (fnegdata[pass][i][2] != 1)  // in
-                                                                                 // which
-                                                                                 // case
-                                                                                 // we
-                                                                                 // can
-                                                                                 // just
-                                                                                 // add
-                        {  // just add
+                            appenddraw(0x60) appenddraw(0xD7)
+                            // in which case we can just add
+                            if (fnegdata[pass][i][2] != 1) {  // just add
                             // see if fnegdata[pass][i][2] is a power of 2
                             unsigned int j;
                             unsigned char k = 0;
@@ -814,11 +802,9 @@ void C_CONVOLUTION::createdraw(void) {
                 }
                 else {                // can use short jumps.
                     appenddraw(0x72)  // jb short back to i loop start
-                        appenddraw(((char)(iloopstart - (codelength + 1))))  // codelength+1
-                                                                             // is the
-                                                                             // indes of
-                                                                             // the next
-                                                                             // command
+
+                        // codelength+1 is the indes of the next command
+                        appenddraw(((char)(iloopstart - (codelength + 1))))
                 }
             }
         }
@@ -858,13 +844,9 @@ void C_CONVOLUTION::createdraw(void) {
             if (jloopstart - codelength - 2 < -128) {  // can't use short jumps
             int jumpoffset;
             appenddraw(0x0F)  // jb near back to j loop start
-                appenddraw(0x82) jumpoffset = jloopstart - (codelength + 4);  // codelength
-                                                                              // + 4 is
-                                                                              // the
-                                                                              // index
-                                                                              // of the
-                                                                              // next
-                                                                              // command
+
+                // codelength + 4 is the index of the next command
+                appenddraw(0x82) jumpoffset = jloopstart - (codelength + 4);
             // offset needs to begin with the lowest byte
             appenddraw(jumpoffset & 0x000000FF)
                 appenddraw((jumpoffset & 0x0000FF00) >> 8)
@@ -890,9 +872,9 @@ void C_CONVOLUTION::createdraw(void) {
             appenddraw(usefbout) appenddraw(0x00) appenddraw(0x00) appenddraw(0x00)
                 appenddraw(0xC3)  // ret
     } else {
-        ((LPBYTE)draw)[0] = 0x33;  // xor eax, eax
-        ((LPBYTE)draw)[1] = 0xC0;
-        ((LPBYTE)draw)[2] = 0xC3;  // ret
+        ((unsigned char*)draw)[0] = 0x33;  // xor eax, eax
+        ((unsigned char*)draw)[1] = 0xC0;
+        ((unsigned char*)draw)[2] = 0xC3;  // ret
         codelength = 3;
     }
     drawstate = 2;

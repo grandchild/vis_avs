@@ -2,7 +2,8 @@
 
 #include "c__base.h"
 
-#include <windows.h>
+#include "../platform.h"
+
 #include <string>
 
 #define MOD_NAME    "Trans / Bump"
@@ -52,5 +53,5 @@ class C_THISCLASS : public C_RBASE {
     int AVS_EEL_CONTEXTNAME;
     int oldstyle;
     int buffern;
-    CRITICAL_SECTION rcs;
+    lock_t* code_lock;
 };

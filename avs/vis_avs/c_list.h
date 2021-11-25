@@ -35,13 +35,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "c__base.h"
 
-#include <windows.h>
 #include <string>
 
 #define LIST_ID -2  // 0xfffffffe
 
 extern unsigned char blendtable[256][256];
-extern BOOL blendtableInited;
+extern bool blendtableInited;
 
 class C_RenderTransitionClass;
 class C_UndoItem;
@@ -83,7 +82,7 @@ class C_RenderListClass : public C_RBASE {
 
     int inited;
     int need_recompile;
-    CRITICAL_SECTION rcs;
+    lock_t* code_lock;
 
     int isstart;
     int mode;
@@ -124,17 +123,17 @@ class C_RenderListClass : public C_RBASE {
         int h;
         C_RBASE2* render;
 
-        HANDLE hQuitHandle;
-        HANDLE hThreads[MAX_SMP_THREADS];
-        HANDLE hThreadSignalsStart[MAX_SMP_THREADS];
-        HANDLE hThreadSignalsDone[MAX_SMP_THREADS];
+        void* hQuitHandle;
+        void* hThreads[MAX_SMP_THREADS];
+        void* hThreadSignalsStart[MAX_SMP_THREADS];
+        void* hThreadSignalsDone[MAX_SMP_THREADS];
 
         int threadTop;
 
     } _s_smp_parms;
 
     static _s_smp_parms smp_parms;
-    static DWORD WINAPI smp_threadProc(LPVOID parm);
+    static long unsigned int __stdcall smp_threadProc(void* parm);
 
    public:
     static void smp_cleanupthreads();
@@ -209,7 +208,6 @@ class C_RenderListClass : public C_RBASE {
     int save_config_ex(unsigned char* data, int rootsave);
     void load_config_code(unsigned char* data, int len);
     int save_config_code(unsigned char* data);
-    void FillBufferCombo(HWND dlg, int ctl);
 
     char* blendmodes[14] = {
         "Ignore",

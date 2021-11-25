@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../platform.h"
 
-#include <windows.h>
+#include <string.h>  // Many if not all components need strcpy or memcpy.
 
 // 64k is the maximum component size in AVS
 #define MAX_CODE_LEN         (1 << 16)
@@ -46,6 +46,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Same as MAX_PATH now, but while MAX_PATH could be anything, LEGACY_SAVE_PATH_LEN is
 // fixed as part of the legacy preset file format.
 #define LEGACY_SAVE_PATH_LEN 260
+
+#ifndef RGB
+#define RGB(r, g, b) ((((r)&0xff) << 16) | (((g)&0xff) << 8) | ((b)&0xff))
+#endif
 
 // defined in main.cpp, render.cpp
 extern unsigned char g_blendtable[256][256];
@@ -998,7 +1002,7 @@ _mmx_adjblend_loop:
 #endif
 }
 
-void doAVSEvalHighLight(HWND hwndDlg, UINT sub, char* data);
+void doAVSEvalHighLight(void* hwndDlg, unsigned int sub, char* data);
 
 #include "laser/laserline.h"
 

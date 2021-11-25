@@ -6,12 +6,11 @@
 #include "image.h"
 #include "pixel_format.h"
 
+#include "../platform.h"
 #include "../util.h"  // ssizeof32()
 
-#include <windows.h>  // CRITICAL_SECTION et.al.
-
 std::vector<char*> C_Picture2::file_list;
-u_int C_Picture2::instance_count = 0;
+unsigned int C_Picture2::instance_count = 0;
 
 C_Picture2::C_Picture2()
     : image(NULL),
@@ -34,7 +33,7 @@ C_Picture2::C_Picture2()
     if (this->file_list.empty()) {
         this->find_image_files();
     }
-    InitializeCriticalSection(&this->criticalsection);
+    this->image_lock = lock_init();
 }
 
 C_Picture2::~C_Picture2() {
@@ -45,6 +44,7 @@ C_Picture2::~C_Picture2() {
     if (this->instance_count <= 0) {
         this->clear_image_files();
     }
+    lock_destroy(this->image_lock);
 }
 
 static void add_file_callback(const char* file, void* data) {
@@ -80,13 +80,13 @@ bool C_Picture2::load_image() {
     if (this->config.image[0] == 0) {
         return true;
     }
-    EnterCriticalSection(&this->criticalsection);
+    lock(this->image_lock);
     char filename[MAX_PATH];
-    wsprintf(filename, "%s\\%s", g_path, this->config.image);
+    snprintf(filename, MAX_PATH, "%s\\%s", g_path, this->config.image);
     AVS_image* tmp_image = image_load(filename);
     if (tmp_image->data == NULL) {
         this->image = NULL;
-        LeaveCriticalSection(&this->criticalsection);
+        lock_unlock(this->image_lock);
         return false;
     }
 
@@ -106,14 +106,14 @@ bool C_Picture2::load_image() {
     image_free(tmp_image);
 
     this->need_image_refresh = true;
-    LeaveCriticalSection(&this->criticalsection);
+    lock_unlock(this->image_lock);
     return true;
 }
 
 void C_Picture2::refresh_image(int w, int h) {
     int* wit;
     int y;
-    EnterCriticalSection(&this->criticalsection);
+    lock(this->image_lock);
     delete[] this->work_image;
     delete[] this->work_image_bilinear;
     this->wiw = w;
@@ -152,7 +152,7 @@ void C_Picture2::refresh_image(int w, int h) {
         }
     }
     this->need_image_refresh = false;
-    LeaveCriticalSection(&this->criticalsection);
+    lock_unlock(this->image_lock);
 }
 
 int C_Picture2::render(char[2][2][576],

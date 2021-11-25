@@ -3,7 +3,6 @@
 
 #include "c__base.h"
 
-#include <windows.h>
 #include <immintrin.h>
 
 #define MOD_NAME "Trans / Color Map"
@@ -75,13 +74,6 @@ typedef struct {
     int colors[NUM_COLOR_VALUES];
 } baked_map;
 
-typedef struct {
-    RECT window_rect;
-    HDC context;
-    HBITMAP bitmap;
-    LPRECT region;
-} ui_map;
-
 class C_ColorMap : public C_RBASE {
    public:
     C_ColorMap();
@@ -112,7 +104,6 @@ class C_ColorMap : public C_RBASE {
     baked_map tween_map;
     int current_map = 0;
     int next_map = 0;
-    HWND dialog = NULL;
     int change_animation_step;
     int disable_map_change;
 

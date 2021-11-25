@@ -1,8 +1,11 @@
 #pragma once
 
+#include "r_defs.h"
+
 #include "c__base.h"
 
-#include <windows.h>  // CRITICAL_SECTION
+#include "../platform.h"
+
 #include <vector>
 
 #define MOD_NAME "Render / Picture II"
@@ -20,7 +23,7 @@
 #define OUT_IGNORE     10
 
 struct picture2_config {
-    char image[MAX_PATH];
+    char image[LEGACY_SAVE_PATH_LEN];
     int output;
     int outputbeat;
     int bilinear;
@@ -48,8 +51,8 @@ class C_Picture2 : public C_RBASE {
     void find_image_files();
     void clear_image_files();
 
-    CRITICAL_SECTION criticalsection;
     picture2_config config;
+    lock_t* image_lock;
     int* image;
     int iw, ih;
     int* work_image;
@@ -57,7 +60,7 @@ class C_Picture2 : public C_RBASE {
     int wiw, wih;
     bool need_image_refresh;
     static std::vector<char*> file_list;
-    static u_int instance_count;
+    static unsigned int instance_count;
 
     const char* blendmodes[11] = {
         "Replace",

@@ -112,29 +112,26 @@ int win32_dlgproc_bump(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                     IsDlgButtonChecked(hwndDlg, IDC_INVERTDEPTH) ? 1 : 0;
             }
             if (LOWORD(wParam) == IDC_CODE1 && HIWORD(wParam) == EN_CHANGE) {
-                EnterCriticalSection(&g_ConfigThis->rcs);
+                lock(g_ConfigThis->code_lock);
                 g_ConfigThis->code1 = string_from_dlgitem(hwndDlg, IDC_CODE1);
                 g_ConfigThis->need_recompile = 1;
-                LeaveCriticalSection(&g_ConfigThis->rcs);
+                lock_unlock(g_ConfigThis->code_lock);
             }
             if (LOWORD(wParam) == IDC_CODE2 && HIWORD(wParam) == EN_CHANGE) {
-                EnterCriticalSection(&g_ConfigThis->rcs);
+                lock(g_ConfigThis->code_lock);
                 g_ConfigThis->code2 = string_from_dlgitem(hwndDlg, IDC_CODE2);
                 g_ConfigThis->need_recompile = 1;
-                LeaveCriticalSection(&g_ConfigThis->rcs);
+                lock_unlock(g_ConfigThis->code_lock);
             }
             if (LOWORD(wParam) == IDC_CODE3 && HIWORD(wParam) == EN_CHANGE) {
-                EnterCriticalSection(&g_ConfigThis->rcs);
+                lock(g_ConfigThis->code_lock);
                 g_ConfigThis->code3 = string_from_dlgitem(hwndDlg, IDC_CODE3);
                 g_ConfigThis->need_recompile = 1;
                 g_ConfigThis->initted = 0;
-                LeaveCriticalSection(&g_ConfigThis->rcs);
+                lock_unlock(g_ConfigThis->code_lock);
             }
-            if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == IDC_COMBO1)  // handle
-                                                                                  // clicks
-                                                                                  // to
-                                                                                  // combo
-                                                                                  // box
+            // handle clicks to combo box
+            if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == IDC_COMBO1)
                 g_ConfigThis->buffern =
                     SendDlgItemMessage(hwndDlg, IDC_COMBO1, CB_GETCURSEL, 0, 0);
             return 0;

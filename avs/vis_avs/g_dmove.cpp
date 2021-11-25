@@ -136,14 +136,14 @@ int win32_dlgproc_dynamicmovement(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
                 if (LOWORD(wParam) == IDC_EDIT1 || LOWORD(wParam) == IDC_EDIT2
                     || LOWORD(wParam) == IDC_EDIT3 || LOWORD(wParam) == IDC_EDIT4) {
-                    EnterCriticalSection(&g_this->rcs);
+                    lock(g_this->code_lock);
                     g_this->effect_exp[0] = string_from_dlgitem(hwndDlg, IDC_EDIT1);
                     g_this->effect_exp[1] = string_from_dlgitem(hwndDlg, IDC_EDIT2);
                     g_this->effect_exp[2] = string_from_dlgitem(hwndDlg, IDC_EDIT3);
                     g_this->effect_exp[3] = string_from_dlgitem(hwndDlg, IDC_EDIT4);
                     g_this->need_recompile = 1;
                     if (LOWORD(wParam) == IDC_EDIT4) g_this->inited = 0;
-                    LeaveCriticalSection(&g_this->rcs);
+                    lock_unlock(g_this->code_lock);
                 }
             }
             return 0;

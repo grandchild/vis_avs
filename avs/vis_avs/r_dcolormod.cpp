@@ -89,7 +89,7 @@ int C_THISCLASS::save_config(unsigned char* data) {
 
 C_THISCLASS::C_THISCLASS() {
     AVS_EEL_INITINST();
-    InitializeCriticalSection(&rcs);
+    this->code_lock = lock_init();
     need_recompile = 1;
     m_recompute = 1;
     memset(codehandle, 0, sizeof(codehandle));
@@ -110,7 +110,7 @@ C_THISCLASS::~C_THISCLASS() {
     }
     AVS_EEL_QUITINST();
 
-    DeleteCriticalSection(&rcs);
+    lock_destroy(this->code_lock);
 }
 
 int C_THISCLASS::render(char visdata[2][2][576],
@@ -120,7 +120,7 @@ int C_THISCLASS::render(char visdata[2][2][576],
                         int w,
                         int h) {
     if (need_recompile) {
-        EnterCriticalSection(&rcs);
+        lock(this->code_lock);
         if (!var_beat || g_reset_vars_on_recompile) {
             clearVars();
             var_r = registerVar("red");
@@ -135,7 +135,7 @@ int C_THISCLASS::render(char visdata[2][2][576],
             freeCode(codehandle[x]);
             codehandle[x] = compileCode((char*)effect_exp[x].c_str());
         }
-        LeaveCriticalSection(&rcs);
+        lock_unlock(this->code_lock);
     }
     if (isBeat & 0x80000000) return 0;
 

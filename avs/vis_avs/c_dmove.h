@@ -2,7 +2,8 @@
 
 #include "c__base.h"
 
-#include <windows.h>
+#include "../platform.h"
+
 #include <string>
 
 #define C_THISCLASS C_DMoveClass
@@ -71,7 +72,7 @@ class C_THISCLASS : public C_RBASE2 {
     int need_recompile;
     int buffern;
     int subpixel, rectcoords, blend, wrap, nomove;
-    CRITICAL_SECTION rcs;
+    lock_t* code_lock;
 
     // smp stuff
     int __subpixel, __rectcoords, __blend, __wrap, __nomove;

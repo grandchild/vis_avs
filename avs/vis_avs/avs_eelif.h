@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../ns-eel/megabuf.h"
 #endif
 
-#include <windows.h>
+#include "../platform.h"
 
 void AVS_EEL_IF_init();
 void AVS_EEL_IF_quit();
@@ -49,7 +49,7 @@ void AVS_EEL_IF_VM_free(NSEEL_VMCTX ctx);
 double AVS_EEL_IF_gmb_value(int index);
 extern char last_error_string[1024];
 extern int g_log_errors;
-extern CRITICAL_SECTION g_eval_cs;
+extern lock_t* g_eval_cs;
 
 // our old-style interface
 #define compileCode(exp)  AVS_EEL_IF_Compile(AVS_EEL_CONTEXTNAME, (exp))

@@ -5,6 +5,7 @@
 #include "../util.h"  // ssizeof32()
 
 #include <emmintrin.h>  // SSE2 SIMD intrinsics
+#include <string.h>
 
 C_MultiFilter::C_MultiFilter()
     : config({true, MULTIFILTER_CHROME, false}), toggle_state(false) {}

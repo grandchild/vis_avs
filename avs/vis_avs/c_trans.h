@@ -2,7 +2,8 @@
 
 #include "c__base.h"
 
-#include <windows.h>
+#include "../platform.h"
+
 #include <string>
 
 #define C_THISCLASS C_TransTabClass
@@ -70,7 +71,7 @@ class C_THISCLASS : public C_RBASE2 {
     int rectangular;
     int subpixel;
     int wrap;
-    CRITICAL_SECTION rcs;
+    lock_t* code_lock;
 
     char* help_text =
         "Movement\0"

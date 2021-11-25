@@ -31,9 +31,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 
-#include "undo.h"
+#include "r_defs.h"
 
-#include <windows.h>
+#include "undo.h"
 
 class C_RenderTransitionClass {
    protected:
@@ -44,13 +44,13 @@ class C_RenderTransitionClass {
     int start_time;
     int curtrans;
     int mask;
-    HANDLE initThread;
+    void* initThread;
     char last_file[MAX_PATH];
     int last_which;
     int _dotransitionflag;
 
    public:
-    static unsigned int WINAPI m_initThread(LPVOID p);
+    static unsigned int __stdcall m_initThread(void* p);
 
     int LoadPreset(char* file, int which, C_UndoItem* item = 0);  // 0 on success
     C_RenderTransitionClass();

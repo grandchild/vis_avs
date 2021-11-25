@@ -20,11 +20,18 @@
 #define TRANSLATE_DISTANCE(a, a_min, a_max, b, b_min, b_max) \
     (((a_max) * (b)) / ((b_max) - (b_min)) - (a) + (a_min))
 
+typedef struct {
+    RECT window_rect;
+    HDC context;
+    HBITMAP bitmap;
+    LPRECT region;
+} ui_map;
+
 static int g_ColorSetValue;
 static int g_currently_selected_color_id = -1;
 
-void save_map_file(C_ColorMap* colormap, int map_index);
-void load_map_file(C_ColorMap* colormap, int map_index);
+void save_map_file(C_ColorMap* colormap, int map_index, HWND hwndDlg);
+void load_map_file(C_ColorMap* colormap, int map_index, HWND hwndDlg);
 
 int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     C_ColorMap* g_ColormapThis = (C_ColorMap*)g_current_render;
@@ -116,10 +123,10 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                                    MB_ICONINFORMATION);
                         return 0;
                     case IDC_COLORMAP_FILE_LOAD:
-                        load_map_file(g_ColormapThis, current_map);
+                        load_map_file(g_ColormapThis, current_map, hwndDlg);
                         return 0;
                     case IDC_COLORMAP_FILE_SAVE:
-                        save_map_file(g_ColormapThis, current_map);
+                        save_map_file(g_ColormapThis, current_map, hwndDlg);
                         return 0;
                     case IDC_COLORMAP_MAP_ENABLE:
                         g_ColormapThis->maps[current_map].enabled =
@@ -170,7 +177,6 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
             return 0;
         case WM_INITDIALOG:  // 0x110
             if (g_ColormapThis != NULL) {
-                g_ColormapThis->dialog = hwndDlg;
                 g_ColormapThis->disable_map_change = 1;
                 SetTimer(hwndDlg, COLORMAP_MAP_CYCLE_TIMER_ID, 250, 0);
                 for (unsigned int i = 0; i < COLORMAP_NUM_MAPS; i++) {
@@ -342,7 +348,7 @@ static int win32_dlgproc_colormap_edit(HWND hwndDlg,
         return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
     }
     int current_map = SendDlgItemMessage(
-        g_ColormapThis->dialog, IDC_COLORMAP_MAP_SELECT, CB_GETCURSEL, 0, 0);
+        GetParent(hwndDlg), IDC_COLORMAP_MAP_SELECT, CB_GETCURSEL, 0, 0);
     if (current_map < 0) {
         current_map = 0;
     }
@@ -680,7 +686,7 @@ bool endswithn(char* str, char* suffix, size_t n) {
     return result;
 }
 
-void save_map_file(C_ColorMap* colormap, int map_index) {
+void save_map_file(C_ColorMap* colormap, int map_index, HWND hwndDlg) {
     char filepath[MAX_PATH];
     OPENFILENAME openfilename;
     if (strnlen(colormap->maps[map_index].filename, COLORMAP_MAP_FILENAME_MAXLEN) > 0) {
@@ -708,17 +714,14 @@ void save_map_file(C_ColorMap* colormap, int map_index) {
     if (!endswithn(openfilename.lpstrFile, ".clm", MAX_PATH)) {
         size_t len_selected_path = strnlen(openfilename.lpstrFile, MAX_PATH);
         if (len_selected_path >= MAX_PATH - 4) {
-            MessageBox(colormap->dialog, "Filename too long!", "Error", MB_ICONERROR);
+            MessageBox(hwndDlg, "Filename too long!", "Error", MB_ICONERROR);
             return;
         }
         strncpy(filepath + len_selected_path, ".clm", 5);
     }
     FILE* file = fopen(openfilename.lpstrFile, "wb");
     if (file == NULL) {
-        MessageBox(colormap->dialog,
-                   "Unable to open file for writing!",
-                   "Error",
-                   MB_ICONERROR);
+        MessageBox(hwndDlg, "Unable to open file for writing!", "Error", MB_ICONERROR);
         return;
     }
     fwrite("CLM1", 4, 1, file);
@@ -732,12 +735,11 @@ void save_map_file(C_ColorMap* colormap, int map_index) {
     char* basename = strrchr(filepath, '\\') + 1;
     strncpy(colormap->maps[map_index].filename, basename, COLORMAP_MAP_FILENAME_MAXLEN);
     colormap->maps[map_index].filename[COLORMAP_MAP_FILENAME_MAXLEN - 1] = '\0';
-    SetDlgItemText(colormap->dialog,
-                   IDC_COLORMAP_FILENAME_VIEW,
-                   colormap->maps[map_index].filename);
+    SetDlgItemText(
+        hwndDlg, IDC_COLORMAP_FILENAME_VIEW, colormap->maps[map_index].filename);
 }
 
-void load_map_file(C_ColorMap* colormap, int map_index) {
+void load_map_file(C_ColorMap* colormap, int map_index, HWND hwndDlg) {
     char filename[MAX_PATH];
     OPENFILENAME openfilename;
     HANDLE file;
@@ -770,10 +772,7 @@ void load_map_file(C_ColorMap* colormap, int map_index) {
                       FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
                       NULL);
     if (file == INVALID_HANDLE_VALUE) {
-        MessageBox(colormap->dialog,
-                   "Unable to open file for reading!",
-                   "Error",
-                   MB_ICONERROR);
+        MessageBox(hwndDlg, "Unable to open file for reading!", "Error", MB_ICONERROR);
         return;
     }
     filesize = GetFileSize(file, NULL);
@@ -782,14 +781,14 @@ void load_map_file(C_ColorMap* colormap, int map_index) {
     CloseHandle(file);
     if (strncmp((char*)contents, "CLM1", 4) != 0) {
         delete[] contents;
-        MessageBox(colormap->dialog, "Invalid CLM file!", "Error", MB_ICONERROR);
+        MessageBox(hwndDlg, "Invalid CLM file!", "Error", MB_ICONERROR);
         return;
     }
     length = *(int*)(contents + 4);
     colors_offset = 4 /*CLM1*/ + 4 /*length*/;
     if (length < 0 || length > COLORMAP_MAX_COLORS
         || length != (int)((bytes_read - colors_offset) / sizeof(map_color))) {
-        MessageBox(colormap->dialog, "Corrupt CLM file!", "Warning", MB_ICONWARNING);
+        MessageBox(hwndDlg, "Corrupt CLM file!", "Warning", MB_ICONWARNING);
         length = (bytes_read - colors_offset) / sizeof(map_color);
     }
     colormap->maps[map_index].length = length;
@@ -798,9 +797,8 @@ void load_map_file(C_ColorMap* colormap, int map_index) {
     strncpy(colormap->maps[map_index].filename,
             strrchr(openfilename.lpstrFile, '\\') + 1,
             COLORMAP_MAP_FILENAME_MAXLEN);
-    InvalidateRect(GetDlgItem(colormap->dialog, IDC_COLORMAP_MAPVIEW), NULL, 0);
-    SetDlgItemText(colormap->dialog,
-                   IDC_COLORMAP_FILENAME_VIEW,
-                   colormap->maps[map_index].filename);
+    InvalidateRect(GetDlgItem(hwndDlg, IDC_COLORMAP_MAPVIEW), NULL, 0);
+    SetDlgItemText(
+        hwndDlg, IDC_COLORMAP_FILENAME_VIEW, colormap->maps[map_index].filename);
     colormap->bake_full_map(map_index);
 }

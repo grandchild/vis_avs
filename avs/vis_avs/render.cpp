@@ -36,8 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wa_ipc.h"
 #include "wnd.h"
 
-#include <windows.h>
-
 #ifdef LASER
 C_LineListBase* g_laser_linelist;
 #endif
@@ -87,7 +85,7 @@ unsigned int const mmx_blend4_revn[2] = {0xff00ff, 0xff00ff};  //{0x1000100,0x10
 int const mmx_blendadj_mask[2] = {0xff00ff, 0xff00ff};
 int const mmx_blend4_zero = 0;
 
-void Render_Init(HINSTANCE) {
+void Render_Init() {
 #ifdef LASER
     laser_connect();
     g_laser_linelist = createLineList();
@@ -129,7 +127,7 @@ void Render_Init(HINSTANCE) {
     }
 }
 
-void Render_Quit(HINSTANCE) {
+void Render_Quit() {
     if (g_render_transition) delete g_render_transition;
     g_render_transition = NULL;
     if (g_render_effects) {

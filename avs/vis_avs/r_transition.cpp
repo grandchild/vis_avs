@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "draw.h"
 #include "render.h"
 
+#include <windows.h>
 #include <math.h>
 #include <process.h>
 #include <stdio.h>
@@ -110,7 +111,7 @@ int C_RenderTransitionClass::LoadPreset(char* file, int which, C_UndoItem* item)
         initThread = 0;
     }
 
-    EnterCriticalSection(&g_render_cs);
+    lock(g_render_cs);
     if (enabled) {
         enabled = 0;
     }
@@ -153,7 +154,7 @@ int C_RenderTransitionClass::LoadPreset(char* file, int which, C_UndoItem* item)
         C_UndoStack::saveundo(1);
         C_UndoStack::cleardirty();
     }
-    LeaveCriticalSection(&g_render_cs);
+    lock_unlock(g_render_cs);
 
     return !!r;
 }

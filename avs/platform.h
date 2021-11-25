@@ -61,6 +61,8 @@ bool lock_try(lock_t* lock_obj);
 void lock_unlock(lock_t* lock_obj);
 void lock_destroy(lock_t* lock_obj);
 
+int create_directory(char* path);
+
 #ifdef __cplusplus
 }
 #endif

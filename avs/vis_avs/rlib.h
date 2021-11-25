@@ -47,7 +47,7 @@ class C_RLibrary {
     int NumRetrFuncs;
 
     typedef struct {
-        HINSTANCE hDllInstance;
+        void* hDllInstance;
         char* idstring;
         C_RBASE* (*createfunc)(char* desc);
         int is_r2;
@@ -62,7 +62,7 @@ class C_RLibrary {
     void initfx(void);
     void initdll(void);
     void initbuiltinape(void);
-    void _add_dll(HINSTANCE,
+    void _add_dll(void*,
                   class C_RBASE*(__cdecl*)(char*),
                   char*,
                   int,
@@ -72,7 +72,7 @@ class C_RLibrary {
     C_RLibrary();
     ~C_RLibrary();
     C_RBASE* CreateRenderer(int* which, int* has_r2);
-    HINSTANCE GetRendererInstance(int which, HINSTANCE hThisInstance);
+    void* GetRendererInstance(int which, void* hThisInstance);
     int GetRendererDesc(int which, char* str);
     // if which is >= DLLRENDERBASE
     // returns "id" of DLL. which is used to enumerate. str is desc

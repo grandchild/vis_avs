@@ -117,7 +117,7 @@ int C_THISCLASS::save_config(unsigned char* data) {
 }
 
 C_THISCLASS::C_THISCLASS() {
-    InitializeCriticalSection(&rcs);
+    this->code_lock = lock_init();
     AVS_EEL_INITINST();
 #ifdef LASER
     mode = 1;
@@ -155,7 +155,7 @@ C_THISCLASS::~C_THISCLASS() {
         codehandle[x] = 0;
     }
     AVS_EEL_QUITINST();
-    DeleteCriticalSection(&rcs);
+    lock_destroy(this->code_lock);
 }
 
 static __inline int makeint(double t) {
@@ -171,7 +171,7 @@ int C_THISCLASS::render(char visdata[2][2][576],
                         int w,
                         int h) {
     if (need_recompile) {
-        EnterCriticalSection(&rcs);
+        lock(this->code_lock);
 
         if (!var_n || g_reset_vars_on_recompile) {
             clearVars();
@@ -200,7 +200,7 @@ int C_THISCLASS::render(char visdata[2][2][576],
             codehandle[x] = compileCode((char*)effect_exp[x].c_str());
         }
 
-        LeaveCriticalSection(&rcs);
+        lock_unlock(this->code_lock);
     }
     if (isBeat & 0x80000000) return 0;
 

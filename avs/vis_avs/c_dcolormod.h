@@ -2,7 +2,8 @@
 
 #include "c__base.h"
 
-#include <windows.h>
+#include "../platform.h"
+
 #include <string>
 
 #define C_THISCLASS C_DColorModClass
@@ -41,7 +42,7 @@ class C_THISCLASS : public C_RBASE {
     int inited;
     int codehandle[4];
     int need_recompile;
-    CRITICAL_SECTION rcs;
+    lock_t* code_lock;
 
     char* help_text =
         "Color Modifier\0"

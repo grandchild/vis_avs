@@ -90,7 +90,7 @@ int C_THISCLASS::save_config(unsigned char* data) {
 }
 
 C_THISCLASS::C_THISCLASS() {
-    InitializeCriticalSection(&rcs);
+    this->code_lock = lock_init();
     AVS_EEL_INITINST();
 
     memset(codehandle, 0, sizeof(codehandle));
@@ -113,7 +113,7 @@ C_THISCLASS::~C_THISCLASS() {
     }
     AVS_EEL_QUITINST();
 
-    DeleteCriticalSection(&rcs);
+    lock_destroy(this->code_lock);
 }
 
 int C_THISCLASS::render(char visdata[2][2][576],
@@ -125,7 +125,7 @@ int C_THISCLASS::render(char visdata[2][2][576],
     // pow(sin(d),dpos)*1.7
     if (need_recompile) {
         int x;
-        EnterCriticalSection(&rcs);
+        lock(this->code_lock);
         if (!var_b || g_reset_vars_on_recompile) {
             clearVars();
             var_x = registerVar("x");
@@ -141,7 +141,7 @@ int C_THISCLASS::render(char visdata[2][2][576],
             freeCode(codehandle[x]);
             codehandle[x] = compileCode((char*)effect_exp[x].c_str());
         }
-        LeaveCriticalSection(&rcs);
+        lock_unlock(this->code_lock);
     }
     *var_w = w;
     *var_h = h;

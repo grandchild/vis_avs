@@ -23,3 +23,5 @@ void lock_destroy(lock_t* lock_obj) {
     DeleteCriticalSection(WIN_LOCK(lock_obj));
     free(lock_obj);
 }
+
+int create_directory(char* path) { return CreateDirectory(path, NULL); }

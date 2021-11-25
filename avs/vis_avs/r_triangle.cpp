@@ -18,7 +18,7 @@
 APEinfo* g_triangle_extinfo;
 
 TriangleDepthBuffer* C_Triangle::depth_buffer = NULL;
-u_int C_Triangle::instance_count = 0;
+unsigned int C_Triangle::instance_count = 0;
 
 C_Triangle::C_Triangle() {
     this->instance_count += 1;
@@ -87,8 +87,8 @@ int C_Triangle::render(char visdata[2][2][576],
     this->depth_buffer->reset_if_needed(w, h, *this->code.vars.zbclear != 0.0);
     int triangle_count = round(*this->code.vars.n);
     if (triangle_count > 0) {
-        u_int blendmode = *g_triangle_extinfo->lineblendmode & 0xff;
-        u_int adjustable_blend = *g_triangle_extinfo->lineblendmode >> 8 & 0xff;
+        unsigned int blendmode = *g_triangle_extinfo->lineblendmode & 0xff;
+        unsigned int adjustable_blend = *g_triangle_extinfo->lineblendmode >> 8 & 0xff;
         double step = 1.0;
         if (triangle_count > 1) {
             step = 1.0 / (triangle_count - 1.0);
@@ -167,9 +167,9 @@ void C_Triangle::draw_triangle(int* framebuffer,
                                int h,
                                Vertex vertices[3],
                                bool use_depthbuffer,
-                               u_int blendmode,
-                               u_int adjustable_blend,
-                               u_int color) {
+                               unsigned int blendmode,
+                               unsigned int adjustable_blend,
+                               unsigned int color) {
     this->sort_vertices(vertices);
     Vertex v1 = vertices[0];
     Vertex v2 = vertices[1];
@@ -219,9 +219,9 @@ inline void C_Triangle::draw_line(int* framebuffer,
                                   uint64_t z,
                                   int w,
                                   bool use_depthbuffer,
-                                  u_int blendmode,
-                                  u_int adjustable_blend,
-                                  u_int color) {
+                                  unsigned int blendmode,
+                                  unsigned int adjustable_blend,
+                                  unsigned int color) {
     if (startx > endx) {
         int tmp = startx;
         startx = endx;
@@ -250,9 +250,9 @@ inline void C_Triangle::draw_line(int* framebuffer,
 }
 
 inline void C_Triangle::draw_pixel(int* pixel,
-                                   u_int blendmode,
-                                   u_int adjustable_blend,
-                                   u_int color) {
+                                   unsigned int blendmode,
+                                   unsigned int adjustable_blend,
+                                   unsigned int color) {
     switch (blendmode) {
         case OUT_REPLACE: {
             *pixel = color;
@@ -348,13 +348,13 @@ inline void C_Triangle::sort_vertices(Vertex v[3]) {
 }
 
 /* Depth buffer */
-TriangleDepthBuffer::TriangleDepthBuffer(u_int w, u_int h) : w(w), h(h) {
-    this->buffer = new u_int[w * h];
-    memset(this->buffer, 0, w * h * sizeof(u_int));
+TriangleDepthBuffer::TriangleDepthBuffer(unsigned int w, unsigned int h) : w(w), h(h) {
+    this->buffer = new unsigned int[w * h];
+    memset(this->buffer, 0, w * h * sizeof(unsigned int));
 }
 TriangleDepthBuffer::~TriangleDepthBuffer() { delete[] this->buffer; }
 
-void TriangleDepthBuffer::reset_if_needed(u_int w, u_int h, bool clear) {
+void TriangleDepthBuffer::reset_if_needed(unsigned int w, unsigned int h, bool clear) {
     // TODO [bug]: lock(triangle_depth_buffer)
     if (clear || this->w != w || this->h != h) {
         // TODO [feature]: The existing depth-buffer could be resized here.
@@ -362,7 +362,7 @@ void TriangleDepthBuffer::reset_if_needed(u_int w, u_int h, bool clear) {
         this->w = w;
         this->h = h;
         /* Allocating with calloc() is noticeably faster than with new[]() */
-        this->buffer = (u_int*)calloc(w * h, sizeof(u_int));
+        this->buffer = (unsigned int*)calloc(w * h, sizeof(unsigned int));
     }
     // TODO [bug]: unlock(triangle_depth_buffer)
 }
@@ -420,7 +420,7 @@ void TriangleVars::init_variables(int w, int h, int /* is_beat */, va_list) {
 /* Config Loading & Effect Registration */
 void C_Triangle::load_config(unsigned char* data, int len) {
     char* str = (char*)data;
-    u_int pos = 0;
+    unsigned int pos = 0;
     pos += this->code.init.load(&str[pos], max(0, len - pos));
     pos += this->code.frame.load(&str[pos], max(0, len - pos));
     pos += this->code.beat.load(&str[pos], max(0, len - pos));
@@ -429,7 +429,7 @@ void C_Triangle::load_config(unsigned char* data, int len) {
 
 int C_Triangle::save_config(unsigned char* data) {
     char* str = (char*)data;
-    u_int pos = 0;
+    unsigned int pos = 0;
     pos += this->code.init.save(&str[pos], max(0, MAX_CODE_LEN - 1 - pos));
     pos += this->code.frame.save(&str[pos], max(0, MAX_CODE_LEN - 1 - pos));
     pos += this->code.beat.save(&str[pos], max(0, MAX_CODE_LEN - 1 - pos));

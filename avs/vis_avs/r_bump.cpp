@@ -44,7 +44,7 @@ C_THISCLASS::~C_THISCLASS() {
     freeCode(codeHandle);
     freeCode(codeHandleBeat);
     freeCode(codeHandleInit);
-    DeleteCriticalSection(&rcs);
+    lock_destroy(this->code_lock);
     AVS_EEL_QUITINST();
 }
 
@@ -53,7 +53,7 @@ C_THISCLASS::~C_THISCLASS() {
 C_THISCLASS::C_THISCLASS()  // set up default configuration
 {
     AVS_EEL_INITINST();
-    InitializeCriticalSection(&rcs);
+    this->code_lock = lock_init();
     buffern = 0;
     oldstyle = 0;
     invert = 0;
@@ -218,7 +218,7 @@ int C_THISCLASS::render(char visdata[2][2][576],
     if (!enabled) return 0;
 
     if (need_recompile) {
-        EnterCriticalSection(&rcs);
+        lock(this->code_lock);
         if (!var_bi || g_reset_vars_on_recompile) {
             clearVars();
             var_x = registerVar("x");
@@ -239,7 +239,7 @@ int C_THISCLASS::render(char visdata[2][2][576],
         codeHandleBeat = compileCode((char*)code2.c_str());
         codeHandleInit = compileCode((char*)code3.c_str());
 
-        LeaveCriticalSection(&rcs);
+        lock_unlock(this->code_lock);
     }
     if (isBeat & 0x80000000) return 0;
 

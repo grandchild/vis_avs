@@ -33,6 +33,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "r_defs.h"
 
+#include <windows.h>
+
 #ifndef LASER
 
 #define PUT_INT(y)                   \
@@ -58,16 +60,16 @@ int C_THISCLASS::save_config(unsigned char* data) {
 }
 
 void C_THISCLASS::SetLibrary() {
-    EnterCriticalSection(&cs);
-    if (hLibrary) {
-        if (vi) vi->SaveSettings("avs.ini");
-        vi = NULL;
-        FreeLibrary(hLibrary);
-        hLibrary = NULL;
+    lock(this->library_lock);
+    if (this->library) {
+        if (this->vi) this->vi->SaveSettings("avs.ini");
+        this->vi = NULL;
+        FreeLibrary((HINSTANCE)this->library);
+        this->library = NULL;
     }
 
     if (!m_library[0]) {
-        LeaveCriticalSection(&cs);
+        lock_unlock(this->library_lock);
         return;
     }
 
@@ -76,40 +78,40 @@ void C_THISCLASS::SetLibrary() {
     strcat(buf1, "\\");
     strcat(buf1, m_library);
 
-    vi = NULL;
-    hLibrary = LoadLibrary(buf1);
-    if (hLibrary) {
+    this->vi = NULL;
+    this->library = LoadLibrary(buf1);
+    if (this->library) {
         VisInfo* (*qm)(void);
         qm = FORCE_FUNCTION_CAST(VisInfo * (*)(void))
-            GetProcAddress(hLibrary, "QueryModule");
+            GetProcAddress((HINSTANCE)this->library, "QueryModule");
         if (!qm)
-            qm = FORCE_FUNCTION_CAST(VisInfo * (*)(void))
-                GetProcAddress(hLibrary, "?QueryModule@@YAPAUUltraVisInfo@@XZ");
+            qm = FORCE_FUNCTION_CAST(VisInfo * (*)(void)) GetProcAddress(
+                (HINSTANCE)this->library, "?QueryModule@@YAPAUUltraVisInfo@@XZ");
 
-        if (!qm || !(vi = qm())) {
-            vi = NULL;
-            FreeLibrary(hLibrary);
-            hLibrary = NULL;
+        if (!qm || !(this->vi = qm())) {
+            this->vi = NULL;
+            FreeLibrary((HINSTANCE)this->library);
+            this->library = NULL;
         }
     }
-    if (vi) {
-        vi->OpenSettings("avs.ini");
-        vi->Initialize();
+    if (this->vi) {
+        this->vi->OpenSettings("avs.ini");
+        this->vi->Initialize();
     }
-    LeaveCriticalSection(&cs);
+    lock_unlock(this->library_lock);
 }
 
 C_THISCLASS::C_THISCLASS() {
-    InitializeCriticalSection(&cs);
+    this->library_lock = lock_init();
     m_library[0] = 0;
-    hLibrary = 0;
-    vi = NULL;
+    this->library = 0;
+    this->vi = NULL;
 }
 
 C_THISCLASS::~C_THISCLASS() {
-    if (vi) vi->SaveSettings("avs.ini");
-    if (hLibrary) FreeLibrary(hLibrary);
-    DeleteCriticalSection(&cs);
+    if (this->vi) this->vi->SaveSettings("avs.ini");
+    if (this->library) FreeLibrary((HINSTANCE)this->library);
+    lock_destroy(this->library_lock);
 }
 
 int C_THISCLASS::render(char visdata[2][2][576],
@@ -119,14 +121,14 @@ int C_THISCLASS::render(char visdata[2][2][576],
                         int w,
                         int h) {
     if (isBeat & 0x80000000) return 0;
-    EnterCriticalSection(&cs);
-    if (vi) {
+    lock(this->library_lock);
+    if (this->vi) {
         //   if (vi->lRequired & VI_WAVEFORM)
         {
             int ch, p;
             for (ch = 0; ch < 2; ch++) {
                 unsigned char* v = (unsigned char*)visdata[1][ch];
-                for (p = 0; p < 512; p++) vd.Waveform[ch][p] = v[p];
+                for (p = 0; p < 512; p++) this->vd.Waveform[ch][p] = v[p];
             }
         }
         // if (vi->lRequired & VI_SPECTRUM)
@@ -135,14 +137,14 @@ int C_THISCLASS::render(char visdata[2][2][576],
             for (ch = 0; ch < 2; ch++) {
                 unsigned char* v = (unsigned char*)visdata[0][ch];
                 for (p = 0; p < 256; p++)
-                    vd.Spectrum[ch][p] = v[p * 2] / 2 + v[p * 2 + 1] / 2;
+                    this->vd.Spectrum[ch][p] = v[p * 2] / 2 + v[p * 2 + 1] / 2;
             }
         }
 
-        vd.MillSec = GetTickCount();
-        vi->Render((unsigned long*)framebuffer, w, h, w, &vd);
+        this->vd.MillSec = GetTickCount();
+        this->vi->Render((unsigned long*)framebuffer, w, h, w, &this->vd);
     }
-    LeaveCriticalSection(&cs);
+    lock_unlock(this->library_lock);
     return 0;
 }
 

@@ -1,9 +1,11 @@
 #pragma once
 
+#include "r_defs.h"
+
 #include "c__base.h"
 #include "svp_vis.h"
 
-#include <windows.h>
+#include "../platform.h"
 
 #define C_THISCLASS C_SVPClass
 #define MOD_NAME    "Render / SVP Loader"
@@ -25,8 +27,8 @@ class C_THISCLASS : public C_RBASE {
 
     char m_library[MAX_PATH];
     void SetLibrary();
-    HMODULE hLibrary;
-    CRITICAL_SECTION cs;
+    void* library;
+    lock_t* library_lock;
     VisInfo* vi;
     VisData vd;
 };

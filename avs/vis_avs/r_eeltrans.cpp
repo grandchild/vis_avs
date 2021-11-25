@@ -4,7 +4,6 @@
 
 #include "../ns-eel/ns-eel.h"
 
-#include <windows.h>
 #include <stdio.h>  // for logging
 #include <vector>
 
@@ -52,12 +51,9 @@ char* C_EelTrans::pre_compile_hook(void* ctx, char* expression) {
                 fprintf(logfile, "%s", expression);
                 fclose(logfile);
             } else {
-                if (!CreateDirectory(logpath, NULL)) {
-                    MessageBox(
-                        NULL,
-                        "Could not create log directory, deactivating Code Logger.",
-                        "Code Logger Error",
-                        0);
+                if (!create_directory(logpath)) {
+                    printf(
+                        "Could not create log directory, deactivating Code Logger.\n");
                     C_EelTrans::log_enabled = 0;
                 }
             }
