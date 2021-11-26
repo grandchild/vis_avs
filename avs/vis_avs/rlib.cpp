@@ -225,7 +225,7 @@ void C_RLibrary::initbuiltinape(void) {
 #undef ADD2
 }
 
-void C_RLibrary::_add_dll(void* hlib,
+void C_RLibrary::_add_dll(dlib_t* hlib,
                           class C_RBASE*(__cdecl* cre)(char*),
                           char* inf,
                           int is_r2,
@@ -264,16 +264,15 @@ void C_RLibrary::initdll() {
     if (h != INVALID_HANDLE_VALUE) {
         do {
             char s[MAX_PATH];
-            void* hlib;
+            dlib_t* hlib;
             snprintf(s, MAX_PATH, "%s\\%s", g_path, d.cFileName);
-            hlib = LoadLibrary(s);
+            hlib = library_load(s);
             if (hlib) {
                 int cre;
                 char* inf;
 
                 void (*sei)(void* hDllInstance, APEinfo* ptr);
-                *(void**)&sei =
-                    (void*)GetProcAddress((HINSTANCE)hlib, "_AVS_APE_SetExtInfo");
+                *(void**)&sei = library_get(hlib, "_AVS_APE_SetExtInfo");
                 if (sei) sei(hlib, &ext_info);
 
 #ifdef LASER
@@ -281,23 +280,23 @@ void C_RLibrary::initdll() {
                             char** info,
                             int* create,
                             C_LineListBase* linelist);
-                retr = (int (*)(void*, char**, int*, C_LineListBase*))GetProcAddress(
-                    (HINSTANCE)hlib, "_AVS_LPE_RetrFunc");
+                retr = (int (*)(void*, char**, int*, C_LineListBase*))library_get(
+                    hlib, "_AVS_LPE_RetrFunc");
                 if (retr && retr(hlib, &inf, &cre, g_laser_linelist)) {
                     _add_dll(
                         hlib, (class C_RBASE * (__cdecl*)(char*)) cre, inf, 0, NULL);
                 } else
-                    FreeLibrary(hlib);
+                    library_unload(hlib);
 #else
                 int (*retr)(void* hDllInstance, char** info, int* create);
                 retr = FORCE_FUNCTION_CAST(int (*)(void*, char**, int*))
-                    GetProcAddress((HINSTANCE)hlib, "_AVS_APE_RetrFuncEXT2");
+                    library_get(hlib, "_AVS_APE_RetrFuncEXT2");
                 if (retr && retr(hlib, &inf, &cre)) {
                     _add_dll(
                         hlib, (class C_RBASE * (__cdecl*)(char*)) cre, inf, 1, NULL);
                 } else {
                     retr = FORCE_FUNCTION_CAST(int (*)(void*, char**, int*))
-                        GetProcAddress((HINSTANCE)hlib, "_AVS_APE_RetrFunc");
+                        library_get(hlib, "_AVS_APE_RetrFunc");
                     if (retr && retr(hlib, &inf, &cre)) {
                         _add_dll(hlib,
                                  (class C_RBASE * (__cdecl*)(char*)) cre,
@@ -305,7 +304,7 @@ void C_RLibrary::initdll() {
                                  0,
                                  NULL);
                     } else
-                        FreeLibrary((HINSTANCE)hlib);
+                        library_unload(hlib);
                 }
 #endif
             }
@@ -392,8 +391,9 @@ C_RLibrary::~C_RLibrary() {
     if (DLLFuncs) {
         int x;
         for (x = 0; x < NumDLLFuncs; x++) {
-            if (DLLFuncs[x].hDllInstance)
-                FreeLibrary((HINSTANCE)DLLFuncs[x].hDllInstance);
+            if (DLLFuncs[x].hDllInstance) {
+                library_unload(DLLFuncs[x].hDllInstance);
+            }
         }
         free(DLLFuncs);
     }
@@ -401,7 +401,7 @@ C_RLibrary::~C_RLibrary() {
     NumDLLFuncs = 0;
 }
 
-void* C_RLibrary::GetRendererInstance(int which, void* hThisInstance) {
+dlib_t* C_RLibrary::GetRendererInstance(int which, dlib_t* hThisInstance) {
     if (which < DLLRENDERBASE || which == UNKN_ID || which == LIST_ID)
         return hThisInstance;
     int x;

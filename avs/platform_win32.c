@@ -24,4 +24,10 @@ void lock_destroy(lock_t* lock_obj) {
     free(lock_obj);
 }
 
+dlib_t* library_load(char* path) { return (dlib_t*)LoadLibrary(path); }
+void* library_get(dlib_t* library, char* func_name) {
+    return (void*)GetProcAddress((HMODULE)library, func_name);
+}
+void library_unload(dlib_t* library) { FreeLibrary((HMODULE)library); }
+
 int create_directory(char* path) { return CreateDirectory(path, NULL); }

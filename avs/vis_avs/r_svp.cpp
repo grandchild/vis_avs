@@ -64,7 +64,7 @@ void C_THISCLASS::SetLibrary() {
     if (this->library) {
         if (this->vi) this->vi->SaveSettings("avs.ini");
         this->vi = NULL;
-        FreeLibrary((HINSTANCE)this->library);
+        library_unload(this->library);
         this->library = NULL;
     }
 
@@ -79,18 +79,17 @@ void C_THISCLASS::SetLibrary() {
     strcat(buf1, m_library);
 
     this->vi = NULL;
-    this->library = LoadLibrary(buf1);
+    this->library = library_load(buf1);
     if (this->library) {
         VisInfo* (*qm)(void);
-        qm = FORCE_FUNCTION_CAST(VisInfo * (*)(void))
-            GetProcAddress((HINSTANCE)this->library, "QueryModule");
+        *(void**)&qm = library_get(this->library, "QueryModule");
         if (!qm)
-            qm = FORCE_FUNCTION_CAST(VisInfo * (*)(void)) GetProcAddress(
-                (HINSTANCE)this->library, "?QueryModule@@YAPAUUltraVisInfo@@XZ");
+            *(void**)&qm =
+                library_get(this->library, "?QueryModule@@YAPAUUltraVisInfo@@XZ");
 
         if (!qm || !(this->vi = qm())) {
             this->vi = NULL;
-            FreeLibrary((HINSTANCE)this->library);
+            library_unload(this->library);
             this->library = NULL;
         }
     }
@@ -110,7 +109,7 @@ C_THISCLASS::C_THISCLASS() {
 
 C_THISCLASS::~C_THISCLASS() {
     if (this->vi) this->vi->SaveSettings("avs.ini");
-    if (this->library) FreeLibrary((HINSTANCE)this->library);
+    if (this->library) library_unload(this->library);
     lock_destroy(this->library_lock);
 }
 

@@ -8,6 +8,7 @@ extern "C" {
 #endif
 
 typedef void lock_t;
+typedef void dlib_t;
 
 /*
  * OS specifics
@@ -60,6 +61,10 @@ void lock(lock_t* lock_obj);
 bool lock_try(lock_t* lock_obj);
 void lock_unlock(lock_t* lock_obj);
 void lock_destroy(lock_t* lock_obj);
+
+dlib_t* library_load(char* path);
+void* library_get(dlib_t* library, char* func_name);
+void library_unload(dlib_t* library);
 
 int create_directory(char* path);
 

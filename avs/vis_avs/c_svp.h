@@ -27,7 +27,7 @@ class C_THISCLASS : public C_RBASE {
 
     char m_library[MAX_PATH];
     void SetLibrary();
-    void* library;
+    dlib_t* library;
     lock_t* library_lock;
     VisInfo* vi;
     VisData vd;
