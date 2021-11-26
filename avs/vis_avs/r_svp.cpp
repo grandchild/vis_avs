@@ -33,8 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "r_defs.h"
 
-#include <windows.h>
-
 #ifndef LASER
 
 #define PUT_INT(y)                   \
@@ -140,7 +138,7 @@ int C_THISCLASS::render(char visdata[2][2][576],
             }
         }
 
-        this->vd.MillSec = GetTickCount();
+        this->vd.MillSec = millis_since_boot();
         this->vi->Render((unsigned long*)framebuffer, w, h, w, &this->vd);
     }
     lock_unlock(this->library_lock);
