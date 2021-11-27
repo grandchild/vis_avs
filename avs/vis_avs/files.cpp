@@ -1,6 +1,7 @@
 #include "files.h"
 
 #include <cstring>
+#include <string>
 #include <thread>
 
 #if defined(__linux__) && !defined(FORCE_CPP_FILESYSTEM_API)

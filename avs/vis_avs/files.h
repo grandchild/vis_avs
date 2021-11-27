@@ -1,7 +1,6 @@
 #pragma once
 
-#include <string>
-#include <vector>
+#include <stddef.h>
 
 /* Search for files matching `pattern` recursively in `path`. If `background` is `false`
  * then `callback_data_size` can be 0, even if `callback_data` is used.*/
