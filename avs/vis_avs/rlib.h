@@ -62,21 +62,21 @@ class C_RLibrary {
     void initfx(void);
     void initdll(void);
     void initbuiltinape(void);
-    void _add_dll(void*,
-                  class C_RBASE*(__cdecl*)(char*),
-                  char*,
-                  int,
-                  void (*set_info)(APEinfo*));
 
    public:
     C_RLibrary();
     ~C_RLibrary();
-    C_RBASE* CreateRenderer(int* which, int* has_r2);
-    dlib_t* GetRendererInstance(int which, dlib_t* hThisInstance);
-    int GetRendererDesc(int which, char* str);
     // if which is >= DLLRENDERBASE
     // returns "id" of DLL. which is used to enumerate. str is desc
     // otherwise, returns 1 on success, 0 on error
+    C_RBASE* CreateRenderer(int* which, int* has_r2);
+    dlib_t* GetRendererInstance(int which, dlib_t* hThisInstance);
+    int GetRendererDesc(int which, char* str);
+    void add_dll(void*,
+                 class C_RBASE*(__cdecl*)(char*),
+                 char*,
+                 int,
+                 void (*set_info)(APEinfo*));
 };
 
 #endif  // _RLIB_H_

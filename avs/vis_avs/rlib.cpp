@@ -36,11 +36,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "avs_eelif.h"
 #include "c__base.h"
+#include "files.h"
 #include "rlib.h"
 
 #include "../util.h"
-
-#include <windows.h>
 
 #define PUT_INT(y)                   \
     data[pos] = (y)&255;             \
@@ -188,14 +187,14 @@ static APEinfo ext_info = {
 void C_RLibrary::initbuiltinape(void) {
 #define ADD(sym)                     \
     extern C_RBASE* sym(char* desc); \
-    _add_dll(0, sym, "Builtin_" #sym, 0, NULL)
+    add_dll(0, sym, "Builtin_" #sym, 0, NULL)
 #define ADD2(sym, name)              \
     extern C_RBASE* sym(char* desc); \
-    _add_dll(0, sym, name, 0, NULL)
+    add_dll(0, sym, name, 0, NULL)
 #define ADD_EXT(sym, name)                           \
     extern C_RBASE* sym(char* desc);                 \
     extern void sym##_SetExtInfo(APEinfo* ape_info); \
-    _add_dll(0, sym, name, 0, sym##_SetExtInfo)
+    add_dll(0, sym, name, 0, sym##_SetExtInfo)
 #ifdef LASER
     ADD(RLASER_Cone);
     ADD(RLASER_BeatHold);
@@ -225,11 +224,19 @@ void C_RLibrary::initbuiltinape(void) {
 #undef ADD2
 }
 
-void C_RLibrary::_add_dll(dlib_t* hlib,
-                          class C_RBASE*(__cdecl* cre)(char*),
-                          char* inf,
-                          int is_r2,
-                          void (*set_info)(APEinfo*)) {
+typedef void (*ape_set_info_func)(void*, APEinfo*);
+#ifdef LASER
+typedef int (*lpe_retr_func)(void*, char**, int*, C_LineListBase*);
+#else
+typedef int (*ape_retr_func)(void*, char**, int*);
+#endif
+typedef C_RBASE* (*component_create_func)(char*);
+
+void C_RLibrary::add_dll(dlib_t* hlib,
+                         component_create_func cre,
+                         char* inf,
+                         int is_r2,
+                         void (*set_info)(APEinfo*)) {
     if ((NumDLLFuncs & 7) == 0 || !DLLFuncs) {
         DLLInfo* newdl = (DLLInfo*)malloc(sizeof(DLLInfo) * (NumDLLFuncs + 8));
         if (!newdl) {
@@ -251,66 +258,54 @@ void C_RLibrary::_add_dll(dlib_t* hlib,
     NumDLLFuncs++;
 }
 
-void C_RLibrary::initdll() {
-    void* h;
-    WIN32_FIND_DATA d;
-    char dirmask[MAX_PATH * 2];
-#ifdef LASER
-    snprintf(dirmask, MAX_PATH, "%s\\*.lpe", g_path);
-#else
-    snprintf(dirmask, MAX_PATH, "%s\\*.ape", g_path);
-#endif
-    h = FindFirstFile(dirmask, &d);
-    if (h != INVALID_HANDLE_VALUE) {
-        do {
-            char s[MAX_PATH];
-            dlib_t* hlib;
-            snprintf(s, MAX_PATH, "%s\\%s", g_path, d.cFileName);
-            hlib = library_load(s);
-            if (hlib) {
-                int cre;
-                char* inf;
+void add_dll_callback(const char* file, void* data) {
+    C_RLibrary* rlib = (C_RLibrary*)data;
+    char s[MAX_PATH];
+    dlib_t* hlib;
+    snprintf(s, MAX_PATH, "%s\\%s", g_path, file);
+    hlib = library_load(s);
+    if (hlib) {
+        int cre;
+        char* inf;
 
-                void (*sei)(void* hDllInstance, APEinfo* ptr);
-                *(void**)&sei = library_get(hlib, "_AVS_APE_SetExtInfo");
-                if (sei) sei(hlib, &ext_info);
-
+        ape_set_info_func sei;
+        *(void**)&sei = library_get(hlib, "_AVS_APE_SetExtInfo");
+        if (sei) {
+            sei(hlib, &ext_info);
+        }
 #ifdef LASER
-                int (*retr)(void* hDllInstance,
-                            char** info,
-                            int* create,
-                            C_LineListBase* linelist);
-                retr = (int (*)(void*, char**, int*, C_LineListBase*))library_get(
-                    hlib, "_AVS_LPE_RetrFunc");
-                if (retr && retr(hlib, &inf, &cre, g_laser_linelist)) {
-                    _add_dll(
-                        hlib, (class C_RBASE * (__cdecl*)(char*)) cre, inf, 0, NULL);
-                } else
-                    library_unload(hlib);
+        lpe_retr_func retr;
+        *(void**)&retr = library_get(hlib, "_AVS_LPE_RetrFunc");
+        if (retr && retr(hlib, &inf, &cre, g_laser_linelist)) {
+            rlib->add_dll(hlib, (component_create_func)cre, inf, 0, NULL);
+        } else {
+            library_unload(hlib);
+        }
 #else
-                int (*retr)(void* hDllInstance, char** info, int* create);
-                retr = FORCE_FUNCTION_CAST(int (*)(void*, char**, int*))
-                    library_get(hlib, "_AVS_APE_RetrFuncEXT2");
-                if (retr && retr(hlib, &inf, &cre)) {
-                    _add_dll(
-                        hlib, (class C_RBASE * (__cdecl*)(char*)) cre, inf, 1, NULL);
-                } else {
-                    retr = FORCE_FUNCTION_CAST(int (*)(void*, char**, int*))
-                        library_get(hlib, "_AVS_APE_RetrFunc");
-                    if (retr && retr(hlib, &inf, &cre)) {
-                        _add_dll(hlib,
-                                 (class C_RBASE * (__cdecl*)(char*)) cre,
-                                 inf,
-                                 0,
-                                 NULL);
-                    } else
-                        library_unload(hlib);
-                }
-#endif
+        ape_retr_func retr;
+        *(void**)&retr = library_get(hlib, "_AVS_APE_RetrFuncEXT2");
+        if (retr && retr(hlib, &inf, &cre)) {
+            rlib->add_dll(hlib, (component_create_func)cre, inf, 1, NULL);
+        } else {
+            *(void**)&retr = library_get(hlib, "_AVS_APE_RetrFunc");
+            if (retr && retr(hlib, &inf, &cre)) {
+                rlib->add_dll(hlib, (component_create_func)cre, inf, 0, NULL);
+            } else {
+                library_unload(hlib);
             }
-        } while (FindNextFile(h, &d));
-        FindClose(h);
+        }
+#endif
     }
+}
+
+void C_RLibrary::initdll() {
+#ifdef LASER
+    char* extension[1] = {".lpe"};
+#else
+    char* extension[1] = {".ape"};
+#endif
+    find_files_by_extensions(
+        g_path, extension, 1, add_dll_callback, this, sizeof(C_RLibrary*));
 }
 
 int C_RLibrary::GetRendererDesc(int which, char* str) {
