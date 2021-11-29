@@ -33,8 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "r_defs.h"
 
-#ifndef LASER
-
 // set up default configuration
 C_THISCLASS::C_THISCLASS() {
     memset(&config, 0, sizeof(colorReductionConfig));
@@ -118,5 +116,3 @@ C_RBASE* R_ColorReduction(char* desc) {
     }
     return (C_RBASE*)new C_THISCLASS();
 }
-
-#endif

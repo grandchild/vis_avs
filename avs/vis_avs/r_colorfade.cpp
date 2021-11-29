@@ -36,8 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "timing.h"
 
-#ifndef LASER
-
 int C_THISCLASS::ft[4][3];
 
 #define PUT_INT(y)                   \
@@ -271,7 +269,3 @@ C_RBASE* R_ColorFade(char* desc) {
     }
     return (C_RBASE*)new C_THISCLASS();
 }
-
-#else
-C_RBASE* R_ColorFade(char* desc) { return NULL; }
-#endif

@@ -52,15 +52,10 @@ void line(int* fb,
     int dy = ABS(y2 - y1);
     int dx = ABS(x2 - x1);
 
-#ifdef LASER
-    lw = 1;
-#define BLEND_LINE(fb, color) (*(fb) = BLEND(*(fb), (color)))
-#else
     if (lw < 1)
         lw = 1;
     else if (lw > 255)
         lw = 255;
-#endif
 
     int lw2 = lw / 2;
     if (!dx)  // optimize vertical draw

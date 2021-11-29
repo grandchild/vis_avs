@@ -66,27 +66,6 @@ class C_THISCLASS : public C_RBASE {
         "  'w' and 'h' are the width and height of the screen, in pixels.\r\n"
         " Anybody want to send me better text to put here? Please :)\r\n";
 
-#ifdef LASER
-    presetType presets[3] = {
-        {"Laser - Bouncing Line",
-         "n=8;xp=0;yp=0;d=0.5;r=0;xps=0; yps=0; dtr=0.1; bv=1; gv=1; rv=1;",
-         "x=xp+d*cos(r)*sign(i-0.5); y=yp+d*sin(r)*sign(i-0.5);",
-         "r=r+dtr; xp=xp*0.99+xps*0.01; yp=yp*0.99+yps*0.01; red=rv; green=gv; "
-         "blue=bv;",
-         "xps=(rand(100)-50)/50; yps=(rand(100)-50)/50; dtr=-dtr; rv=rand(100)/100; "
-         "gv=rand(100)/100; bv=rand(100)/100;"},
-        {"Laser - BeatFlex Scope",
-         "n=5; tv=0; dtv=0; tvs=1.0;",
-         "x=(i-0.5)*2; y=-sin(i*$PI)*tv+v*0.2;",
-         "tv=tv*0.97+tvs*0.03;",
-         "tvs=-sign(tvs);"},
-        {"Laser - Pulsing Box",
-         "n=5;r=$PI/4;",
-         "x=cos(i*$PI*2+r); y=sin(i*$PI*2+r); red=rv; green=gv; blue=bv;",
-         "rv=rv*0.93; gv=gv*0.93; bv=bv*0.93;",
-         "bv=blue; gv=green;rv=red;"},
-    };
-#else
     presetType presets[14] = {
         {"Spiral",
          "n=800",
@@ -198,5 +177,4 @@ class C_THISCLASS : public C_RBASE {
          "bb = bb + 1;\r\nbeatdiv = "
          "8;\r\nc=if(equal(bb%beatdiv,0),f,c);\r\nf=if(equal(bb%beatdiv,0),0,f);"},
     };
-#endif
 };

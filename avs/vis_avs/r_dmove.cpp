@@ -54,8 +54,6 @@ static void __docheck(int xp, int yp, int m_lastw, int m_lasth, int d_x, int d_y
 }
 #endif
 
-#ifndef LASER
-
 #define PUT_INT(y)                   \
     data[pos] = (y)&255;             \
     data[pos + 1] = (y >> 8) & 255;  \
@@ -618,7 +616,3 @@ C_RBASE* R_DMove(char* desc) {
     }
     return (C_RBASE*)new C_THISCLASS();
 }
-
-#else
-C_RBASE* R_DMove(char* desc) { return NULL; }
-#endif

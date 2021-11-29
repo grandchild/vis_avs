@@ -12,11 +12,6 @@ int win32_dlgproc_starfield(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
     C_THISCLASS* g_ConfigThis = (C_THISCLASS*)g_current_render;
     switch (uMsg) {
         case WM_INITDIALOG:
-#ifdef LASER
-            ShowWindow(GetDlgItem(hwndDlg, IDC_ADDITIVE), SW_HIDE);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_5050), SW_HIDE);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_REPLACE), SW_HIDE);
-#endif
             SendDlgItemMessage(hwndDlg, IDC_SPEED, TBM_SETTICFREQ, 10, 0);
             SendDlgItemMessage(
                 hwndDlg, IDC_SPEED, TBM_SETRANGE, TRUE, MAKELONG(1, 5000));
@@ -68,14 +63,10 @@ int win32_dlgproc_starfield(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
             }
 
             if (LOWORD(wParam) == IDC_NUMSTARS) {
-#ifndef LASER
                 int a = g_ConfigThis->MaxStars_set;
-#endif
                 g_ConfigThis->MaxStars_set =
                     SendDlgItemMessage(hwndDlg, IDC_NUMSTARS, TBM_GETPOS, 0, 0);
-#ifndef LASER
                 if (g_ConfigThis->MaxStars_set > a)
-#endif
                     if (g_ConfigThis->Width && g_ConfigThis->Height)
                         g_ConfigThis->InitializeStars();
             }

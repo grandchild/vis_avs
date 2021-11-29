@@ -38,8 +38,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifndef LASER
-
 C_THISCLASS::~C_THISCLASS() {
     freeCode(codeHandle);
     freeCode(codeHandleBeat);
@@ -402,7 +400,3 @@ C_RBASE* R_Bump(char* desc)  // creates a new effect object if desc is NULL, oth
     }
     return (C_RBASE*)new C_THISCLASS();
 }
-
-#else
-C_RBASE* R_Bump(char* desc) { return NULL; }
-#endif

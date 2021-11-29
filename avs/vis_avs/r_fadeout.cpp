@@ -36,8 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "timing.h"
 
-#ifndef LASER
-
 void C_THISCLASS::maketab(void) {
     int rseek = color & 0xff;
     int gseek = (color >> 8) & 0xff;
@@ -263,7 +261,3 @@ C_RBASE* R_FadeOut(char* desc) {
     }
     return (C_RBASE*)new C_THISCLASS();
 }
-
-#else
-C_RBASE* R_FadeOut(char* desc) { return NULL; }
-#endif

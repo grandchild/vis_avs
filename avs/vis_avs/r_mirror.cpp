@@ -33,8 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "r_defs.h"
 
-#ifndef LASER
-
 C_THISCLASS::C_THISCLASS()  // set up default configuration
 {
     framecount = 0;
@@ -238,11 +236,3 @@ C_RBASE* R_Mirror(char* desc)  // creates a new effect object if desc is NULL, o
     }
     return (C_RBASE*)new C_THISCLASS();
 }
-
-#else
-C_RBASE* R_Mirror(char* desc)  // creates a new effect object if desc is NULL, otherwise
-                               // fills in desc with description
-{
-    return NULL;
-}
-#endif

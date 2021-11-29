@@ -37,8 +37,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdlib.h>
 
-#ifndef LASER
-
 C_THISCLASS::C_THISCLASS()  // set up default configuration
 {
     AVIFileInit();
@@ -311,7 +309,3 @@ C_RBASE* R_AVI(char* desc)  // creates a new effect object if desc is NULL, othe
     }
     return (C_RBASE*)new C_THISCLASS();
 }
-
-#else  //! LASER
-C_RBASE* R_AVI(char* desc) { return NULL; }
-#endif

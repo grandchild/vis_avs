@@ -462,17 +462,8 @@ int Wnd_Init(struct winampVisModule* this_mod) {
             (char*)SendMessage(this_mod->hwndParent, WM_WA_IPC, 0, IPC_GETINIFILE);
 #endif
 #define AVS_SECTION "AVS"
-#ifdef LASER
-#undef AVS_SECTION
-#define AVS_SECTION "AVS_L"
-        extern int g_laser_nomessage, g_laser_zones;
-        g_laser_nomessage =
-            GetPrivateProfileInt(AVS_SECTION, "laser_nomessage", 0, INI_FILE);
-        g_laser_zones = GetPrivateProfileInt(AVS_SECTION, "laser_zones", 1, INI_FILE);
-#else
         g_config_smp = GetPrivateProfileInt(AVS_SECTION, "smp", 0, INI_FILE);
         g_config_smp_mt = GetPrivateProfileInt(AVS_SECTION, "smp_mt", 2, INI_FILE);
-#endif
         need_redock = GetPrivateProfileInt(AVS_SECTION, "cfg_docked", 0, INI_FILE);
         cfg_cfgwnd_x =
             GetPrivateProfileInt(AVS_SECTION, "cfg_cfgwnd_x", cfg_cfgwnd_x, INI_FILE);
@@ -577,11 +568,6 @@ int Wnd_Init(struct winampVisModule* this_mod) {
             debug_reg[x] = GetPrivateProfileInt(AVS_SECTION, debugreg, x, INI_FILE);
         }
     }
-#ifdef LASER
-    cfg_transitions = 0;
-    cfg_transition_mode = 0;
-    cfg_transitions2 = 0;
-#endif
 
     g_in_destroy = 0;
 #ifndef WA2_EMBED
@@ -683,15 +669,8 @@ void Wnd_Quit(void) {
     g_hwnd = NULL;
     UnregisterClass("avswnd", g_mod->hDllInstance);
     {
-#ifdef LASER
-        extern int g_laser_zones, g_laser_nomessage;
-        wsprintf(str, "%d", g_laser_zones);
-        WriteInt("laser_zones", g_laser_zones);
-        WriteInt("laser_nomessage", g_laser_nomessage);
-#else
         WriteInt("smp", g_config_smp);
         WriteInt("smp_mt", g_config_smp_mt);
-#endif
 #ifdef WA2_EMBED
         WriteInt("wx", myWindowState.r.left);
         WriteInt("wy", myWindowState.r.top);

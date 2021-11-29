@@ -39,8 +39,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // TODO: doesn't complain if not included. -> research.
 #include "timing.h"
 
-#ifndef LASER
-
 static const unsigned int revn[2] = {0xff00ff, 0xff00ff};  //{0x1000100,0x1000100}; <<-
                                                            // this is actually more
                                                            // correct, but we're going
@@ -558,7 +556,3 @@ C_RBASE* R_BlitterFB(char* desc) {
     }
     return (C_RBASE*)new C_THISCLASS();
 }
-
-#else
-C_RBASE* R_BlitterFB(char* desc) { return NULL; }
-#endif

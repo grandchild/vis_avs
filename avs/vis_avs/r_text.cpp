@@ -42,8 +42,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifndef LASER
-
 // Reinit bitmap buffer since size changed
 void C_THISCLASS::reinit(int w, int h) {
     // Free anything if needed
@@ -794,11 +792,3 @@ C_RBASE* R_Text(char* desc)  // creates a new effect object if desc is NULL, oth
     }
     return (C_RBASE*)new C_THISCLASS();
 }
-
-#else
-C_RBASE* R_Text(char* desc)  // creates a new effect object if desc is NULL, otherwise
-                             // fills in desc with description
-{
-    return NULL;
-}
-#endif

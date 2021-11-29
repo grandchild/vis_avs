@@ -1004,6 +1004,4 @@ _mmx_adjblend_loop:
 
 void doAVSEvalHighLight(void* hwndDlg, unsigned int sub, char* data);
 
-#include "laser/laserline.h"
-
 #endif

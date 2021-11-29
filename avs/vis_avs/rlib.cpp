@@ -195,13 +195,6 @@ void C_RLibrary::initbuiltinape(void) {
     extern C_RBASE* sym(char* desc);                 \
     extern void sym##_SetExtInfo(APEinfo* ape_info); \
     add_dll(0, sym, name, 0, sym##_SetExtInfo)
-#ifdef LASER
-    ADD(RLASER_Cone);
-    ADD(RLASER_BeatHold);
-    ADD(RLASER_Line);
-    ADD(RLASER_Bren);  // not including it for now
-    ADD(RLASER_Transform);
-#else
     ADD2(R_ChannelShift, "Channel Shift");
     ADD2(R_ColorReduction, "Color Reduction");
     ADD2(R_Multiplier, "Multiplier");
@@ -219,17 +212,12 @@ void C_RLibrary::initbuiltinape(void) {
     ADD2(R_Picture2, "Picture II");
     ADD2(R_FramerateLimiter, "VFX FRAMERATE LIMITER");
     ADD2(R_Texer, "Texer");
-#endif
 #undef ADD
 #undef ADD2
 }
 
 typedef void (*ape_set_info_func)(void*, APEinfo*);
-#ifdef LASER
-typedef int (*lpe_retr_func)(void*, char**, int*, C_LineListBase*);
-#else
 typedef int (*ape_retr_func)(void*, char**, int*);
-#endif
 typedef C_RBASE* (*component_create_func)(char*);
 
 void C_RLibrary::add_dll(dlib_t* hlib,
@@ -273,15 +261,6 @@ void add_dll_callback(const char* file, void* data) {
         if (sei) {
             sei(hlib, &ext_info);
         }
-#ifdef LASER
-        lpe_retr_func retr;
-        *(void**)&retr = library_get(hlib, "_AVS_LPE_RetrFunc");
-        if (retr && retr(hlib, &inf, &cre, g_laser_linelist)) {
-            rlib->add_dll(hlib, (component_create_func)cre, inf, 0, NULL);
-        } else {
-            library_unload(hlib);
-        }
-#else
         ape_retr_func retr;
         *(void**)&retr = library_get(hlib, "_AVS_APE_RetrFuncEXT2");
         if (retr && retr(hlib, &inf, &cre)) {
@@ -294,16 +273,11 @@ void add_dll_callback(const char* file, void* data) {
                 library_unload(hlib);
             }
         }
-#endif
     }
 }
 
 void C_RLibrary::initdll() {
-#ifdef LASER
-    char* extension[1] = {".lpe"};
-#else
     char* extension[1] = {".ape"};
-#endif
     find_files_by_extensions(
         g_path, extension, 1, add_dll_callback, this, sizeof(C_RLibrary*));
 }

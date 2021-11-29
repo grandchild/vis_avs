@@ -59,13 +59,7 @@ extern void GetClientRect_adj(HWND hwnd, RECT* r);
 static unsigned char g_logtab[256];
 HINSTANCE g_hInstance;
 
-char* verstr =
-#ifndef LASER
-    "Advanced Visualization Studio"
-#else
-    "AVS/Laser"
-#endif
-    " v2.81d";
+char* verstr = "Advanced Visualization Studio v2.81d";
 
 static unsigned int WINAPI RenderThread(LPVOID a);
 
@@ -94,31 +88,26 @@ __declspec(dllexport) winampVisHeader* winampVisGetHeader() { return &hdr; }
 }
 
 static winampVisModule* getModule(int which) {
-    static winampVisModule mod = {
-#ifdef LASER
-        "Advanced Visualization Studio/Laser",
-#else
-        "Advanced Visualization Studio",
-#endif
-        NULL,       // hwndParent
-        NULL,       // hDllInstance
-        0,          // sRate
-        0,          // nCh
-        1000 / 70,  // latencyMS
-        1000 / 70,  // delayMS
-        2,          // spectrumNch
-        2,          // waveformNch
-        {
-            0,
-        },  // spectrumData
-        {
-            0,
-        },  // waveformData
-        config,
-        init,
-        render,
-        quit,
-        NULL};
+    static winampVisModule mod = {"Advanced Visualization Studio",
+                                  NULL,       // hwndParent
+                                  NULL,       // hDllInstance
+                                  0,          // sRate
+                                  0,          // nCh
+                                  1000 / 70,  // latencyMS
+                                  1000 / 70,  // delayMS
+                                  2,          // spectrumNch
+                                  2,          // waveformNch
+                                  {
+                                      0,
+                                  },  // spectrumData
+                                  {
+                                      0,
+                                  },  // waveformData
+                                  config,
+                                  init,
+                                  render,
+                                  quit,
+                                  NULL};
     if (which == 0) return &mod;
     return 0;
 }
@@ -221,11 +210,7 @@ static int init(struct winampVisModule* this_mod) {
     strcat(g_path, "\\wacs\\data");
 #endif
 
-#ifdef LASER
-    strcat(g_path, "\\avs_laser");
-#else
     strcat(g_path, "\\avs");
-#endif
     CreateDirectory(g_path, NULL);
 
 #ifndef WA3_COMPONENT
@@ -466,9 +451,6 @@ static unsigned int WINAPI RenderThread(LPVOID) {
                 break;
             if (fb && fb2) {
                 extern int g_dlg_w, g_dlg_h, g_dlg_fps;
-#ifdef LASER
-                g_laser_linelist->ClearLineList();
-#endif
 
                 lock(g_render_cs);
                 int t = g_render_transition->render(
@@ -476,11 +458,6 @@ static unsigned int WINAPI RenderThread(LPVOID) {
                 lock_unlock(g_render_cs);
                 if (t & 1) s ^= 1;
 
-#ifdef LASER
-                s = 0;
-                memset(fb, 0, w * h * sizeof(int));
-                LineDrawList(g_laser_linelist, fb, w, h);
-#endif
                 if (IsWindow(g_hwnd)) DDraw_Exit(s);
 
                 int lastt = framedata[framedata_pos];

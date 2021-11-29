@@ -241,7 +241,6 @@ int C_RenderListClass::save_config_ex(unsigned char* data, int rootsave) {
 C_RenderListClass::C_RenderListClass(int iroot) {
     AVS_EEL_INITINST();
     isstart = 0;
-#ifndef LASER
     nsaved = 0;
     memset(nbw_save, 0, sizeof(nbw_save));
     memset(nbw_save2, 0, sizeof(nbw_save2));
@@ -249,7 +248,6 @@ C_RenderListClass::C_RenderListClass(int iroot) {
     memset(nbh_save2, 0, sizeof(nbh_save2));
     memset(nb_save, 0, sizeof(nb_save));
     memset(nb_save2, 0, sizeof(nb_save2));
-#endif
     inblendval = 128;
     outblendval = 128;
     ininvert = 0;
@@ -276,18 +274,11 @@ C_RenderListClass::C_RenderListClass(int iroot) {
     beat_render = 0;
     beat_render_frames = 1;
     fake_enabled = 0;
-#ifdef LASER
-    if (!iroot)
-        line_save = createLineList();
-    else
-        line_save = NULL;
-#endif
 }
 
 extern int g_n_buffers_w[NBUF], g_n_buffers_h[NBUF];
 extern void* g_n_buffers[NBUF];
 
-#ifndef LASER
 void C_RenderListClass::set_n_Context() {
     if (!isroot) return;
     if (nsaved) return;
@@ -314,7 +305,6 @@ void C_RenderListClass::unset_n_Context() {
     memcpy(g_n_buffers_h, nbh_save2, sizeof(nbh_save2));
     memcpy(g_n_buffers, nb_save2, sizeof(nb_save2));
 }
-#endif
 
 void C_RenderListClass::smp_cleanupthreads() {
     if (smp_parms.threadTop > 0) {
@@ -335,7 +325,6 @@ void C_RenderListClass::smp_cleanupthreads() {
 }
 
 void C_RenderListClass::freeBuffers() {
-#ifndef LASER
     if (isroot) {
         int x;
         for (x = 0; x < NBUF; x++) {
@@ -344,13 +333,9 @@ void C_RenderListClass::freeBuffers() {
             nbw_save[x] = nbh_save[x] = 0;
         }
     }
-#endif
 }
 
 C_RenderListClass::~C_RenderListClass() {
-#ifdef LASER
-    if (line_save) delete line_save;
-#endif
     clearRenders();
 
     // free nb_save
@@ -444,13 +429,9 @@ int C_RenderListClass::render(char visdata[2][2][576],
         // code execute
     }
 
-#ifndef LASER
     // root/replaceinout special cases
-    if (isroot || (use_enabled && blendin() == 1 && blendout() == 1))
-#endif
-    {
+    if (isroot || (use_enabled && blendin() == 1 && blendout() == 1)) {
         int s = 0, x;
-#ifndef LASER
         int line_blend_mode_save = g_line_blend_mode;
         if (thisfb) free(thisfb);
         thisfb = NULL;
@@ -460,14 +441,6 @@ int C_RenderListClass::render(char visdata[2][2][576],
             g_line_blend_mode = 0;
             set_n_Context();
         }
-#else
-        if (isroot || use_enabled) {
-            void LineListSwap(C_LineListBase * item1, C_LineListBase * item2);
-            if (!isroot) {
-                line_save->ClearLineList();
-                LineListSwap(line_save, g_laser_linelist);
-            }
-#endif
         for (x = 0; x < num_renders; x++) {
             int t = 0;
             int smp_max_threads;
@@ -536,347 +509,339 @@ int C_RenderListClass::render(char visdata[2][2][576],
                 if (t & 0x20000000) isBeat = 0;
             }
         }
-#ifdef LASER
-        if (!isroot) {
-            LineListSwap(line_save, g_laser_linelist);
-            int us = g_laser_linelist->GetUsedLines();
-            int n = g_laser_linelist->GetMaxLines() - us;
-            if (line_save->GetUsedLines() < n) n = line_save->GetUsedLines();
-            g_laser_linelist->SetLines(line_save->GetLineList(), us, n);
-            g_laser_linelist->SetUsedLines(us + n);
+        if (!is_preinit) {
+            g_line_blend_mode = line_blend_mode_save;
+            unset_n_Context();
         }
+        fake_enabled--;
+        return s;
     }
-#else
-            if (!is_preinit) {
-                g_line_blend_mode = line_blend_mode_save;
-                unset_n_Context();
-            }
-#endif
+
+    // check to see if we're enabled
+    if (!use_enabled) {
+        if (thisfb) free(thisfb);
+        thisfb = NULL;
+        return 0;
+    }
+
     fake_enabled--;
-    return s;
-}
 
-#ifndef LASER
-// check to see if we're enabled
-if (!use_enabled) {
-    if (thisfb) free(thisfb);
-    thisfb = NULL;
-    return 0;
-}
+    // handle resize
+    if (l_w != w || l_h != h || !thisfb) {
+        extern int config_reuseonresize;
+        int do_resize = config_reuseonresize && !!thisfb && l_w && l_h && !use_clear;
 
-fake_enabled--;
-
-// handle resize
-if (l_w != w || l_h != h || !thisfb) {
-    extern int config_reuseonresize;
-    int do_resize = config_reuseonresize && !!thisfb && l_w && l_h && !use_clear;
-
-    int* newfb;
-    if (!do_resize) {
-        newfb = (int*)calloc(w * h, sizeof(int));
-    } else {
-        newfb = (int*)malloc(w * h * sizeof(int));
-        if (newfb) {
-            int x, y;
-            int dxpos = (l_w << 16) / w;
-            int ypos = 0;
-            int dypos = (l_h << 16) / h;
-            int* out = newfb;
-            for (y = 0; y < h; y++) {
-                int* p = thisfb + l_w * (ypos >> 16);
-                int xpos = 0;
-                for (x = 0; x < w; x++) {
-                    *out++ = p[xpos >> 16];
-                    xpos += dxpos;
+        int* newfb;
+        if (!do_resize) {
+            newfb = (int*)calloc(w * h, sizeof(int));
+        } else {
+            newfb = (int*)malloc(w * h * sizeof(int));
+            if (newfb) {
+                int x, y;
+                int dxpos = (l_w << 16) / w;
+                int ypos = 0;
+                int dypos = (l_h << 16) / h;
+                int* out = newfb;
+                for (y = 0; y < h; y++) {
+                    int* p = thisfb + l_w * (ypos >> 16);
+                    int xpos = 0;
+                    for (x = 0; x < w; x++) {
+                        *out++ = p[xpos >> 16];
+                        xpos += dxpos;
+                    }
+                    ypos += dypos;
                 }
-                ypos += dypos;
             }
         }
+        // TODO [bug]: What happens here if newfb alloc failed?
+        l_w = w;
+        l_h = h;
+        if (thisfb) free(thisfb);
+        thisfb = newfb;
     }
-    // TODO [bug]: What happens here if newfb alloc failed?
-    l_w = w;
-    l_h = h;
-    if (thisfb) free(thisfb);
-    thisfb = newfb;
-}
-// handle clear mode
-if (use_clear) memset(thisfb, 0, w* h * sizeof(int));
+    // handle clear mode
+    if (use_clear) memset(thisfb, 0, w * h * sizeof(int));
 
-// blend parent framebuffer into current, if necessary
+    // blend parent framebuffer into current, if necessary
 
-if (!is_preinit) {
-    int x = w * h;
-    int* tfb = framebuffer;
-    int* o = thisfb;
-    set_n_Context();
-    int use_blendin = blendin();
-    if (use_blendin == 10 && use_inblendval >= 255) use_blendin = 1;
+    if (!is_preinit) {
+        int x = w * h;
+        int* tfb = framebuffer;
+        int* o = thisfb;
+        set_n_Context();
+        int use_blendin = blendin();
+        if (use_blendin == 10 && use_inblendval >= 255) use_blendin = 1;
 
-    switch (use_blendin) {
-        case 1:
-            memcpy(o, tfb, w * h * sizeof(int));
-            break;
-        case 2:
-            mmx_avgblend_block(o, tfb, x);
-            break;
-        case 3:
-            while (x--) {
-                *o = BLEND_MAX(*o, *tfb++);
-                o++;
-            }
-            break;
-        case 4:
-            mmx_addblend_block(o, tfb, x);
-            break;
-        case 5:
-            while (x--) {
-                *o = BLEND_SUB(*o, *tfb++);
-                o++;
-            }
-            break;
-        case 6:
-            while (x--) {
-                *o = BLEND_SUB(*tfb++, *o);
-                o++;
-            }
-            break;
-        case 7: {
-            int y = h / 2;
-            while (y-- > 0) {
-                memcpy(o, tfb, w * sizeof(int));
-                tfb += w * 2;
-                o += w * 2;
-            }
-        } break;
-        case 8: {
-            int r = 0;
-            int y = h;
-            while (y-- > 0) {
-                int *out, *in;
-                int x = w / 2;
-                out = o + r;
-                in = tfb + r;
-                r ^= 1;
-                while (x-- > 0) {
-                    *out = *in;
-                    out += 2;
-                    in += 2;
+        switch (use_blendin) {
+            case 1:
+                memcpy(o, tfb, w * h * sizeof(int));
+                break;
+            case 2:
+                mmx_avgblend_block(o, tfb, x);
+                break;
+            case 3:
+                while (x--) {
+                    *o = BLEND_MAX(*o, *tfb++);
+                    o++;
                 }
-                o += w;
-                tfb += w;
+                break;
+            case 4:
+                mmx_addblend_block(o, tfb, x);
+                break;
+            case 5:
+                while (x--) {
+                    *o = BLEND_SUB(*o, *tfb++);
+                    o++;
+                }
+                break;
+            case 6:
+                while (x--) {
+                    *o = BLEND_SUB(*tfb++, *o);
+                    o++;
+                }
+                break;
+            case 7: {
+                int y = h / 2;
+                while (y-- > 0) {
+                    memcpy(o, tfb, w * sizeof(int));
+                    tfb += w * 2;
+                    o += w * 2;
+                }
+            } break;
+            case 8: {
+                int r = 0;
+                int y = h;
+                while (y-- > 0) {
+                    int *out, *in;
+                    int x = w / 2;
+                    out = o + r;
+                    in = tfb + r;
+                    r ^= 1;
+                    while (x-- > 0) {
+                        *out = *in;
+                        out += 2;
+                        in += 2;
+                    }
+                    o += w;
+                    tfb += w;
+                }
+            } break;
+            case 9:
+                while (x--) {
+                    *o = *o ^ *tfb++;
+                    o++;
+                }
+                break;
+            case 10:
+                mmx_adjblend_block(o, tfb, o, x, use_inblendval);
+                break;
+            case 11:
+                mmx_mulblend_block(o, tfb, x);
+                break;
+            case 13:
+                while (x--) {
+                    *o = BLEND_MIN(*o, *tfb++);
+                    o++;
+                }
+                break;
+            case 12: {
+                int* buf = (int*)getGlobalBuffer(w, h, bufferin, 0);
+                if (!buf) break;
+                while (x--) {
+                    *o = BLEND_ADJ(*tfb++, *o, depthof(*buf, ininvert));
+                    o++;
+                    buf++;
+                }
             }
-        } break;
-        case 9:
-            while (x--) {
-                *o = *o ^ *tfb++;
-                o++;
-            }
-            break;
-        case 10:
-            mmx_adjblend_block(o, tfb, o, x, use_inblendval);
-            break;
-        case 11:
-            mmx_mulblend_block(o, tfb, x);
-            break;
-        case 13:
-            while (x--) {
-                *o = BLEND_MIN(*o, *tfb++);
-                o++;
-            }
-            break;
-        case 12: {
-            int* buf = (int*)getGlobalBuffer(w, h, bufferin, 0);
-            if (!buf) break;
-            while (x--) {
-                *o = BLEND_ADJ(*tfb++, *o, depthof(*buf, ininvert));
-                o++;
-                buf++;
-            }
-        }
 #ifndef NO_MMX
 #ifdef _MSC_VER  // MSVC asm
-            __asm emms;
+                __asm emms;
 #else   // _MSC_VER, GCC asm
-            __asm__ __volatile__("emms");
+                __asm__ __volatile__("emms");
 #endif  // _MSC_VER
 #endif
-            break;
-        default:
-            break;
+                break;
+            default:
+                break;
+        }
+        unset_n_Context();
     }
-    unset_n_Context();
-}
 
-int s = 0;
-int x;
-int line_blend_mode_save = g_line_blend_mode;
-if (!is_preinit) g_line_blend_mode = 0;
+    int s = 0;
+    int x;
+    int line_blend_mode_save = g_line_blend_mode;
+    if (!is_preinit) g_line_blend_mode = 0;
 
-for (x = 0; x < num_renders; x++) {
-    int t = 0;
+    for (x = 0; x < num_renders; x++) {
+        int t = 0;
 
-    int smp_max_threads;
-    C_RBASE2* rb2;
+        int smp_max_threads;
+        C_RBASE2* rb2;
 
-    if (renders[x].has_rbase2
-        && (smp_max_threads = g_config_smp ? g_config_smp_mt : 0) > 1
-        && ((rb2 = (C_RBASE2*)renders[x].render)->smp_getflags() & 1)) {
-        if (smp_max_threads > MAX_SMP_THREADS) smp_max_threads = MAX_SMP_THREADS;
+        if (renders[x].has_rbase2
+            && (smp_max_threads = g_config_smp ? g_config_smp_mt : 0) > 1
+            && ((rb2 = (C_RBASE2*)renders[x].render)->smp_getflags() & 1)) {
+            if (smp_max_threads > MAX_SMP_THREADS) smp_max_threads = MAX_SMP_THREADS;
 
-        int nt = smp_max_threads;
-        nt = rb2->smp_begin(nt,
-                            visdata,
-                            isBeat,
-                            s ? fbout : framebuffer,
-                            s ? framebuffer : fbout,
-                            w,
-                            h);
-        if (!is_preinit && nt > 0) {
-            if (nt > smp_max_threads) nt = smp_max_threads;
-
-            // launch threads
-            smp_Render(
-                nt, rb2, visdata, isBeat, s ? fbout : thisfb, s ? thisfb : fbout, w, h);
-
-            t = rb2->smp_finish(visdata,
+            int nt = smp_max_threads;
+            nt = rb2->smp_begin(nt,
+                                visdata,
                                 isBeat,
                                 s ? fbout : framebuffer,
                                 s ? framebuffer : fbout,
                                 w,
                                 h);
-        }
+            if (!is_preinit && nt > 0) {
+                if (nt > smp_max_threads) nt = smp_max_threads;
 
-    } else if (g_config_seh && renders[x].effect_index != LIST_ID) {
-        try {
+                // launch threads
+                smp_Render(nt,
+                           rb2,
+                           visdata,
+                           isBeat,
+                           s ? fbout : thisfb,
+                           s ? thisfb : fbout,
+                           w,
+                           h);
+
+                t = rb2->smp_finish(visdata,
+                                    isBeat,
+                                    s ? fbout : framebuffer,
+                                    s ? framebuffer : fbout,
+                                    w,
+                                    h);
+            }
+
+        } else if (g_config_seh && renders[x].effect_index != LIST_ID) {
+            try {
+                t = renders[x].render->render(
+                    visdata, isBeat, s ? fbout : thisfb, s ? thisfb : fbout, w, h);
+            } catch (...) {
+                t = 0;
+            }
+        } else {
             t = renders[x].render->render(
                 visdata, isBeat, s ? fbout : thisfb, s ? thisfb : fbout, w, h);
-        } catch (...) {
-            t = 0;
         }
-    } else {
-        t = renders[x].render->render(
-            visdata, isBeat, s ? fbout : thisfb, s ? thisfb : fbout, w, h);
-    }
 
-    if (t & 1) s ^= 1;
+        if (t & 1) s ^= 1;
+        if (!is_preinit) {
+            if (t & 0x10000000) isBeat = 1;
+            if (t & 0x20000000) isBeat = 0;
+        }
+    }
+    if (!is_preinit) g_line_blend_mode = line_blend_mode_save;
+
+    // if s==1 at this point, data we want is in fbout.
+
     if (!is_preinit) {
-        if (t & 0x10000000) isBeat = 1;
-        if (t & 0x20000000) isBeat = 0;
-    }
-}
-if (!is_preinit) g_line_blend_mode = line_blend_mode_save;
+        if (s) memcpy(thisfb, fbout, w * h * sizeof(int));
 
-// if s==1 at this point, data we want is in fbout.
+        int* tfb = s ? fbout : thisfb;
+        int* o = framebuffer;
+        x = w * h;
+        set_n_Context();
 
-if (!is_preinit) {
-    if (s) memcpy(thisfb, fbout, w * h * sizeof(int));
-
-    int* tfb = s ? fbout : thisfb;
-    int* o = framebuffer;
-    x = w * h;
-    set_n_Context();
-
-    int use_blendout = blendout();
-    if (use_blendout == 10 && use_outblendval >= 255) use_blendout = 1;
-    switch (use_blendout) {
-        case 1:
-            if (s) {
-                unset_n_Context();
-                return 1;
-            }
-            memcpy(o, tfb, x * sizeof(int));
-            break;
-        case 2:
-            mmx_avgblend_block(o, tfb, x);
-            break;
-        case 3:
-            while (x--) {
-                *o = BLEND_MAX(*o, *tfb++);
-                o++;
-            }
-            break;
-        case 4:
-            mmx_addblend_block(o, tfb, x);
-            break;
-        case 5:
-            while (x--) {
-                *o = BLEND_SUB(*o, *tfb++);
-                o++;
-            }
-            break;
-        case 6:
-            while (x--) {
-                *o = BLEND_SUB(*tfb++, *o);
-                o++;
-            }
-            break;
-        case 7: {
-            int y = h / 2;
-            while (y-- > 0) {
-                memcpy(o, tfb, w * sizeof(int));
-                tfb += w * 2;
-                o += w * 2;
-            }
-        } break;
-        case 8: {
-            int r = 0;
-            int y = h;
-            while (y-- > 0) {
-                int *out, *in;
-                int x = w / 2;
-                out = o + r;
-                in = tfb + r;
-                r ^= 1;
-                while (x-- > 0) {
-                    *out = *in;
-                    out += 2;
-                    in += 2;
+        int use_blendout = blendout();
+        if (use_blendout == 10 && use_outblendval >= 255) use_blendout = 1;
+        switch (use_blendout) {
+            case 1:
+                if (s) {
+                    unset_n_Context();
+                    return 1;
                 }
-                o += w;
-                tfb += w;
-            }
-        } break;
-        case 9:
-            while (x--) {
-                *o = *o ^ *tfb++;
-                o++;
-            }
-            break;
-        case 10:
-            mmx_adjblend_block(o, tfb, o, x, use_outblendval);
-            break;
-        case 11:
-            mmx_mulblend_block(o, tfb, x);
-            break;
-        case 13:
-            while (x--) {
-                *o = BLEND_MIN(*o, *tfb++);
-                o++;
-            }
-            break;
-        case 12: {
-            int* buf = (int*)getGlobalBuffer(w, h, bufferout, 0);
-            if (!buf) break;
-            while (x--) {
-                *o = BLEND_ADJ(*tfb++, *o, depthof(*buf, outinvert));
-                o++;
-                buf++;
-            }
+                memcpy(o, tfb, x * sizeof(int));
+                break;
+            case 2:
+                mmx_avgblend_block(o, tfb, x);
+                break;
+            case 3:
+                while (x--) {
+                    *o = BLEND_MAX(*o, *tfb++);
+                    o++;
+                }
+                break;
+            case 4:
+                mmx_addblend_block(o, tfb, x);
+                break;
+            case 5:
+                while (x--) {
+                    *o = BLEND_SUB(*o, *tfb++);
+                    o++;
+                }
+                break;
+            case 6:
+                while (x--) {
+                    *o = BLEND_SUB(*tfb++, *o);
+                    o++;
+                }
+                break;
+            case 7: {
+                int y = h / 2;
+                while (y-- > 0) {
+                    memcpy(o, tfb, w * sizeof(int));
+                    tfb += w * 2;
+                    o += w * 2;
+                }
+            } break;
+            case 8: {
+                int r = 0;
+                int y = h;
+                while (y-- > 0) {
+                    int *out, *in;
+                    int x = w / 2;
+                    out = o + r;
+                    in = tfb + r;
+                    r ^= 1;
+                    while (x-- > 0) {
+                        *out = *in;
+                        out += 2;
+                        in += 2;
+                    }
+                    o += w;
+                    tfb += w;
+                }
+            } break;
+            case 9:
+                while (x--) {
+                    *o = *o ^ *tfb++;
+                    o++;
+                }
+                break;
+            case 10:
+                mmx_adjblend_block(o, tfb, o, x, use_outblendval);
+                break;
+            case 11:
+                mmx_mulblend_block(o, tfb, x);
+                break;
+            case 13:
+                while (x--) {
+                    *o = BLEND_MIN(*o, *tfb++);
+                    o++;
+                }
+                break;
+            case 12: {
+                int* buf = (int*)getGlobalBuffer(w, h, bufferout, 0);
+                if (!buf) break;
+                while (x--) {
+                    *o = BLEND_ADJ(*tfb++, *o, depthof(*buf, outinvert));
+                    o++;
+                    buf++;
+                }
 #ifndef NO_MMX
 #ifdef _MSC_VER  // MSVC asm
-            __asm emms;
+                __asm emms;
 #else   // _MSC_VER, GCC asm
-            __asm__ __volatile__("emms");
+                __asm__ __volatile__("emms");
 #endif  // _MSC_VER
 #endif
-        } break;
-        default:
-            break;
+            } break;
+            default:
+                break;
+        }
+        unset_n_Context();
     }
-    unset_n_Context();
-}
-return 0;
-#endif  // !LASER
+    return 0;
 }
 
 int C_RenderListClass::getNumRenders(void) { return num_renders; }

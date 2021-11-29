@@ -40,8 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <math.h>
 
-#ifndef LASER
-
 #define MAKE_REFFECT(n, expr)                                                        \
     void _ref##n(double& r, double& d, double max_d, int& xo, int& yo) {             \
         /* any parameter unused in at least one expression, avoid "unused parameter" \
@@ -720,7 +718,3 @@ C_RBASE* R_Trans(char* desc) {
     }
     return (C_RBASE*)new C_THISCLASS();
 }
-
-#else
-C_RBASE* R_Trans(char* desc) { return NULL; }
-#endif

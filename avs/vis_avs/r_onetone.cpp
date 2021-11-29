@@ -35,8 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdlib.h>
 
-#ifndef LASER
-
 C_THISCLASS::~C_THISCLASS() {}
 
 C_THISCLASS::C_THISCLASS()  // set up default configuration
@@ -169,11 +167,3 @@ C_RBASE* R_Onetone(char* desc)  // creates a new effect object if desc is NULL,
     }
     return (C_RBASE*)new C_THISCLASS();
 }
-
-#else
-C_RBASE* R_Onetone(char* desc)  // creates a new effect object if desc is NULL,
-                                // otherwise fills in desc with description
-{
-    return NULL;
-}
-#endif

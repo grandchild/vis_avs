@@ -37,8 +37,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "r_defs.h"
 
-#ifndef LASER
-
 // set up default configuration
 C_DELAY::C_DELAY() {
     // enable
@@ -230,5 +228,3 @@ C_RBASE* R_VideoDelay(char* desc)  // creates a new effect object if desc is NUL
     }
     return (C_RBASE*)new C_DELAY();
 }
-
-#endif

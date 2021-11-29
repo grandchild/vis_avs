@@ -88,9 +88,6 @@ class C_RenderListClass : public C_RBASE {
     int mode;
     int beat_render, beat_render_frames;
 
-#ifdef LASER
-    C_LineListBase* line_save;
-#else
     void set_n_Context();
     void unset_n_Context();
 
@@ -101,7 +98,6 @@ class C_RenderListClass : public C_RBASE {
                                            // ones
     void* nb_save2[NBUF];
     int nsaved;
-#endif
 
 #define MAX_SMP_THREADS 8
     // smp stuff

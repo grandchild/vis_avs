@@ -35,8 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "timing.h"
 
-#ifndef LASER
-
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
 void C_THISCLASS::load_config(unsigned char* data, int len)  // read configuration of
@@ -318,7 +316,3 @@ C_RBASE* R_FastBright(char* desc) {
     }
     return (C_RBASE*)new C_THISCLASS();
 }
-
-#else
-C_RBASE* R_FastBright(char* desc) { return NULL; }
-#endif

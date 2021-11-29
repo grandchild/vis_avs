@@ -38,8 +38,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdlib.h>
 
-#ifndef LASER
-
 std::vector<char*> C_THISCLASS::file_list;
 unsigned int C_THISCLASS::instance_count = 0;
 
@@ -283,11 +281,3 @@ C_RBASE* R_Picture(char* desc)  // creates a new effect object if desc is NULL,
     }
     return (C_RBASE*)new C_THISCLASS();
 }
-
-#else
-C_RBASE* R_Picture(char* desc)  // creates a new effect object if desc is NULL,
-                                // otherwise fills in desc with description
-{
-    return NULL;
-}
-#endif

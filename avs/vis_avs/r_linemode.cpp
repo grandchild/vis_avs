@@ -35,8 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "timing.h"
 
-#ifndef LASER
-
 int g_line_blend_mode;
 
 #define PUT_INT(y)                   \
@@ -79,7 +77,3 @@ C_RBASE* R_LineMode(char* desc) {
     }
     return (C_RBASE*)new C_THISCLASS();
 }
-
-#else
-C_RBASE* R_LineMode(char* desc) { return NULL; }
-#endif

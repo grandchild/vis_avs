@@ -37,8 +37,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <time.h>
 
-#ifndef LASER
-
 // historically, these were the radio buttons' resource IDs, hence the weird numbers.
 #define CHANSHIFT_MODE_RBG 1020
 #define CHANSHIFT_MODE_BRG 1019
@@ -492,5 +490,3 @@ C_RBASE* R_ChannelShift(char* desc) {
     }
     return (C_RBASE*)new C_THISCLASS();
 }
-
-#endif

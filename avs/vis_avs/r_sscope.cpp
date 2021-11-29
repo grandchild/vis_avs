@@ -119,11 +119,7 @@ int C_THISCLASS::save_config(unsigned char* data) {
 C_THISCLASS::C_THISCLASS() {
     this->code_lock = lock_init();
     AVS_EEL_INITINST();
-#ifdef LASER
-    mode = 1;
-#else
     mode = 0;
-#endif
 
     need_recompile = 1;
     which_ch = 2;
@@ -133,17 +129,10 @@ C_THISCLASS::C_THISCLASS() {
     color_pos = 0;
     memset(codehandle, 0, sizeof(codehandle));
 
-#ifdef LASER
-    effect_exp[0].assign("d=i+v*0.2; r=t+i*$PI*4; x=cos(r)*d; y=sin(r)*d");
-    effect_exp[1].assign("t=t-0.05");
-    effect_exp[2].assign("");
-    effect_exp[3].assign("n=100");
-#else
     effect_exp[0].assign("d=i+v*0.2; r=t+i*$PI*4; x=cos(r)*d; y=sin(r)*d");
     effect_exp[1].assign("t=t-0.05");
     effect_exp[2].assign("");
     effect_exp[3].assign("n=800");
-#endif
 
     var_n = 0;
 }
@@ -258,9 +247,6 @@ int C_THISCLASS::render(char visdata[2][2][576],
     if (isBeat) executeCode(codehandle[2], visdata);
     if (codehandle[0]) {
         int candraw = 0, lx = 0, ly = 0;
-#ifdef LASER
-        double dlx = 0.0, dly = 0.0;
-#endif
         int a;
         int l = (int)*var_n;
         if (l > 128 * 1024) l = 128 * 1024;
@@ -281,24 +267,10 @@ int C_THISCLASS::render(char visdata[2][2][576],
                                 | (makeint(*var_red) << 16);
                 if (*var_drawmode < 0.00001) {
                     if (y >= 0 && y < h && x >= 0 && x < w) {
-#ifdef LASER
-                        laser_drawpoint((float)*var_x, (float)*var_y, thiscolor);
-#else
                         BLEND_LINE(framebuffer + x + y * w, thiscolor);
-#endif
                     }
                 } else {
                     if (candraw) {
-#ifdef LASER
-                        LineType l;
-                        l.color = thiscolor;
-                        l.mode = 0;
-                        l.x1 = (float)*var_x;
-                        l.y1 = (float)*var_y;
-                        l.x2 = (float)dlx;
-                        l.y2 = (float)dly;
-                        g_laser_linelist->AddLine(&l);
-#else
                         if ((thiscolor & 0xffffff) || (g_line_blend_mode & 0xff) != 1) {
                             line(framebuffer,
                                  lx,
@@ -310,17 +282,12 @@ int C_THISCLASS::render(char visdata[2][2][576],
                                  thiscolor,
                                  (int)(*var_linesize + 0.5));
                         }
-#endif
                     }  // candraw
                 }      // line
             }          // skip
             candraw = 1;
             lx = x;
             ly = y;
-#ifdef LASER
-            dlx = *var_x;
-            dly = *var_y;
-#endif
         }
     }
 

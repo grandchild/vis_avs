@@ -36,8 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "timing.h"
 
-#ifndef LASER
-
 #define PUT_INT(y)                   \
     data[pos] = (y)&255;             \
     data[pos + 1] = (y >> 8) & 255;  \
@@ -109,7 +107,3 @@ C_RBASE* R_Scat(char* desc) {
     }
     return (C_RBASE*)new C_THISCLASS();
 }
-
-#else
-C_RBASE* R_Scat(char* desc) { return NULL; }
-#endif

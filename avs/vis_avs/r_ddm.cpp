@@ -38,8 +38,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <math.h>
 
-#ifndef LASER
-
 // Integer Square Root function
 
 // Uses factoring to find square root
@@ -405,7 +403,3 @@ C_RBASE* R_DDM(char* desc) {
     }
     return (C_RBASE*)new C_THISCLASS();
 }
-
-#else
-C_RBASE* R_DDM(char* desc) { return NULL; }
-#endif

@@ -151,16 +151,6 @@ int C_THISCLASS::render(char visdata[2][2][576],
 
     {
         double s = size / 32.0;
-#ifdef LASER
-        double c_x;
-        double is = s;
-        if (y_pos == 2)
-            c_x = 0;
-        else if (y_pos == 0)
-            c_x = -0.5;
-        else
-            c_x = 0.5;
-#else
         int c_x;
         int is = min((int)(h * s), (int)(w * s));
         if (y_pos == 2)
@@ -169,7 +159,6 @@ int C_THISCLASS::render(char visdata[2][2][576],
             c_x = (w / 4);
         else
             c_x = w / 2 + w / 4;
-#endif
         {
             int q, ii = 0;
             for (q = 0; q < 5; q++) {
@@ -177,11 +166,6 @@ int C_THISCLASS::render(char visdata[2][2][576],
                 s = sin(m_r + q * (3.14159 * 2.0 / 5.0));
                 c = cos(m_r + q * (3.14159 * 2.0 / 5.0));
                 double p = 0.0;
-#ifdef LASER
-                double lx = c_x;
-                double ly = 0.0;
-                int t = 6;
-#else
                 if (y_pos == 2)
                     c_x = w / 2;
                 else if (y_pos == 0)
@@ -189,29 +173,11 @@ int C_THISCLASS::render(char visdata[2][2][576],
                 int lx = c_x;
                 int ly = h / 2;
                 int t = 64;
-#endif
                 double dp = is / (double)t;
                 double dfactor = 1.0 / 1024.0f;
                 double hw = is;
                 while (t--) {
                     double ale = (((fa_data[ii] ^ 128) - 128) * dfactor * hw);
-#ifdef LASER
-                    double x, y;
-                    ii += 8;
-                    x = c_x + (c * p) - (s * ale);
-                    y = (s * p) + (c * ale);
-                    if ((x > -1.0 && x < 1.0 && y > -1.0 && y < 1.0)
-                        || (lx > -1.0 && lx < 1.0 && ly > -.10 && ly < 1.0)) {
-                        LineType l;
-                        l.color = current_color;
-                        l.mode = 0;
-                        l.x1 = (float)x;
-                        l.x2 = (float)lx;
-                        l.y1 = (float)y;
-                        l.y2 = (float)ly;
-                        g_laser_linelist->AddLine(&l);
-                    }
-#else
                     int x, y;
                     ii++;
                     x = c_x + (int)(c * p) - (int)(s * ale);
@@ -228,7 +194,6 @@ int C_THISCLASS::render(char visdata[2][2][576],
                              current_color,
                              (g_line_blend_mode & 0xff0000) >> 16);
                     }
-#endif
                     lx = x;
                     ly = y;
                     p += dp;

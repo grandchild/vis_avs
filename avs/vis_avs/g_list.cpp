@@ -22,15 +22,9 @@ void fill_buffer_combo(HWND dlg, int ctl) {
 int win32_dlgproc_root_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     C_RenderListClass* g_this = (C_RenderListClass*)g_current_render;
     switch (uMsg) {
-        case WM_INITDIALOG:
-#ifdef LASER
-            ShowWindow(GetDlgItem(hwndDlg, IDC_CHECK1), SW_HIDE);
-#endif
-            {
-#ifndef LASER
-                if (g_this->clearfb()) CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
-#endif
-            }
+        case WM_INITDIALOG: {
+            if (g_this->clearfb()) CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
+        }
             return 1;
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
@@ -46,108 +40,77 @@ int win32_dlgproc_root_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     C_RenderListClass* g_this = (C_RenderListClass*)g_current_render;
     switch (uMsg) {
-        case WM_INITDIALOG:
-#ifdef LASER
-            ShowWindow(GetDlgItem(hwndDlg, IDC_CHECK1), SW_HIDE);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_INSLIDE), SW_HIDE);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_OUTSLIDE), SW_HIDE);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_CBBUF1), SW_HIDE);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_CBBUF2), SW_HIDE);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_INVERT1), SW_HIDE);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_INVERT2), SW_HIDE);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_COMBO1), SW_HIDE);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_COMBO2), SW_HIDE);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_FR1), SW_HIDE);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_FR2), SW_HIDE);
-#endif
+        case WM_INITDIALOG: {
             {
-#ifndef LASER
-                {
-                    unsigned int x;
-                    for (x = 0;
-                         x < sizeof(g_this->blendmodes) / sizeof(g_this->blendmodes[0]);
-                         x++) {
-                        SendDlgItemMessage(hwndDlg,
-                                           IDC_COMBO1,
-                                           CB_ADDSTRING,
-                                           0,
-                                           (LPARAM)g_this->blendmodes[x]);
-                        SendDlgItemMessage(hwndDlg,
-                                           IDC_COMBO2,
-                                           CB_ADDSTRING,
-                                           0,
-                                           (LPARAM)g_this->blendmodes[x]);
-                    }
+                unsigned int x;
+                for (x = 0;
+                     x < sizeof(g_this->blendmodes) / sizeof(g_this->blendmodes[0]);
+                     x++) {
                     SendDlgItemMessage(hwndDlg,
                                        IDC_COMBO1,
-                                       CB_SETCURSEL,
-                                       (WPARAM)g_this->blendout(),
-                                       0);
+                                       CB_ADDSTRING,
+                                       0,
+                                       (LPARAM)g_this->blendmodes[x]);
                     SendDlgItemMessage(hwndDlg,
                                        IDC_COMBO2,
-                                       CB_SETCURSEL,
-                                       (WPARAM)g_this->blendin(),
-                                       0);
-                    ShowWindow(GetDlgItem(hwndDlg, IDC_INSLIDE),
-                               (g_this->blendin() == 10) ? SW_NORMAL : SW_HIDE);
-                    ShowWindow(GetDlgItem(hwndDlg, IDC_OUTSLIDE),
-                               (g_this->blendout() == 10) ? SW_NORMAL : SW_HIDE);
-                    SendDlgItemMessage(
-                        hwndDlg, IDC_INSLIDE, TBM_SETRANGE, TRUE, MAKELONG(0, 255));
-                    SendDlgItemMessage(hwndDlg,
-                                       IDC_INSLIDE,
-                                       TBM_SETPOS,
-                                       TRUE,
-                                       (int)(g_this->inblendval));
-                    SendDlgItemMessage(
-                        hwndDlg, IDC_OUTSLIDE, TBM_SETRANGE, TRUE, MAKELONG(0, 255));
-                    SendDlgItemMessage(hwndDlg,
-                                       IDC_OUTSLIDE,
-                                       TBM_SETPOS,
-                                       TRUE,
-                                       (int)(g_this->outblendval));
-                    ShowWindow(GetDlgItem(hwndDlg, IDC_CBBUF1),
-                               (g_this->blendin() == 12) ? SW_NORMAL : SW_HIDE);
-                    ShowWindow(GetDlgItem(hwndDlg, IDC_CBBUF2),
-                               (g_this->blendout() == 12) ? SW_NORMAL : SW_HIDE);
-                    ShowWindow(GetDlgItem(hwndDlg, IDC_INVERT1),
-                               (g_this->blendin() == 12) ? SW_NORMAL : SW_HIDE);
-                    ShowWindow(GetDlgItem(hwndDlg, IDC_INVERT2),
-                               (g_this->blendout() == 12) ? SW_NORMAL : SW_HIDE);
-                    fill_buffer_combo(hwndDlg, IDC_CBBUF1);
-                    fill_buffer_combo(hwndDlg, IDC_CBBUF2);
-                    SendDlgItemMessage(
-                        hwndDlg, IDC_CBBUF1, CB_SETCURSEL, (WPARAM)g_this->bufferin, 0);
-                    SendDlgItemMessage(hwndDlg,
-                                       IDC_CBBUF2,
-                                       CB_SETCURSEL,
-                                       (WPARAM)g_this->bufferout,
-                                       0);
-                    if (g_this->ininvert)
-                        CheckDlgButton(hwndDlg, IDC_INVERT1, BST_CHECKED);
-                    if (g_this->outinvert)
-                        CheckDlgButton(hwndDlg, IDC_INVERT2, BST_CHECKED);
+                                       CB_ADDSTRING,
+                                       0,
+                                       (LPARAM)g_this->blendmodes[x]);
                 }
-                if (g_this->clearfb()) CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
-#endif
-                g_this->isstart = 1;
-                SetDlgItemText(
-                    hwndDlg, IDC_EDIT4, (char*)g_this->effect_exp[0].c_str());
-                SetDlgItemText(
-                    hwndDlg, IDC_EDIT5, (char*)g_this->effect_exp[1].c_str());
-                g_this->isstart = 0;
-
-                if (((g_this->mode & 2) ^ 2))
-                    CheckDlgButton(hwndDlg, IDC_CHECK2, BST_CHECKED);
-                if (g_this->beat_render)
-                    CheckDlgButton(hwndDlg, IDC_CHECK3, BST_CHECKED);
-                else
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT1), FALSE);
-                if (g_this->use_code) CheckDlgButton(hwndDlg, IDC_CHECK4, BST_CHECKED);
-                char buf[999];
-                wsprintf(buf, "%d", g_this->beat_render_frames);
-                SetDlgItemText(hwndDlg, IDC_EDIT1, buf);
+                SendDlgItemMessage(
+                    hwndDlg, IDC_COMBO1, CB_SETCURSEL, (WPARAM)g_this->blendout(), 0);
+                SendDlgItemMessage(
+                    hwndDlg, IDC_COMBO2, CB_SETCURSEL, (WPARAM)g_this->blendin(), 0);
+                ShowWindow(GetDlgItem(hwndDlg, IDC_INSLIDE),
+                           (g_this->blendin() == 10) ? SW_NORMAL : SW_HIDE);
+                ShowWindow(GetDlgItem(hwndDlg, IDC_OUTSLIDE),
+                           (g_this->blendout() == 10) ? SW_NORMAL : SW_HIDE);
+                SendDlgItemMessage(
+                    hwndDlg, IDC_INSLIDE, TBM_SETRANGE, TRUE, MAKELONG(0, 255));
+                SendDlgItemMessage(
+                    hwndDlg, IDC_INSLIDE, TBM_SETPOS, TRUE, (int)(g_this->inblendval));
+                SendDlgItemMessage(
+                    hwndDlg, IDC_OUTSLIDE, TBM_SETRANGE, TRUE, MAKELONG(0, 255));
+                SendDlgItemMessage(hwndDlg,
+                                   IDC_OUTSLIDE,
+                                   TBM_SETPOS,
+                                   TRUE,
+                                   (int)(g_this->outblendval));
+                ShowWindow(GetDlgItem(hwndDlg, IDC_CBBUF1),
+                           (g_this->blendin() == 12) ? SW_NORMAL : SW_HIDE);
+                ShowWindow(GetDlgItem(hwndDlg, IDC_CBBUF2),
+                           (g_this->blendout() == 12) ? SW_NORMAL : SW_HIDE);
+                ShowWindow(GetDlgItem(hwndDlg, IDC_INVERT1),
+                           (g_this->blendin() == 12) ? SW_NORMAL : SW_HIDE);
+                ShowWindow(GetDlgItem(hwndDlg, IDC_INVERT2),
+                           (g_this->blendout() == 12) ? SW_NORMAL : SW_HIDE);
+                fill_buffer_combo(hwndDlg, IDC_CBBUF1);
+                fill_buffer_combo(hwndDlg, IDC_CBBUF2);
+                SendDlgItemMessage(
+                    hwndDlg, IDC_CBBUF1, CB_SETCURSEL, (WPARAM)g_this->bufferin, 0);
+                SendDlgItemMessage(
+                    hwndDlg, IDC_CBBUF2, CB_SETCURSEL, (WPARAM)g_this->bufferout, 0);
+                if (g_this->ininvert) CheckDlgButton(hwndDlg, IDC_INVERT1, BST_CHECKED);
+                if (g_this->outinvert)
+                    CheckDlgButton(hwndDlg, IDC_INVERT2, BST_CHECKED);
             }
+            if (g_this->clearfb()) CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
+            g_this->isstart = 1;
+            SetDlgItemText(hwndDlg, IDC_EDIT4, (char*)g_this->effect_exp[0].c_str());
+            SetDlgItemText(hwndDlg, IDC_EDIT5, (char*)g_this->effect_exp[1].c_str());
+            g_this->isstart = 0;
+
+            if (((g_this->mode & 2) ^ 2))
+                CheckDlgButton(hwndDlg, IDC_CHECK2, BST_CHECKED);
+            if (g_this->beat_render)
+                CheckDlgButton(hwndDlg, IDC_CHECK3, BST_CHECKED);
+            else
+                EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT1), FALSE);
+            if (g_this->use_code) CheckDlgButton(hwndDlg, IDC_CHECK4, BST_CHECKED);
+            char buf[999];
+            wsprintf(buf, "%d", g_this->beat_render_frames);
+            SetDlgItemText(hwndDlg, IDC_EDIT1, buf);
+        }
             return 1;
         case WM_COMMAND:
             switch (LOWORD(wParam)) {

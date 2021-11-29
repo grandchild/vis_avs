@@ -158,17 +158,12 @@ int C_THISCLASS::save_config(unsigned char* data)  // write configuration to dat
 
 void C_THISCLASS::InitializeStars(void) {
     int i;
-#ifdef LASER
-    MaxStars = MaxStars_set / 12;
-    if (MaxStars < 10) MaxStars = 10;
-#else
     // This used to be MulDiv() which uses a 64-bit intermediate.
     // But the maximum for MaxStars_set is 4096, and 4096 * w * h overflows 32-bit
     // INT_MAX already for 720p, so we explicitly use 64-bit integers instead.
     MaxStars = (int)(((uint64_t)MaxStars_set * (uint64_t)Width * (uint64_t)Height)
                      / (512 * 384));
 
-#endif
     if (MaxStars > 4095) MaxStars = 4095;
     for (i = 0; i < MaxStars; i++) {
         Stars[i].X = (rand() % Width) - Xoff;
@@ -204,9 +199,6 @@ int C_THISCLASS::render(char[2][2][576],
                         int*,
                         int w,
                         int h) {
-#ifdef LASER
-    w = h = 1024;
-#endif
     int i = w * h;
     int NX, NY;
     int c;
@@ -238,19 +230,10 @@ int C_THISCLASS::render(char[2][2][576],
                     c = BLEND_ADAPT((c | (c << 8) | (c << 16)), color, c >> 4);
                 else
                     c = (c | (c << 8) | (c << 16));
-#ifdef LASER
-                LineType l;
-                l.color = c;
-                l.mode = 1;
-                l.x1 = (float)NX / 512.0f - 1.0f;
-                l.y1 = (float)NY / 512.0f - 1.0f;
-                g_laser_linelist->AddLine(&l);
-#else
                 framebuffer[NY * w + NX] = blend ? BLEND(framebuffer[NY * w + NX], c)
                                            : blendavg
                                                ? BLEND_AVG(framebuffer[NY * w + NX], c)
                                                : c;
-#endif
                 Stars[i].OX = NX;
                 Stars[i].OY = NY;
                 Stars[i].Z -= Stars[i].Speed * CurrentSpeed;

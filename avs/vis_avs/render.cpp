@@ -36,10 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wa_ipc.h"
 #include "wnd.h"
 
-#ifdef LASER
-C_LineListBase* g_laser_linelist;
-#endif
-
 C_RenderListClass* g_render_effects;
 C_RenderListClass* g_render_effects2;
 C_RenderTransitionClass* g_render_transition;
@@ -86,10 +82,6 @@ int const mmx_blendadj_mask[2] = {0xff00ff, 0xff00ff};
 int const mmx_blend4_zero = 0;
 
 void Render_Init() {
-#ifdef LASER
-    laser_connect();
-    g_laser_linelist = createLineList();
-#endif
     timingInit();
     {
         int i, j;
@@ -111,11 +103,7 @@ void Render_Init() {
     INI_FILE[MAX_PATH - 1] = '\0';
     p += strlen(INI_FILE) - 1;
     while (p >= INI_FILE && *p != '\\') p--;
-#ifdef LASER
-    strcpy(p, "\\plugins\\vis_avs_laser.dat");
-#else
     strcpy(p, "\\plugins\\vis_avs.dat");
-#endif
     extern int g_saved_preset_dirty;
     // clear the undo stack before loading a file.
     C_UndoStack::clear();
@@ -139,12 +127,7 @@ void Render_Quit() {
         INI_FILE[MAX_PATH - 1] = '\0';
         p += strlen(INI_FILE) - 1;
         while (p >= INI_FILE && *p != '\\') p--;
-#ifdef LASER
-        strcpy(p, "\\plugins\\vis_avs_laser.dat");
-#else
         strcpy(p, "\\plugins\\vis_avs.dat");
-#endif
-
         g_render_effects->__SavePreset(INI_FILE);
     }
 
@@ -157,9 +140,4 @@ void Render_Quit() {
     g_render_library = NULL;
 
     timingPrint();
-#ifdef LASER
-    if (g_laser_linelist) delete g_laser_linelist;
-    g_laser_linelist = 0;
-    laser_disconnect();
-#endif
 }

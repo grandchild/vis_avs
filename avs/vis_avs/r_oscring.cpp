@@ -150,18 +150,6 @@ int C_THISCLASS::render(char visdata[2][2][576],
 
     {
         double s = size / 32.0;
-#ifdef LASER
-        double lx, ly;
-        double is = s;
-        double c_x;
-        double c_y = 0;
-        if (y_pos == 2)
-            c_x = 0;
-        else if (y_pos == 0)
-            c_x = -0.5;
-        else
-            c_x = 0.5;
-#else
         int lx, ly;
         double is = min((h * s), (w * s));
         int c_x;
@@ -172,7 +160,6 @@ int C_THISCLASS::render(char visdata[2][2][576],
             c_x = (w / 4);
         else
             c_x = w / 2 + w / 4;
-#endif
         {
             int q = 0;
             double a = 0.0;
@@ -182,20 +169,12 @@ int C_THISCLASS::render(char visdata[2][2][576],
             else
                 sca =
                     0.1 + ((fa_data[q * 2] / 2 + fa_data[q * 2 + 1] / 2) / 255.0) * 0.9;
-#ifdef LASER
-            int n_seg = 4;
-#else
             int n_seg = 1;
-#endif
             lx = c_x + (cos(a) * is * sca);
             ly = c_y + (sin(a) * is * sca);
 
             for (q = 1; q <= 80; q += n_seg) {
-#ifdef LASER
-                double tx, ty;
-#else
                 int tx, ty;
-#endif
                 a -= 3.14159 * 2.0 / 80.0 * n_seg;
                 if (!source)
                     sca = 0.1 + ((fa_data[q > 40 ? 80 - q : q] ^ 128) / 255.0) * 0.90;
@@ -207,19 +186,6 @@ int C_THISCLASS::render(char visdata[2][2][576],
                                 * 0.9;
                 tx = c_x + (cos(a) * is * sca);
                 ty = c_y + (sin(a) * is * sca);
-#ifdef LASER
-                if ((tx > -1.0 && tx < 1.0 && ty > -1.0 && ty < 1.0)
-                    || (lx > -1.0 && lx < 1.0 && ly > -1.0 && ly < 1.0)) {
-                    LineType l;
-                    l.color = current_color;
-                    l.mode = 0;
-                    l.x1 = (float)tx;
-                    l.x2 = (float)lx;
-                    l.y1 = (float)ty;
-                    l.y2 = (float)ly;
-                    g_laser_linelist->AddLine(&l);
-                }
-#else
 
                 if ((tx >= 0 && tx < w && ty >= 0 && ty < h)
                     || (lx >= 0 && lx < w && ly >= 0 && ly < h)) {
@@ -233,7 +199,6 @@ int C_THISCLASS::render(char visdata[2][2][576],
                          current_color,
                          (g_line_blend_mode & 0xff0000) >> 16);
                 }
-#endif
                 //        line(framebuffer,tx,ty,c_x,c_y,w,h,current_color);
                 //        if (tx >= 0 && tx < w && ty >= 0 && ty < h)
                 //        framebuffer[tx+ty*w]=current_color;

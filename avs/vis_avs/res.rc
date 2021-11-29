@@ -281,14 +281,11 @@ BEGIN
                     BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,146,76,82,11
     COMBOBOX        IDC_THREAD_PRIORITY,144,138,86,65,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Projection zones...",IDC_L_PROJZONES,5,169,78,14,NOT 
-                    WS_VISIBLE
     GROUPBOX        "Windowed settings",IDC_STATIC,0,0,137,104
     LTEXT           "Lower framerate",IDC_STATIC,77,56,53,8
     GROUPBOX        "Alpha blending",IDC_STATIC_ALPHA,0,107,137,49
     LTEXT           "Total",IDC_STATIC_TRANS_TOTAL,5,133,17,8
     LTEXT           "None",IDC_STATIC_TRANS_NONE,108,133,18,8
-    GROUPBOX        "Laser",IDC_L_FRAME,0,158,232,56,NOT WS_VISIBLE
     GROUPBOX        "Overlay mode",IDC_STATIC,140,0,93,91
     CONTROL         "Overlay mode",IDC_BKGND_RENDER,"Button",BS_AUTOCHECKBOX | 
                     BS_MULTILINE | WS_TABSTOP,145,9,82,11
@@ -296,18 +293,6 @@ BEGIN
                     IDC_STATIC,148,41,75,33
     GROUPBOX        "Priority",IDC_STATIC,140,107,93,49
     LTEXT           "Render thread priority:",IDC_STATIC,145,122,70,8
-    CONTROL         "Suppress laser-related messages",IDC_L_SUPPRESS_DIALOGS,
-                    "Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,
-                    99,188,119,10
-    CONTROL         "Suppress laser output when Winamp or AVS/Laser is not active",
-                    IDC_L_ACTIVEOUTPUT,"Button",BS_AUTOCHECKBOX | NOT 
-                    WS_VISIBLE | WS_TABSTOP,5,198,216,10
-    CONTROL         "Suppress laser output",IDC_L_SUPPRESS_OUTPUT,"Button",
-                    BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,5,187,84,
-                    10
-    CONTROL         "Sync with laser (no call to DBStatus)",IDC_L_SYNC,
-                    "Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,
-                    90,171,130,10
     GROUPBOX        "SMP support",IDC_THREADSBORDER,1,160,232,29
     CONTROL         "Experimental multiprocessor support:",IDC_CHECK4,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,8,171,130,10
@@ -1384,90 +1369,6 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,0,41,111,10
 END
 
-#if defined(APSTUDIO_INVOKED) || defined(LASER)
-#if defined(APSTUDIO_INVOKED)
-IDD_CFG_LASER_CONE$(LASER) DIALOG DISCARDABLE  0, 0, 137, 155
-#else
-IDD_CFG_LASER_CONE DIALOG DISCARDABLE  0, 0, 137, 155
-#endif
-STYLE DS_CONTROL | WS_CHILD
-FONT 8, "MS Sans Serif"
-BEGIN
-    CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS | 
-                    TBS_TOP | WS_TABSTOP,11,8,125,11
-    CONTROL         "Slider1",IDC_SLIDER7,"msctls_trackbar32",TBS_AUTOTICKS | 
-                    TBS_TOP | WS_TABSTOP,11,19,125,11
-    CONTROL         "Slider1",IDC_SLIDER3,"msctls_trackbar32",TBS_AUTOTICKS | 
-                    TBS_TOP | WS_TABSTOP,5,44,130,16
-    CONTROL         "Slider1",IDC_SLIDER4,"msctls_trackbar32",TBS_AUTOTICKS | 
-                    TBS_TOP | WS_TABSTOP,5,73,130,16
-    EDITTEXT        IDC_EDIT1,78,98,24,12,ES_AUTOHSCROLL | ES_NUMBER
-    CONTROL         "Dots",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
-                    WS_TABSTOP,9,110,31,10
-    CONTROL         "Lines",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,41,110,33,
-                    10
-    EDITTEXT        IDC_NUMCOL,53,125,19,12,ES_AUTOHSCROLL | ES_NUMBER
-    CONTROL         "",IDC_DEFCOL,"Button",BS_OWNERDRAW | WS_TABSTOP,6,140,
-                    127,11
-    GROUPBOX        "Distance from center",IDC_STATIC,0,0,137,36
-    GROUPBOX        "Cone size",IDC_STATIC,0,37,137,30
-    GROUPBOX        "Cone size on beat",IDC_STATIC,0,62,137,35
-    LTEXT           "Number of segments:",IDC_STATIC,7,100,68,8
-    GROUPBOX        "Colors",IDC_STATIC,0,119,137,36
-    LTEXT           "Cycle through ",IDC_STATIC,7,127,46,8
-    LTEXT           "colors (max 16)",IDC_STATIC,77,127,48,8
-    RTEXT           "x",IDC_STATIC,3,12,8,8
-    RTEXT           "y",IDC_STATIC,3,22,8,8
-END
-#endif
-
-#if defined(APSTUDIO_INVOKED) || defined(LASER)
-#if defined(APSTUDIO_INVOKED)
-IDD_CFG_LASER_BEATHOLD$(LASER) DIALOG DISCARDABLE  0, 0, 137, 137
-#else
-IDD_CFG_LASER_BEATHOLD DIALOG DISCARDABLE  0, 0, 137, 137
-#endif
-STYLE DS_CONTROL | WS_CHILD
-FONT 8, "MS Sans Serif"
-BEGIN
-    GROUPBOX        "Hold for (ms)",-1,0,0,137,32
-    CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS | 
-                    TBS_TOP | WS_TABSTOP,5,8,130,16
-    GROUPBOX        "Hold on the nth beat",-1,0,39,137,30
-    CONTROL         "Slider1",IDC_SLIDER2,"msctls_trackbar32",TBS_AUTOTICKS | 
-                    TBS_TOP | WS_TABSTOP,5,46,130,16
-END
-#endif
-
-#if defined(APSTUDIO_INVOKED) || defined(LASER)
-#if defined(APSTUDIO_INVOKED)
-IDD_CFG_LASER_LINE$(LASER) DIALOG DISCARDABLE  0, 0, 137, 137
-#else
-IDD_CFG_LASER_LINE DIALOG DISCARDABLE  0, 0, 137, 137
-#endif
-STYLE DS_CONTROL | WS_CHILD
-FONT 8, "MS Sans Serif"
-BEGIN
-    CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS | 
-                    TBS_TOP | WS_TABSTOP,5,8,130,16
-    CONTROL         "Slider1",IDC_SLIDER3,"msctls_trackbar32",TBS_AUTOTICKS | 
-                    TBS_TOP | WS_TABSTOP,5,34,130,16
-    CONTROL         "Slider1",IDC_SLIDER4,"msctls_trackbar32",TBS_AUTOTICKS | 
-                    TBS_TOP | WS_TABSTOP,5,63,130,16
-    EDITTEXT        IDC_EDIT1,103,87,26,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_NUMCOL,53,107,19,12,ES_AUTOHSCROLL | ES_NUMBER
-    CONTROL         "",IDC_DEFCOL,"Button",BS_OWNERDRAW | WS_TABSTOP,6,122,
-                    127,11
-    GROUPBOX        "Colors",IDC_STATIC,0,101,137,36
-    LTEXT           "Cycle through ",IDC_STATIC,7,109,46,8
-    LTEXT           "colors (max 16)",IDC_STATIC,77,109,48,8
-    GROUPBOX        "Distance from center",IDC_STATIC,0,0,137,32
-    GROUPBOX        "Line size",IDC_STATIC,0,27,137,30
-    GROUPBOX        "Line size on beat",IDC_STATIC,0,52,137,35
-    LTEXT           "Beat count for rotation switch: ",IDC_STATIC,3,89,97,8
-END
-#endif
-
 IDD_GCFG_FS DIALOG DISCARDABLE  0, 0, 233, 215
 STYLE DS_CONTROL | WS_CHILD
 FONT 8, "MS Sans Serif"
@@ -1530,32 +1431,6 @@ BEGIN
                     WS_TABSTOP,35,194,63,10
     PUSHBUTTON      "expression help",IDC_HELPBTN,162,196,71,12
 END
-
-#if defined(APSTUDIO_INVOKED) || defined(LASER)
-#if defined(APSTUDIO_INVOKED)
-IDD_CFG_LASER_TRANSFORM$(LASER) DIALOG DISCARDABLE  0, 0, 233, 214
-#else
-IDD_CFG_LASER_TRANSFORM DIALOG DISCARDABLE  0, 0, 233, 214
-#endif
-STYLE DS_CONTROL | WS_CHILD
-FONT 8, "MS Sans Serif"
-BEGIN
-    EDITTEXT        IDC_EDIT1,0,161,233,41,ES_MULTILINE | ES_AUTOHSCROLL | 
-                    ES_WANTRETURN
-    CONTROL         "Rectangular coordinates",IDC_CHECK3,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,0,204,93,10
-    LTEXT           "Point:",IDC_STATIC,0,151,19,8
-    EDITTEXT        IDC_EDIT2,0,10,233,41,ES_MULTILINE | ES_AUTOHSCROLL | 
-                    ES_WANTRETURN
-    LTEXT           "Init:",IDC_STATIC,0,0,12,8
-    EDITTEXT        IDC_EDIT3,0,65,233,41,ES_MULTILINE | ES_AUTOHSCROLL | 
-                    ES_WANTRETURN
-    LTEXT           "Frame:",IDC_STATIC,0,52,22,8
-    EDITTEXT        IDC_EDIT4,0,119,233,28,ES_MULTILINE | ES_AUTOHSCROLL | 
-                    ES_WANTRETURN
-    LTEXT           "Beat:",IDC_STATIC,0,108,18,8
-END
-#endif
 
 IDD_CFG_DMOVE DIALOG DISCARDABLE  0, 0, 233, 214
 STYLE DS_CONTROL | WS_CHILD
@@ -2216,11 +2091,6 @@ BEGIN
     BEGIN
         RIGHTMARGIN, 137
         BOTTOMMARGIN, 176
-    END
-
-    "IDD_CFG_LASER_CONE$(LASER)", DIALOG
-    BEGIN
-        BOTTOMMARGIN, 137
     END
 
     IDD_GCFG_FS, DIALOG

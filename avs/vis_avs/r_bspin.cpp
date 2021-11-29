@@ -37,8 +37,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <math.h>
 
-#ifndef LASER
-
 #define PUT_INT(y)                   \
     data[pos] = (y)&255;             \
     data[pos + 1] = (y >> 8) & 255;  \
@@ -268,7 +266,3 @@ void C_THISCLASS::my_triangle(int* fb,
         x2 += dx2;
     }
 }
-
-#else
-C_RBASE* R_BSpin(char* desc) { return NULL; }
-#endif
