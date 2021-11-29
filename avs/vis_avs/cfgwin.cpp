@@ -1448,8 +1448,8 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                             SetDlgItemText(hwndDlg, IDC_EFNAME, tp->render->get_desc());
                             if (cur_hwnd) DestroyWindow(cur_hwnd);
                             HINSTANCE render_instance =
-                                g_render_library->GetRendererInstance(tp->effect_index,
-                                                                      g_hInstance);
+                                (HINSTANCE)g_render_library->GetRendererInstance(
+                                    tp->effect_index, g_hInstance);
                             g_current_render = (void*)tp->render;
                             C_Win32GuiComponent* ui_component =
                                 g_ui_library->get(tp->effect_index, g_current_render);
