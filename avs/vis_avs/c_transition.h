@@ -41,7 +41,7 @@ class C_RenderTransitionClass {
     int ep[2];
     int l_w, l_h;
     int enabled;
-    int start_time;
+    uint64_t start_time;
     int curtrans;
     int mask;
     void* initThread;

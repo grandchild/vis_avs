@@ -48,13 +48,8 @@ int max(int a, int b);
 
 #endif  // Compiler specifics
 
-/*
-Return the number of milliseconds since the system was booted. Since it's a 32bit value,
-it will roll over roughly every 50 days. The function will return 0 on error. If the
-rollover is hit precisely it will return 1 instead of 0 (not really a loss of precision,
-because the system timer itself isn't that precise).
-*/
-uint32_t millis_since_boot();
+/* Return the number of milliseconds since the system was booted. Return 0 on error. */
+uint64_t timer_ms();
 
 lock_t* lock_init();
 void lock(lock_t* lock_obj);

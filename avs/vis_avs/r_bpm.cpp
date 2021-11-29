@@ -50,7 +50,7 @@ C_THISCLASS::C_THISCLASS()  // set up default configuration
     oldInSlide = 0;
     oldOutSlide = 0;
     enabled = 1;
-    arbLastTC = millis_since_boot();
+    arbLastTC = timer_ms();
     arbitrary = 1;
     arbVal = 500;
     skipVal = 1;
@@ -148,7 +148,7 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int*, int*, int, int) {
     if (skipfirst != 0 && count <= skipfirst) return isBeat ? CLR_BEAT : 0;
 
     if (arbitrary) {
-        unsigned int TCNow = millis_since_boot();
+        uint64_t TCNow = timer_ms();
         if (TCNow > arbLastTC + arbVal) {
             arbLastTC = TCNow;
             SliderStep(SLIDER_CTRL_OUT, &outSlide);

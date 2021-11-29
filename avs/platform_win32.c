@@ -4,11 +4,7 @@
 #include <commctrl.h>
 #include <windowsx.h>
 
-uint32_t millis_since_boot() {
-    uint32_t millis = GetTickCount();
-    // Create the same behavior as the Linux version, which returns 0 on error.
-    return millis != 0 ? millis : 1;
-}
+uint64_t timer_ms() { return GetTickCount64(); }
 
 #define WIN_LOCK(lock) ((CRITICAL_SECTION*)(lock))
 lock_t* lock_init() {

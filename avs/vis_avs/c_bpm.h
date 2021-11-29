@@ -25,7 +25,7 @@ class C_THISCLASS : public C_RBASE {
     int enabled;
     int arbitrary, skip, invert;   // Type of action, adapt = detect beat
     unsigned int arbVal, skipVal;  // Values of arbitrary beat and beat skip
-    unsigned int arbLastTC;        // Last tick count used for arbitrary beat
+    uint64_t arbLastTC;            // Last tick count used for arbitrary beat
     unsigned int skipCount;        // Beat counter used by beat skipper
     int inInc, outInc;             // +1/-1, Used by the nifty beatsynced sliders
     int inSlide, outSlide;         // Positions of sliders

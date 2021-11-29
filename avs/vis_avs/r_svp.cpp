@@ -138,7 +138,7 @@ int C_THISCLASS::render(char visdata[2][2][576],
             }
         }
 
-        this->vd.MillSec = millis_since_boot();
+        this->vd.MillSec = (uint32_t)(timer_ms() & 0xffffffff);
         this->vi->Render((unsigned long*)framebuffer, w, h, w, &this->vd);
     }
     lock_unlock(this->library_lock);
