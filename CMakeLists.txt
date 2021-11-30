@@ -74,16 +74,15 @@ else()
     # link_libraries(#[[...]])
 endif()
 
-add_definitions(
-    -DAVS_MEGABUF_SUPPORT     # No reason to not enable this. Remove #ifdefs eventually.
-    -DNSEEL_LOOPFUNC_SUPPORT  # No reason to not enable this. Remove #ifdefs eventually.
-    -DWA2_EMBED               # Enabling this shows the window decorations for AVS, at
-                              # the cost of making the window resize a bit choppier
-                              # (Winamp2 restricted window dimensions to certain
-                              # multiples).
-    # -DNO_MMX                # Use (usually slower) C equivalents for MMX assembly.
-                              # (Initially enabled for quick porting but should be
-                              # removed, now that all MMX sections are ported.)
+add_compile_definitions(
+    AVS_MEGABUF_SUPPORT     # No reason to not enable this. Remove #ifdefs eventually.
+    NSEEL_LOOPFUNC_SUPPORT  # No reason to not enable this. Remove #ifdefs eventually.
+    WA2_EMBED               # Enabling this shows the window decorations for AVS, at the
+                            # cost of making the window resize a bit choppier. (Winamp2
+                            # restricted window dimensions to certain multiples).
+    # NO_MMX                # Use (usually slower) C equivalents for MMX assembly.
+                            # (Initially enabled for quick porting but should be
+                            # removed, now that all MMX sections are ported.)
 )
 
 set(CMAKE_SHARED_LIBRARY_PREFIX "")  # Remove "lib" prefix from output to get original
