@@ -63,6 +63,10 @@ else() # TODO: Clang option
 endif()
 
 if(WIN32)
+    add_compile_definitions(
+        _WIN32_WINNT=_WIN32_WINNT_VISTA     # Minimum WinNT version (needed for
+                                            # GetTickCount64()).
+    )
     if(NOT MSVC)
         # googletest here because it doesn't work for MSVC
     endif()
