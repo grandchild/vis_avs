@@ -259,9 +259,9 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
     int n;
     if (!start_time) {
         n = 0;
-        start_time = GetTickCount();
+        start_time = timer_ms();
     } else
-        n = MulDiv(GetTickCount() - start_time, 256, ttime);
+        n = (timer_ms() - start_time) * 256 / ttime;
 
     if (n >= 255) n = 255;
 
