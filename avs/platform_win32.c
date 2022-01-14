@@ -4,7 +4,31 @@
 #include <commctrl.h>
 #include <windowsx.h>
 
+/* timers */
+
+static int64_t _timer_highres_ticks_per_us = 0;
+
+void _timer_us_init() {
+    LARGE_INTEGER ticks_per_second = {.QuadPart = 0};
+    if (!QueryPerformanceFrequency(&ticks_per_second)) {
+        _timer_highres_ticks_per_us = 1;
+    } else {
+        _timer_highres_ticks_per_us = ticks_per_second.QuadPart / (1000 * 1000);
+    }
+}
+
 uint64_t timer_ms() { return GetTickCount64(); }
+
+uint64_t timer_us() {
+    if (_timer_highres_ticks_per_us == 0) {
+        _timer_us_init();
+    }
+    LARGE_INTEGER result;
+    QueryPerformanceCounter(&result);
+    return result.QuadPart / _timer_highres_ticks_per_us;
+}
+
+double timer_us_precision() { return 1.0f / (double)_timer_highres_ticks_per_us; }
 
 #define WIN_LOCK(lock) ((CRITICAL_SECTION*)(lock))
 lock_t* lock_init() {

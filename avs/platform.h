@@ -48,8 +48,11 @@ int max(int a, int b);
 
 #endif  // Compiler specifics
 
-/* Return the number of milliseconds since the system was booted. Return 0 on error. */
+/* The number of milliseconds since the system was booted. May return 0 on error. */
 uint64_t timer_ms();
+/* A high-precision microsecond resolution counter for performance measuring. */
+uint64_t timer_us();
+double timer_us_precision();
 
 lock_t* lock_init();
 void lock(lock_t* lock_obj);
