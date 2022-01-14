@@ -9,6 +9,8 @@ extern "C" {
 
 typedef void lock_t;
 typedef void dlib_t;
+typedef void signal_t;
+typedef void thread_t;
 
 /*
  * OS specifics
@@ -63,6 +65,22 @@ void lock_destroy(lock_t* lock_obj);
 dlib_t* library_load(char* path);
 void* library_get(dlib_t* library, char* func_name);
 void library_unload(dlib_t* library);
+
+#define WAIT_INFINITE -1
+signal_t* signal_create_single();
+signal_t* signal_create_broadcast();
+void signal_set(signal_t* signal);
+// All wait functions return NULL if timeout was hit or other error occurred.
+signal_t* signal_wait(signal_t* signal, int32_t wait_ms);
+signal_t* signal_wait_any(signal_t** signals, uint32_t num_signals, int32_t wait_ms);
+signal_t* signal_wait_all(signal_t** signals, uint32_t num_signals, int32_t wait_ms);
+void signal_destroy(signal_t* signal);
+
+thread_t* thread_create(uint32_t (*func)(void* data), void* data);
+// All join functions return false if timeout was hit or other error occurred.
+bool thread_join(thread_t* thread, int32_t wait_ms);
+bool thread_join_all(thread_t** threads, uint32_t num_threads, int32_t wait_ms);
+void thread_destroy(thread_t* thread);
 
 int create_directory(char* path);
 
