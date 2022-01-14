@@ -952,18 +952,11 @@ int C_RenderListClass::__SavePreset(char* filename) {
         pos += strlen(sig_str);
         pos += save_config_ex(data + pos, 1);
         if (pos < 1024 * 1024) {
-            HANDLE fp = CreateFile(filename,
-                                   GENERIC_WRITE,
-                                   0,
-                                   NULL,
-                                   CREATE_ALWAYS,
-                                   FILE_ATTRIBUTE_NORMAL,
-                                   NULL);
-            if (fp != INVALID_HANDLE_VALUE) {
-                unsigned long int dw;
+            FILE* fp = fopen(filename, "wb");
+            if (fp != NULL) {
                 success = 0;
-                WriteFile(fp, data, pos, &dw, NULL);
-                CloseHandle(fp);
+                fwrite(data, 1, pos, fp);
+                fclose(fp);
             } else
                 success = 2;
         } else
@@ -980,35 +973,24 @@ int C_RenderListClass::__LoadPreset(char* filename, int clear) {
     int success = 1;
     if (clear) clearRenders();
     if (data) {
-        //  OutputDebugString(filename);
-        HANDLE fp = CreateFile(filename,
-                               GENERIC_READ,
-                               FILE_SHARE_READ,
-                               NULL,
-                               OPEN_EXISTING,
-                               FILE_ATTRIBUTE_NORMAL,
-                               NULL);
-        if (fp != INVALID_HANDLE_VALUE) {
-            unsigned long int len = GetFileSize(fp, NULL);
-            if (len == 0xffffffff) len = 0;
-            if (!ReadFile(fp, data, min(len, 1024 * 1024), &len, NULL)) len = 0;
-            CloseHandle(fp);
+        FILE* fp = fopen(filename, "rb");
+        if (fp != NULL) {
+            fseek(fp, 0, SEEK_END);
+            unsigned long int len = ftell(fp);
+            fseek(fp, 0, SEEK_SET);
+            if (!fread(data, 1, min(len, 1024 * 1024), fp)) {
+                len = 0;
+            }
+            fclose(fp);
             if (len > strlen(sig_str) + 2 && !memcmp(data, sig_str, strlen(sig_str) - 2)
                 && data[strlen(sig_str) - 2] >= '1' && data[strlen(sig_str) - 2] <= '2'
                 && data[strlen(sig_str) - 1] == '\x1a') {
                 load_config(data + strlen(sig_str), len - strlen(sig_str));
                 success = 0;
-            } else {
-                //     if (len<=strlen(sig_str)+2) MessageBox(NULL,"Error laoding
-                //     preset: len",filename,MB_OK);
-                //       else MessageBox(NULL,"Error laoding preset:
-                //       signature",filename,MB_OK);
             }
         }
-        //  else MessageBox(NULL,"Error laoding preset: fopen",filename,MB_OK);
         free(data);
     }
-    //  else MessageBox(NULL,"Error laoding preset: MALLOC",filename,MB_OK);
     lock_unlock(g_render_cs);
     return success;
 }
