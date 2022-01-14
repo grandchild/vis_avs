@@ -35,6 +35,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "c__base.h"
 
+#include "../platform.h"
+
 #include <string>
 
 #define LIST_ID -2  // 0xfffffffe
@@ -119,17 +121,17 @@ class C_RenderListClass : public C_RBASE {
         int h;
         C_RBASE2* render;
 
-        void* hQuitHandle;
-        void* hThreads[MAX_SMP_THREADS];
-        void* hThreadSignalsStart[MAX_SMP_THREADS];
-        void* hThreadSignalsDone[MAX_SMP_THREADS];
+        signal_t* hQuitHandle;
+        thread_t* hThreads[MAX_SMP_THREADS];
+        signal_t* hThreadSignalsStart[MAX_SMP_THREADS];
+        signal_t* hThreadSignalsDone[MAX_SMP_THREADS];
 
         int threadTop;
 
     } _s_smp_parms;
 
     static _s_smp_parms smp_parms;
-    static long unsigned int __stdcall smp_threadProc(void* parm);
+    static uint32_t smp_threadProc(void* parm);
 
    public:
     static void smp_cleanupthreads();

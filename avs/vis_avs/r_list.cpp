@@ -38,7 +38,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "render.h"
 #include "undo.h"
 
-#include <windows.h>
+#include "../platform.h"
+
 #include <stdio.h>
 
 #define PUT_INT(y)                   \
@@ -308,18 +309,18 @@ void C_RenderListClass::unset_n_Context() {
 
 void C_RenderListClass::smp_cleanupthreads() {
     if (smp_parms.threadTop > 0) {
-        if (smp_parms.hQuitHandle) SetEvent(smp_parms.hQuitHandle);
+        if (smp_parms.hQuitHandle) signal_set(smp_parms.hQuitHandle);
 
-        WaitForMultipleObjects(smp_parms.threadTop, smp_parms.hThreads, TRUE, INFINITE);
+        thread_join_all(smp_parms.hThreads, smp_parms.threadTop, WAIT_INFINITE);
         int x;
         for (x = 0; x < smp_parms.threadTop; x++) {
-            CloseHandle(smp_parms.hThreads[x]);
-            CloseHandle(smp_parms.hThreadSignalsDone[x]);
-            CloseHandle(smp_parms.hThreadSignalsStart[x]);
+            thread_destroy(smp_parms.hThreads[x]);
+            signal_destroy(smp_parms.hThreadSignalsDone[x]);
+            signal_destroy(smp_parms.hThreadSignalsStart[x]);
         }
     }
 
-    if (smp_parms.hQuitHandle) CloseHandle(smp_parms.hQuitHandle);
+    if (smp_parms.hQuitHandle) signal_destroy(smp_parms.hQuitHandle);
 
     memset(&smp_parms, 0, sizeof(smp_parms));
 }
@@ -1057,8 +1058,7 @@ void C_RenderListClass::smp_Render(int minthreads,
                                    int h) {
     int x;
     smp_parms.nthreads = minthreads;
-    if (!smp_parms.hQuitHandle)
-        smp_parms.hQuitHandle = CreateEvent(NULL, TRUE, FALSE, NULL);
+    if (!smp_parms.hQuitHandle) smp_parms.hQuitHandle = signal_create_broadcast();
 
     smp_parms.vis_data_ptr = visdata;
     smp_parms.isBeat = isBeat;
@@ -1069,26 +1069,25 @@ void C_RenderListClass::smp_Render(int minthreads,
     smp_parms.render = render;
     for (x = 0; x < minthreads; x++) {
         if (x >= smp_parms.threadTop) {
-            unsigned long int id;
-            smp_parms.hThreadSignalsStart[x] = CreateEvent(NULL, FALSE, TRUE, NULL);
-            smp_parms.hThreadSignalsDone[x] = CreateEvent(NULL, FALSE, FALSE, NULL);
+            // unsigned long int id;
+            smp_parms.hThreadSignalsStart[x] = signal_create_single();
+            smp_parms.hThreadSignalsDone[x] = signal_create_single();
 
-            smp_parms.hThreads[x] =
-                CreateThread(NULL, 0, smp_threadProc, (void*)(x), 0, &id);
+            smp_parms.hThreads[x] = thread_create(smp_threadProc, (void*)(x));
             smp_parms.threadTop = x + 1;
         } else
-            SetEvent(smp_parms.hThreadSignalsStart[x]);
+            signal_set(smp_parms.hThreadSignalsStart[x]);
     }
-    WaitForMultipleObjects(
-        smp_parms.nthreads, smp_parms.hThreadSignalsDone, TRUE, INFINITE);
+    signal_wait_all(smp_parms.hThreadSignalsDone, smp_parms.nthreads, WAIT_INFINITE);
 }
 
-unsigned long int __stdcall C_RenderListClass::smp_threadProc(void* parm) {
+uint32_t C_RenderListClass::smp_threadProc(void* parm) {
     int which = (int)parm;
     void* hdls[2] = {smp_parms.hThreadSignalsStart[which], smp_parms.hQuitHandle};
     for (;;) {
-        if (WaitForMultipleObjects(2, hdls, FALSE, INFINITE) == WAIT_OBJECT_0 + 1)
+        if (signal_wait_any(hdls, 2, WAIT_INFINITE) == smp_parms.hQuitHandle) {
             return 0;
+        }
 
         smp_parms.render->smp_render(which,
                                      smp_parms.nthreads,
@@ -1099,7 +1098,7 @@ unsigned long int __stdcall C_RenderListClass::smp_threadProc(void* parm) {
                                      smp_parms.fbout,
                                      smp_parms.w,
                                      smp_parms.h);
-        SetEvent(smp_parms.hThreadSignalsDone[which]);
+        signal_set(smp_parms.hThreadSignalsDone[which]);
     }
 }
 
