@@ -138,7 +138,7 @@ IncludeCategories:
 
   # The headers for the current component. "r_*.h" files are only rarely used, for
   # things that are relevant _only_ to the render .cpp file but not to the UI code.
-  - Regex:        '"c_[^_].*\.h"'
+  - Regex:        '"[ce]_[^_].*\.h"'
     Priority:     0
   - Regex:        '"r_[^_].*\.h"'
     Priority:     0
