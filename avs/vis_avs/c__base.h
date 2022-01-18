@@ -32,7 +32,6 @@ class C_RBASE2 : public C_RBASE {
    public:
     C_RBASE2() {}
     virtual ~C_RBASE2(){};
-    int getRenderVer2() { return 2; }
     virtual int smp_getflags() { return 0; }  // return 1 to enable smp support
 
     // returns # of threads you desire, <= max_threads, or 0 to not do anything
