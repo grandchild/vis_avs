@@ -242,42 +242,6 @@ void C_RLibrary::add_dll(dlib_t* hlib,
     NumDLLFuncs++;
 }
 
-void add_dll_callback(const char* file, void* data) {
-    C_RLibrary* rlib = (C_RLibrary*)data;
-    char s[MAX_PATH];
-    dlib_t* hlib;
-    snprintf(s, MAX_PATH, "%s\\%s", g_path, file);
-    hlib = library_load(s);
-    if (hlib) {
-        int cre;
-        char* inf;
-
-        ape_set_info_func sei;
-        *(void**)&sei = library_get(hlib, "_AVS_APE_SetExtInfo");
-        if (sei) {
-            sei(hlib, &ext_info);
-        }
-        ape_retr_func retr;
-        *(void**)&retr = library_get(hlib, "_AVS_APE_RetrFuncEXT2");
-        if (retr && retr(hlib, &inf, &cre)) {
-            rlib->add_dll(hlib, (component_create_func)cre, inf, 1, NULL);
-        } else {
-            *(void**)&retr = library_get(hlib, "_AVS_APE_RetrFunc");
-            if (retr && retr(hlib, &inf, &cre)) {
-                rlib->add_dll(hlib, (component_create_func)cre, inf, 0, NULL);
-            } else {
-                library_unload(hlib);
-            }
-        }
-    }
-}
-
-void C_RLibrary::initdll() {
-    char* extension[1] = {".ape"};
-    find_files_by_extensions(
-        g_path, extension, 1, add_dll_callback, this, sizeof(C_RLibrary*));
-}
-
 int C_RLibrary::GetRendererDesc(int which, char* str) {
     *str = 0;
     if (which >= 0 && which < NumRetrFuncs) {
@@ -338,10 +302,8 @@ C_RLibrary::C_RLibrary() {
     NumDLLFuncs = 0;
     RetrFuncs = 0;
     NumRetrFuncs = 0;
-    ext_info.global_registers = NSEEL_getglobalregs();
 
     initfx();
-    initdll();
     initbuiltinape();
 }
 

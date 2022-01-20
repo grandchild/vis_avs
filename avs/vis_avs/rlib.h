@@ -58,7 +58,6 @@ class C_RLibrary {
 
     void add_dofx(void* rf, int has_r2);
     void initfx(void);
-    void initdll(void);
     void initbuiltinape(void);
 
    public:
