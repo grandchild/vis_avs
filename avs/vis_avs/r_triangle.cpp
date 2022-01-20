@@ -15,8 +15,6 @@
 #define TRIANGLE_MAX_Z             40000
 #define TRIANGLE_Z_INT_RESOLUTION  100000
 
-APEinfo* g_triangle_extinfo;
-
 TriangleDepthBuffer* C_Triangle::depth_buffer = NULL;
 unsigned int C_Triangle::instance_count = 0;
 
@@ -87,8 +85,8 @@ int C_Triangle::render(char visdata[2][2][576],
     this->depth_buffer->reset_if_needed(w, h, *this->code.vars.zbclear != 0.0);
     int triangle_count = round(*this->code.vars.n);
     if (triangle_count > 0) {
-        unsigned int blendmode = *g_triangle_extinfo->lineblendmode & 0xff;
-        unsigned int adjustable_blend = *g_triangle_extinfo->lineblendmode >> 8 & 0xff;
+        unsigned int blendmode = g_line_blend_mode & 0xff;
+        unsigned int adjustable_blend = g_line_blend_mode >> 8 & 0xff;
         double step = 1.0;
         if (triangle_count > 1) {
             step = 1.0 / (triangle_count - 1.0);
@@ -446,5 +444,3 @@ C_RBASE* R_Triangle(char* desc) {
     }
     return (C_RBASE*)new C_Triangle();
 }
-
-void R_Triangle_SetExtInfo(APEinfo* info) { g_triangle_extinfo = info; }

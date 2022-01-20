@@ -13,8 +13,6 @@
 #include <math.h>
 #include <stdio.h>
 
-APEinfo* g_extinfo = 0;
-
 int C_Texer2::instance_count = 0;
 std::vector<char*> C_Texer2::file_list;
 
@@ -272,7 +270,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
             // Prepare filter color
             T2_PREP_MASK_COLOR
 
-            switch (*(g_extinfo->lineblendmode) & 0xFF) {
+            switch (g_line_blend_mode & 0xFF) {
                 case OUT_REPLACE: {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
                     int tot = r2.right - r2.left;
@@ -512,7 +510,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     // it's used to calculate 256 - alpha, and if max_alpha = 255,
                     // then...
                     __int64 salpha = 0x0100010001000100;
-                    int t = ((*g_extinfo->lineblendmode) & 0xFF00) >> 8;
+                    int t = (g_line_blend_mode & 0xFF00) >> 8;
                     T2_SCALE_BLEND_AND_STORE_ALPHA
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
                     int tot = r2.right - r2.left;
@@ -687,7 +685,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
         if (this->config.mask) {
             // Second easiest path, masking, but no scaling
             T2_PREP_MASK_COLOR
-            switch (*(g_extinfo->lineblendmode) & 0xFF) {
+            switch (g_line_blend_mode & 0xFF) {
                 case OUT_REPLACE: {
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -994,7 +992,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     // it's used to calculate 256 - alpha, and if max_alpha = 255,
                     // then...
                     __int64 salpha = 0x0100010001000100;
-                    int t = ((*g_extinfo->lineblendmode) & 0xFF00) >> 8;
+                    int t = (g_line_blend_mode & 0xFF00) >> 8;
                     T2_NONSCALE_BLEND_AND_STORE_ALPHA
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -1148,7 +1146,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
         } else {
             // Most basic path, no scaling or masking
             T2_ZERO_MM5
-            switch (*(g_extinfo->lineblendmode) & 0xFF) {
+            switch (g_line_blend_mode & 0xFF) {
                 case OUT_REPLACE: {
                     // the push order was reversed (edi, esi) in the original code here
                     // (and only here) -- i assume that was not intentional...
@@ -1374,7 +1372,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     // it's used to calculate 256 - alpha, and if max_alpha = 255,
                     // then...
                     __int64 salpha = 0x0100010001000100;
-                    int t = ((*g_extinfo->lineblendmode) & 0xFF00) >> 8;
+                    int t = (g_line_blend_mode & 0xFF00) >> 8;
                     T2_NONSCALE_BLEND_AND_STORE_ALPHA
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -1737,5 +1735,3 @@ C_RBASE* R_Texer2(char* desc) {
     }
     return (C_RBASE*)new C_Texer2(TEXER_II_VERSION_CURRENT);
 }
-
-void R_Texer2_SetExtInfo(APEinfo* ptr) { g_extinfo = ptr; }

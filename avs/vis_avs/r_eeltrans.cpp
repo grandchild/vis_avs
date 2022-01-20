@@ -7,8 +7,6 @@
 #include <stdio.h>  // for logging
 #include <vector>
 
-APEinfo* g_eeltrans_extinfo = 0;
-
 char* C_EelTrans::logpath = NULL;
 bool C_EelTrans::log_enabled = false;
 bool C_EelTrans::translate_enabled = false;
@@ -108,8 +106,7 @@ C_EelTrans::C_EelTrans() {
             strcpy(logpath, "C:\\avslog");
         }
 
-        g_eeltrans_extinfo->set_compile_hooks(this->pre_compile_hook,
-                                              this->post_compile_hook);
+        NSEEL_set_compile_hooks(this->pre_compile_hook, this->post_compile_hook);
     } else {
         this->is_first_instance = false;
     }
@@ -129,7 +126,7 @@ C_EelTrans::~C_EelTrans() {
         }
     }
     if (this->num_instances == 0) {
-        g_eeltrans_extinfo->unset_compile_hooks();
+        NSEEL_unset_compile_hooks();
     }
     this->instances.erase(this);
 }
@@ -209,5 +206,3 @@ C_RBASE* R_EelTrans(char* desc) {
     }
     return (C_RBASE*)new C_EelTrans();
 }
-
-void R_EelTrans_SetExtInfo(APEinfo* ptr) { g_eeltrans_extinfo = ptr; }

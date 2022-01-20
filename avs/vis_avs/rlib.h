@@ -51,8 +51,6 @@ class C_RLibrary {
         char* idstring;
         C_RBASE* (*createfunc)(char* desc);
         int is_r2;
-        void (*set_info_func)(APEinfo* ape_info);
-
     } DLLInfo;
 
     DLLInfo* DLLFuncs;

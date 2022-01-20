@@ -191,23 +191,20 @@ void C_RLibrary::initbuiltinape(void) {
 #define ADD2(sym, name)              \
     extern C_RBASE* sym(char* desc); \
     add_dll(0, sym, name, 0, NULL)
-#define ADD_EXT(sym, name)                           \
-    extern C_RBASE* sym(char* desc);                 \
-    extern void sym##_SetExtInfo(APEinfo* ape_info); \
-    add_dll(0, sym, name, 0, sym##_SetExtInfo)
+
     ADD2(R_ChannelShift, "Channel Shift");
     ADD2(R_ColorReduction, "Color Reduction");
     ADD2(R_Multiplier, "Multiplier");
     ADD2(R_VideoDelay, "Holden04: Video Delay");
     ADD2(R_MultiDelay, "Holden05: Multi Delay");
     ADD2(R_Convolution, "Holden03: Convolution Filter");
-    ADD_EXT(R_Texer2, "Acko.net: Texer II");
+    ADD2(R_Texer2, "Acko.net: Texer II");
     ADD2(R_Normalise, "Trans: Normalise");
     ADD2(R_ColorMap, "Color Map");
     ADD2(R_AddBorders, "Virtual Effect: Addborders");
-    ADD_EXT(R_Triangle, "Render: Triangle");
-    ADD_EXT(R_EelTrans, "Misc: AVSTrans Automation");
-    ADD_EXT(R_GlobalVars, "Jheriko: Global");
+    ADD2(R_Triangle, "Render: Triangle");
+    ADD2(R_EelTrans, "Misc: AVSTrans Automation");
+    ADD2(R_GlobalVars, "Jheriko: Global");
     ADD2(R_MultiFilter, "Jheriko : MULTIFILTER");
     ADD2(R_Picture2, "Picture II");
     ADD2(R_FramerateLimiter, "VFX FRAMERATE LIMITER");
@@ -242,7 +239,6 @@ void C_RLibrary::add_dll(dlib_t* hlib,
     DLLFuncs[NumDLLFuncs].createfunc = cre;
     DLLFuncs[NumDLLFuncs].idstring = inf;
     DLLFuncs[NumDLLFuncs].is_r2 = is_r2;
-    DLLFuncs[NumDLLFuncs].set_info_func = set_info;
     NumDLLFuncs++;
 }
 
@@ -316,9 +312,6 @@ C_RBASE* C_RLibrary::CreateRenderer(int* which, int* has_r2) {
             if (DLLFuncs[x].idstring) {
                 if (!strncmp(p, DLLFuncs[x].idstring, 32)) {
                     *which = (int)DLLFuncs[x].idstring;
-                    if (DLLFuncs[x].set_info_func) {
-                        DLLFuncs[x].set_info_func(&ext_info);
-                    }
                     return DLLFuncs[x].createfunc(NULL);
                 }
             }

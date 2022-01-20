@@ -8,8 +8,6 @@
 
 #define IS_BEAT_MASK 0x01  // something else might be encoded in the higher bytes
 
-APEinfo* g_globalvars_extinfo = NULL;
-
 const int C_GlobalVars::max_regs_index = 99;
 const int C_GlobalVars::max_gmb_index = MEGABUF_BLOCKS * MEGABUF_ITEMSPERBLOCK - 1;
 
@@ -308,5 +306,3 @@ C_RBASE* R_GlobalVars(char* desc) {
     }
     return (C_RBASE*)new C_GlobalVars();
 }
-
-void R_GlobalVars_SetExtInfo(APEinfo* info) { g_globalvars_extinfo = info; }
