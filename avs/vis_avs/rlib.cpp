@@ -200,8 +200,7 @@ typedef void (*ape_set_info_func)(void*, APEinfo*);
 typedef int (*ape_retr_func)(void*, char**, int*);
 typedef C_RBASE* (*component_create_func)(char*);
 
-void C_RLibrary::add_dll(dlib_t* hlib,
-                         component_create_func cre,
+void C_RLibrary::add_dll(component_create_func cre,
                          char* inf,
                          int is_r2,
                          void (*set_info)(APEinfo*)) {
@@ -218,7 +217,6 @@ void C_RLibrary::add_dll(dlib_t* hlib,
         }
         DLLFuncs = newdl;
     }
-    DLLFuncs[NumDLLFuncs].hDllInstance = hlib;
     DLLFuncs[NumDLLFuncs].createfunc = cre;
     DLLFuncs[NumDLLFuncs].idstring = inf;
     DLLFuncs[NumDLLFuncs].is_r2 = is_r2;
@@ -296,32 +294,10 @@ C_RLibrary::~C_RLibrary() {
     NumRetrFuncs = 0;
 
     if (DLLFuncs) {
-        int x;
-        for (x = 0; x < NumDLLFuncs; x++) {
-            if (DLLFuncs[x].hDllInstance) {
-                library_unload(DLLFuncs[x].hDllInstance);
-            }
-        }
         free(DLLFuncs);
     }
     DLLFuncs = NULL;
     NumDLLFuncs = 0;
-}
-
-dlib_t* C_RLibrary::GetRendererInstance(int which, dlib_t* hThisInstance) {
-    if (which < DLLRENDERBASE || which == UNKN_ID || which == LIST_ID)
-        return hThisInstance;
-    int x;
-    char* p = (char*)which;
-    for (x = 0; x < NumDLLFuncs; x++) {
-        if (DLLFuncs[x].idstring) {
-            if (!strncmp(p, DLLFuncs[x].idstring, 32)) {
-                if (DLLFuncs[x].hDllInstance) return DLLFuncs[x].hDllInstance;
-                break;
-            }
-        }
-    }
-    return hThisInstance;
 }
 
 void* g_n_buffers[NBUF];

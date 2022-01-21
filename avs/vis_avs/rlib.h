@@ -47,7 +47,6 @@ class C_RLibrary {
     int NumRetrFuncs;
 
     typedef struct {
-        dlib_t* hDllInstance;
         char* idstring;
         C_RBASE* (*createfunc)(char* desc);
         int is_r2;
@@ -69,8 +68,7 @@ class C_RLibrary {
     C_RBASE* CreateRenderer(int* which, int* has_r2);
     dlib_t* GetRendererInstance(int which, dlib_t* hThisInstance);
     int GetRendererDesc(int which, char* str);
-    void add_dll(void*,
-                 class C_RBASE*(__cdecl*)(char*),
+    void add_dll(class C_RBASE*(__cdecl*)(char*),
                  char*,
                  int,
                  void (*set_info)(APEinfo*));

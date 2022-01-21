@@ -1333,18 +1333,15 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         if (tp && tp->render) {
                             SetDlgItemText(hwndDlg, IDC_EFNAME, tp->render->get_desc());
                             if (cur_hwnd) DestroyWindow(cur_hwnd);
-                            HINSTANCE render_instance =
-                                (HINSTANCE)g_render_library->GetRendererInstance(
-                                    tp->effect_index, g_hInstance);
                             g_current_render = (void*)tp->render;
                             C_Win32GuiComponent* ui_component =
                                 g_ui_library->get(tp->effect_index, g_current_render);
                             if (ui_component != NULL) {
                                 if (ui_component->uiprep != NULL) {
-                                    ui_component->uiprep(render_instance);
+                                    ui_component->uiprep(g_hInstance);
                                 }
                                 cur_hwnd = CreateDialog(
-                                    render_instance,
+                                    g_hInstance,
                                     MAKEINTRESOURCE(ui_component->dialog_resource_id),
                                     hwndDlg,
                                     ui_component->ui_handler);
