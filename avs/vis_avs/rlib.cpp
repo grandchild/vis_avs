@@ -167,23 +167,6 @@ static const struct {
                               {"Nullsoft Picture Rendering v1", 34},
                               {"Winamp Interf APE v1", 41}};
 
-static APEinfo ext_info = {
-    4,
-    0,
-    &g_line_blend_mode,
-    NSEEL_VM_alloc,
-    AVS_EEL_IF_VM_free,
-    AVS_EEL_IF_resetvars,
-    NSEEL_VM_regvar,
-    NSEEL_code_compile,
-    AVS_EEL_IF_Execute,
-    NSEEL_code_free,
-    NULL,
-    getGlobalBuffer,
-    NSEEL_set_compile_hooks,
-    NSEEL_unset_compile_hooks,
-};
-
 void C_RLibrary::initbuiltinape(void) {
 #define ADD(sym)                     \
     extern C_RBASE* sym(char* desc); \
