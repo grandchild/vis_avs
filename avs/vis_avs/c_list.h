@@ -156,13 +156,8 @@ class C_RenderListClass : public C_RBASE {
     int removeRenderFrom(T_RenderListType* r, int del);  // return 0 on success
     int insertRender(T_RenderListType* r, int index);    // return -1 on failure, actual
                                                          // position on success
-    int insertRenderBefore(T_RenderListType* r, T_RenderListType* before);  // return -1
-                                                                            // on
-                                                                            // failure,
-                                                                            // actual
-                                                                            // position
-                                                                            // on
-                                                                            // success
+    // return -1 on failure, actual position on success
+    int insertRenderBefore(T_RenderListType* r, T_RenderListType* before);
     void clearRenders(void);
     void freeBuffers();
 

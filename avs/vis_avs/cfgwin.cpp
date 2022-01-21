@@ -438,8 +438,8 @@ static BOOL CALLBACK DlgProc_Disp(HWND hwndDlg,
                 case IDC_CHECK2:
                     config_reuseonresize = !!IsDlgButtonChecked(hwndDlg, IDC_CHECK2);
                     return 0;
-                    //				case IDC_DONT_MIN_AVS:
-                    //				cfg_dont_min_avs=IsDlgButtonChecked(hwndDlg,IDC_DONT_MIN_AVS)?1:0;
+                    // case IDC_DONT_MIN_AVS:
+                    // cfg_dont_min_avs=IsDlgButtonChecked(hwndDlg,IDC_DONT_MIN_AVS)?1:0;
                 case IDC_DEFOVERLAYCOLOR:
                     cfg_bkgnd_render_color = 0x1F000F;
                     InvalidateRect(GetDlgItem(hwndDlg, IDC_OVERLAYCOLOR), NULL, FALSE);
