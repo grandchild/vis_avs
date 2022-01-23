@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "avs_eelif.h"
 #include "c__base.h"
+#include "effect.h"
 #include "files.h"
 #include "rlib.h"
 
@@ -75,7 +76,10 @@ void C_RBASE::save_string(unsigned char* data, int& pos, std::string& text) {
     }
 }
 
-void C_RLibrary::add_dofx(void* rf, int has_r2) {
+void C_RLibrary::add_dofx(void* rf,
+                          bool can_multithread,
+                          Effect_Info* (*create_info)(void) = NULL,
+                          Effect* (*create)(void) = NULL) {
     if ((NumRetrFuncs & 7) == 0 || !RetrFuncs) {
         void* newdl = (void*)malloc(sizeof(rfStruct) * (NumRetrFuncs + 8));
         if (!newdl) {
@@ -89,66 +93,75 @@ void C_RLibrary::add_dofx(void* rf, int has_r2) {
         }
         RetrFuncs = (rfStruct*)newdl;
     }
-    RetrFuncs[NumRetrFuncs].is_r2 = has_r2;
-    *((void**)&RetrFuncs[NumRetrFuncs].rf) = rf;
+    RetrFuncs[NumRetrFuncs].is_legacy = rf != NULL;
+    RetrFuncs[NumRetrFuncs].can_multithread = can_multithread;
+    *((void**)&RetrFuncs[NumRetrFuncs].create_legacy) = rf;
+    RetrFuncs[NumRetrFuncs].create_info = create_info;
+    RetrFuncs[NumRetrFuncs].create = create;
     NumRetrFuncs++;
 }
 
 // declarations for built-in effects
-#define DECLARE_EFFECT(name)           \
+#define DECLARE_EFFECT_LEGACY(name)    \
     extern C_RBASE*(name)(char* desc); \
-    add_dofx((void*)name, 0);
-#define DECLARE_EFFECT2(name)          \
+    add_dofx((void*)name, false);
+// multithreaded effects
+#define DECLARE_EFFECT_LEGACY_MT(name) \
     extern C_RBASE*(name)(char* desc); \
-    add_dofx((void*)name, 1);
+    add_dofx((void*)name, true);
+// effect-api-capable effects
+#define DECLARE_EFFECT_NEW(name)                \
+    extern Effect_Info* create_##name##_Info(); \
+    extern Effect* create_##name();             \
+    add_dofx(NULL, false, create_##name##_Info, create_##name);
 
 void C_RLibrary::initfx(void) {
-    DECLARE_EFFECT(R_SimpleSpectrum);
-    DECLARE_EFFECT(R_DotPlane);
-    DECLARE_EFFECT(R_OscStars);
-    DECLARE_EFFECT(R_FadeOut);
-    DECLARE_EFFECT(R_BlitterFB);
-    DECLARE_EFFECT(R_NFClear);
-    DECLARE_EFFECT2(R_Blur);
-    DECLARE_EFFECT(R_BSpin);
-    DECLARE_EFFECT(R_Parts);
-    DECLARE_EFFECT(R_RotBlit);
-    DECLARE_EFFECT(R_SVP);
-    DECLARE_EFFECT2(R_ColorFade);
-    DECLARE_EFFECT(R_ColorClip);
-    DECLARE_EFFECT(R_RotStar);
-    DECLARE_EFFECT(R_OscRings);
-    DECLARE_EFFECT2(R_Trans);
-    DECLARE_EFFECT(R_Scat);
-    DECLARE_EFFECT(R_DotGrid);
-    DECLARE_EFFECT(R_Stack);
-    DECLARE_EFFECT(R_DotFountain);
-    DECLARE_EFFECT2(R_Water);
-    DECLARE_EFFECT(R_Comment);
-    DECLARE_EFFECT2(R_Brightness);
-    DECLARE_EFFECT(R_Interleave);
-    DECLARE_EFFECT(R_Grain);
-    DECLARE_EFFECT(R_Clear);
-    DECLARE_EFFECT(R_Mirror);
-    DECLARE_EFFECT(R_StarField);
-    DECLARE_EFFECT(R_Text);
-    DECLARE_EFFECT(R_Bump);
-    DECLARE_EFFECT(R_Mosaic);
-    DECLARE_EFFECT(R_WaterBump);
-    DECLARE_EFFECT(R_AVI);
-    DECLARE_EFFECT(R_Bpm);
-    DECLARE_EFFECT(R_Picture);
-    DECLARE_EFFECT(R_DDM);
-    DECLARE_EFFECT(R_SScope);
-    DECLARE_EFFECT(R_Invert);
-    DECLARE_EFFECT(R_Onetone);
-    DECLARE_EFFECT(R_Timescope);
-    DECLARE_EFFECT(R_LineMode);
-    DECLARE_EFFECT(R_Interferences);
-    DECLARE_EFFECT(R_Shift);
-    DECLARE_EFFECT2(R_DMove);
-    DECLARE_EFFECT(R_FastBright);
-    DECLARE_EFFECT(R_DColorMod);
+    DECLARE_EFFECT_LEGACY(R_SimpleSpectrum);
+    DECLARE_EFFECT_LEGACY(R_DotPlane);
+    DECLARE_EFFECT_LEGACY(R_OscStars);
+    DECLARE_EFFECT_LEGACY(Fadeout);
+    DECLARE_EFFECT_LEGACY(R_BlitterFB);
+    DECLARE_EFFECT_LEGACY(R_NFClear);
+    DECLARE_EFFECT_LEGACY_MT(R_Blur);
+    DECLARE_EFFECT_LEGACY(R_BSpin);
+    DECLARE_EFFECT_LEGACY(R_Parts);
+    DECLARE_EFFECT_LEGACY(R_RotBlit);
+    DECLARE_EFFECT_LEGACY(R_SVP);
+    DECLARE_EFFECT_LEGACY_MT(R_ColorFade);
+    DECLARE_EFFECT_LEGACY(R_ColorClip);
+    DECLARE_EFFECT_LEGACY(R_RotStar);
+    DECLARE_EFFECT_LEGACY(R_OscRings);
+    DECLARE_EFFECT_LEGACY_MT(R_Trans);
+    DECLARE_EFFECT_LEGACY(R_Scat);
+    DECLARE_EFFECT_LEGACY(R_DotGrid);
+    DECLARE_EFFECT_LEGACY(R_Stack);
+    DECLARE_EFFECT_LEGACY(R_DotFountain);
+    DECLARE_EFFECT_LEGACY_MT(R_Water);
+    DECLARE_EFFECT_LEGACY(R_Comment);
+    DECLARE_EFFECT_LEGACY_MT(R_Brightness);
+    DECLARE_EFFECT_LEGACY(R_Interleave);
+    DECLARE_EFFECT_LEGACY(R_Grain);
+    DECLARE_EFFECT_LEGACY(R_Clear);
+    DECLARE_EFFECT_LEGACY(R_Mirror);
+    DECLARE_EFFECT_LEGACY(R_StarField);
+    DECLARE_EFFECT_LEGACY(R_Text);
+    DECLARE_EFFECT_LEGACY(R_Bump);
+    DECLARE_EFFECT_LEGACY(R_Mosaic);
+    DECLARE_EFFECT_LEGACY(R_WaterBump);
+    DECLARE_EFFECT_LEGACY(R_AVI);
+    DECLARE_EFFECT_LEGACY(R_Bpm);
+    DECLARE_EFFECT_LEGACY(R_Picture);
+    DECLARE_EFFECT_LEGACY(R_DDM);
+    DECLARE_EFFECT_LEGACY(R_SScope);
+    DECLARE_EFFECT_LEGACY(R_Invert);
+    DECLARE_EFFECT_LEGACY(R_Onetone);
+    DECLARE_EFFECT_LEGACY(R_Timescope);
+    DECLARE_EFFECT_LEGACY(R_LineMode);
+    DECLARE_EFFECT_LEGACY(R_Interferences);
+    DECLARE_EFFECT_LEGACY(R_Shift);
+    DECLARE_EFFECT_LEGACY_MT(R_DMove);
+    DECLARE_EFFECT_LEGACY(R_FastBright);
+    DECLARE_EFFECT_LEGACY(R_DColorMod);
 }
 
 static const struct {
@@ -167,43 +180,13 @@ static const struct {
                               {"Nullsoft Picture Rendering v1", 34},
                               {"Winamp Interf APE v1", 41}};
 
-void C_RLibrary::initbuiltinape(void) {
-#define ADD(sym)                     \
-    extern C_RBASE* sym(char* desc); \
-    add_dll(0, sym, "Builtin_" #sym, 0, NULL)
-#define ADD2(sym, name)              \
-    extern C_RBASE* sym(char* desc); \
-    add_dll(0, sym, name, 0, NULL)
+typedef C_RBASE* (*create_legacy_func)(char*);
 
-    ADD2(R_ChannelShift, "Channel Shift");
-    ADD2(R_ColorReduction, "Color Reduction");
-    ADD2(R_Multiplier, "Multiplier");
-    ADD2(R_VideoDelay, "Holden04: Video Delay");
-    ADD2(R_MultiDelay, "Holden05: Multi Delay");
-    ADD2(R_Convolution, "Holden03: Convolution Filter");
-    ADD2(R_Texer2, "Acko.net: Texer II");
-    ADD2(R_Normalise, "Trans: Normalise");
-    ADD2(R_ColorMap, "Color Map");
-    ADD2(R_AddBorders, "Virtual Effect: Addborders");
-    ADD2(R_Triangle, "Render: Triangle");
-    ADD2(R_EelTrans, "Misc: AVSTrans Automation");
-    ADD2(R_GlobalVars, "Jheriko: Global");
-    ADD2(R_MultiFilter, "Jheriko : MULTIFILTER");
-    ADD2(R_Picture2, "Picture II");
-    ADD2(R_FramerateLimiter, "VFX FRAMERATE LIMITER");
-    ADD2(R_Texer, "Texer");
-#undef ADD
-#undef ADD2
-}
-
-typedef void (*ape_set_info_func)(void*, APEinfo*);
-typedef int (*ape_retr_func)(void*, char**, int*);
-typedef C_RBASE* (*component_create_func)(char*);
-
-void C_RLibrary::add_dll(component_create_func cre,
-                         char* inf,
-                         int is_r2,
-                         void (*set_info)(APEinfo*)) {
+void C_RLibrary::add_dll(create_legacy_func create_legacy,
+                         char* ape_id,
+                         bool can_multithread = false,
+                         Effect_Info* (*create_info)(void) = NULL,
+                         Effect* (*create)(void) = NULL) {
     if ((NumDLLFuncs & 7) == 0 || !DLLFuncs) {
         DLLInfo* newdl = (DLLInfo*)malloc(sizeof(DLLInfo) * (NumDLLFuncs + 8));
         if (!newdl) {
@@ -217,47 +200,106 @@ void C_RLibrary::add_dll(component_create_func cre,
         }
         DLLFuncs = newdl;
     }
-    DLLFuncs[NumDLLFuncs].createfunc = cre;
-    DLLFuncs[NumDLLFuncs].idstring = inf;
-    DLLFuncs[NumDLLFuncs].is_r2 = is_r2;
+    DLLFuncs[NumDLLFuncs].is_legacy = create_legacy != NULL;
+    DLLFuncs[NumDLLFuncs].can_multithread = can_multithread;
+    DLLFuncs[NumDLLFuncs].idstring = ape_id;
+    DLLFuncs[NumDLLFuncs].create_legacy = create_legacy;
+    DLLFuncs[NumDLLFuncs].create_info = create_info;
+    DLLFuncs[NumDLLFuncs].create = create;
     NumDLLFuncs++;
+}
+
+void C_RLibrary::initbuiltinape(void) {
+#define ADD(name, ape_id)             \
+    extern C_RBASE* name(char* desc); \
+    this->add_dll(name, ape_id)
+#define ADD_NEW(name, ape_id)                   \
+    extern Effect_Info* create_##name##_Info(); \
+    extern Effect* create_##name();             \
+    this->add_dll(NULL, ape_id, false, create_##name##_Info, create_##name)
+
+    ADD(R_ChannelShift, "Channel Shift");
+    ADD(R_ColorReduction, "Color Reduction");
+    ADD(R_Multiplier, "Multiplier");
+    ADD(R_VideoDelay, "Holden04: Video Delay");
+    ADD(R_MultiDelay, "Holden05: Multi Delay");
+    ADD(R_Convolution, "Holden03: Convolution Filter");
+    ADD(R_Texer2, "Acko.net: Texer II");
+    ADD(R_Normalise, "Trans: Normalise");
+    ADD(R_ColorMap, "Color Map");
+    ADD(R_AddBorders, "Virtual Effect: Addborders");
+    ADD(R_Triangle, "Render: Triangle");
+    ADD(R_EelTrans, "Misc: AVSTrans Automation");
+    ADD(R_GlobalVars, "Jheriko: Global");
+    ADD(R_MultiFilter, "Jheriko : MULTIFILTER");
+    ADD(R_Picture2, "Picture II");
+    ADD(R_FramerateLimiter, "VFX FRAMERATE LIMITER");
+    ADD(R_Texer, "Texer");
+#undef ADD
 }
 
 int C_RLibrary::GetRendererDesc(int which, char* str) {
     *str = 0;
     if (which >= 0 && which < NumRetrFuncs) {
-        RetrFuncs[which].rf(str);
+        if (RetrFuncs[which].create_legacy != NULL) {
+            RetrFuncs[which].create_legacy(str);
+        } else {
+            Effect* effect = RetrFuncs[which].create();
+            effect->set_desc(str);
+            delete effect;
+        }
         return 1;
     }
     if (which >= DLLRENDERBASE) {
         which -= DLLRENDERBASE;
         if (which < NumDLLFuncs) {
-            DLLFuncs[which].createfunc(str);
+            if (DLLFuncs[which].create_legacy != NULL) {
+                DLLFuncs[which].create_legacy(str);
+            } else {
+                Effect* effect = DLLFuncs[which].create();
+                effect->set_desc(str);
+                delete effect;
+            }
             return (int)DLLFuncs[which].idstring;
         }
     }
     return 0;
 }
 
-C_RBASE* C_RLibrary::CreateRenderer(int* which, int* has_r2) {
-    if (has_r2) *has_r2 = 0;
-
+Legacy_Effect_Proxy C_RLibrary::CreateRenderer(int* which) {
     if (*which >= 0 && *which < NumRetrFuncs) {
-        if (has_r2) *has_r2 = RetrFuncs[*which].is_r2;
-        return RetrFuncs[*which].rf(NULL);
+        if (RetrFuncs[*which].is_legacy) {
+            return Legacy_Effect_Proxy(RetrFuncs[*which].create_legacy(NULL),
+                                       NULL,
+                                       *which,
+                                       RetrFuncs[*which].can_multithread);
+        } else {
+            return Legacy_Effect_Proxy(NULL, RetrFuncs[*which].create(), *which);
+        }
     }
 
-    if (*which == LIST_ID) return (C_RBASE*)new C_RenderListClass();
+    if (*which == LIST_ID)
+        return Legacy_Effect_Proxy(
+            (C_RBASE*)new C_RenderListClass(), NULL, *which, false);
 
     if (*which >= DLLRENDERBASE) {
         int x;
         char* p = (char*)*which;
         for (x = 0; x < NumDLLFuncs; x++) {
-            if (!DLLFuncs[x].createfunc) break;
+            if (!DLLFuncs[x].create_legacy && !DLLFuncs[x].create) {
+                break;
+            }
             if (DLLFuncs[x].idstring) {
                 if (!strncmp(p, DLLFuncs[x].idstring, 32)) {
                     *which = (int)DLLFuncs[x].idstring;
-                    return DLLFuncs[x].createfunc(NULL);
+                    if (DLLFuncs[x].is_legacy) {
+                        return Legacy_Effect_Proxy(DLLFuncs[x].create_legacy(NULL),
+                                                   NULL,
+                                                   *which,
+                                                   DLLFuncs[x].can_multithread);
+                    } else {
+                        return Legacy_Effect_Proxy(NULL, DLLFuncs[x].create(), *which);
+                    }
                 }
             }
         }
@@ -266,8 +308,15 @@ C_RBASE* C_RLibrary::CreateRenderer(int* which, int* has_r2) {
              x++) {
             if (!strncmp(p, NamedApeToBuiltinTrans[x].id, 32)) {
                 *which = NamedApeToBuiltinTrans[x].newidx;
-                if (has_r2) *has_r2 = RetrFuncs[*which].is_r2;
-                return RetrFuncs[*which].rf(NULL);
+                if (RetrFuncs[*which].is_legacy) {
+                    return Legacy_Effect_Proxy(RetrFuncs[*which].create_legacy(NULL),
+                                               NULL,
+                                               *which,
+                                               RetrFuncs[*which].can_multithread);
+                } else {
+                    return Legacy_Effect_Proxy(
+                        NULL, RetrFuncs[*which].create(), *which);
+                }
             }
         }
     }
@@ -275,7 +324,7 @@ C_RBASE* C_RLibrary::CreateRenderer(int* which, int* has_r2) {
     *which = UNKN_ID;
     C_UnknClass* p = new C_UnknClass();
     p->SetID(r, (r >= DLLRENDERBASE) ? (char*)r : (char*)"");
-    return (C_RBASE*)p;
+    return Legacy_Effect_Proxy(p, NULL, *which);
 }
 
 C_RLibrary::C_RLibrary() {

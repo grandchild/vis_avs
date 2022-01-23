@@ -33,29 +33,39 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _RLIB_H_
 
 #include "ape.h"
+#include "effect.h"
 
 #define DLLRENDERBASE 16384
 
 class C_RLibrary {
    protected:
     typedef struct {
-        C_RBASE* (*rf)(char* desc);
-        int is_r2;
+        bool is_legacy;
+        bool can_multithread;
+        C_RBASE* (*create_legacy)(char* desc);
+        Effect_Info* (*create_info)(void);
+        Effect* (*create)(void);
     } rfStruct;
     rfStruct* RetrFuncs;
 
     int NumRetrFuncs;
 
     typedef struct {
+        bool is_legacy;
+        bool can_multithread;
         char* idstring;
-        C_RBASE* (*createfunc)(char* desc);
-        int is_r2;
+        C_RBASE* (*create_legacy)(char* desc);
+        Effect_Info* (*create_info)(void);
+        Effect* (*create)(void);
     } DLLInfo;
 
     DLLInfo* DLLFuncs;
     int NumDLLFuncs;
 
-    void add_dofx(void* rf, int has_r2);
+    void add_dofx(void* rf,
+                  bool can_multithread,
+                  Effect_Info* (*create_info)(void),
+                  Effect* (*create)(void));
     void initfx(void);
     void initbuiltinape(void);
 
@@ -65,13 +75,13 @@ class C_RLibrary {
     // if which is >= DLLRENDERBASE
     // returns "id" of DLL. which is used to enumerate. str is desc
     // otherwise, returns 1 on success, 0 on error
-    C_RBASE* CreateRenderer(int* which, int* has_r2);
-    dlib_t* GetRendererInstance(int which, dlib_t* hThisInstance);
+    Legacy_Effect_Proxy CreateRenderer(int* which);
     int GetRendererDesc(int which, char* str);
-    void add_dll(class C_RBASE*(__cdecl*)(char*),
-                 char*,
-                 int,
-                 void (*set_info)(APEinfo*));
+    void add_dll(C_RBASE* (*create_legacy)(char*),
+                 char* ape_id,
+                 bool can_multithread,
+                 Effect_Info* (*create_info)(void),
+                 Effect* (*create)(void));
 };
 
 #endif  // _RLIB_H_

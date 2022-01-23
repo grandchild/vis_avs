@@ -34,12 +34,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "r_defs.h"
 
 #include "c__base.h"
+#include "effect.h"
 
 #include "../platform.h"
 
 #include <string>
-
-#define LIST_ID -2  // 0xfffffffe
 
 extern unsigned char blendtable[256][256];
 extern bool blendtableInited;
@@ -52,9 +51,8 @@ class C_RenderListClass : public C_RBASE {
 
    public:
     typedef struct {
-        C_RBASE* render;
+        Legacy_Effect_Proxy effect;
         int effect_index;
-        int has_rbase2;
     } T_RenderListType;
 
    protected:
@@ -104,7 +102,7 @@ class C_RenderListClass : public C_RBASE {
 #define MAX_SMP_THREADS 8
     // smp stuff
     void smp_Render(int minthreads,
-                    C_RBASE2* render,
+                    Legacy_Effect_Proxy* render,
                     char visdata[2][2][576],
                     int isBeat,
                     int* framebuffer,
@@ -119,7 +117,7 @@ class C_RenderListClass : public C_RBASE {
         int* fbout;
         int w;
         int h;
-        C_RBASE2* render;
+        Legacy_Effect_Proxy* render;
 
         signal_t* hQuitHandle;
         thread_t* hThreads[MAX_SMP_THREADS];

@@ -1226,8 +1226,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     }
                     if (dest_handle != g_dragsource_item && recurse_okay) {
                         C_RenderListClass* s =
-                            (C_RenderListClass*)source_parent->render;
-                        C_RenderListClass* d = (C_RenderListClass*)dest_parent->render;
+                            (C_RenderListClass*)source_parent->effect.legacy_effect;
+                        C_RenderListClass* d =
+                            (C_RenderListClass*)dest_parent->effect.legacy_effect;
                         int a = s->findRender(source);
                         int b = d->findRender(dest);
                         int err = 1;
@@ -1253,7 +1254,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         TV_INSERTSTRUCT is = {};
                         is.hParent = dest_parent_handle;
                         is.item.mask = TVIF_PARAM | TVIF_TEXT | TVIF_CHILDREN;
-                        is.item.pszText = source->render->get_desc();
+                        is.item.pszText = source->effect.get_desc();
                         is.item.cChildren = source->effect_index == LIST_ID ? 1 : 0;
                         is.item.lParam = (int)source;
 
@@ -1270,7 +1271,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
                         HTREEITEM newi = TreeView_InsertItem(hwnd, &is);
                         if (source->effect_index == LIST_ID) {
-                            _do_add(hwnd, newi, (C_RenderListClass*)source->render);
+                            _do_add(hwnd,
+                                    newi,
+                                    (C_RenderListClass*)source->effect.legacy_effect);
                             if (expand)
                                 SendMessage(hwnd, TVM_EXPAND, TVE_EXPAND, (long)newi);
                         }
@@ -1330,10 +1333,10 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                             (C_RenderListClass::T_RenderListType*)i.lParam;
 
                         is_aux_wnd = 0;
-                        if (tp && tp->render) {
-                            SetDlgItemText(hwndDlg, IDC_EFNAME, tp->render->get_desc());
+                        if (tp && tp->effect.valid()) {
+                            SetDlgItemText(hwndDlg, IDC_EFNAME, tp->effect.get_desc());
                             if (cur_hwnd) DestroyWindow(cur_hwnd);
-                            g_current_render = (void*)tp->render;
+                            g_current_render = tp->effect.void_ref();
                             C_Win32GuiComponent* ui_component =
                                 g_ui_library->get(tp->effect_index, g_current_render);
                             if (ui_component != NULL) {
@@ -1560,10 +1563,11 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 wsprintf(temp, "%s%s.avs", g_path, buf);
                                 r = new C_RenderListClass();
                                 if (!r->__LoadPreset(temp, 1)) {
-                                    ren.render = (C_RBASE*)r;
+                                    ren.effect = (C_RBASE*)r;
+                                    ren.effect_index = LIST_ID;
                                 } else {
                                     delete r;
-                                    ren.render = NULL;
+                                    ren.effect.invalidate();
                                 }
                             }
                         } else {
@@ -1571,15 +1575,16 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                             mi.cbSize = sizeof(mi);
                             mi.fMask = MIIM_DATA;
                             GetMenuItemInfo(hAddMenu, t, FALSE, &mi);
-                            if (mi.dwItemData != 0xffffffff)  // effect
-                            {
-                                ren.effect_index = mi.dwItemData;
-                                ren.render = g_render_library->CreateRenderer(
-                                    &ren.effect_index, &ren.has_rbase2);
+                            if (mi.dwItemData != 0xffffffff) {
+                                int effect_index_tmp = mi.dwItemData;
+                                ren.effect =
+                                    g_render_library->CreateRenderer(&effect_index_tmp);
+                                ren.effect_index = effect_index_tmp;
+                                mi.dwItemData = effect_index_tmp;
                             }
                         }
 
-                        if (ren.render) {
+                        if (ren.effect.valid()) {
                             int insert_pos = 0;
                             HTREEITEM hTreeItem =
                                 TreeView_GetSelection(GetDlgItem(hwndDlg, IDC_TREE1));
@@ -1600,7 +1605,8 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 C_RenderListClass::T_RenderListType* tp =
                                     (C_RenderListClass::T_RenderListType*)i.lParam;
                                 if (tp->effect_index == LIST_ID) {
-                                    parentrender = (C_RenderListClass*)tp->render;
+                                    parentrender =
+                                        (C_RenderListClass*)tp->effect.legacy_effect;
                                     parenthandle = hTreeItem;
                                 } else {
                                     HTREEITEM hParent = TreeView_GetParent(
@@ -1622,13 +1628,14 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                             (C_RenderListClass::T_RenderListType*)
                                                 i2.lParam;
                                         parentrender =
-                                            (C_RenderListClass*)tparent->render;
+                                            (C_RenderListClass*)
+                                                tparent->effect.legacy_effect;
                                         parenthandle = hParent;
                                     }
                                     for (insert_pos = 0;
                                          insert_pos < parentrender->getNumRenders()
-                                         && parentrender->getRender(insert_pos)->render
-                                                != tp->render;
+                                         && parentrender->getRender(insert_pos)->effect
+                                                != tp->effect;
                                          insert_pos++)
                                         ;
                                 }
@@ -1644,7 +1651,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                             TV_INSERTSTRUCT is = {};
                             is.hParent = parenthandle;
                             is.item.mask = TVIF_PARAM | TVIF_TEXT | TVIF_CHILDREN;
-                            is.item.pszText = ren.render->get_desc();
+                            is.item.pszText = ren.effect.get_desc();
                             is.item.cChildren = newt->effect_index == LIST_ID ? 1 : 0;
                             is.item.lParam = (int)newt;
                             if (!hTreeItem || parenthandle == hTreeItem)
@@ -1661,7 +1668,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                             if (ren.effect_index == LIST_ID)
                                 _do_add(GetDlgItem(hwndDlg, IDC_TREE1),
                                         newh,
-                                        (C_RenderListClass*)ren.render);
+                                        (C_RenderListClass*)ren.effect.legacy_effect);
 
                             // Always do undo last.
                             KillTimer(hwndDlg, 69);
@@ -1705,7 +1712,8 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 TreeView_GetItem(GetDlgItem(hwndDlg, IDC_TREE1), &i2);
                                 C_RenderListClass::T_RenderListType* tparent =
                                     (C_RenderListClass::T_RenderListType*)i2.lParam;
-                                parentrender = (C_RenderListClass*)tparent->render;
+                                parentrender =
+                                    (C_RenderListClass*)tparent->effect.legacy_effect;
                                 lock(g_render_cs);
                                 if (!parentrender->removeRenderFrom(tp, 1)) {
                                     TreeView_DeleteItem(GetDlgItem(hwndDlg, IDC_TREE1),
@@ -1735,10 +1743,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         TreeView_GetItem(GetDlgItem(hwndDlg, IDC_TREE1), &i);
                         C_RenderListClass::T_RenderListType* tp =
                             (C_RenderListClass::T_RenderListType*)i.lParam;
-                        ren.effect_index = tp->effect_index;
-                        ren.render = g_render_library->CreateRenderer(&ren.effect_index,
-                                                                      &ren.has_rbase2);
-                        if (ren.render) {
+                        ren.effect =
+                            g_render_library->CreateRenderer(&tp->effect_index);
+                        if (ren.effect.valid()) {
                             HTREEITEM hParent = TreeView_GetParent(
                                 GetDlgItem(hwndDlg, IDC_TREE1), hTreeItem);
 
@@ -1750,19 +1757,19 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 C_RenderListClass::T_RenderListType* tparent =
                                     (C_RenderListClass::T_RenderListType*)i2.lParam;
                                 C_RenderListClass* parentrender =
-                                    (C_RenderListClass*)tparent->render;
+                                    (C_RenderListClass*)tparent->effect.legacy_effect;
                                 for (insert_pos = 0;
                                      insert_pos < parentrender->getNumRenders()
-                                     && parentrender->getRender(insert_pos)->render
-                                            != tp->render;
+                                     && parentrender->getRender(insert_pos)->effect
+                                            != tp->effect;
                                      insert_pos++)
                                     ;
                                 insert_pos++;
                                 unsigned char* buf = (unsigned char*)calloc(
                                     1024 * 1024, sizeof(unsigned char));
                                 if (buf) {
-                                    int len = tp->render->save_config(buf);
-                                    ren.render->load_config(buf, len);
+                                    int len = tp->effect.save_config(buf);
+                                    ren.effect.load_config(buf, len);
                                     free(buf);
                                 }
                                 lock(g_render_cs);
@@ -1777,18 +1784,18 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 is.hParent = hParent;
                                 is.hInsertAfter = hTreeItem;
                                 is.item.mask = TVIF_PARAM | TVIF_TEXT | TVIF_CHILDREN;
-                                is.item.pszText = ren.render->get_desc();
-                                is.item.cChildren =
-                                    newt->effect_index == LIST_ID ? 1 : 0;
+                                is.item.pszText = ren.effect.get_desc();
+                                is.item.cChildren = newt->effect.is_list() ? 1 : 0;
                                 is.item.lParam = (int)newt;
                                 HTREEITEM newh = TreeView_InsertItem(
                                     GetDlgItem(hwndDlg, IDC_TREE1), &is);
                                 TreeView_Select(
                                     GetDlgItem(hwndDlg, IDC_TREE1), newh, TVGN_CARET);
                                 if (ren.effect_index == LIST_ID)
-                                    _do_add(GetDlgItem(hwndDlg, IDC_TREE1),
-                                            newh,
-                                            (C_RenderListClass*)ren.render);
+                                    _do_add(
+                                        GetDlgItem(hwndDlg, IDC_TREE1),
+                                        newh,
+                                        (C_RenderListClass*)ren.effect.legacy_effect);
                             }
                         }
                         // Always save undo last.
@@ -1858,13 +1865,13 @@ static void _do_add(HWND hwnd, HTREEITEM h, C_RenderListClass* list) {
             is.hParent = h;
             is.hInsertAfter = TVI_LAST;
             is.item.mask = TVIF_PARAM | TVIF_TEXT | TVIF_CHILDREN;
-            is.item.pszText = t->render->get_desc();
+            is.item.pszText = t->effect.get_desc();
             is.item.cChildren = t->effect_index == LIST_ID ? 1 : 0;
             is.item.lParam = (int)newt;
 
             HTREEITEM h2 = TreeView_InsertItem(hwnd, &is);
             if (t->effect_index == LIST_ID) {
-                _do_add(hwnd, h2, (C_RenderListClass*)t->render);
+                _do_add(hwnd, h2, (C_RenderListClass*)t->effect.legacy_effect);
             }
         }
     }
@@ -1917,7 +1924,7 @@ void CfgWnd_Populate(int force) {
         C_RenderListClass::T_RenderListType* newt =
             (C_RenderListClass::T_RenderListType*)malloc(
                 sizeof(C_RenderListClass::T_RenderListType));
-        newt->render = g_render_effects;
+        newt->effect = g_render_effects;
         newt->effect_index = LIST_ID;
         TV_INSERTSTRUCT is;
         memset(&is, 0, sizeof(is));

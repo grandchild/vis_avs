@@ -122,13 +122,13 @@ void C_RenderListClass::load_config(unsigned char* data, int len) {
         char s[33];
         T_RenderListType t;
         int l_len;
-        t.effect_index = GET_INT();
+        int effect_index = GET_INT();
         pos += 4;
-        if (t.effect_index >= DLLRENDERBASE) {
+        if (effect_index >= DLLRENDERBASE) {
             if (pos + 32 > len) break;
             memcpy(s, data + pos, 32);
             s[32] = 0;
-            t.effect_index = (int)s;
+            effect_index = (int)s;
             pos += 32;
         }
         if (pos + 4 > len) break;
@@ -138,13 +138,14 @@ void C_RenderListClass::load_config(unsigned char* data, int len) {
 
         // special case for new 2.81+ codable effect list. saved as an effect, but
         // loaded into this very EL right here.
-        if (ext > 5 && t.effect_index >= DLLRENDERBASE
+        if (ext > 5 && effect_index >= DLLRENDERBASE
             && !memcmp(s, extsigstr, strlen(extsigstr) + 1)) {
             load_config_code(data + pos, l_len);
         } else {
-            t.render = g_render_library->CreateRenderer(&t.effect_index, &t.has_rbase2);
-            if (t.render) {
-                t.render->load_config(data + pos, l_len);
+            t.effect = g_render_library->CreateRenderer(&effect_index);
+            t.effect_index = effect_index;
+            if (t.effect.valid()) {
+                t.effect.load_config(data + pos, l_len);
                 insertRender(&t, -1);
             }
         }
@@ -210,7 +211,7 @@ int C_RenderListClass::save_config_ex(unsigned char* data, int rootsave) {
         int t;
         int idx = renders[x].effect_index;
         if (idx == UNKN_ID) {
-            C_UnknClass* r = (C_UnknClass*)renders[x].render;
+            C_UnknClass* r = (C_UnknClass*)renders[x].effect.legacy_effect;
             if (!r->idString[0]) {
                 PUT_INT(r->id);
                 pos += 4;
@@ -231,7 +232,7 @@ int C_RenderListClass::save_config_ex(unsigned char* data, int rootsave) {
             }
         }
 
-        t = renders[x].render->save_config(data + pos + 4);
+        t = renders[x].effect.save_config(data + pos + 4);
         PUT_INT(t);
         pos += 4 + t;
     }
@@ -445,28 +446,28 @@ int C_RenderListClass::render(char visdata[2][2][576],
         for (x = 0; x < num_renders; x++) {
             int t = 0;
             int smp_max_threads;
-            C_RBASE2* rb2;
+            Legacy_Effect_Proxy render = renders[x].effect;
 
-            if (renders[x].has_rbase2
-                && (smp_max_threads = g_config_smp ? g_config_smp_mt : 0) > 1
-                && ((rb2 = (C_RBASE2*)renders[x].render)->smp_getflags() & 1)) {
+            if (g_config_smp && render.can_multithread() && g_config_smp_mt > 1) {
+                smp_max_threads = g_config_smp;
+                render = renders[x].effect;
                 if (smp_max_threads > MAX_SMP_THREADS)
                     smp_max_threads = MAX_SMP_THREADS;
 
                 int nt = smp_max_threads;
-                nt = rb2->smp_begin(nt,
-                                    visdata,
-                                    isBeat,
-                                    s ? fbout : framebuffer,
-                                    s ? framebuffer : fbout,
-                                    w,
-                                    h);
+                nt = render.smp_begin(nt,
+                                      visdata,
+                                      isBeat,
+                                      s ? fbout : framebuffer,
+                                      s ? framebuffer : fbout,
+                                      w,
+                                      h);
                 if (!is_preinit && nt > 0) {
                     if (nt > smp_max_threads) nt = smp_max_threads;
 
                     // launch threads
                     smp_Render(nt,
-                               rb2,
+                               &render,
                                visdata,
                                isBeat,
                                s ? fbout : framebuffer,
@@ -474,33 +475,33 @@ int C_RenderListClass::render(char visdata[2][2][576],
                                w,
                                h);
 
-                    t = rb2->smp_finish(visdata,
-                                        isBeat,
-                                        s ? fbout : framebuffer,
-                                        s ? framebuffer : fbout,
-                                        w,
-                                        h);
+                    t = render.smp_finish(visdata,
+                                          isBeat,
+                                          s ? fbout : framebuffer,
+                                          s ? framebuffer : fbout,
+                                          w,
+                                          h);
                 }
 
             } else {
                 if (g_config_seh && renders[x].effect_index != LIST_ID) {
                     try {
-                        t = renders[x].render->render(visdata,
-                                                      isBeat,
-                                                      s ? fbout : framebuffer,
-                                                      s ? framebuffer : fbout,
-                                                      w,
-                                                      h);
+                        t = render.render(visdata,
+                                          isBeat,
+                                          s ? fbout : framebuffer,
+                                          s ? framebuffer : fbout,
+                                          w,
+                                          h);
                     } catch (...) {
                         t = 0;
                     }
                 } else {
-                    t = renders[x].render->render(visdata,
-                                                  isBeat,
-                                                  s ? fbout : framebuffer,
-                                                  s ? framebuffer : fbout,
-                                                  w,
-                                                  h);
+                    t = render.render(visdata,
+                                      isBeat,
+                                      s ? fbout : framebuffer,
+                                      s ? framebuffer : fbout,
+                                      w,
+                                      h);
                 }
             }
 
@@ -677,27 +678,26 @@ int C_RenderListClass::render(char visdata[2][2][576],
         int t = 0;
 
         int smp_max_threads;
-        C_RBASE2* rb2;
+        Legacy_Effect_Proxy render = renders[x].effect;
 
-        if (renders[x].has_rbase2
-            && (smp_max_threads = g_config_smp ? g_config_smp_mt : 0) > 1
-            && ((rb2 = (C_RBASE2*)renders[x].render)->smp_getflags() & 1)) {
+        if (g_config_smp && render.can_multithread() && g_config_smp_mt > 1) {
+            smp_max_threads = g_config_smp_mt;
             if (smp_max_threads > MAX_SMP_THREADS) smp_max_threads = MAX_SMP_THREADS;
 
             int nt = smp_max_threads;
-            nt = rb2->smp_begin(nt,
-                                visdata,
-                                isBeat,
-                                s ? fbout : framebuffer,
-                                s ? framebuffer : fbout,
-                                w,
-                                h);
+            nt = render.smp_begin(nt,
+                                  visdata,
+                                  isBeat,
+                                  s ? fbout : framebuffer,
+                                  s ? framebuffer : fbout,
+                                  w,
+                                  h);
             if (!is_preinit && nt > 0) {
                 if (nt > smp_max_threads) nt = smp_max_threads;
 
                 // launch threads
                 smp_Render(nt,
-                           rb2,
+                           &render,
                            visdata,
                            isBeat,
                            s ? fbout : thisfb,
@@ -705,23 +705,23 @@ int C_RenderListClass::render(char visdata[2][2][576],
                            w,
                            h);
 
-                t = rb2->smp_finish(visdata,
-                                    isBeat,
-                                    s ? fbout : framebuffer,
-                                    s ? framebuffer : fbout,
-                                    w,
-                                    h);
+                t = render.smp_finish(visdata,
+                                      isBeat,
+                                      s ? fbout : framebuffer,
+                                      s ? framebuffer : fbout,
+                                      w,
+                                      h);
             }
 
         } else if (g_config_seh && renders[x].effect_index != LIST_ID) {
             try {
-                t = renders[x].render->render(
+                t = renders[x].effect.render(
                     visdata, isBeat, s ? fbout : thisfb, s ? thisfb : fbout, w, h);
             } catch (...) {
                 t = 0;
             }
         } else {
-            t = renders[x].render->render(
+            t = renders[x].effect.render(
                 visdata, isBeat, s ? fbout : thisfb, s ? thisfb : fbout, w, h);
         }
 
@@ -855,7 +855,7 @@ C_RenderListClass::T_RenderListType* C_RenderListClass::getRender(int index) {
 int C_RenderListClass::findRender(T_RenderListType* r) {
     int idx;
     if (!r) return -1;
-    for (idx = 0; idx < num_renders && renders[idx].render != r->render; idx++)
+    for (idx = 0; idx < num_renders && renders[idx].effect != r->effect; idx++)
         ;
     if (idx < num_renders) return idx;
     return -1;
@@ -864,14 +864,17 @@ int C_RenderListClass::findRender(T_RenderListType* r) {
 int C_RenderListClass::removeRenderFrom(T_RenderListType* r, int del) {
     int idx;
     if (!r) return 1;
-    for (idx = 0; idx < num_renders && renders[idx].render != r->render; idx++)
+    for (idx = 0; idx < num_renders && renders[idx].effect != r->effect; idx++)
         ;
     return removeRender(idx, del);
 }
 
 int C_RenderListClass::removeRender(int index, int del) {
     if (index >= 0 && index < num_renders) {
-        if (del && renders[index].render) delete renders[index].render;
+        if (del && renders[index].effect.valid()) {
+            delete renders[index].effect.effect;
+            delete renders[index].effect.legacy_effect;
+        }
         num_renders--;
         while (index < num_renders) {
             renders[index] = renders[index + 1];
@@ -890,7 +893,8 @@ void C_RenderListClass::clearRenders(void) {
     int x;
     if (renders) {
         for (x = 0; x < num_renders; x++) {
-            delete renders[x].render;
+            delete renders[x].effect.effect;
+            delete renders[x].effect.legacy_effect;
         }
         free(renders);
     }
@@ -907,7 +911,7 @@ int C_RenderListClass::insertRenderBefore(T_RenderListType* r,
     if (!before)
         idx = num_renders;
     else
-        for (idx = 0; idx < num_renders && renders[idx].render != before->render; idx++)
+        for (idx = 0; idx < num_renders && renders[idx].effect != before->effect; idx++)
             ;
     return insertRender(r, idx);
 }
@@ -1049,7 +1053,7 @@ int C_RenderListClass::__LoadPresetFromUndo(C_UndoItem& item, int clear) {
 /// smp fun
 
 void C_RenderListClass::smp_Render(int minthreads,
-                                   C_RBASE2* render,
+                                   Legacy_Effect_Proxy* render,
                                    char visdata[2][2][576],
                                    int isBeat,
                                    int* framebuffer,
