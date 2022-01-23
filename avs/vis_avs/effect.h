@@ -80,7 +80,7 @@ class Effect {
     void save_string_legacy(unsigned char* data, int& pos, std::string& text);
 
     // multithread render api
-    static bool can_multithread() { return false; };
+    virtual bool can_multithread() { return false; };
     virtual int smp_getflags() { return 0; }
     virtual int smp_begin(int max_threads,
                           char visdata[2][2][576],
