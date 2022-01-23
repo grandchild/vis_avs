@@ -30,38 +30,45 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 // alphachannel safe 11/21/99
-#include "c_fadeout.h"
+#include "e_fadeout.h"
 
 #include "r_defs.h"
 
 #include "timing.h"
 
-void C_THISCLASS::maketab(void) {
-    int rseek = color & 0xff;
-    int gseek = (color >> 8) & 0xff;
-    int bseek = (color >> 16) & 0xff;
+constexpr Parameter Fadeout_Info::parameters[];
+
+void maketab(Effect* component, const Parameter*, std::vector<int64_t>) {
+    E_Fadeout* fadeout = (E_Fadeout*)component;
+    fadeout->maketab();
+}
+
+void E_Fadeout::maketab(void) {
+    int rseek = this->config.color & 0xff;
+    int gseek = (this->config.color >> 8) & 0xff;
+    int bseek = (this->config.color >> 16) & 0xff;
     int x;
     for (x = 0; x < 256; x++) {
         int r = x;
         int g = x;
         int b = x;
-        if (r <= rseek - fadelen)
-            r += fadelen;
-        else if (r >= rseek + fadelen)
-            r -= fadelen;
+        if (r <= rseek - this->config.fadelen)
+            r += this->config.fadelen;
+        else if (r >= rseek + this->config.fadelen)
+            r -= this->config.fadelen;
         else
             r = rseek;
 
-        if (g <= gseek - fadelen)
-            g += fadelen;
-        else if (g >= gseek + fadelen)
-            g -= fadelen;
+        if (g <= gseek - this->config.fadelen)
+            g += this->config.fadelen;
+        else if (g >= gseek + this->config.fadelen)
+            g -= this->config.fadelen;
         else
             g = gseek;
-        if (b <= bseek - fadelen)
-            b += fadelen;
-        else if (b >= bseek + fadelen)
-            b -= fadelen;
+        if (b <= bseek - this->config.fadelen)
+            b += this->config.fadelen;
+        else if (b >= bseek + this->config.fadelen)
+            b -= this->config.fadelen;
         else
             b = bseek;
 
@@ -78,50 +85,50 @@ void C_THISCLASS::maketab(void) {
     data[pos + 3] = (y >> 24) & 255
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
-void C_THISCLASS::load_config(unsigned char* data, int len) {
+void E_Fadeout::load_legacy(unsigned char* data, int len) {
     int pos = 0;
     if (len - pos >= 4) {
-        fadelen = GET_INT();
+        this->config.fadelen = GET_INT();
         pos += 4;
     }
     if (len - pos >= 4) {
-        color = GET_INT();
+        this->config.color = GET_INT();
         pos += 4;
     }
     maketab();
 }
 
-int C_THISCLASS::save_config(unsigned char* data) {
+int E_Fadeout::save_legacy(unsigned char* data) {
     int pos = 0;
-    PUT_INT(fadelen);
+    PUT_INT(this->config.fadelen);
     pos += 4;
-    PUT_INT(color);
+    PUT_INT(this->config.color);
     pos += 4;
     return pos;
 }
 
-C_THISCLASS::C_THISCLASS() {
-    color = 0;
-    fadelen = 16;
+E_Fadeout::E_Fadeout() {
+    this->config.color = 0;
+    this->config.fadelen = 16;
     maketab();
 }
 
-C_THISCLASS::~C_THISCLASS() {}
+E_Fadeout::~E_Fadeout() {}
 
-int C_THISCLASS::render(char[2][2][576],
-                        int isBeat,
-                        int* framebuffer,
-                        int*,
-                        int w,
-                        int h) {
+int E_Fadeout::render(char[2][2][576],
+                      int isBeat,
+                      int* framebuffer,
+                      int*,
+                      int w,
+                      int h) {
     if (isBeat & 0x80000000) return 0;
-    if (!fadelen) return 0;
+    if (!this->config.fadelen) return 0;
     timingEnter(1);
     if (
 #ifdef NO_MMX
         1
 #else
-        color
+        this->config.color
 #endif
     ) {
         unsigned char* t = (unsigned char*)framebuffer;
@@ -139,7 +146,7 @@ int C_THISCLASS::render(char[2][2][576],
         char fadj[8];
         int x;
         unsigned char* t = fadtab[0];
-        for (x = 0; x < 8; x++) fadj[x] = this->fadelen;
+        for (x = 0; x < 8; x++) fadj[x] = this->config.fadelen;
 #ifdef _MSC_VER  // MSVC asm
         __asm {
 			mov edx, l
@@ -254,10 +261,5 @@ int C_THISCLASS::render(char[2][2][576],
     return 0;
 }
 
-C_RBASE* R_FadeOut(char* desc) {
-    if (desc) {
-        strcpy(desc, MOD_NAME);
-        return NULL;
-    }
-    return (C_RBASE*)new C_THISCLASS();
-}
+Effect_Info* create_Fadeout_Info() { return new Fadeout_Info(); }
+Effect* create_Fadeout() { return new E_Fadeout(); }
