@@ -51,6 +51,7 @@ C_RenderTransitionClass::C_RenderTransitionClass() {
     start_time = 0;
     _dotransitionflag = 0;
     initThread = 0;
+    prev_renders_need_cleanup = false;
 }
 
 C_RenderTransitionClass::~C_RenderTransitionClass() {
@@ -159,6 +160,14 @@ int C_RenderTransitionClass::LoadPreset(char* file, int which, C_UndoItem* item)
     return !!r;
 }
 
+void C_RenderTransitionClass::clean_prev_renders_if_needed() {
+    if (this->prev_renders_need_cleanup) {
+        g_render_effects2->clearRenders();
+        g_render_effects2->freeBuffers();
+        this->prev_renders_need_cleanup = false;
+    }
+}
+
 #define PI 3.14159265358979323846
 // 264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848...
 
@@ -217,8 +226,7 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
                 }
             }
         if (!initThread && g_render_effects2->getNumRenders()) {
-            g_render_effects2->clearRenders();
-            g_render_effects2->freeBuffers();
+            this->prev_renders_need_cleanup = true;
         }
         return g_render_effects->render(visdata, isBeat, framebuffer, fbout, w, h);
     }

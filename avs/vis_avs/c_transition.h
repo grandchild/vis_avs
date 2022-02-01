@@ -48,11 +48,13 @@ class C_RenderTransitionClass {
     char last_file[MAX_PATH];
     int last_which;
     int _dotransitionflag;
+    bool prev_renders_need_cleanup;
 
    public:
     static unsigned int __stdcall m_initThread(void* p);
 
     int LoadPreset(char* file, int which, C_UndoItem* item = 0);  // 0 on success
+    void clean_prev_renders_if_needed();
     C_RenderTransitionClass();
     virtual ~C_RenderTransitionClass();
 

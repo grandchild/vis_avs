@@ -952,6 +952,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             return 0;
         case WM_USER + 20:
             CfgWnd_Unpopulate();
+            g_render_transition->clean_prev_renders_if_needed();
             CfgWnd_Populate();
             return 0;
         case WM_CLOSE:
