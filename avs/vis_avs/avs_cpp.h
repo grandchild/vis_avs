@@ -88,6 +88,7 @@
 #include "avs_editor.h"
 
 #include <map>
+#include <sstream>
 #include <stdio.h>
 #include <string>
 #include <vector>
@@ -383,16 +384,41 @@ class AVS {
         const std::string description() const { return this->parameter.description(); };
         const std::vector<std::string> options() { return this->parameter.options(); };
 
-        bool add_child(int64_t before = -1) {
+        bool add_child(int64_t before = -1,
+                       std::map<std::string, AVS_Value> values = {}) {
             this->clear_error();
             if (this->is_set) {
                 this->set_error("Cannot use add_child() on a parameter set");
                 return false;
             }
+            std::vector<AVS_Parameter_Value> parameter_values;
+            if (!values.empty()) {
+                std::vector<Parameter> child_params = this->parameter.children();
+                for (auto const& named_value : values) {
+                    bool found = false;
+                    for (auto const& child_param : child_params) {
+                        if (named_value.first == child_param.name()) {
+                            parameter_values.push_back(
+                                {child_param.handle, named_value.second});
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        std::stringstream error_msg;
+                        error_msg << "Parameter name " << named_value.first
+                                  << " not found";
+                        this->set_error(error_msg.str());
+                        return false;
+                    }
+                }
+            }
             return avs_parameter_list_element_add(this->avs->handle,
                                                   this->component,
                                                   this->parameter.handle,
                                                   before,
+                                                  parameter_values.size(),
+                                                  parameter_values.data(),
                                                   this->parameter_path.size(),
                                                   this->parameter_path.data());
         };

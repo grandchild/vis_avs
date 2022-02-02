@@ -550,11 +550,14 @@ int64_t avs_parameter_list_length(AVS_Handle avs,
 #endif
     return (int64_t)length;
 }
+
 AVS_EDITOR_API
 bool avs_parameter_list_element_add(AVS_Handle avs,
                                     AVS_Component_Handle component,
                                     AVS_Parameter_Handle parameter,
                                     int64_t before,
+                                    uint32_t values_length,
+                                    const AVS_Parameter_Value* values,
                                     uint32_t list_depth,
                                     int64_t* list_indices) {
     AVS_Instance* instance;
@@ -566,10 +569,13 @@ bool avs_parameter_list_element_add(AVS_Handle avs,
     }
     if (_parameter->type != AVS_PARAM_LIST) {
         instance->error = "Parameter is not of list type";
-        return -1;
+        return false;
     }
     return _component->parameter_list_entry_add(
-        _parameter, before, make_parameter_tree_path(list_depth, list_indices));
+        _parameter,
+        before,
+        std::vector<AVS_Parameter_Value>(values, values + values_length),
+        make_parameter_tree_path(list_depth, list_indices));
 }
 AVS_EDITOR_API
 bool avs_parameter_list_element_move(AVS_Handle avs,

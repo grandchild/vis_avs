@@ -36,6 +36,7 @@ class Effect {
                                          std::vector<int64_t> parameter_path) = 0;
     virtual bool parameter_list_entry_add(const Parameter* parameter,
                                           int64_t before,
+                                          std::vector<AVS_Parameter_Value>,
                                           std::vector<int64_t> parameter_path) = 0;
     virtual bool parameter_list_entry_move(const Parameter* parameter,
                                            int64_t from,
@@ -186,9 +187,11 @@ class Configurable_Effect : public Effect {
         }
         return parameter->list_length(config_param.value_addr);
     };
-    bool parameter_list_entry_add(const Parameter* parameter,
-                                  int64_t before,
-                                  std::vector<int64_t> parameter_path = {}) {
+    bool parameter_list_entry_add(
+        const Parameter* parameter,
+        int64_t before,
+        std::vector<AVS_Parameter_Value> parameter_values = {},
+        std::vector<int64_t> parameter_path = {}) {
         if (parameter == 0) {
             return false;
         }
@@ -199,9 +202,48 @@ class Configurable_Effect : public Effect {
         }
         bool success = parameter->list_add(
             config_param.value_addr, parameter->num_child_parameters_max, &before);
-        if (success && config_param.info->on_list_add != NULL) {
-            config_param.info->on_list_add(
-                this, config_param.info, parameter_path, before, 0);
+        if (success) {
+            std::vector<int64_t> new_parameter_path = parameter_path;
+            new_parameter_path.push_back(before);
+            for (auto const& pv : parameter_values) {
+                auto value_config_param =
+                    this->get_config_parameter(pv.parameter, new_parameter_path);
+                if (value_config_param.info == NULL) {
+                    continue;
+                }
+                switch (value_config_param.info->type) {
+                    case AVS_PARAM_BOOL:
+                        parameter_dispatch<bool>::set(value_config_param, pv.value.b);
+                        break;
+                    case AVS_PARAM_SELECT:
+                    case AVS_PARAM_INT:
+                        parameter_dispatch<int64_t>::set(value_config_param,
+                                                         pv.value.i);
+                        break;
+                    case AVS_PARAM_FLOAT:
+                        parameter_dispatch<double>::set(value_config_param, pv.value.f);
+                        break;
+                    case AVS_PARAM_COLOR:
+                        parameter_dispatch<uint64_t>::set(value_config_param,
+                                                          pv.value.c);
+                        break;
+                    case AVS_PARAM_STRING:
+                        parameter_dispatch<const char*>::set(value_config_param,
+                                                             pv.value.s);
+                        break;
+                    case AVS_PARAM_LIST:
+                    case AVS_PARAM_INVALID:
+                    case AVS_PARAM_INT_ARRAY:
+                    case AVS_PARAM_FLOAT_ARRAY:
+                    case AVS_PARAM_COLOR_ARRAY:
+                    default:
+                        break;
+                }
+            }
+            if (config_param.info->on_list_add != NULL) {
+                config_param.info->on_list_add(
+                    this, config_param.info, parameter_path, before, 0);
+            }
         }
         return success;
     };
