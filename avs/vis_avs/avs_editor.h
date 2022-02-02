@@ -54,6 +54,9 @@ enum AVS_Parameter_Type {
                            // out-of-range indices, esp. -1 for "no selection".
                            // When getting/setting a parameter of this type use the
                            // `_int()` getter/setter flavors.
+    AVS_PARAM_INT_ARRAY = 8,
+    AVS_PARAM_FLOAT_ARRAY = 9,
+    AVS_PARAM_COLOR_ARRAY = 10,
 };
 
 enum AVS_Component_Position {
@@ -298,6 +301,35 @@ bool avs_parameter_set_string(AVS_Handle avs,
                               uint32_t list_depth,
                               int64_t* list_indices);
 
+/**
+ * Array-type parameters are read-only. The length of the array is written to the
+ * `length_out` argument.
+ */
+const int64_t* avs_parameter_get_int_array(AVS_Handle avs,
+                                           AVS_Component_Handle component,
+                                           AVS_Parameter_Handle parameter,
+                                           uint64_t* length_out,
+                                           uint32_t list_depth,
+                                           int64_t* list_indices);
+const double* avs_parameter_get_float_array(AVS_Handle avs,
+                                            AVS_Component_Handle component,
+                                            AVS_Parameter_Handle parameter,
+                                            uint64_t* length_out,
+                                            uint32_t list_depth,
+                                            int64_t* list_indices);
+const uint64_t* avs_parameter_get_color_array(AVS_Handle avs,
+                                              AVS_Component_Handle component,
+                                              AVS_Parameter_Handle parameter,
+                                              uint64_t* length_out,
+                                              uint32_t list_depth,
+                                              int64_t* list_indices);
+
+/**
+ * Run the action associated with an AVS_PARAM_ACTION parameter.
+ *
+ * Returns `false` if the arguments are invalid. Does _not_ check for the success of the
+ * action function.
+ */
 bool avs_parameter_run_action(AVS_Handle avs,
                               AVS_Component_Handle component,
                               AVS_Parameter_Handle parameter,

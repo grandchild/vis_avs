@@ -166,6 +166,19 @@ class AVS {
             return out;
         };
     };
+    template <typename T>
+    class Readonly_Array {
+       private:
+        size_t _size;
+        const T* _data;
+
+       public:
+        Readonly_Array() = delete;  // use `Readonly_Array(data, size)`
+        Readonly_Array(const T* data, size_t size) : _size(size), _data(data){};
+        size_t size() const { return this->_size; };
+        const T* data() const { return this->_data; };
+        const T& operator[](size_t index) const { return this->_data[index]; };
+    };
 
    public:
     AVS_Handle handle;
@@ -522,6 +535,24 @@ class AVS {
         PARAMETER_GETTER(float, double);
         PARAMETER_GETTER(color, uint64_t);
         PARAMETER_GETTER(string, const char*);
+
+#define PARAMETER_ARRAY_GETTER(AVS_TYPE, TYPE)                                 \
+    const Readonly_Array<TYPE> as_##AVS_TYPE##_array() {                       \
+        this->clear_error();                                                   \
+        uint64_t length;                                                       \
+        auto array =                                                           \
+            avs_parameter_get_##AVS_TYPE##_array(this->avs->handle,            \
+                                                 this->component,              \
+                                                 this->parameter.handle,       \
+                                                 &length,                      \
+                                                 this->parameter_path.size(),  \
+                                                 this->parameter_path.data()); \
+        return Readonly_Array<TYPE>(array, length);                            \
+    }
+        // Create: as_int_array(), as_float_array(), as_color_array()
+        PARAMETER_ARRAY_GETTER(int, int64_t);
+        PARAMETER_ARRAY_GETTER(float, double);
+        PARAMETER_ARRAY_GETTER(color, uint64_t);
     };
 
 // This macro is invoked for all types outside of the AVS class.

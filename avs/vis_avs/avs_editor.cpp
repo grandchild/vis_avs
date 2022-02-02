@@ -509,6 +509,58 @@ bool avs_parameter_set_string(AVS_Handle avs,
 }
 
 AVS_EDITOR_API
+const int64_t* avs_parameter_get_int_array(AVS_Handle avs,
+                                           AVS_Component_Handle component,
+                                           AVS_Parameter_Handle parameter,
+                                           uint64_t* length_out,
+                                           uint32_t list_depth,
+                                           int64_t* list_indices) {
+    Effect* _component;
+    if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
+        *length_out = 0;
+        return NULL;
+    }
+    auto parameter_path = make_parameter_tree_path(list_depth, list_indices);
+    auto array = _component->get_int_array(parameter, parameter_path);
+    *length_out = array.size();
+    return array.data();
+}
+AVS_EDITOR_API
+const double* avs_parameter_get_float_array(AVS_Handle avs,
+                                            AVS_Component_Handle component,
+                                            AVS_Parameter_Handle parameter,
+                                            uint64_t* length_out,
+                                            uint32_t list_depth,
+                                            int64_t* list_indices) {
+    Effect* _component;
+    if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
+        *length_out = 0;
+        return NULL;
+    }
+    auto parameter_path = make_parameter_tree_path(list_depth, list_indices);
+    auto array = _component->get_float_array(parameter, parameter_path);
+    *length_out = array.size();
+    return array.data();
+}
+AVS_EDITOR_API
+const uint64_t* avs_parameter_get_color_array(AVS_Handle avs,
+                                              AVS_Component_Handle component,
+                                              AVS_Parameter_Handle parameter,
+                                              uint64_t* length_out,
+                                              uint32_t list_depth,
+                                              int64_t* list_indices) {
+    Effect* _component;
+    if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
+        *length_out = 0;
+        return NULL;
+    }
+    auto parameter_path = make_parameter_tree_path(list_depth, list_indices);
+    auto array = _component->get_color_array(parameter, parameter_path);
+    *length_out = array.size();
+    return array.data();
+}
+
+AVS_EDITOR_API
 bool avs_parameter_run_action(AVS_Handle avs,
                               AVS_Component_Handle component,
                               AVS_Parameter_Handle parameter,
