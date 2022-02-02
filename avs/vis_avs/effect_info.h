@@ -663,6 +663,21 @@ struct Effect_Info {
     virtual bool can_have_child_components() const { return true; }
 
 /**
+ * `Parameter_Value` is only needed for adding a new list element, to set some or all of
+ * the new element's values at once before running the `ONADD` handler, if any was set.
+ */
+struct Parameter_Value {
+    const Parameter* parameter;
+    union {
+        bool as_bool;
+        int64_t as_int;
+        double as_float;
+        uint64_t as_color;
+        const char* as_string;
+    } value;
+};
+
+/**
  * This is needed by the `Configurable_Effect` template class, but it's here since it
  * fits the context better, and effect.h shouldn't be _too_ messy.
  *

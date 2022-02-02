@@ -392,6 +392,19 @@ bool avs_parameter_run_action(AVS_Handle avs,
  *     double check = avs_parameter_get_float(my_avs, my_foo, things_baz, list_index);
  *     assert(check == new_value);
  */
+typedef union {
+    bool b;
+    int64_t i;
+    double f;
+    uint64_t c;
+    const char* s;
+} AVS_Value;
+
+typedef struct {
+    AVS_Parameter_Handle parameter;
+    AVS_Value value;
+} AVS_Parameter_Value;
+
 int64_t avs_parameter_list_length(AVS_Handle avs,
                                   AVS_Component_Handle component,
                                   AVS_Parameter_Handle parameter,
@@ -401,6 +414,8 @@ bool avs_parameter_list_element_add(AVS_Handle avs,
                                     AVS_Component_Handle component,
                                     AVS_Parameter_Handle parameter,
                                     int64_t before,
+                                    uint32_t values_length,
+                                    const AVS_Parameter_Value* values,
                                     uint32_t list_depth,
                                     int64_t* list_indices);
 bool avs_parameter_list_element_move(AVS_Handle avs,
