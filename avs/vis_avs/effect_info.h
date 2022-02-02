@@ -710,6 +710,9 @@ struct parameter_dispatch<int64_t> {
         }
         *(int64_t*)config_param.value_addr = value;
     }
+    static std::vector<int64_t>& get_array(uint8_t* config_data) {
+        return *(std::vector<int64_t>*)config_data;
+    };
     static int64_t zero() { return 0; };
 };
 
@@ -724,6 +727,9 @@ struct parameter_dispatch<double> {
         }
         *(double*)config_param.value_addr = value;
     }
+    static std::vector<double>& get_array(uint8_t* config_data) {
+        return *(std::vector<double>*)config_data;
+    };
     static double zero() { return 0.0; };
 };
 
@@ -733,6 +739,9 @@ struct parameter_dispatch<uint64_t> {
     static void set(const Config_Parameter& config_param, uint64_t value) {
         *(uint64_t*)config_param.value_addr = value;
     }
+    static std::vector<uint64_t>& get_array(uint8_t* config_data) {
+        return *(std::vector<uint64_t>*)config_data;
+    };
     static uint64_t zero() { return 0; };
 };
 

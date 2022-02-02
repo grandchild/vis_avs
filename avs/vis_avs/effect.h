@@ -60,6 +60,13 @@ class Effect {
     GET_SET_PARAMETER_ABSTRACT(color, uint64_t);
     GET_SET_PARAMETER_ABSTRACT(string, const char*);
 
+#define GET_ARRAY_PARAMETER_ABSTRACT(AVS_TYPE, TYPE)  \
+    virtual std::vector<TYPE> get_##AVS_TYPE##_array( \
+        AVS_Parameter_Handle parameter, std::vector<int64_t> parameter_path = {}) = 0
+    GET_ARRAY_PARAMETER_ABSTRACT(int, int64_t);
+    GET_ARRAY_PARAMETER_ABSTRACT(float, double);
+    GET_ARRAY_PARAMETER_ABSTRACT(color, uint64_t);
+
     // render api
     virtual int render(char visdata[2][2][576],
                        int isBeat,
@@ -173,6 +180,20 @@ class Configurable_Effect : public Effect {
             config_param.info->on_value_change(this, config_param.info, parameter_path);
         }
         return true;
+    };
+
+    template <typename T>
+    std::vector<T>& get_array(AVS_Parameter_Handle parameter,
+                              std::vector<int64_t> parameter_path = {}) {
+        static std::vector<T> empty;
+        if (parameter == 0) {
+            return empty;
+        }
+        auto config_param = this->get_config_parameter(parameter, parameter_path);
+        if (config_param.info == NULL) {
+            return empty;
+        }
+        return parameter_dispatch<T>::get_array(config_param.value_addr);
     };
 
     size_t parameter_list_length(const Parameter* parameter,
@@ -314,6 +335,15 @@ class Configurable_Effect : public Effect {
     GET_SET_PARAMETER(float, double);
     GET_SET_PARAMETER(color, uint64_t);
     GET_SET_PARAMETER(string, const char*);
+
+#define GET_ARRAY_PARAMETER(AVS_TYPE, TYPE)                                         \
+    virtual std::vector<TYPE> get_##AVS_TYPE##_array(                               \
+        AVS_Parameter_Handle parameter, std::vector<int64_t> parameter_path = {}) { \
+        return get_array<TYPE>(parameter, parameter_path);                          \
+    }
+    GET_ARRAY_PARAMETER(int, int64_t);
+    GET_ARRAY_PARAMETER(float, double);
+    GET_ARRAY_PARAMETER(color, uint64_t);
 
    protected:
     static std::string desc;
