@@ -894,6 +894,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
     extern void toggleWharfAmpDock(HWND hwnd);
 
     switch (uMsg) {
+        case WM_SHOWWINDOW:
+            ShowWindow(cur_hwnd, wParam ? SW_SHOW : SW_HIDE);
+            break;
         case WM_INITMENU:
             EnableMenuItem(
                 (HMENU)wParam,
