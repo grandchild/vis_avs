@@ -226,7 +226,7 @@ void C_RLibrary::initbuiltinape(void) {
     ADD(R_Convolution, "Holden03: Convolution Filter");
     ADD(R_Texer2, "Acko.net: Texer II");
     ADD(R_Normalise, "Trans: Normalise");
-    ADD(R_ColorMap, "Color Map");
+    ADD_NEW(ColorMap, "Color Map");
     ADD(R_AddBorders, "Virtual Effect: Addborders");
     ADD(R_Triangle, "Render: Triangle");
     ADD(R_EelTrans, "Misc: AVSTrans Automation");
