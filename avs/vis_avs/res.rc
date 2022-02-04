@@ -1861,8 +1861,8 @@ BEGIN
    DEFPUSHBUTTON    "OK", IDOK | WS_CHILD | WS_TABSTOP, 85, 20, 50, 14
    LTEXT            "Please specify the color's position (0-255):", IDC_STATIC,
                     5, 5, 135, 10, SS_LEFT | WS_CHILD | WS_GROUP
-   EDITTEXT         IDC_COLORMAP_COLOR_POSITION | ES_NUMBER | WS_CHILD | WS_TABSTOP,
-                    5, 20, 30, 13
+   EDITTEXT         IDC_COLORMAP_COLOR_POSITION, 5, 20, 30, 13, ES_NUMBER | WS_CHILD |
+                    WS_TABSTOP
 END
 
 IDD_CFG_ADDBORDERS DIALOG 0, 0, 137, 71
