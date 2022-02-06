@@ -7,7 +7,7 @@
 #if defined(__linux__) && !defined(FORCE_CPP_FILESYSTEM_API)
 #include <ftw.h>
 #include <glob.h>
-#elif defined(WIN32) && !defined(FORCE_CPP_FILESYSTEM_API)
+#elif defined(_WIN32) && !defined(FORCE_CPP_FILESYSTEM_API)
 #include <windows.h>
 #endif
 
@@ -70,7 +70,7 @@ int ftw_callback(const char* file_path, const struct stat* file_info, int file_t
 }
 #endif  // __linux__
 
-#ifdef WIN32
+#ifdef _WIN32
 void _win32_find_files_by_extensions(char* path,
                                      char* partial_path,
                                      char** extensions,
@@ -162,7 +162,7 @@ void _find_files_by_extensions(char* path,
         globfree(&glob_info);
     }
 
-#elif defined(WIN32) && !defined(FORCE_CPP_FILESYSTEM_API)
+#elif defined(_WIN32) && !defined(FORCE_CPP_FILESYSTEM_API)
 
     char new_path[MAX_PATH];
     strcpy(new_path, path);

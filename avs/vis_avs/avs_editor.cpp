@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-#ifdef WIN32
+#ifdef _WIN32
 #define AVS_EDITOR_API __declspec(dllexport)
 #elif defined(__linux__)
 #define AVS_EDITOR_API __attribute__((visibility("default")))
