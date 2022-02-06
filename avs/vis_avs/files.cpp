@@ -31,14 +31,14 @@ bool matches_file_suffix(std::string file, char** suffixes, int num_suffixes) {
  * which will walk a filesystem subtree for you, with the help of a callback function
  * that you give it. (This is the function `ftw_callback()` below.) So far so easy.
  *
- * The tricky part is that the ftw callback function cannot have user data passed to
- * it. So in order to map the callback to `find_files_with_extensions()` (which has user
- * data) to the `ftw()` callback, we need to use a global variable that you we can use
- * in the callback. Now we have two nested callbacks, an outer one mandated by
- * `ftw()`, and an inner one, given by the user of `find_files_by_extensions()`.
+ * The tricky part is that the ftw callback function cannot have user data passed to it.
+ * So in order to map the callback to `find_files_with_extensions()` (which has user
+ * data) to the `ftw()` callback, we need to use a global variable that you can use in
+ * the callback. Now we have two nested callbacks, an outer one mandated by `ftw()`, and
+ * an inner one, given by the user of `find_files_by_extensions()`.
  *
- * So before calling `ftw()` proper, we set the global `ftw_data` variable that
- * contains the user callback data as well as the list of extensions that
+ * So before calling `ftw()` proper, we set the global `ftw_data` variable that contains
+ * the user callback data as well as the list of extensions that
  * `find_files_by_extensions()` should match against.
  *
  * To top it off, we _only_ use this for the `recursive=true` mode on linux.
