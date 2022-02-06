@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
-#ifdef WIN32
+#ifdef _WIN32
 #define AVS_API __declspec(dllexport)
 #elif defined(__linux__)
 #define AVS_API __attribute__((visibility("default")))

@@ -15,7 +15,7 @@ typedef void thread_t;
 /*
  * OS specifics
  */
-#ifdef __WIN32
+#ifdef _WIN32
 
 #elif defined __linux__
 

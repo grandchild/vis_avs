@@ -1,6 +1,6 @@
 #include "image.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #endif
 
@@ -15,7 +15,7 @@
 #ifdef AVS_IMAGE_EXTENDED_BMP_SUPPORT
 /* stb_image cannot load RLE-encoded BMPs and other exotic variants. */
 bool _fallback_load_bmp(const char* filename, AVS_image* image) {
-#ifdef WIN32
+#ifdef _WIN32
     HBITMAP bmp = (HBITMAP)LoadImage(
         0, filename, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
     if (!bmp) {
