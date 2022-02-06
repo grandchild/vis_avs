@@ -20,6 +20,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(
         /W4                 # Warning level 4 (maximum)
         /MP                 # Multithreaded compilation
+        /std:c++14          # Pin to C++14 features
         /Zc:__cplusplus     # Define the actual C++ standard in __cplusplus, instead of
                             # a backwards-compatible "199711L".
                             # https://devblogs.microsoft.com/cppblog/msvc-now-correctly-reports-__cplusplus/
@@ -50,7 +51,9 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
                             # into the base build directory.
     )
     # C++-specific flags
-    set(AVS_CXX_COMPILER_FLAGS)
+    set(AVS_CXX_COMPILER_FLAGS
+        -std=c++14          # Pin to C++14 features
+    )
     # (CMake generator expressions cannot be multiline, hence the AVS_CXX_COMPILE_FLAGS
     # variable in a foreach workaround.)
     foreach(FLAG ${AVS_CXX_COMPILER_FLAGS})
