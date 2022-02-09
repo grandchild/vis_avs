@@ -19,12 +19,9 @@ struct Root_Info : public Effect_Info {
 
     static constexpr uint32_t num_parameters = 1;
     static constexpr Parameter parameters[num_parameters] = {
-        PARAM(Root_Config,
-              clear,
-              BOOL,
-              "Clear",
-              "Clear the screen for every new frame",
-              NULL),
+        P_BOOL(offsetof(Root_Config, clear),
+               "Clear",
+               "Clear the screen for every new frame"),
     };
     EFFECT_INFO_GETTERS_WITH_CHILDREN;
 };

@@ -13,6 +13,8 @@ void maketab(Effect* component,
              const Parameter* parameter,
              std::vector<int64_t> parameter_path);
 
+#define OFFSET(field) offsetof(Fadeout_Config, field)
+
 struct Fadeout_Info : public Effect_Info {
     static constexpr char* group = "Trans";
     static constexpr char* name = "Fadeout";
@@ -24,8 +26,8 @@ struct Fadeout_Info : public Effect_Info {
     static constexpr uint32_t num_parameters = 2;
     static constexpr Parameter parameters[num_parameters] = {
         // config, field, [type,] name, desc, onchange
-        PARAM_IRANGE(Fadeout_Config, fadelen, "Fade Velocity", NULL, maketab, 0, 92),
-        PARAM(Fadeout_Config, color, COLOR, "Fade to Color", NULL, maketab),
+        P_IRANGE(OFFSET(fadelen), "Fade Velocity", 0, 92, NULL, maketab),
+        P_COLOR(OFFSET(color), "Fade to Color", NULL, maketab),
     };
 
     EFFECT_INFO_GETTERS;
