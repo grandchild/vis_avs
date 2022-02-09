@@ -39,16 +39,17 @@ enabled for the cases where it might actually catch something.
 */
 #define FORCE_FUNCTION_CAST(x) (x)(void (*)())
 
-// These are builtins in MSVC
-int min(int a, int b);
-int max(int a, int b);
-
 #else
 
 // A no-op here, see above.
 #define FORCE_FUNCTION_CAST(x) (x)
 
 #endif  // Compiler specifics
+
+/* Including windows.h on MSVC (not GCC!) would define min/max, but we set NOMINMAX for
+ * the project, so we can define them all the same for all platforms. */
+int min(int a, int b);
+int max(int a, int b);
 
 /* The number of milliseconds since the system was booted. May return 0 on error. */
 uint64_t timer_ms();

@@ -9,10 +9,12 @@ file(GLOB SRC_FILES_VIS_AVS
     avs/vis_avs/*.cpp
     avs/vis_avs/*.c
     avs/vis_avs/*.rc
+    avs/platform.c
 )
 set(SRC_FILES_VIS_AVS_TARGET
     avs/platform_win32.c
 )
+set(SRC_FILES_VIS_AVS_COMPILER)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(
@@ -54,7 +56,6 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     foreach(FLAG ${AVS_CXX_COMPILER_FLAGS})
         add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${FLAG}>)
     endforeach()
-    set(SRC_FILES_VIS_AVS_COMPILER avs/platform_gcc.c)
 else() # TODO: Clang option
     message(SEND_ERROR "unsupported compiler ${CMAKE_CXX_COMPILER_ID}")
 endif()
@@ -63,6 +64,8 @@ if(WIN32)
     add_compile_definitions(
         _WIN32_WINNT=_WIN32_WINNT_VISTA     # Minimum WinNT version (needed for
                                             # GetTickCount64()).
+        NOMINMAX                            # Don't define min()/max() in windows.h on
+                                            # MSVC. Use our own functions everywhere.
     )
     if(NOT MSVC)
         # googletest here because it doesn't work for MSVC
