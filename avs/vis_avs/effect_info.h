@@ -62,19 +62,17 @@
  *
  *         static constexpr uint32_t num_parameters = 2;
  *         static constexpr Parameter parameters[num_parameters] = {
- *             //    CONFIG      FIELD TYPE  NAME   DESC          ONCHANGE
- *             PARAM(Foo_Config, foo,  INT,  "Foo", "Does a foo", NULL),
- *             //           CONFIG      FIELD NAME   DESC        ONCHANGE MIN  MAX
- *             PARAM_FRANGE(Foo_Config, bar,  "Bar", "Does bar", NULL,    0.0, 1.0)
+ *             P_INT(offsetof(Foo_Config, foo), "Foo", "Does a foo"),
+ *             P_FRANGE(offsetof(Foo_Config, bar), "Bar", 0.0, 1.0, "Does bar"),
  *         };
  *
  *         EFFECT_INFO_GETTERS;
  *     };
  *
- * Use the `PARAM` macro to safely add an entry to the `parameters` array. Alternatively
+ * Use the `P_` functions to safely add entries to the `parameters` array. Alternatively
  * you can declare `Parameter` structs yourself, and set unneeded fields to 0 or NULL as
- * appropriate. The `PARAM*` macros do this for you. For select- and list-type
- * parameters, use `PARAM_SELECT` and `PARAM_LIST` respectively.
+ * appropriate. The `P_` functions do all of this for you and are highly recommended.
+ * For select- and list-type parameters, use `P_SELECT` and `P_LIST` respectively.
  *
  * There are quite a few requirements on the Info struct and inter-dependencies with the
  * Config struct:
@@ -93,55 +91,51 @@
  *     parameters will be inaccessible for editing. Do with that information what you
  *     will.)
  *
- *   - There are a few different macros to choose from when declaring parameters:
+ *   - There are a few different functions to choose from when declaring parameters:
  *
- *     - `PARAM` declares a generic parameter.
+ *     - `PARAM` declares a generic parameter. You shouldn't generally use this one,
+ *       rather use one of `P_BOOL`, `P_INT`, `P_FLOAT`, `P_COLOR` or `P_STRING`
+ *       directly.
  *
- *     - `PARAM_IRANGE` and `PARAM_FRANGE` declare limited integer and floating-point
+ *     - `P_IRANGE` and `P_FRANGE` declare limited integer and floating-point
  *       parameters, respectively. Setting a value outside of the min/max range will set
- *       a clamped value.
- *       An editor UI may render a range-limited parameter as a slider.
+ *       a clamped value. An editor UI may render a range-limited parameter as a slider.
  *
- *     - `PARAM_SELECT` creates a parameter that can be selected from a list of options.
- *       The value type is actually an integer index (refer to avs_editor.h). To set the
+ *     - `P_SELECT` creates a parameter that can be selected from a list of options. The
+ *       value type is actually an integer index (refer to avs_editor.h). To set the
  *       options pass the name of a function that returns a list of strings, and writes
  *       the length of the list to its input parameter. Have a look into existing
- *       effects for examples.
- *       A smart editor UI may turn a short list into a radio select, and a longer list
- *       into a dropdown select.
+ *       effects for examples. A smart editor UI may turn a short list into a radio
+ *       select, and a longer list into a dropdown select.
  *
- *     - `PARAM_LIST` is an advanced feature not needed by most effects. It creates a
+ *     - `P_LIST` is an advanced feature not needed by most effects. It creates a
  *       list of sets of parameters. Declaring parameter lists will be explained in more
  *       detail further down (TODO).
  *
- *     - `PARAM_ACTION` lets you register a function to be triggered through the API. An
+ *     - `P_ACTION` lets you register a function to be triggered through the API. An
  *       action parameter isn't represented by a config field and cannot be read or set.
  *
- *     - All macros have an `_X`-suffixed version, which excludes them from being saved
- *       in a preset (except for actions, which have no value and thus cannot be saved).
- *       So if you choose `PARAM_X` instead of `PARAM` the parameter will not be saved
- *       and not loaded back.
+ *     - Most functions have an `_X`-suffixed version, which excludes them from being
+ *       saved in a preset. So if you choose `P_*_X` instead of `P_*` the parameter will
+ *       not be saved and not loaded back.
  *
- *     - The arguments to `PARAM` (which it shares with the others) are as follows:
+ *     - The arguments to the `P_` function (which it shares with the others) are as
+ *       follows:
  *
- *       - `CONFIG` must be the Config struct name.
+ *       - `offset` must be the offset, in bytes, of the parameter's field in its Config
+ *         struct. Use `offsetof(Foo_Config, foo)` to let the compiler figure it out.
  *
- *       - `FIELD` must be the Config struct member name.
- *
- *       - `TYPE` must be one of `BOOL`, `INT`, `FLOAT`, `COLOR` or `STRING`. The other
- *         parameter macros lack this argument, since the type is implicit there.
- *
- *       - `NAME` can be any string, and it must not be NULL. It must be unique among
+ *       - `name` can be any string, and it must not be NULL. It must be unique among
  *         your effect's other parameters. It doesn't have to bear any resemblance to
- *         `FIELD` (but it'd probably be wise). An editor UI may use this to label the
- *         parameter.
+ *         the config field (but it'd probably be wise). An editor UI may use this to
+ *         label the parameter.
  *
- *       - `DESC` can be any string, or NULL. An editor UI may use this to further
- *         describe and explain the parameter if needed (e.g. in a tooltip).
+ *       - `description` can be any string, or NULL. An editor UI may use this to
+ *         further describe and explain the parameter if needed (e.g. in a tooltip).
  *
- *       - `ONCHANGE` (or `ONADD` for action parameters) may be a function pointer or
- *         NULL. The function gets called whenever the value is changed (or the action
- *         triggered) through the editor API. The signature is:
+ *       - `on_value_change` (or `on_run` for action parameters) may be a function
+ *         pointer or NULL. The function gets called whenever the value is changed
+ *         (or the action triggered) through the editor API. The signature is:
  *
  *            void on_change(Effect* component, const Parameter* parameter,
  *                          std::vector<int64_t> parameter_path)
@@ -154,40 +148,41 @@
  *         is guaranteed to be of the correct length to contain your list index, you
  *         don't need to test `parameter_path.size()` in your handlers. If your effect
  *         doesn't have list-type parameters, it's safe to just ignore `parameter_path`.
- *         For `PARAM_LIST` use `ONADD`, `ONMOVE` & `ONREMOVE` (see below).
+ *         For `P_LIST` use `on_add`, `on_move` & `on_remove` (see below).
  *
  *         Tip: Make the handler function a static member function of the info struct
  *         instead of a free function. This way it will not conflict with other effects'
  *         handler functions (which are often named similarly).
  *
- *     - `MIN` & `MAX` set the minimum and maximum value of a ranged parameter. Note
- *       that if `MIN == MAX`, then the parameter is unlimited!
+ *     - `int_min`/`int_max` & `float_min`/`float_max` set the minimum and maximum value
+ *       of a ranged parameter. Note that if `min == max`, then the parameter is
+ *       unlimited!
  *
- *     - `GETOPTS` is a function to retrieve the list of options. This is not a static
- *       list, because some lists aren't known at compile time (e.g. image filenames).
- *       The signature is:
+ *     - `get_options` is a function to retrieve the list of options. This is not a
+ *       static list because some lists aren't known at compile time (e.g. image
+ *       filenames). The signature is:
  *
- *         const char* const* get_opts(int64_t* length_out)
+ *         const char* const* get_options(int64_t* length_out)
  *
  *       The list length must be written to the location pointed to by `length_out`.
  *
- *     - If `LENGTH_MIN` and `LENGTH_MAX` in `PARAM_LIST` are both 0 then the list
- *       length is unlimited. If they are both the same but non-zero, then the list is
- *       fixed at that size (elements can still be moved around).
+ *     - If `length_min` and `length_max` in `P_LIST` are both 0 then the list length is
+ *       unlimited. If they are both the same but non-zero the list is fixed at that
+ *       size (elements can still be moved around).
  *
- *     - `ONADD`, `ONMOVE` & `ONREMOVE` are three callback functions that get called
+ *     - `on_add`, `on_move` & `on_remove` are three callback functions that get called
  *       whenever the respective action was successfully performed on the parameter
  *       list. The signature for all 3 functions is:
  *
- *         void on_change(Effect* component, const Parameter* parameter,
- *                        std::vector<int64_t> parameter_path,
- *                        int64_t index1, int64_t index2)
+ *         void on_list_change(Effect* component, const Parameter* parameter,
+ *                             std::vector<int64_t> parameter_path,
+ *                             int64_t index1, int64_t index2)
  *
  *       where:
  *
- *       - for `ONADD` `index1` is the new index and `index2` is always zero.
- *       - for `ONMOVE` `index1` is the previous index and `index2` is the new index.
- *       - for `ONREMOVE` `index1` is the removed index and `index2` is always zero.
+ *       - for `on_add` `index1` is the new index and `index2` is always zero.
+ *       - for `on_move` `index1` is the previous index and `index2` is the new index.
+ *       - for `on_remove` `index1` is the removed index and `index2` is always zero.
  *
  *       With the signatures all the same, you can pass the same function to all three.
  *
@@ -255,51 +250,61 @@
  * touched again by any outside (API) or inside (effect) code.
  */
 
-class Effect; // declared in effect.h
+/**
+ * The base for all effects' config structs. Must be empty, because `offsetof` is not
+ * strictly supported for structs/classes with inherited members.
+ */
+struct Effect_Config {};
+
+class Effect;      // declared in effect.h
+struct Parameter;  // declared below
+
+/* Function types for various Parameter fields. */
+typedef void (*value_change_handler)(Effect* component,
+                                     const Parameter* parameter,
+                                     std::vector<int64_t> parameter_path);
+typedef const char* const* (*options_getter)(int64_t* length_out);
+typedef size_t (*list_length_getter)(uint8_t* list_address);
+typedef bool (*list_adder)(uint8_t* list_address, uint32_t length_max, int64_t* before);
+typedef bool (*list_mover)(uint8_t* list_address, int64_t* from, int64_t* to);
+typedef bool (*list_remover)(uint8_t* list_address,
+                             uint32_t length_min,
+                             int64_t* to_remove);
+typedef void (*list_edit_handler)(Effect* component,
+                                  const Parameter* parameter,
+                                  std::vector<int64_t> parameter_path,
+                                  int64_t index1,
+                                  int64_t index2);
 
 struct Parameter {
-    AVS_Parameter_Handle handle;
-    AVS_Parameter_Type type;
-    const char* name;
-    const char* description;
-    bool is_saved;
-    size_t offset;
-    void (*on_value_change)(Effect* component,
-                            const Parameter* parameter,
-                            std::vector<int64_t> parameter_path);
+    AVS_Parameter_Handle handle = 0;
+    size_t offset = 0;
+    AVS_Parameter_Type type = AVS_PARAM_INVALID;
+    const char* name = NULL;
+    const char* description = NULL;
+    bool is_saved = true;
+    value_change_handler on_value_change = NULL;
 
-    const char* const* (*get_options)(int64_t* length_out);
+    options_getter get_options = NULL;
 
-    int64_t int_min;
-    int64_t int_max;
-    double float_min;
-    double float_max;
+    int64_t int_min = 0;
+    int64_t int_max = 0;
+    double float_min = 0.0;
+    double float_max = 0.0;
 
-    uint32_t num_child_parameters;
-    uint32_t num_child_parameters_min;
-    uint32_t num_child_parameters_max;
-    const Parameter* child_parameters;
-    size_t sizeof_child;
+    uint32_t num_child_parameters = 0;
+    uint32_t num_child_parameters_min = 0;
+    uint32_t num_child_parameters_max = 0;
+    const Parameter* child_parameters = NULL;
+    size_t sizeof_child = 1;
 
-    size_t (*list_length)(uint8_t* list_address);
-    bool (*list_add)(uint8_t* list_address, uint32_t length_max, int64_t* before);
-    bool (*list_move)(uint8_t* list_address, int64_t* from, int64_t* to);
-    bool (*list_remove)(uint8_t* list_address, uint32_t length_min, int64_t* to_remove);
-    void (*on_list_add)(Effect* component,
-                        const Parameter* parameter,
-                        std::vector<int64_t> parameter_path,
-                        int64_t added,
-                        int64_t _unused);
-    void (*on_list_move)(Effect* component,
-                         const Parameter* parameter,
-                         std::vector<int64_t> parameter_path,
-                         int64_t from,
-                         int64_t to);
-    void (*on_list_remove)(Effect* component,
-                           const Parameter* parameter,
-                           std::vector<int64_t> parameter_path,
-                           int64_t removed,
-                           int64_t _unused);
+    list_length_getter list_length = NULL;
+    list_adder list_add = NULL;
+    list_mover list_move = NULL;
+    list_remover list_remove = NULL;
+    list_edit_handler on_list_add = NULL;
+    list_edit_handler on_list_move = NULL;
+    list_edit_handler on_list_remove = NULL;
 };
 
 template <typename T>
@@ -370,151 +375,121 @@ bool list_remove(uint8_t* list_address, uint32_t length_min, int64_t* to_remove)
     return true;
 }
 
-#define _PARAMETER_BASIC(SAVED, CONFIG, FIELD, TYPE, NAME, DESC, ONCHANGE)          \
-    .handle = Handles::comptime_get(#CONFIG #FIELD #DESC #NAME),                    \
-    .type = AVS_PARAM_##TYPE, .name = NAME, .description = DESC, .is_saved = SAVED, \
-    .offset = offsetof(CONFIG, FIELD), .on_value_change = ONCHANGE
-
-#define _PARAMETER_OPTIONS(GETOPTS) .get_options = GETOPTS
-#define _PARAMETER_NOOPTIONS        .get_options = NULL
-
-#define _PARAMETER_IRANGE(MIN, MAX) .int_min = MIN, .int_max = MAX
-#define _PARAMETER_NOIRANGE         .int_min = 0, .int_max = 0
-#define _PARAMETER_FRANGE(MIN, MAX) .float_min = MIN, .float_max = MAX
-#define _PARAMETER_NOFRANGE         .float_min = 0.0, .float_max = 0.0
-
-#define _PARAMETER_LIST(                                                         \
-    LENGTH, LENGTH_MIN, LENGTH_MAX, LIST, SUBTYPE, ONADD, ONMOVE, ONREMOVE)      \
-    .num_child_parameters = LENGTH, .num_child_parameters_min = LENGTH_MIN,      \
-    .num_child_parameters_max =                                                  \
-        (LENGTH_MAX == LENGTH_MIN && LENGTH_MAX == 0) ? UINT32_MAX : LENGTH_MAX, \
-    .child_parameters = LIST, .sizeof_child = sizeof(SUBTYPE),                   \
-    .list_length = list_length<SUBTYPE>, .list_add = list_add<SUBTYPE>,          \
-    .list_move = list_move<SUBTYPE>, .list_remove = list_remove<SUBTYPE>,        \
-    .on_list_add = ONADD, .on_list_move = ONMOVE, .on_list_remove = ONREMOVE
-#define _PARAMETER_NOLIST                                                          \
-    .num_child_parameters = 0, .num_child_parameters_min = 0,                      \
-    .num_child_parameters_max = 0, .child_parameters = NULL, .sizeof_child = 1,    \
-    .list_length = NULL, .list_add = NULL, .list_move = NULL, .list_remove = NULL, \
-    .on_list_add = NULL, .on_list_move = NULL, .on_list_remove = NULL
-
-#define _PARAM(SAVED, CONFIG, FIELD, TYPE, NAME, DESC, ONCHANGE)            \
-    {                                                                       \
-        _PARAMETER_BASIC(SAVED, CONFIG, FIELD, TYPE, NAME, DESC, ONCHANGE), \
-            _PARAMETER_NOOPTIONS, _PARAMETER_NOIRANGE, _PARAMETER_NOFRANGE, \
-            _PARAMETER_NOLIST                                               \
+constexpr Parameter PARAM(size_t offset,
+                          AVS_Parameter_Type type,
+                          const char* name,
+                          const char* description = NULL,
+                          value_change_handler on_value_change = NULL,
+                          bool is_saved = true) {
+    Parameter _param = Parameter();
+    _param.handle = Handles::comptime_get(name);
+    _param.offset = offset;
+    _param.type = type;
+    _param.name = name;
+    _param.description = description;
+    _param.is_saved = is_saved;
+    _param.on_value_change = on_value_change;
+    return _param;
+}
+#define PARAM_SIMPLE(TYPE)                                                           \
+    constexpr Parameter P_##TYPE(size_t offset,                                      \
+                                 const char* name,                                   \
+                                 const char* description = NULL,                     \
+                                 value_change_handler on_value_change = NULL,        \
+                                 bool is_saved = true) {                             \
+        return PARAM(                                                                \
+            offset, AVS_PARAM_##TYPE, name, description, on_value_change, is_saved); \
+    }                                                                                \
+    constexpr Parameter P_##TYPE##_X(size_t offset,                                  \
+                                     const char* name,                               \
+                                     const char* description = NULL,                 \
+                                     value_change_handler on_value_change = NULL) {  \
+        return PARAM(                                                                \
+            offset, AVS_PARAM_##TYPE, name, description, on_value_change, false);    \
     }
-#define PARAM(CONFIG, FIELD, TYPE, NAME, DESC, ONCHANGE) \
-    _PARAM(/*saved*/ true, CONFIG, FIELD, TYPE, NAME, DESC, ONCHANGE)
-#define PARAM_X(CONFIG, FIELD, TYPE, NAME, DESC, ONCHANGE) \
-    _PARAM(/*saved*/ false, CONFIG, FIELD, TYPE, NAME, DESC, ONCHANGE)
+PARAM_SIMPLE(BOOL)
+PARAM_SIMPLE(INT)
+PARAM_SIMPLE(FLOAT)
+PARAM_SIMPLE(COLOR)
+PARAM_SIMPLE(STRING)
+PARAM_SIMPLE(INT_ARRAY)
+PARAM_SIMPLE(FLOAT_ARRAY)
+PARAM_SIMPLE(COLOR_ARRAY)
 
-#define _PARAM_IRANGE(SAVED, CONFIG, FIELD, NAME, DESC, ONCHANGE, MIN, MAX)         \
-    {                                                                               \
-        _PARAMETER_BASIC(SAVED, CONFIG, FIELD, INT, NAME, DESC, ONCHANGE),          \
-            _PARAMETER_NOOPTIONS, _PARAMETER_IRANGE(MIN, MAX), _PARAMETER_NOFRANGE, \
-            _PARAMETER_NOLIST                                                       \
-    }
-#define PARAM_IRANGE(CONFIG, FIELD, NAME, DESC, ONCHANGE, MIN, MAX) \
-    _PARAM_IRANGE(true, CONFIG, FIELD, NAME, DESC, ONCHANGE, MIN, MAX)
-#define PARAM_IRANGE_X(CONFIG, FIELD, NAME, DESC, ONCHANGE, MIN, MAX) \
-    _PARAM_IRANGE(false, CONFIG, FIELD, NAME, DESC, ONCHANGE, MIN, MAX)
+constexpr Parameter P_IRANGE(size_t offset,
+                             const char* name,
+                             int64_t int_min = 0,
+                             int64_t int_max = 0,
+                             const char* description = NULL,
+                             value_change_handler on_value_change = NULL,
+                             bool is_saved = false) {
+    Parameter _param =
+        PARAM(offset, AVS_PARAM_INT, name, description, on_value_change, is_saved);
+    _param.int_min = int_min;
+    _param.int_max = int_max;
+    return _param;
+}
 
-#define _PARAM_FRANGE(SAVED, CONFIG, FIELD, NAME, DESC, ONCHANGE, MIN, MAX)         \
-    {                                                                               \
-        _PARAMETER_BASIC(SAVED, CONFIG, FIELD, FLOAT, NAME, DESC, ONCHANGE),        \
-            _PARAMETER_NOOPTIONS, _PARAMETER_NOIRANGE, _PARAMETER_FRANGE(MIN, MAX), \
-            _PARAMETER_NOLIST                                                       \
-    }
-#define PARAM_FRANGE(CONFIG, FIELD, NAME, DESC, ONCHANGE, MIN, MAX) \
-    _PARAM_FRANGE(true, CONFIG, FIELD, NAME, DESC, ONCHANGE, MIN, MAX)
-#define PARAM_FRANGE_X(CONFIG, FIELD, NAME, DESC, ONCHANGE, MIN, MAX) \
-    _PARAM_FRANGE(false, CONFIG, FIELD, NAME, DESC, ONCHANGE, MIN, MAX)
+constexpr Parameter P_FRANGE(size_t offset,
+                             const char* name,
+                             double float_min = 0,
+                             double float_max = 0,
+                             const char* description = NULL,
+                             value_change_handler on_value_change = NULL,
+                             bool is_saved = true) {
+    Parameter _param =
+        PARAM(offset, AVS_PARAM_INT, name, description, on_value_change, is_saved);
+    _param.float_min = float_min;
+    _param.float_max = float_max;
+    return _param;
+}
 
-#define _PARAM_SELECT(SAVED, CONFIG, FIELD, NAME, DESC, ONCHANGE, GETOPTS)         \
-    {                                                                              \
-        _PARAMETER_BASIC(SAVED, CONFIG, FIELD, SELECT, NAME, DESC, ONCHANGE),      \
-            _PARAMETER_OPTIONS(GETOPTS), _PARAMETER_NOIRANGE, _PARAMETER_NOFRANGE, \
-            _PARAMETER_NOLIST                                                      \
-    }
-#define PARAM_SELECT(CONFIG, FIELD, NAME, DESC, ONCHANGE, GETOPTS) \
-    _PARAM_SELECT(true, CONFIG, FIELD, NAME, DESC, ONCHANGE, GETOPTS)
-#define PARAM_SELECT_X(CONFIG, FIELD, NAME, DESC, ONCHANGE, GETOPTS) \
-    _PARAM_SELECT(false, CONFIG, FIELD, NAME, DESC, ONCHANGE, GETOPTS)
+constexpr Parameter P_SELECT(size_t offset,
+                             const char* name,
+                             options_getter get_options,
+                             const char* description = NULL,
+                             value_change_handler on_value_change = NULL,
+                             bool is_saved = true) {
+    Parameter _param =
+        PARAM(offset, AVS_PARAM_SELECT, name, description, on_value_change, is_saved);
+    _param.get_options = get_options;
+    return _param;
+}
 
-#define _PARAM_LIST(SAVED,                                                  \
-                    CONFIG,                                                 \
-                    FIELD,                                                  \
-                    NAME,                                                   \
-                    DESC,                                                   \
-                    LENGTH,                                                 \
-                    LENGTH_MIN,                                             \
-                    LENGTH_MAX,                                             \
-                    LIST_,                                                  \
-                    SUBTYPE,                                                \
-                    ONADD,                                                  \
-                    ONMOVE,                                                 \
-                    ONREMOVE)                                               \
-    {                                                                       \
-        _PARAMETER_BASIC(SAVED, CONFIG, FIELD, LIST, NAME, DESC, NULL),     \
-            _PARAMETER_NOOPTIONS, _PARAMETER_NOIRANGE, _PARAMETER_NOFRANGE, \
-            _PARAMETER_LIST(LENGTH,                                         \
-                            LENGTH_MIN,                                     \
-                            LENGTH_MAX,                                     \
-                            LIST_,                                          \
-                            SUBTYPE,                                        \
-                            ONADD,                                          \
-                            ONMOVE,                                         \
-                            ONREMOVE)                                       \
-    }
-#define PARAM_LIST(CONFIG,      \
-                   FIELD,       \
-                   NAME,        \
-                   DESC,        \
-                   LENGTH,      \
-                   LENGTH_MIN,  \
-                   LENGTH_MAX,  \
-                   LIST_,       \
-                   SUBTYPE,     \
-                   ONADD,       \
-                   ONMOVE,      \
-                   ONREMOVE)    \
-    _PARAM_LIST(/*saved*/ true, \
-                CONFIG,         \
-                FIELD,          \
-                NAME,           \
-                DESC,           \
-                LENGTH,         \
-                LENGTH_MIN,     \
-                LENGTH_MAX,     \
-                LIST_,          \
-                SUBTYPE,        \
-                ONADD,          \
-                ONMOVE,         \
-                ONREMOVE)
-#define PARAM_LIST_X(                                                           \
-    CONFIG, FIELD, NAME, DESC, LENGTH, LIST_, SUBTYPE, ONADD, ONMOVE, ONREMOVE) \
-    _PARAM_LIST(/*saved*/ false,                                                \
-                CONFIG,                                                         \
-                FIELD,                                                          \
-                NAME,                                                           \
-                DESC,                                                           \
-                LENGTH,                                                         \
-                LENGTH_MIN,                                                     \
-                LENGTH_MAX,                                                     \
-                LIST_,                                                          \
-                SUBTYPE,                                                        \
-                ONADD,                                                          \
-                ONMOVE,                                                         \
-                ONREMOVE)
+template <typename Subtype>
+constexpr Parameter P_LIST(size_t offset,
+                           const char* name,
+                           const Parameter* list,
+                           uint32_t length,
+                           uint32_t length_min = 0,
+                           uint32_t length_max = 0,
+                           const char* description = NULL,
+                           list_edit_handler on_add = NULL,
+                           list_edit_handler on_move = NULL,
+                           list_edit_handler on_remove = NULL,
+                           bool is_saved = true) {
+    Parameter _param = PARAM(offset, AVS_PARAM_LIST, name, description, NULL, is_saved);
+    _param.num_child_parameters = length;
+    _param.num_child_parameters_min = length_min;
+    _param.num_child_parameters_max =
+        (length_max == length_min && length_max == 0) ? UINT32_MAX : length_max;
+    _param.child_parameters = list;
+    _param.sizeof_child = sizeof(Subtype);
+    _param.list_length = list_length<Subtype>;
+    _param.list_add = list_add<Subtype>;
+    _param.list_move = list_move<Subtype>;
+    _param.list_remove = list_remove<Subtype>;
+    _param.on_list_add = on_add;
+    _param.on_list_move = on_move;
+    _param.on_list_remove = on_remove;
+    return _param;
+}
 
-#define PARAM_ACTION(NAME, DESC, ONRUN)                                                \
-    {                                                                                  \
-        .handle = Handles::comptime_get(#NAME #DESC #ONRUN), .type = AVS_PARAM_ACTION, \
-        .name = NAME, .description = DESC, .is_saved = false, .offset = 0,             \
-        .on_value_change = ONRUN, _PARAMETER_NOOPTIONS, _PARAMETER_NOIRANGE,           \
-        _PARAMETER_NOFRANGE, _PARAMETER_NOLIST                                         \
-    }
+constexpr Parameter P_ACTION(const char* name,
+                             value_change_handler on_run,
+                             const char* description = NULL) {
+    return PARAM(0, AVS_PARAM_ACTION, name, description, on_run, false);
+}
 
 struct Config_Parameter {
     const Parameter* info;
