@@ -12,10 +12,10 @@
 #include <string>
 #include <vector>
 
-#ifdef _WIN32
-#define AVS_EDITOR_API __declspec(dllexport)
-#elif defined(__linux__)
+#ifdef __linux__
 #define AVS_EDITOR_API __attribute__((visibility("default")))
+#else
+#define AVS_EDITOR_API
 #endif
 
 Effect_Info* get_effect_from_handle(AVS_Effect_Handle effect) {
@@ -92,6 +92,7 @@ static inline std::vector<int64_t> make_parameter_tree_path(uint32_t list_depth,
 
 AVS_EDITOR_API
 const AVS_Effect_Handle* avs_effect_library(AVS_Handle avs, uint32_t* length_out) {
+    (void)avs;  // The library is static but might be instance-specific in the future.
     set_out<uint32_t>(length_out, g_effect_lib_handles_for_api.size());
     return g_effect_lib_handles_for_api.data();
 }
