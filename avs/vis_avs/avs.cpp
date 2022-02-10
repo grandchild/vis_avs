@@ -11,10 +11,10 @@
 #include <unordered_map>
 #include <vector>
 
-#ifdef _WIN32
-#define AVS_API __declspec(dllexport)
-#elif defined(__linux__)
+#ifdef __linux__
 #define AVS_API __attribute__((visibility("default")))
+#else
+#define AVS_API
 #endif
 
 std::unordered_map<AVS_Handle, AVS_Instance*> g_instances;
@@ -88,7 +88,7 @@ bool avs_preset_set_legacy(AVS_Handle avs,
     return false;
 }
 AVS_API
-uint8_t* avs_preset_get_legacy(AVS_Handle avs, size_t preset_length_out) {
+uint8_t* avs_preset_get_legacy(AVS_Handle avs, size_t* preset_length_out) {
     return NULL;
 }
 AVS_API

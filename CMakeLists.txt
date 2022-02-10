@@ -13,6 +13,7 @@ file(GLOB SRC_FILES_VIS_AVS
 )
 set(SRC_FILES_VIS_AVS_TARGET
     avs/platform_win32.c
+    libavs.def # The function export list.
 )
 set(SRC_FILES_VIS_AVS_COMPILER)
 
