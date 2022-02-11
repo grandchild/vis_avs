@@ -395,13 +395,16 @@ static BOOL CALLBACK evalHelpDlgProc(HWND hwndDlg,
     return 0;
 }
 
-void compilerfunctionlist(HWND hwndDlg, char* localinfo) {
+void compilerfunctionlist(HWND hwndDlg, const char* title, const char* text) {
     extern HINSTANCE g_hInstance;
+    std::string info(title);
+    info += '\0';
+    info += text;
     DialogBoxParam(g_hInstance,
                    MAKEINTRESOURCE(IDD_EVAL_HELP),
                    hwndDlg,
                    evalHelpDlgProc,
-                   (LONG)localinfo);
+                   (LONG)info.c_str());
 }
 
 #if 0  // syntax highlighting

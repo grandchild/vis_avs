@@ -125,7 +125,7 @@ int win32_dlgproc_superscope(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 }
             }
             if (LOWORD(wParam) == IDC_BUTTON2) {
-                compilerfunctionlist(hwndDlg, g_this->help_text);
+                compilerfunctionlist(hwndDlg, "Superscope", g_this->help_text);
             }
             if (LOWORD(wParam) == IDC_BUTTON1) {
                 RECT r;

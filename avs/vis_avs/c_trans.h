@@ -74,7 +74,6 @@ class C_THISCLASS : public C_RBASE2 {
     lock_t* code_lock;
 
     char* help_text =
-        "Movement\0"
         "Movement help goes here (send me some :)\r\n"
         "To use the custom table, modify r,d,x or y.\r\n"
         "Rect coords: x,y are in (-1..1) . Otherwise: d is (0..1) and r is "

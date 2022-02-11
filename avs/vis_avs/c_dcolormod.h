@@ -45,7 +45,6 @@ class C_THISCLASS : public C_RBASE {
     lock_t* code_lock;
 
     char* help_text =
-        "Color Modifier\0"
         "The color modifier allows you to modify the intensity of each color\r\n"
         "channel with respect to itself. For example, you could reverse the red\r\n"
         "channel, double the green channel, or half the blue channel.\r\n"

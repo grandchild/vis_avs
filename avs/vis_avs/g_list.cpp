@@ -196,7 +196,6 @@ int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                     break;
                 case IDC_BUTTON2: {
                     char* text =
-                        "Effect List\0"
                         "Read/write 'enabled' to get/set whether the effect list is "
                         "enabled for this frame\r\n"
                         "Read/write 'beat' to get/set whether there is currently a "
@@ -209,8 +208,7 @@ int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                         "set from 0.0-1.0\r\n"
                         "'w' and 'h' are set with the current width and height of the "
                         "frame\r\n";
-
-                    compilerfunctionlist(hwndDlg, text);
+                    compilerfunctionlist(hwndDlg, "Effect List", text);
                 } break;
             }
             break;

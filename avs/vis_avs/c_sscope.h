@@ -48,7 +48,6 @@ class C_THISCLASS : public C_RBASE {
     lock_t* code_lock;
 
     char* help_text =
-        "Superscope\0"
         "Superscope tutorial goes here\r\n"
         "But for now, here is the old text:\r\n"
         "You can specify expressions that run on Init, Frame, and on Beat.\r\n"

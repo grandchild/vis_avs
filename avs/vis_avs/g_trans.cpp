@@ -194,7 +194,7 @@ int win32_dlgproc_movement(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                     g_this->effect_exp_ch = 1;
             }
             if (LOWORD(wParam) == IDC_BUTTON2) {
-                compilerfunctionlist(hwndDlg, g_this->help_text);
+                compilerfunctionlist(hwndDlg, "Movement", g_this->help_text);
             }
             return 0;
             return 0;
