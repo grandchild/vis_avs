@@ -44,10 +44,8 @@ int win32_dlgproc_dynamicmovement(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
             return 1;
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_BUTTON1) {
-                char* text =
-                    "Dynamic Movement\0"
-                    "Dynamic movement help goes here (send me some :)";
-                compilerfunctionlist(hwndDlg, text);
+                char* text = "Dynamic movement help goes here (send me some :)";
+                compilerfunctionlist(hwndDlg, "Dynamic Movement", text);
             }
 
             if (LOWORD(wParam) == IDC_CHECK1) {

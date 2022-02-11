@@ -143,7 +143,8 @@ int win32_dlgproc_globalvars(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         }
                         break;
                     case IDC_GLOBALVARS_HELP:
-                        compilerfunctionlist(hwndDlg, config_this->help_text);
+                        compilerfunctionlist(
+                            hwndDlg, "Global Variable Manager", config_this->help_text);
                         break;
                 }
             }

@@ -28,7 +28,6 @@ int win32_dlgproc_dynamicdistancemodifier(HWND hwndDlg,
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_BUTTON1) {
                 char* text =
-                    "Dynamic Distance Modifier\0"
                     "The dynamic distance modifier allows you to dynamically (once per "
                     "frame)\r\n"
                     "change the source pixels for each ring of pixels out from the "
@@ -47,7 +46,7 @@ int win32_dlgproc_dynamicdistancemodifier(HWND hwndDlg,
                     "Zoom out: 'd=d*1.1'\r\n"
                     "Back and forth: pixel='d=d*(1.0+0.1*cos(t));', "
                     "frame='t=t+0.1'\r\n";
-                compilerfunctionlist(hwndDlg, text);
+                compilerfunctionlist(hwndDlg, "Dynamic Distance Modifier", text);
             }
 
             if (LOWORD(wParam) == IDC_CHECK1) {

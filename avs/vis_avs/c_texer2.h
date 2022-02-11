@@ -118,7 +118,6 @@ class C_Texer2 : public C_RBASE {
     lock_t* code_lock;
 
     char* help_text =
-        "Texer II\0"
         "Texer II is a rendering component that draws what is commonly known as "
         "particles.\r\n"
         "At specified positions on screen, a copy of the source image is placed and "

@@ -67,7 +67,6 @@ int win32_dlgproc_bump(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_HELPBTN) {
                 char* text =
-                    "Bump Light Position\0"
                     "How to use the custom light position evaluator:\r\n"
                     " * Init code will be executed each time the window size is "
                     "changed\r\n"
@@ -96,7 +95,7 @@ int win32_dlgproc_bump(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                     "      Init : t=0;u=0\r\n"
                     "      Frame: x=0.5+cos(t)*0.3; y=0.5+cos(u)*0.3; t=t+0.1; "
                     "u=u+0.012;\r\n";
-                compilerfunctionlist(hwndDlg, text);
+                compilerfunctionlist(hwndDlg, "Bump Light Position", text);
                 return 0;
             }
             if ((LOWORD(wParam) == IDC_CHECK1) || (LOWORD(wParam) == IDC_ONBEAT)

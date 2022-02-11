@@ -24,14 +24,13 @@ int win32_dlgproc_dynamicshift(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_HELPBTN) {
                 char* text =
-                    "Dynamic Shift\0"
                     "better Dynamic shift help goes here (send me some :)\r\n"
                     "Variables:\r\n"
                     "x,y = amount to shift (in pixels - set these)\r\n"
                     "w,h = width, height (in pixels)\r\n"
                     "b = isBeat\r\n"
                     "alpha = alpha value (0.0-1.0) for blend\r\n";
-                compilerfunctionlist(hwndDlg, text);
+                compilerfunctionlist(hwndDlg, "Dynamic Shift", text);
             }
             if (LOWORD(wParam) == IDC_CHECK1) {
                 g_this->blend = IsDlgButtonChecked(hwndDlg, IDC_CHECK1) ? 1 : 0;

@@ -59,7 +59,6 @@ class C_GlobalVars {
     double buf_value(int index);
 
     char* help_text =
-        "Global Variable Manager\0"
         "The Global Variable Manager (Misc / Global Variables) is a component designed "
         "to ease handling the gmegabuf and reg## global variables in AVS.\r\n"
         "\r\n"

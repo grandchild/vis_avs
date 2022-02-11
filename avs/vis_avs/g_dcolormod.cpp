@@ -25,7 +25,7 @@ int win32_dlgproc_colormodifier(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) 
             return 1;
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_BUTTON1) {
-                compilerfunctionlist(hwndDlg, g_this->help_text);
+                compilerfunctionlist(hwndDlg, "Color Modifier", g_this->help_text);
             }
 
             if (LOWORD(wParam) == IDC_CHECK1) {
