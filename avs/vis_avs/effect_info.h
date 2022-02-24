@@ -368,7 +368,10 @@ bool list_remove(uint8_t* list_address, uint32_t length_min, int64_t* to_remove)
     if (list->size() <= length_min) {
         return false;
     }
-    if ((size_t)(*to_remove < 0 ? 0 : *to_remove) >= list->size()) {
+    if (*to_remove < 0) {
+        *to_remove = list->size() + *to_remove;
+    }
+    if (*to_remove < 0 || (size_t)(*to_remove) >= list->size()) {
         return false;
     }
     list->erase(std::next(list->begin(), *to_remove));
