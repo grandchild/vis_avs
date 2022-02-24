@@ -283,23 +283,6 @@ class Legacy_Effect_Proxy {
         }
     };
 
-    void load_string(std::string& s, unsigned char* data, int& pos, int len) {
-        switch (this->type()) {
-            case NEW_EFFECT:
-                return this->effect->load_string_legacy(s, data, pos, len);
-            default:
-                return this->legacy_effect->load_string(s, data, pos, len);
-        }
-    };
-    void save_string(unsigned char* data, int& pos, std::string& text) {
-        switch (this->type()) {
-            case NEW_EFFECT:
-                return this->effect->save_string_legacy(data, pos, text);
-            default:
-                return this->legacy_effect->save_string(data, pos, text);
-        }
-    };
-
     bool can_multithread() {
         switch (this->type()) {
             case NEW_EFFECT:
