@@ -204,12 +204,9 @@ int win32_dlgproc_convolution(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                 }
                 // see if the save button's been clicked
                 if (objectcode == IDC_CONVOLUTION_BUTTON2) {
-                    file_box.Flags = 0x02000000 | OFN_HIDEREADONLY;  // 0x02000000 is
-                                                                     // OFN_DONTADDTORECENT
-                                                                     // for some reason
-                                                                     // the compiler is
-                                                                     // not recognising
-                                                                     // it.
+                    // 0x02000000 is OFN_DONTADDTORECENT for some reason the compiler is
+                    // not recognising it.
+                    file_box.Flags = 0x02000000 | OFN_HIDEREADONLY;
                     if (GetSaveFileName(&(file_box))) {
                         filehandle = CreateFile(file_box.lpstrFile,
                                                 GENERIC_WRITE,

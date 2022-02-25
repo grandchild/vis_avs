@@ -256,36 +256,18 @@ static unsigned int __inline BLEND_MUL(unsigned int a, unsigned int b) {
 
 static __inline void BLEND_LINE(int* fb, int color) {
     switch (g_line_blend_mode & 0xff) {
-        case 1:
-            *fb = BLEND(*fb, color);
-            break;
-        case 2:
-            *fb = BLEND_MAX(*fb, color);
-            break;
-        case 3:
-            *fb = BLEND_AVG(*fb, color);
-            break;
-        case 4:
-            *fb = BLEND_SUB(*fb, color);
-            break;
-        case 5:
-            *fb = BLEND_SUB(color, *fb);
-            break;
-        case 6:
-            *fb = BLEND_MUL(*fb, color);
-            break;
+        case 1: *fb = BLEND(*fb, color); break;
+        case 2: *fb = BLEND_MAX(*fb, color); break;
+        case 3: *fb = BLEND_AVG(*fb, color); break;
+        case 4: *fb = BLEND_SUB(*fb, color); break;
+        case 5: *fb = BLEND_SUB(color, *fb); break;
+        case 6: *fb = BLEND_MUL(*fb, color); break;
         case 7:
             *fb = BLEND_ADJ_NOMMX(*fb, color, (g_line_blend_mode >> 8) & 0xff);
             break;
-        case 8:
-            *fb = *fb ^ color;
-            break;
-        case 9:
-            *fb = BLEND_MIN(*fb, color);
-            break;
-        default:
-            *fb = color;
-            break;
+        case 8: *fb = *fb ^ color; break;
+        case 9: *fb = BLEND_MIN(*fb, color); break;
+        default: *fb = color; break;
     }
 }
 extern unsigned int const mmx_blend4_revn[2];

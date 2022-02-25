@@ -56,12 +56,8 @@ int win32_dlgproc_avi(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                 g_ConfigThis->adapt = IsDlgButtonChecked(hwndDlg, IDC_ADAPT) ? 1 : 0;
                 EnableWindows(hwndDlg, g_ConfigThis);
             }
-            if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == OBJ_COMBO)  // handle
-                                                                                 // clicks
-                                                                                 // to
-                                                                                 // combo
-                                                                                 // box
-            {
+            // handle clicks to combo box
+            if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == OBJ_COMBO) {
                 int sel = SendDlgItemMessage(hwndDlg, OBJ_COMBO, CB_GETCURSEL, 0, 0);
                 if (sel != -1) {
                     SendDlgItemMessage(hwndDlg,

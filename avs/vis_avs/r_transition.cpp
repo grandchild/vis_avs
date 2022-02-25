@@ -469,8 +469,7 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
                     memcpy(framebuffer + j * w, (dir ? d : p) + j * w, w * sizeof(int));
             }
         } break;
-        default:
-            break;
+        default: break;
     }
 
     if (n == 255) {

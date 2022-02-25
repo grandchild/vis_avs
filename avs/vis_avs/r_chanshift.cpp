@@ -80,8 +80,7 @@ int C_THISCLASS::render(char[2][2][576],
     // TODO [performance]: All of these byte-swapping sections just smell like PSHUFB
     switch (config.mode) {
         default:
-        case CHANSHIFT_MODE_RGB:
-            return 0;
+        case CHANSHIFT_MODE_RGB: return 0;
         case CHANSHIFT_MODE_RBG:
 #ifdef _MSC_VER
             __asm {

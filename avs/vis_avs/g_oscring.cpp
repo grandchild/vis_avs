@@ -55,26 +55,14 @@ int win32_dlgproc_oscring(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return 0;
         case WM_INITDIALOG:
             switch ((g_this->effect >> 2) & 3) {
-                case 0:
-                    CheckDlgButton(hwndDlg, IDC_LEFTCH, BST_CHECKED);
-                    break;
-                case 1:
-                    CheckDlgButton(hwndDlg, IDC_RIGHTCH, BST_CHECKED);
-                    break;
-                case 2:
-                    CheckDlgButton(hwndDlg, IDC_MIDCH, BST_CHECKED);
-                    break;
+                case 0: CheckDlgButton(hwndDlg, IDC_LEFTCH, BST_CHECKED); break;
+                case 1: CheckDlgButton(hwndDlg, IDC_RIGHTCH, BST_CHECKED); break;
+                case 2: CheckDlgButton(hwndDlg, IDC_MIDCH, BST_CHECKED); break;
             }
             switch ((g_this->effect >> 4) & 3) {
-                case 0:
-                    CheckDlgButton(hwndDlg, IDC_TOP, BST_CHECKED);
-                    break;
-                case 1:
-                    CheckDlgButton(hwndDlg, IDC_BOTTOM, BST_CHECKED);
-                    break;
-                case 2:
-                    CheckDlgButton(hwndDlg, IDC_CENTER, BST_CHECKED);
-                    break;
+                case 0: CheckDlgButton(hwndDlg, IDC_TOP, BST_CHECKED); break;
+                case 1: CheckDlgButton(hwndDlg, IDC_BOTTOM, BST_CHECKED); break;
+                case 2: CheckDlgButton(hwndDlg, IDC_CENTER, BST_CHECKED); break;
             }
             if (g_this->source)
                 CheckDlgButton(hwndDlg, IDC_SPEC, BST_CHECKED);
@@ -87,15 +75,9 @@ int win32_dlgproc_oscring(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return 1;
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
-                case IDC_OSC:
-                    g_this->source = 0;
-                    break;
-                case IDC_SPEC:
-                    g_this->source = 1;
-                    break;
-                case IDC_LEFTCH:
-                    g_this->effect &= ~12;
-                    break;
+                case IDC_OSC: g_this->source = 0; break;
+                case IDC_SPEC: g_this->source = 1; break;
+                case IDC_LEFTCH: g_this->effect &= ~12; break;
                 case IDC_RIGHTCH:
                     g_this->effect &= ~12;
                     g_this->effect |= 4;
@@ -104,9 +86,7 @@ int win32_dlgproc_oscring(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     g_this->effect &= ~12;
                     g_this->effect |= 8;
                     break;
-                case IDC_TOP:
-                    g_this->effect &= ~48;
-                    break;
+                case IDC_TOP: g_this->effect &= ~48; break;
                 case IDC_BOTTOM:
                     g_this->effect &= ~48;
                     g_this->effect |= 16;

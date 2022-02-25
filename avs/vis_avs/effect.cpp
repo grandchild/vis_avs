@@ -22,12 +22,8 @@ Effect* Effect::insert(Effect* to_insert,
     for (auto child = this->children.begin(); child != this->children.end(); child++) {
         if (*child == relative_to) {
             switch (direction) {
-                case INSERT_BEFORE:
-                    this->children.insert(child, to_insert);
-                    break;
-                case INSERT_AFTER:
-                    this->children.insert(++child, to_insert);
-                    break;
+                case INSERT_BEFORE: this->children.insert(child, to_insert); break;
+                case INSERT_AFTER: this->children.insert(++child, to_insert); break;
                 case INSERT_CHILD:
                     // Note: this one is not vector::insert(), but a recursive call
                     (*child)->insert(to_insert, *child, direction);

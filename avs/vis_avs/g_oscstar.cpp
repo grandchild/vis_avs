@@ -58,26 +58,14 @@ int win32_dlgproc_oscstar(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return 0;
         case WM_INITDIALOG:
             switch ((g_this->effect >> 2) & 3) {
-                case 0:
-                    CheckDlgButton(hwndDlg, IDC_LEFTCH, BST_CHECKED);
-                    break;
-                case 1:
-                    CheckDlgButton(hwndDlg, IDC_RIGHTCH, BST_CHECKED);
-                    break;
-                case 2:
-                    CheckDlgButton(hwndDlg, IDC_MIDCH, BST_CHECKED);
-                    break;
+                case 0: CheckDlgButton(hwndDlg, IDC_LEFTCH, BST_CHECKED); break;
+                case 1: CheckDlgButton(hwndDlg, IDC_RIGHTCH, BST_CHECKED); break;
+                case 2: CheckDlgButton(hwndDlg, IDC_MIDCH, BST_CHECKED); break;
             }
             switch ((g_this->effect >> 4) & 3) {
-                case 0:
-                    CheckDlgButton(hwndDlg, IDC_TOP, BST_CHECKED);
-                    break;
-                case 1:
-                    CheckDlgButton(hwndDlg, IDC_BOTTOM, BST_CHECKED);
-                    break;
-                case 2:
-                    CheckDlgButton(hwndDlg, IDC_CENTER, BST_CHECKED);
-                    break;
+                case 0: CheckDlgButton(hwndDlg, IDC_TOP, BST_CHECKED); break;
+                case 1: CheckDlgButton(hwndDlg, IDC_BOTTOM, BST_CHECKED); break;
+                case 2: CheckDlgButton(hwndDlg, IDC_CENTER, BST_CHECKED); break;
             }
             SetDlgItemInt(hwndDlg, IDC_NUMCOL, g_this->num_colors, FALSE);
             SendDlgItemMessage(hwndDlg, IDC_SLIDER1, TBM_SETRANGEMIN, 0, 0);
@@ -89,9 +77,7 @@ int win32_dlgproc_oscstar(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return 1;
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
-                case IDC_LEFTCH:
-                    g_this->effect &= ~12;
-                    break;
+                case IDC_LEFTCH: g_this->effect &= ~12; break;
                 case IDC_RIGHTCH:
                     g_this->effect &= ~12;
                     g_this->effect |= 4;
@@ -100,9 +86,7 @@ int win32_dlgproc_oscstar(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     g_this->effect &= ~12;
                     g_this->effect |= 8;
                     break;
-                case IDC_TOP:
-                    g_this->effect &= ~48;
-                    break;
+                case IDC_TOP: g_this->effect &= ~48; break;
                 case IDC_BOTTOM:
                     g_this->effect &= ~48;
                     g_this->effect |= 16;

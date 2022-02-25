@@ -62,9 +62,7 @@ static void join(std::string& output,
                  std::vector<std::string>& input,
                  const std::string& delimiter) {
     switch (input.size()) {
-        case 0:
-            output = "";
-            break;
+        case 0: output = ""; break;
         default:
             output = input[0];
             for (unsigned int i = 1; i < input.size(); ++i) {
@@ -139,9 +137,7 @@ static unsigned int parse_bracket(const std::string& input) {
     int brackets = 0;
     for (unsigned int i = 0; i < input.size(); ++i) {
         switch (input[i]) {
-            case '(':
-                brackets++;
-                break;
+            case '(': brackets++; break;
             case ')':
                 brackets--;
                 if (brackets == 0) return i;
@@ -259,14 +255,8 @@ void Replacement::c_style_replace(std::string& input) {
             params.clear();
             for (j = 0; j < com_params.size(); ++j) {
                 switch (com_params[j]) {
-                    case '(':
-                        Brackets++;
-                        break;
-
-                    case ')':
-                        Brackets--;
-                        break;
-
+                    case '(': Brackets++; break;
+                    case ')': Brackets--; break;
                     case ',':
                         if (Brackets == 0) {
                             params.push_back(
@@ -304,17 +294,11 @@ void Replacement::c_style_replace(std::string& input) {
 void Translator::do_replacements(std::string& input) {
     for (auto r : this->replacements) {
         switch (r.mode) {
-            case REPLACE_CASE_SENSITIVE:
-                string_replace(input, r.from, r.to);
-                break;
-
+            case REPLACE_CASE_SENSITIVE: string_replace(input, r.from, r.to); break;
             case REPLACE_CASE_INSENSITIVE:
                 string_replace_insensitive(input, r.from, r.to);
                 break;
-
-            case REPLACE_C_STYLE:
-                r.c_style_replace(input);
-                break;
+            case REPLACE_C_STYLE: r.c_style_replace(input); break;
         }
     }
 }
@@ -326,14 +310,8 @@ void Translator::command_split(std::vector<std::string>& output, std::string inp
     input += ';';
     for (i = 0; i < input.size(); ++i) {
         switch (input[i]) {
-            case '(':
-                brackets++;
-                break;
-
-            case ')':
-                brackets--;
-                break;
-
+            case '(': brackets++; break;
+            case ')': brackets--; break;
             case ';':
                 if (brackets == 0) {
                     output.push_back(input.substr(last_semicolon, i - last_semicolon));
@@ -407,20 +385,11 @@ std::string Translator::transform_code(std::string input, int indent, bool do_pa
     }
 
     switch (this->mode) {
-        case MODE_LINEAR:
-            return tmp_linear_form;
-
-        case MODE_ASSIGN:
-            return tmp_assign_form;
-
-        case MODE_EXEC:
-            return tmp_exec_form;
-
-        case MODE_PLUS:
-            return tmp_plus_form;
-
-        default:
-            return tmp_exec_form;
+        case MODE_LINEAR: return tmp_linear_form;
+        case MODE_ASSIGN: return tmp_assign_form;
+        case MODE_EXEC: return tmp_exec_form;
+        case MODE_PLUS: return tmp_plus_form;
+        default: return tmp_exec_form;
     }
 }
 
@@ -446,12 +415,8 @@ std::string Translator::parse_command(std::string input, int indent) {
         last_comma = 0;
         for (i = 0; i < cmd_params.size(); ++i) {
             switch (cmd_params[i]) {
-                case '(':
-                    brackets++;
-                    break;
-                case ')':
-                    brackets--;
-                    break;
+                case '(': brackets++; break;
+                case ')': brackets--; break;
                 case ',':
                     if (brackets == 0) {
                         tmp_output += this->transform_code(

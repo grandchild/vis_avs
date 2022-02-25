@@ -291,28 +291,16 @@ int C_THISCLASS::render(char[2][2][576],
         } else {
             int x, y;
             switch (drop_position_x) {
-                case 0:
-                    x = w / 4;
-                    break;
+                case 0: x = w / 4; break;
                 case 1:
-                default:
-                    x = w / 2;
-                    break;
-                case 2:
-                    x = w * 3 / 4;
-                    break;
+                default: x = w / 2; break;
+                case 2: x = w * 3 / 4; break;
             }
             switch (drop_position_y) {
-                case 0:
-                    y = h / 4;
-                    break;
+                case 0: y = h / 4; break;
                 case 1:
-                default:
-                    y = h / 2;
-                    break;
-                case 2:
-                    y = h * 3 / 4;
-                    break;
+                default: y = h / 2; break;
+                case 2: y = h * 3 / 4; break;
             }
             SineBlob(x, y, drop_radius, -depth, page);
         }

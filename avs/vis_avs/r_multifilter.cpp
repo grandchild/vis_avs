@@ -82,8 +82,7 @@ inline void C_MultiFilter::chrome(int* framebuffer, unsigned int fb_length) {
                 chan[1] = chan[1] < 128 ? chan[1] * 2 : 510 - (chan[1] * 2);
                 chan[2] = chan[2] < 128 ? chan[2] * 2 : 510 - (chan[2] * 2);
                 break;
-            default:
-                break;
+            default: break;
         }
     }
 }

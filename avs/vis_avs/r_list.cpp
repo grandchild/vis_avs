@@ -575,21 +575,15 @@ int C_RenderListClass::render(char visdata[2][2][576],
         if (use_blendin == 10 && use_inblendval >= 255) use_blendin = 1;
 
         switch (use_blendin) {
-            case 1:
-                memcpy(o, tfb, w * h * sizeof(int));
-                break;
-            case 2:
-                mmx_avgblend_block(o, tfb, x);
-                break;
+            case 1: memcpy(o, tfb, w * h * sizeof(int)); break;
+            case 2: mmx_avgblend_block(o, tfb, x); break;
             case 3:
                 while (x--) {
                     *o = BLEND_MAX(*o, *tfb++);
                     o++;
                 }
                 break;
-            case 4:
-                mmx_addblend_block(o, tfb, x);
-                break;
+            case 4: mmx_addblend_block(o, tfb, x); break;
             case 5:
                 while (x--) {
                     *o = BLEND_SUB(*o, *tfb++);
@@ -634,12 +628,8 @@ int C_RenderListClass::render(char visdata[2][2][576],
                     o++;
                 }
                 break;
-            case 10:
-                mmx_adjblend_block(o, tfb, o, x, use_inblendval);
-                break;
-            case 11:
-                mmx_mulblend_block(o, tfb, x);
-                break;
+            case 10: mmx_adjblend_block(o, tfb, o, x, use_inblendval); break;
+            case 11: mmx_mulblend_block(o, tfb, x); break;
             case 13:
                 while (x--) {
                     *o = BLEND_MIN(*o, *tfb++);
@@ -663,8 +653,7 @@ int C_RenderListClass::render(char visdata[2][2][576],
 #endif  // _MSC_VER
 #endif
                 break;
-            default:
-                break;
+            default: break;
         }
         unset_n_Context();
     }
@@ -753,18 +742,14 @@ int C_RenderListClass::render(char visdata[2][2][576],
                 }
                 memcpy(o, tfb, x * sizeof(int));
                 break;
-            case 2:
-                mmx_avgblend_block(o, tfb, x);
-                break;
+            case 2: mmx_avgblend_block(o, tfb, x); break;
             case 3:
                 while (x--) {
                     *o = BLEND_MAX(*o, *tfb++);
                     o++;
                 }
                 break;
-            case 4:
-                mmx_addblend_block(o, tfb, x);
-                break;
+            case 4: mmx_addblend_block(o, tfb, x); break;
             case 5:
                 while (x--) {
                     *o = BLEND_SUB(*o, *tfb++);
@@ -809,12 +794,8 @@ int C_RenderListClass::render(char visdata[2][2][576],
                     o++;
                 }
                 break;
-            case 10:
-                mmx_adjblend_block(o, tfb, o, x, use_outblendval);
-                break;
-            case 11:
-                mmx_mulblend_block(o, tfb, x);
-                break;
+            case 10: mmx_adjblend_block(o, tfb, o, x, use_outblendval); break;
+            case 11: mmx_mulblend_block(o, tfb, x); break;
             case 13:
                 while (x--) {
                     *o = BLEND_MIN(*o, *tfb++);
@@ -837,8 +818,7 @@ int C_RenderListClass::render(char visdata[2][2][576],
 #endif  // _MSC_VER
 #endif
             } break;
-            default:
-                break;
+            default: break;
         }
         unset_n_Context();
     }

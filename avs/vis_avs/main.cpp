@@ -115,16 +115,11 @@ static winampVisModule* getModule(int which) {
 
 BOOL CALLBACK aboutProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     switch (uMsg) {
-        case WM_INITDIALOG:
-            SetDlgItemText(hwndDlg, IDC_VERSTR, verstr);
-
-            return 1;
+        case WM_INITDIALOG: SetDlgItemText(hwndDlg, IDC_VERSTR, verstr); return 1;
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
                 case IDOK:
-                case IDCANCEL:
-                    EndDialog(hwndDlg, 0);
-                    return 0;
+                case IDCANCEL: EndDialog(hwndDlg, 0); return 0;
             }
             return 0;
     }

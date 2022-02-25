@@ -15,9 +15,7 @@ int win32_dlgproc_onbeatclear(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
         case WM_DRAWITEM: {
             DRAWITEMSTRUCT* di = (DRAWITEMSTRUCT*)lParam;
             switch (di->CtlID) {
-                case IDC_BUTTON1:
-                    GR_DrawColoredButton(di, g_this->color);
-                    break;
+                case IDC_BUTTON1: GR_DrawColoredButton(di, g_this->color); break;
             }
         }
             return 0;
