@@ -1,4 +1,6 @@
-#include "c__base.h"
+#include "effect_code.h"
+
+#include "r_defs.h"
 
 #include "avs_eelif.h"
 
@@ -14,8 +16,17 @@ CodeSection::~CodeSection() {
     this->code = NULL;
 }
 
+void CodeSection::set(const char* string) {
+    unsigned int length = strnlen(string, MAX_CODE_LEN);
+    if (length == MAX_CODE_LEN) {
+        return;
+    }
+    length += 1;
+    this->set(string, length);
+}
+
 /* `length` must include the zero byte! */
-void CodeSection::set(char* string, unsigned int length) {
+void CodeSection::set(const char* string, unsigned int length) {
     delete[] this->string;
     length = length == 0 ? 1 : length;
     this->string = new char[length];

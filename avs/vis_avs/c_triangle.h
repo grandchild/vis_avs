@@ -2,6 +2,7 @@
 
 #include "ape.h"
 #include "c__base.h"
+#include "effect_code.h"
 
 #define MOD_NAME "Render / Triangle"
 
