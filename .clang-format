@@ -182,3 +182,7 @@ PenaltyBreakComment: 1
 #     #define BAR_BAZ 2
 #
 AlignConsecutiveMacros: AcrossComments
+
+# Compact switch-case blocks can be a boon to readability if the case lines are very
+# similar.
+AllowShortCaseLabelsOnASingleLine: true
