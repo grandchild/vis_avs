@@ -635,7 +635,7 @@ struct Effect_Info {
     virtual const Parameter* get_parameters() const { return this->parameters; }; \
     virtual const AVS_Parameter_Handle* get_parameters_for_api() const {          \
         static AVS_Parameter_Handle parameters_for_api[this->num_parameters];     \
-        for (uint32_t i = 0; i < this->num_parameters; i++) {                     \
+        for (int64_t i = 0; i < this->num_parameters; i++) {                      \
             parameters_for_api[i] = this->parameters[i].handle;                   \
         }                                                                         \
         return parameters_for_api;                                                \
