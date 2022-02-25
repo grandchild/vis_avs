@@ -3,6 +3,7 @@
 #include "r_defs.h"
 
 #include "c__base.h"
+#include "effect_code.h"
 #include "pixel_format.h"
 
 #include <vector>
