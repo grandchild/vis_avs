@@ -84,8 +84,16 @@ class Effect {
         (void)data;
         return 0;
     }
-    void load_string_legacy(std::string& s, unsigned char* data, int& pos, int len);
-    void save_string_legacy(unsigned char* data, int& pos, std::string& text);
+    uint32_t string_load_legacy(const char* src,
+                                std::string& dest,
+                                uint32_t max_length);
+    uint32_t string_save_legacy(std::string& src,
+                                char* dest,
+                                uint32_t max_length = 0x7fff);
+    uint32_t string_nt_load_legacy(const char* src,
+                                   std::string& dest,
+                                   uint32_t max_length);
+    uint32_t string_nt_save_legacy(std::string& src, char* dest, uint32_t max_length);
 
     // multithread render api
     virtual bool can_multithread() { return false; };
