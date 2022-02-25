@@ -125,15 +125,9 @@ static LRESULT CALLBACK FSOverlayWndProc(HWND hwnd,
         return 0;
     }
     switch (message) {
-        case WM_CREATE:
-            start_t = GetTickCount();
-            return 0;
-        case WM_SETCURSOR:
-            SetCursor(NULL);
-            return TRUE;
-        case WM_DESTROY:
-            hwndOverlayWnd = 0;
-            return 0;
+        case WM_CREATE: start_t = GetTickCount(); return 0;
+        case WM_SETCURSOR: SetCursor(NULL); return TRUE;
+        case WM_DESTROY: hwndOverlayWnd = 0; return 0;
         case WM_PAINT: {
             PAINTSTRUCT ps;
             BeginPaint(hwnd, &ps);
@@ -149,8 +143,7 @@ static LRESULT CALLBACK FSOverlayWndProc(HWND hwnd,
             EndPaint(hwnd, &ps);
         }
             return 0;
-        case WM_KEYDOWN:
-            return SendMessage(g_hwnd, message, wParam, lParam);
+        case WM_KEYDOWN: return SendMessage(g_hwnd, message, wParam, lParam);
     }
     return DefWindowProc(hwnd, message, wParam, lParam);
 }

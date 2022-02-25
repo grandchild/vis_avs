@@ -137,10 +137,8 @@ class Legacy_Effect_Proxy {
     };
     void* void_ref() {
         switch (this->type()) {
-            case NEW_EFFECT:
-                return (void*)this->effect;
-            default:
-                return (void*)this->legacy_effect;
+            case NEW_EFFECT: return (void*)this->effect;
+            default: return (void*)this->legacy_effect;
         }
     };
 
@@ -160,38 +158,30 @@ class Legacy_Effect_Proxy {
     };
     char* get_desc() {
         switch (this->type()) {
-            case NEW_EFFECT:
-                return this->effect->get_desc();
-            default:
-                return this->legacy_effect->get_desc();
+            case NEW_EFFECT: return this->effect->get_desc();
+            default: return this->legacy_effect->get_desc();
         }
     };
     void load_config(unsigned char* data, int len) {
         switch (this->type()) {
-            case NEW_EFFECT:
-                return this->effect->load_legacy(data, len);
-            default:
-                return this->legacy_effect->load_config(data, len);
+            case NEW_EFFECT: return this->effect->load_legacy(data, len);
+            default: return this->legacy_effect->load_config(data, len);
         }
     };
     int save_config(unsigned char* data) {
         switch (this->type()) {
-            case NEW_EFFECT:
-                return this->effect->save_legacy(data);
-            default:
-                return this->legacy_effect->save_config(data);
+            case NEW_EFFECT: return this->effect->save_legacy(data);
+            default: return this->legacy_effect->save_config(data);
         }
     };
 
     bool can_multithread() {
         switch (this->type()) {
-            case NEW_EFFECT:
-                return this->effect->can_multithread();
+            case NEW_EFFECT: return this->effect->can_multithread();
             case LEGACY_MULTITHREAD:
                 return ((C_RBASE2*)(this->legacy_effect))->smp_getflags() & 1;
             default:
-            case LEGACY_SINGLETHREAD:
-                return false;
+            case LEGACY_SINGLETHREAD: return false;
         }
     };
     int smp_begin(int max_threads,
@@ -209,8 +199,7 @@ class Legacy_Effect_Proxy {
                 return ((C_RBASE2*)(this->legacy_effect))
                     ->smp_begin(max_threads, visdata, isBeat, framebuffer, fbout, w, h);
             default:
-            case LEGACY_SINGLETHREAD:
-                return 0;
+            case LEGACY_SINGLETHREAD: return 0;
         }
     };
     void smp_render(int this_thread,
@@ -242,8 +231,7 @@ class Legacy_Effect_Proxy {
                                  w,
                                  h);
             default:
-            case LEGACY_SINGLETHREAD:
-                return;
+            case LEGACY_SINGLETHREAD: return;
         }
     };
     int smp_finish(char visdata[2][2][576],
@@ -260,8 +248,7 @@ class Legacy_Effect_Proxy {
                 return ((C_RBASE2*)(this->legacy_effect))
                     ->smp_finish(visdata, isBeat, framebuffer, fbout, w, h);
             default:
-            case LEGACY_SINGLETHREAD:
-                return 0;
+            case LEGACY_SINGLETHREAD: return 0;
         }
     };
 };

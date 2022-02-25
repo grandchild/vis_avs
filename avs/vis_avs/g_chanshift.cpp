@@ -27,9 +27,7 @@ int win32_dlgproc_chanshift(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
 
             return 1;
 
-        case WM_DESTROY:
-            KillTimer(hwndDlg, 1);
-            return 1;
+        case WM_DESTROY: KillTimer(hwndDlg, 1); return 1;
     }
     return 0;
 }

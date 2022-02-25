@@ -860,9 +860,7 @@ static BOOL CALLBACK debugProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                     lock_unlock(g_eval_cs);
                     return 0;
                 case IDOK:
-                case IDCANCEL:
-                    DestroyWindow(hwndDlg);
-                    return 0;
+                case IDCANCEL: DestroyWindow(hwndDlg); return 0;
                 default:
                     if (HIWORD(wParam) == EN_CHANGE && LOWORD(wParam) >= IDC_DEBUGREG_1
                         && LOWORD(wParam) <= IDC_DEBUGREG_16) {
@@ -879,9 +877,7 @@ static BOOL CALLBACK debugProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                     break;
             }
             return 0;
-        case WM_DESTROY:
-            g_debugwnd = 0;
-            return 0;
+        case WM_DESTROY: g_debugwnd = 0; return 0;
     }
     return 0;
 }
@@ -894,9 +890,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
     extern void toggleWharfAmpDock(HWND hwnd);
 
     switch (uMsg) {
-        case WM_SHOWWINDOW:
-            ShowWindow(cur_hwnd, wParam ? SW_SHOW : SW_HIDE);
-            break;
+        case WM_SHOWWINDOW: ShowWindow(cur_hwnd, wParam ? SW_SHOW : SW_HIDE); break;
         case WM_INITMENU:
             EnableMenuItem(
                 (HMENU)wParam,
@@ -972,8 +966,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 ShowWindow(hwndDlg, SW_HIDE);
             }
             return 0;
-        case WM_DESTROY:
-            return 0;
+        case WM_DESTROY: return 0;
         case WM_INITDIALOG: {
             g_hwndDlg = hwndDlg;
             // SetDlgItemText(hwndDlg,IDC_AVS_VER,verstr);
@@ -1838,15 +1831,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     SetCurrentDirectory(buf2);
                 }
                     return 0;
-                case IDC_SAVE:
-                    dosavePreset(hwndDlg);
-                    return 0;
-                case IDM_UNDO:
-                    C_UndoStack::undo();
-                    return 0;
-                case IDM_REDO:
-                    C_UndoStack::redo();
-                    return 0;
+                case IDC_SAVE: dosavePreset(hwndDlg); return 0;
+                case IDM_UNDO: C_UndoStack::undo(); return 0;
+                case IDM_REDO: C_UndoStack::redo(); return 0;
             }
             return 0;
     }

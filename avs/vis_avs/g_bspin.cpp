@@ -14,12 +14,8 @@ int win32_dlgproc_bassspin(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
         case WM_DRAWITEM: {
             DRAWITEMSTRUCT* di = (DRAWITEMSTRUCT*)lParam;
             switch (di->CtlID) {
-                case IDC_LC:
-                    GR_DrawColoredButton(di, g_this->colors[0]);
-                    break;
-                case IDC_RC:
-                    GR_DrawColoredButton(di, g_this->colors[1]);
-                    break;
+                case IDC_LC: GR_DrawColoredButton(di, g_this->colors[0]); break;
+                case IDC_RC: GR_DrawColoredButton(di, g_this->colors[1]); break;
             }
         }
             return 0;

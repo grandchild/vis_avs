@@ -66,9 +66,7 @@ int win32_dlgproc_globalvars(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     case IDC_GLOBALVARS_CODE_BEAT:
                         config_this->code.beat.set(buf, l);
                         break;
-                    case IDC_GLOBALVARS_FILEPATH:
-                        config_this->filepath = buf;
-                        break;
+                    case IDC_GLOBALVARS_FILEPATH: config_this->filepath = buf; break;
                     case IDC_GLOBALVARS_REG_RANGE:
                         config_this->reg_ranges_str = buf;
                         range_valid =
@@ -95,8 +93,7 @@ int win32_dlgproc_globalvars(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 hwndDlg, IDC_GLOBALVARS_BUF_RANGE_ERR, "Err");
                         }
                         break;
-                    default:
-                        break;
+                    default: break;
                 }
                 delete buf;
             } else if (wNotifyCode == BN_CLICKED) {
@@ -151,8 +148,7 @@ int win32_dlgproc_globalvars(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             return 1;
         }
 
-        case WM_DESTROY:
-            return 1;
+        case WM_DESTROY: return 1;
     }
     return 0;
 }

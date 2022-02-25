@@ -104,9 +104,7 @@ int win32_dlgproc_custombpm(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                 g_ConfigThis->invert = IsDlgButtonChecked(hwndDlg, IDC_INVERT) ? 1 : 0;
             }
             return 0;
-        case WM_DESTROY:
-            KillTimer(hwndDlg, 0);
-            return 0;
+        case WM_DESTROY: KillTimer(hwndDlg, 0); return 0;
     }
     return 0;
 }

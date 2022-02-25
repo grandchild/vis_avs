@@ -65,8 +65,7 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     case IDC_TEXERII_POINT:
                         config_this->code.point.set(buf, l + 1);
                         break;
-                    default:
-                        break;
+                    default: break;
                 }
                 delete buf;
             }
@@ -103,8 +102,7 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 1;
         }
 
-        case WM_DESTROY:
-            return 1;
+        case WM_DESTROY: return 1;
     }
     return 0;
 }

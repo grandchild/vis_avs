@@ -92,8 +92,7 @@ int win32_dlgproc_picture(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                 }
             }
             return 0;
-        case WM_HSCROLL:
-            return 0;
+        case WM_HSCROLL: return 0;
     }
     return 0;
 }

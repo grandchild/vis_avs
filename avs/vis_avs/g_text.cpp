@@ -58,9 +58,7 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             if (g_ConfigThis->randomword)
                 CheckDlgButton(hwndDlg, IDC_RANDWORD, BST_CHECKED);
             switch (g_ConfigThis->valign) {
-                case DT_TOP:
-                    CheckDlgButton(hwndDlg, IDC_VTOP, BST_CHECKED);
-                    break;
+                case DT_TOP: CheckDlgButton(hwndDlg, IDC_VTOP, BST_CHECKED); break;
                 case DT_BOTTOM:
                     CheckDlgButton(hwndDlg, IDC_VBOTTOM, BST_CHECKED);
                     break;
@@ -69,12 +67,8 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                     break;
             }
             switch (g_ConfigThis->halign) {
-                case DT_LEFT:
-                    CheckDlgButton(hwndDlg, IDC_HLEFT, BST_CHECKED);
-                    break;
-                case DT_RIGHT:
-                    CheckDlgButton(hwndDlg, IDC_HRIGHT, BST_CHECKED);
-                    break;
+                case DT_LEFT: CheckDlgButton(hwndDlg, IDC_HLEFT, BST_CHECKED); break;
+                case DT_RIGHT: CheckDlgButton(hwndDlg, IDC_HRIGHT, BST_CHECKED); break;
                 case DT_CENTER:
                     CheckDlgButton(hwndDlg, IDC_HCENTER, BST_CHECKED);
                     break;

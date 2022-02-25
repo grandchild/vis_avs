@@ -21,20 +21,11 @@ int win32_dlgproc_triangle(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                 GetWindowText(h, buf, l);
 
                 switch (LOWORD(wParam)) {
-                    case IDC_TRIANGLE_INIT:
-                        config_this->code.init.set(buf, l);
-                        break;
-                    case IDC_TRIANGLE_FRAME:
-                        config_this->code.frame.set(buf, l);
-                        break;
-                    case IDC_TRIANGLE_BEAT:
-                        config_this->code.beat.set(buf, l);
-                        break;
-                    case IDC_TRIANGLE_POINT:
-                        config_this->code.point.set(buf, l);
-                        break;
-                    default:
-                        break;
+                    case IDC_TRIANGLE_INIT: config_this->code.init.set(buf, l); break;
+                    case IDC_TRIANGLE_FRAME: config_this->code.frame.set(buf, l); break;
+                    case IDC_TRIANGLE_BEAT: config_this->code.beat.set(buf, l); break;
+                    case IDC_TRIANGLE_POINT: config_this->code.point.set(buf, l); break;
+                    default: break;
                 }
                 delete buf;
             }
@@ -49,8 +40,7 @@ int win32_dlgproc_triangle(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
             return 1;
         }
 
-        case WM_DESTROY:
-            return 1;
+        case WM_DESTROY: return 1;
     }
     return 0;
 }

@@ -265,8 +265,7 @@ class Configurable_Effect : public Effect {
                     case AVS_PARAM_INT_ARRAY:
                     case AVS_PARAM_FLOAT_ARRAY:
                     case AVS_PARAM_COLOR_ARRAY:
-                    default:
-                        break;
+                    default: break;
                 }
             }
             if (config_param.info->on_list_add != NULL) {

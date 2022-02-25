@@ -14,12 +14,8 @@ int win32_dlgproc_colorclip(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
         case WM_DRAWITEM: {
             DRAWITEMSTRUCT* di = (DRAWITEMSTRUCT*)lParam;
             switch (di->CtlID) {
-                case IDC_LC:
-                    GR_DrawColoredButton(di, g_this->color_clip);
-                    break;
-                case IDC_LC2:
-                    GR_DrawColoredButton(di, g_this->color_clip_out);
-                    break;
+                case IDC_LC: GR_DrawColoredButton(di, g_this->color_clip); break;
+                case IDC_LC2: GR_DrawColoredButton(di, g_this->color_clip_out); break;
             }
         }
             return 0;

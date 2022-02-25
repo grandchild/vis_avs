@@ -305,9 +305,7 @@ static int win32_dlgproc_colormap_color_position(HWND hwndDlg,
     int v;
 
     switch (uMsg) {
-        case WM_CLOSE:
-            EndDialog(hwndDlg, 0);
-            return 1;
+        case WM_CLOSE: EndDialog(hwndDlg, 0); return 1;
         case WM_INITDIALOG: {
             SetDlgItemInt(hwndDlg, IDC_COLORMAP_COLOR_POSITION, g_ColorSetValue, true);
             auto edit = GetDlgItem(hwndDlg, IDC_COLORMAP_COLOR_POSITION);
@@ -327,9 +325,7 @@ static int win32_dlgproc_colormap_color_position(HWND hwndDlg,
                         }
                     }
                     return 0;
-                case BN_CLICKED:
-                    EndDialog(hwndDlg, 0);
-                    return 1;
+                case BN_CLICKED: EndDialog(hwndDlg, 0); return 1;
             }
     }
     return 0;

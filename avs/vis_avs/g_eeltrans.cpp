@@ -38,8 +38,7 @@ int win32_dlgproc_eeltrans(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
             }
             return 1;
 
-        case WM_DESTROY:
-            return 1;
+        case WM_DESTROY: return 1;
 
         case WM_COMMAND:
             if (HIWORD(wParam) == EN_CHANGE) {
@@ -56,9 +55,7 @@ int win32_dlgproc_eeltrans(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                         g_EelTransThis->code = std::string(buf);
                         delete[] buf;
                         break;
-                    default:
-                        delete[] buf;
-                        break;
+                    default: delete[] buf; break;
                 }
             }
             switch (LOWORD(wParam)) {

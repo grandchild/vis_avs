@@ -229,9 +229,7 @@ BOOL CALLBACK DlgProc_Bpm(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                 stickyConfidenceCount = 0;
             }
             return 0;
-        case WM_DESTROY:
-            KillTimer(hwndDlg, 0);
-            return 0;
+        case WM_DESTROY: KillTimer(hwndDlg, 0); return 0;
     }
     return 0;
 }
@@ -394,8 +392,10 @@ BOOL TCHistStep(BeatType* t,
         if (learning) {
             if (abs((int)(Avg - (TC - t[1].TC)))
                 < abs((int)(Avg - (t[0].TC - t[1].TC)))) {
-                /* if (predictionLastTC && t[0].Type == BEAT_GUESSED
-                   && Type == BEAT_REAL) predictionLastTC += (TC - t[0].TC)/2; */
+                /*
+                if (predictionLastTC && t[0].Type == BEAT_GUESSED && Type == BEAT_REAL)
+                    predictionLastTC += (TC - t[0].TC)/2;
+                */
                 t[0].TC = TC;
                 t[0].Type = Type;
                 return TRUE;

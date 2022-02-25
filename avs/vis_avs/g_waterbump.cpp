@@ -34,8 +34,7 @@ int win32_dlgproc_waterbump(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
             CheckDlgButton(
                 hwndDlg, IDC_DROP_BOTTOM, g_ConfigThis->drop_position_y == 2);
             return 1;
-        case WM_DRAWITEM:
-            return 0;
+        case WM_DRAWITEM: return 0;
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_CHECK1)
                 g_ConfigThis->enabled = IsDlgButtonChecked(hwndDlg, IDC_CHECK1) ? 1 : 0;

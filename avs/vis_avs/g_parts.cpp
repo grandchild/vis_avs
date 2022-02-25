@@ -19,9 +19,7 @@ int win32_dlgproc_movingparticles(HWND hwndDlg,
         case WM_DRAWITEM: {
             DRAWITEMSTRUCT* di = (DRAWITEMSTRUCT*)lParam;
             switch (di->CtlID) {
-                case IDC_LC:
-                    GR_DrawColoredButton(di, g_this->colors);
-                    break;
+                case IDC_LC: GR_DrawColoredButton(di, g_this->colors); break;
             }
         }
             return 0;

@@ -142,8 +142,7 @@ int C_THISCLASS::render(char[2][2][576],
                 : end);
 #endif
             break;
-        case MD_X8:
-            c = w * h / 2;
+        case MD_X8: c = w * h / 2;
 #ifdef _MSC_VER
             __asm {
 			mov ebx, framebuffer;
@@ -181,8 +180,7 @@ int C_THISCLASS::render(char[2][2][576],
                 : end);
 #endif
             break;
-        case MD_X4:
-            c = w * h / 2;
+        case MD_X4: c = w * h / 2;
 #ifdef _MSC_VER
             __asm {
 			mov ebx, framebuffer;
@@ -218,8 +216,7 @@ int C_THISCLASS::render(char[2][2][576],
                 : end);
 #endif
             break;
-        case MD_X2:
-            c = w * h / 2;
+        case MD_X2: c = w * h / 2;
 #ifdef _MSC_VER
             __asm {
 			mov ebx, framebuffer;
@@ -253,9 +250,7 @@ int C_THISCLASS::render(char[2][2][576],
                 : end);
 #endif
             break;
-        case MD_X05:
-            c = w * h / 2;
-            mask = 0x7F7F7F7F7F7F7F7F;
+        case MD_X05: c = w * h / 2; mask = 0x7F7F7F7F7F7F7F7F;
 #ifdef _MSC_VER
             __asm {
 			mov ebx, framebuffer;
@@ -293,9 +288,7 @@ int C_THISCLASS::render(char[2][2][576],
                 : end);
 #endif
             break;
-        case MD_X025:
-            c = w * h / 2;
-            mask = 0x3F3F3F3F3F3F3F3F;
+        case MD_X025: c = w * h / 2; mask = 0x3F3F3F3F3F3F3F3F;
 #ifdef _MSC_VER
             __asm {
 			mov ebx, framebuffer;
@@ -333,9 +326,7 @@ int C_THISCLASS::render(char[2][2][576],
                 : end);
 #endif
             break;
-        case MD_X0125:
-            c = w * h / 2;
-            mask = 0x1F1F1F1F1F1F1F1F;
+        case MD_X0125: c = w * h / 2; mask = 0x1F1F1F1F1F1F1F1F;
 #ifdef _MSC_VER
             __asm {
 			mov ebx, framebuffer;

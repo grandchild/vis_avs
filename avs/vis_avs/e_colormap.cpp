@@ -234,12 +234,9 @@ inline void E_ColorMap::reset_tween_map() {
 inline int E_ColorMap::get_key(int color) {
     int r, g, b;
     switch (this->config.color_key) {
-        case COLORMAP_COLOR_KEY_RED:
-            return color >> 16 & 0xff;
-        case COLORMAP_COLOR_KEY_GREEN:
-            return color >> 8 & 0xff;
-        case COLORMAP_COLOR_KEY_BLUE:
-            return color & 0xff;
+        case COLORMAP_COLOR_KEY_RED: return color >> 16 & 0xff;
+        case COLORMAP_COLOR_KEY_GREEN: return color >> 8 & 0xff;
+        case COLORMAP_COLOR_KEY_BLUE: return color & 0xff;
         case COLORMAP_COLOR_KEY_RGB_SUM_HALF:
             return min(
                 ((color >> 16 & 0xff) + (color >> 8 & 0xff) + (color & 0xff)) / 2,
@@ -374,12 +371,9 @@ inline __m128i E_ColorMap::get_key_ssse3(__m128i color4) {
     __m128i r, g;
     __m128 color4f;
     switch (this->config.color_key) {
-        case COLORMAP_COLOR_KEY_RED:
-            return _mm_shuffle_epi8(color4, gather_red);
-        case COLORMAP_COLOR_KEY_GREEN:
-            return _mm_shuffle_epi8(color4, gather_green);
-        case COLORMAP_COLOR_KEY_BLUE:
-            return _mm_shuffle_epi8(color4, gather_blue);
+        case COLORMAP_COLOR_KEY_RED: return _mm_shuffle_epi8(color4, gather_red);
+        case COLORMAP_COLOR_KEY_GREEN: return _mm_shuffle_epi8(color4, gather_green);
+        case COLORMAP_COLOR_KEY_BLUE: return _mm_shuffle_epi8(color4, gather_blue);
         case COLORMAP_COLOR_KEY_RGB_SUM_HALF:
             r = _mm_shuffle_epi8(color4, gather_red);
             g = _mm_shuffle_epi8(color4, gather_green);

@@ -1282,9 +1282,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
                 }
             }
             return 0;
-        case WM_RBUTTONUP:
-            DoPopupMenu();
-            return 0;
+        case WM_RBUTTONUP: DoPopupMenu(); return 0;
         case WM_USER + 33:
             DDraw_SetStatusText("", 100);
             if (inWharf) {
@@ -1298,9 +1296,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
                 CfgWnd_RePopIfNeeded();
             }
             return 0;
-        case WM_USER + 32:
-            Wnd_GoFullScreen(hwnd);
-            return 0;
+        case WM_USER + 32: Wnd_GoFullScreen(hwnd); return 0;
         case WM_SYSKEYDOWN:
         case WM_KEYDOWN:
             if ((GetAsyncKeyState(VK_CONTROL) & 0x8000) && wParam == VK_F4) {
@@ -1881,12 +1877,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
         case WM_COMMAND: {
             int id = LOWORD(wParam);
             switch (id) {
-                case ID_VIS_NEXT:
-                    next_preset(hwnd);
-                    break;
-                case ID_VIS_PREV:
-                    previous_preset(hwnd);
-                    break;
+                case ID_VIS_NEXT: next_preset(hwnd); break;
+                case ID_VIS_PREV: previous_preset(hwnd); break;
                 case ID_VIS_RANDOM: {
                     int v = HIWORD(wParam) ? 1 : 0;
                     if (wParam >> 16 == 0xFFFF) {
@@ -1900,15 +1892,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
                                                    : "random presets off");
                     break;
                 }
-                case ID_VIS_FS:
-                    Wnd_GoFullScreen(hwnd);
-                    break;
-                case ID_VIS_CFG:
-                    SendMessage(hwnd, WM_USER + 33, 0, 0);
-                    break;
-                case ID_VIS_MENU:
-                    DoPopupMenu();
-                    break;
+                case ID_VIS_FS: Wnd_GoFullScreen(hwnd); break;
+                case ID_VIS_CFG: SendMessage(hwnd, WM_USER + 33, 0, 0); break;
+                case ID_VIS_MENU: DoPopupMenu(); break;
             }
             break;
         }
