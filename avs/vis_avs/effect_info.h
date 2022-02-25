@@ -458,6 +458,16 @@ constexpr Parameter P_SELECT(size_t offset,
     _param.get_options = get_options;
     return _param;
 }
+constexpr Parameter P_SELECT_X(size_t offset,
+                               const char* name,
+                               options_getter get_options,
+                               const char* description = NULL,
+                               value_change_handler on_value_change = NULL) {
+    Parameter _param =
+        PARAM(offset, AVS_PARAM_SELECT, name, description, on_value_change, false);
+    _param.get_options = get_options;
+    return _param;
+}
 
 template <typename Subtype>
 constexpr Parameter P_LIST(size_t offset,
