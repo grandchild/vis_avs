@@ -129,3 +129,57 @@ const AVS_Component_Handle* Effect::get_child_handles_for_api() {
     this->child_handles_for_api = new_handles;
     return this->child_handles_for_api;
 }
+
+uint32_t Effect::string_load_legacy(const char* src,
+                                    std::string& dest,
+                                    uint32_t max_length) {
+    if (max_length < sizeof(uint32_t)) {
+        return 0;
+    }
+    uint32_t size = *((uint32_t*)src);
+    uint32_t pos = sizeof(uint32_t);
+    if (size > 0 && max_length >= size) {
+        dest.assign(&src[pos], size);
+        pos += size;
+    } else {
+        dest.assign("");
+    }
+    return pos;
+}
+
+uint32_t Effect::string_save_legacy(std::string& src, char* dest, uint32_t max_length) {
+    if (!src.empty()) {
+        if (src.length() > max_length) {
+            printf("string truncated for legacy save format\n");
+        }
+        size_t length = src.length() + 1;
+        *((uint32_t*)dest) = length;
+        uint32_t pos = 4;
+        memcpy(dest + pos, src.c_str(), length);
+        pos += length;
+        return pos;
+    } else {
+        *((uint32_t*)dest) = 0;
+        return sizeof(uint32_t);
+    }
+}
+
+uint32_t Effect::string_nt_load_legacy(const char* src,
+                                       std::string& dest,
+                                       uint32_t max_length) {
+    auto code_len = strnlen(src, max_length);
+    dest.assign(src, code_len);
+    return code_len + 1;
+}
+
+uint32_t Effect::string_nt_save_legacy(std::string& src,
+                                       char* dest,
+                                       uint32_t max_length) {
+    auto code_len = src.length();
+    if (code_len > max_length) {
+        code_len = max_length;
+    }
+    strncpy(dest, src.c_str(), code_len + 1);
+    dest[code_len] = '\0';
+    return code_len + 1;
+}
