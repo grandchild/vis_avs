@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 // alphachannel safe 11/21/99
-#include "c_scat.h"
+#include "e_scatter.h"
 
 #include "r_defs.h"
 
@@ -43,35 +43,33 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     data[pos + 3] = (y >> 24) & 255
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
-void C_THISCLASS::load_config(unsigned char* data, int len) {
+
+constexpr Parameter Scatter_Info::parameters[];
+
+void E_Scatter::load_legacy(unsigned char* data, int len) {
     int pos = 0;
     if (len - pos >= 4) {
-        enabled = GET_INT();
+        this->enabled = GET_INT();
         pos += 4;
     }
 }
-int C_THISCLASS::save_config(unsigned char* data) {
+int E_Scatter::save_legacy(unsigned char* data) {
     int pos = 0;
-    PUT_INT(enabled);
+    PUT_INT(this->enabled);
     pos += 4;
     return pos;
 }
 
-C_THISCLASS::C_THISCLASS() {
-    enabled = 1;
-    ftw = 0;
-}
+E_Scatter::E_Scatter() : ftw(0) {}
+E_Scatter::~E_Scatter() {}
 
-C_THISCLASS::~C_THISCLASS() {}
-
-int C_THISCLASS::render(char[2][2][576],
-                        int isBeat,
-                        int* framebuffer,
-                        int* fbout,
-                        int w,
-                        int h) {
+int E_Scatter::render(char[2][2][576],
+                      int isBeat,
+                      int* framebuffer,
+                      int* fbout,
+                      int w,
+                      int h) {
     int l;
-    if (!enabled) return 0;
     if (ftw != w) {
         int x;
         for (x = 0; x < 512; x++) {
@@ -100,10 +98,5 @@ int C_THISCLASS::render(char[2][2][576],
     return 1;
 }
 
-C_RBASE* R_Scat(char* desc) {
-    if (desc) {
-        strcpy(desc, MOD_NAME);
-        return NULL;
-    }
-    return (C_RBASE*)new C_THISCLASS();
-}
+Effect_Info* create_Scatter_Info() { return new Scatter_Info(); }
+Effect* create_Scatter() { return new E_Scatter(); }

@@ -1,4 +1,4 @@
-#include "c_scat.h"
+#include "e_scatter.h"
 
 #include "g__defs.h"
 #include "g__lib.h"
@@ -8,7 +8,7 @@
 #include <windows.h>
 
 int win32_dlgproc_scatter(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
-    C_THISCLASS* g_this = (C_THISCLASS*)g_current_render;
+    E_Scatter* g_this = (E_Scatter*)g_current_render;
 
     switch (uMsg) {
         case WM_INITDIALOG:
