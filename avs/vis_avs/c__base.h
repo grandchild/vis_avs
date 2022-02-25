@@ -150,6 +150,9 @@ class Legacy_Effect_Proxy {
                int h) {
         switch (this->type()) {
             case NEW_EFFECT:
+                if (!this->effect->enabled) {
+                    return 0;
+                }
                 return this->effect->render(visdata, isBeat, framebuffer, fbout, w, h);
             default:
                 return this->legacy_effect->render(
