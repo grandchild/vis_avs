@@ -8,7 +8,7 @@
 #include <windows.h>
 #include <commctrl.h>
 
-int win32_dlgproc_dotplane(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+int win32_dlgproc_dotfountain(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     C_THISCLASS* g_this = (C_THISCLASS*)g_current_render;
 
     switch (uMsg) {
