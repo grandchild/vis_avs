@@ -1071,6 +1071,7 @@ void C_RenderListClass::smp_Render(int minthreads,
         if (x >= smp_parms.threadTop) {
             // unsigned long int id;
             smp_parms.hThreadSignalsStart[x] = signal_create_single();
+            signal_set(smp_parms.hThreadSignalsStart[x]);
             smp_parms.hThreadSignalsDone[x] = signal_create_single();
 
             smp_parms.hThreads[x] = thread_create(smp_threadProc, (void*)(x));
