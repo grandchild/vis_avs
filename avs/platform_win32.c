@@ -64,8 +64,8 @@ signal_t* signal_create_broadcast() { return _signal_create(/*manual*/ true); }
 void signal_set(signal_t* signal) { SetEvent(signal); }
 
 signal_t* signal_wait(signal_t* signal, int32_t wait_ms) {
-    uint32_t wait_result = WaitForSingleObject(
-        signal, wait_ms == WAIT_INFINITE ? INFINITE : (uint32_t)wait_ms);
+    uint32_t wait = wait_ms == WAIT_INFINITE ? INFINITE : (uint32_t)wait_ms;
+    uint32_t wait_result = WaitForSingleObject(signal, wait);
     return wait_result == WAIT_OBJECT_0 ? signal : NULL;
 }
 
@@ -73,11 +73,9 @@ static signal_t* _signal_wait_multiple(signal_t** signals,
                                        uint32_t num_signals,
                                        int32_t wait_ms,
                                        bool wait_for_all) {
+    uint32_t wait = wait_ms == WAIT_INFINITE ? INFINITE : (uint32_t)wait_ms;
     uint32_t wait_result =
-        WaitForMultipleObjects(num_signals,
-                               signals,
-                               wait_for_all,
-                               wait_ms == WAIT_INFINITE ? INFINITE : (uint32_t)wait_ms);
+        WaitForMultipleObjects(num_signals, signals, wait_for_all, wait);
     if (wait_result < WAIT_ABANDONED_0 && wait_result < num_signals) {
         return signals[wait_result - WAIT_OBJECT_0];
     } else {
@@ -103,17 +101,13 @@ thread_t* thread_create(uint32_t (*func)(void* data), void* data) {
 }
 
 bool thread_join(thread_t* thread, int32_t wait_ms) {
-    return WaitForSingleObject(thread,
-                               wait_ms == WAIT_INFINITE ? INFINITE : (uint32_t)wait_ms)
-           == WAIT_OBJECT_0;
+    uint32_t wait = wait_ms == WAIT_INFINITE ? INFINITE : (uint32_t)wait_ms;
+    return WaitForSingleObject(thread, wait) == WAIT_OBJECT_0;
 }
 
 bool thread_join_all(thread_t** threads, uint32_t num_threads, int32_t wait_ms) {
-    uint32_t wait_result =
-        WaitForMultipleObjects(num_threads,
-                               threads,
-                               true,
-                               wait_ms == WAIT_INFINITE ? INFINITE : (uint32_t)wait_ms);
+    uint32_t wait = wait_ms == WAIT_INFINITE ? INFINITE : (uint32_t)wait_ms;
+    uint32_t wait_result = WaitForMultipleObjects(num_threads, threads, true, wait);
     return wait_result < WAIT_ABANDONED_0 && wait_result < num_threads;
 }
 
