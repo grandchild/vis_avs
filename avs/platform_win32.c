@@ -57,9 +57,9 @@ static signal_t* _signal_create(bool manual) {
     return CreateEvent(NULL, manual, false, NULL);
 }
 
-signal_t* signal_create_single() { return _signal_create(/*manual*/ true); }
+signal_t* signal_create_single() { return _signal_create(/*manual*/ false); }
 
-signal_t* signal_create_broadcast() { return _signal_create(/*manual*/ false); }
+signal_t* signal_create_broadcast() { return _signal_create(/*manual*/ true); }
 
 void signal_set(signal_t* signal) { SetEvent(signal); }
 
