@@ -196,6 +196,9 @@ class Legacy_Effect_Proxy {
                   int h) {
         switch (this->type()) {
             case NEW_EFFECT:
+                if (!this->effect->enabled) {
+                    return 0;
+                }
                 return this->effect->smp_begin(
                     max_threads, visdata, isBeat, framebuffer, fbout, w, h);
             case LEGACY_MULTITHREAD:
@@ -215,6 +218,9 @@ class Legacy_Effect_Proxy {
                     int h) {
         switch (this->type()) {
             case NEW_EFFECT:
+                if (!this->effect->enabled) {
+                    return;
+                }
                 return this->effect->smp_render(this_thread,
                                                 max_threads,
                                                 visdata,
@@ -245,6 +251,9 @@ class Legacy_Effect_Proxy {
                    int h) {
         switch (this->type()) {
             case NEW_EFFECT:
+                if (!this->effect->enabled) {
+                    return 0;
+                }
                 return this->effect->smp_finish(
                     visdata, isBeat, framebuffer, fbout, w, h);
             case LEGACY_MULTITHREAD:
