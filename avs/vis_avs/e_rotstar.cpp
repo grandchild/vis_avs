@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 // alphachannel safe 11/21/99
-#include "c_rotstar.h"
+#include "e_rotstar.h"
 
 #include "r_defs.h"
 
@@ -44,80 +44,47 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
 
-void C_THISCLASS::load_config(unsigned char* data, int len) {
-    int pos = 0;
-    int x = 0;
-    if (len - pos >= 4) {
-        num_colors = GET_INT();
-        pos += 4;
-    }
-    if (num_colors <= 16)
-        while (len - pos >= 4 && x < num_colors) {
-            colors[x++] = GET_INT();
-            pos += 4;
-        }
-    else
-        num_colors = 0;
-}
+constexpr Parameter RotStar_Info::parameters[];
+constexpr Parameter RotStar_Info::color_params[];
 
-int C_THISCLASS::save_config(unsigned char* data) {
-    int pos = 0, x = 0;
-    PUT_INT(num_colors);
-    pos += 4;
-    while (x < num_colors) {
-        PUT_INT(colors[x]);
-        x++;
-        pos += 4;
-    }
-    return pos;
-}
+E_RotStar::E_RotStar() : color_pos(0), r(0.0) {}
+E_RotStar::~E_RotStar() {}
 
-C_THISCLASS::C_THISCLASS() {
-    r1 = 0.0;
-    num_colors = 1;
-    memset(colors, 0, sizeof(colors));
-    colors[0] = RGB(255, 255, 255);
-    color_pos = 0;
-}
-
-C_THISCLASS::~C_THISCLASS() {}
-
-int C_THISCLASS::render(char visdata[2][2][576],
-                        int isBeat,
-                        int* framebuffer,
-                        int*,
-                        int w,
-                        int h) {
+int E_RotStar::render(char visdata[2][2][576],
+                      int isBeat,
+                      int* framebuffer,
+                      int*,
+                      int w,
+                      int h) {
     int x, y, c;
     int current_color;
 
     if (isBeat & 0x80000000) return 0;
-    if (!num_colors) return 0;
+    if (this->config.colors.empty()) return 0;
+
     color_pos++;
-    if (color_pos >= num_colors * 64) color_pos = 0;
-
-    {
-        int p = color_pos / 64;
-        int r = color_pos & 63;
-        int c1, c2;
-        int r1, r2, r3;
-        c1 = colors[p];
-        if (p + 1 < num_colors)
-            c2 = colors[p + 1];
-        else
-            c2 = colors[0];
-
-        r1 = (((c1 & 255) * (63 - r)) + ((c2 & 255) * r)) / 64;
-        r2 = ((((c1 >> 8) & 255) * (63 - r)) + (((c2 >> 8) & 255) * r)) / 64;
-        r3 = ((((c1 >> 16) & 255) * (63 - r)) + (((c2 >> 16) & 255) * r)) / 64;
-
-        current_color = r1 | (r2 << 8) | (r3 << 16);
+    if (color_pos >= this->config.colors.size() * 64) {
+        color_pos = 0;
     }
+    uint32_t p = color_pos / 64;
+    uint32_t r = color_pos & 63;
+    int c1, c2;
+    int r1, r2, r3;
+    c1 = this->config.colors[p].color;
+    if (p + 1 < this->config.colors.size()) {
+        c2 = this->config.colors[p + 1].color;
+    } else {
+        c2 = this->config.colors[0].color;
+    }
+    r1 = (((c1 & 255) * (63 - r)) + ((c2 & 255) * r)) / 64;
+    r2 = ((((c1 >> 8) & 255) * (63 - r)) + (((c2 >> 8) & 255) * r)) / 64;
+    r3 = ((((c1 >> 16) & 255) * (63 - r)) + (((c2 >> 16) & 255) * r)) / 64;
+    current_color = r1 | (r2 << 8) | (r3 << 16);
 
-    x = (int)(cos(r1) * w / 4.0);
-    y = (int)(sin(r1) * h / 4.0);
+    x = (int)(cos(this->r) * w / 4.0);
+    y = (int)(sin(this->r) * h / 4.0);
     for (c = 0; c < 2; c++) {
-        double r2 = -r1;
+        double r2 = -this->r;
         int s = 0;
         int t;
         int a, b;
@@ -165,14 +132,37 @@ int C_THISCLASS::render(char visdata[2][2][576],
             ly = ny;
         }
     }
-    r1 += 0.1;
+    this->r += 0.1;
     return 0;
 }
 
-C_RBASE* R_RotStar(char* desc) {
-    if (desc) {
-        strcpy(desc, MOD_NAME);
-        return NULL;
+void E_RotStar::load_legacy(unsigned char* data, int len) {
+    int pos = 0;
+    uint32_t num_colors = 0;
+    if (len - pos >= 4) {
+        num_colors = GET_INT();
+        pos += 4;
     }
-    return (C_RBASE*)new C_THISCLASS();
+    this->config.colors.clear();
+    if (num_colors <= 16) {
+        for (uint32_t i = 0; len - pos >= 4 && i < num_colors; i++) {
+            uint32_t color = GET_INT();
+            this->config.colors.emplace_back(color);
+            pos += 4;
+        }
+    }
 }
+
+int E_RotStar::save_legacy(unsigned char* data) {
+    int pos = 0;
+    PUT_INT(this->config.colors.size());
+    pos += 4;
+    for (auto const& color : this->config.colors) {
+        PUT_INT(color.color);
+        pos += 4;
+    }
+    return pos;
+}
+
+Effect_Info* create_RotStar_Info() { return new RotStar_Info(); }
+Effect* create_RotStar() { return new E_RotStar(); }
