@@ -30,11 +30,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 // alphachannel safe 11/21/99
-#include "c_water.h"
+#include "e_water.h"
 
 #include "r_defs.h"
-
-#include "timing.h"
 
 #define PUT_INT(y)                   \
     data[pos] = (y)&255;             \
@@ -43,43 +41,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     data[pos + 3] = (y >> 24) & 255
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
-void C_THISCLASS::load_config(unsigned char* data, int len) {
-    int pos = 0;
-    if (len - pos >= 4) {
-        enabled = GET_INT();
-        pos += 4;
-    }
-}
-int C_THISCLASS::save_config(unsigned char* data) {
-    int pos = 0;
-    PUT_INT(enabled);
-    pos += 4;
-    return pos;
-}
-
-C_THISCLASS::C_THISCLASS() {
-    enabled = 1;
-    lastframe_len = 0;
-    lastframe = NULL;
-}
-
-C_THISCLASS::~C_THISCLASS() {
-    if (lastframe) free(lastframe);
-}
 
 #define _R(x)         ((x)&0xff)
 #define _G(x)         (((x)) & 0xff00)
 #define _B(x)         (((x)) & 0xff0000)
 #define _RGB(r, g, b) ((r) | ((g)&0xff00) | ((b)&0xff0000))
 
+constexpr Parameter Water_Info::parameters[];
+
+E_Water::E_Water() : lastframe(NULL), lastframe_size(0) {}
+E_Water::~E_Water() { free(this->lastframe); }
+
 static const int zero = 0;
 
-int C_THISCLASS::render(char visdata[2][2][576],
-                        int isBeat,
-                        int* framebuffer,
-                        int* fbout,
-                        int w,
-                        int h) {
+int E_Water::render(char visdata[2][2][576],
+                    int isBeat,
+                    int* framebuffer,
+                    int* fbout,
+                    int w,
+                    int h) {
     smp_begin(1, visdata, isBeat, framebuffer, fbout, w, h);
     if (isBeat & 0x80000000) return 0;
 
@@ -87,41 +67,37 @@ int C_THISCLASS::render(char visdata[2][2][576],
     return smp_finish(visdata, isBeat, framebuffer, fbout, w, h);
 }
 
-int C_THISCLASS::smp_begin(int max_threads,
-                           char[2][2][576],
-                           int,
-                           int*,
-                           int*,
-                           int w,
-                           int h) {
-    if (!enabled) return 0;
-
-    if (!lastframe || w * h != lastframe_len) {
-        if (lastframe) free(lastframe);
-        lastframe_len = w * h;
-        lastframe = (unsigned int*)calloc(w * h, sizeof(int));
+int E_Water::smp_begin(int max_threads,
+                       char[2][2][576],
+                       int,
+                       int*,
+                       int*,
+                       int w,
+                       int h) {
+    if (!this->lastframe || w * h != this->lastframe_size) {
+        if (this->lastframe) free(this->lastframe);
+        this->lastframe_size = w * h;
+        this->lastframe = (unsigned int*)calloc(w * h, sizeof(int));
     }
 
     return max_threads;
 }
 
-int C_THISCLASS::smp_finish(char[2][2][576], int, int*, int*, int, int) {
-    return !!enabled;
+int E_Water::smp_finish(char[2][2][576], int, int*, int*, int, int) {
+    return this->enabled;
 }
 
-void C_THISCLASS::smp_render(int this_thread,
-                             int max_threads,
-                             char[2][2][576],
-                             int,
-                             int* framebuffer,
-                             int* fbout,
-                             int w,
-                             int h) {
-    if (!enabled) return;
-
+void E_Water::smp_render(int this_thread,
+                         int max_threads,
+                         char[2][2][576],
+                         int,
+                         int* framebuffer,
+                         int* fbout,
+                         int w,
+                         int h) {
     unsigned int* f = (unsigned int*)framebuffer;
     unsigned int* of = (unsigned int*)fbout;
-    unsigned int* lfo = (unsigned int*)lastframe;
+    unsigned int* lfo = (unsigned int*)this->lastframe;
 
     int start_l = (this_thread * h) / max_threads;
     int end_l;
@@ -145,12 +121,9 @@ void C_THISCLASS::smp_render(int this_thread,
     if (!this_thread) at_top = 1;
     if (this_thread >= max_threads - 1) at_bottom = 1;
 
-    timingEnter(0);
-
     {
-        if (at_top)
         // top line
-        {
+        if (at_top) {
             int x;
 
             // left edge
@@ -618,7 +591,7 @@ mmx_water_loop1:
         }
     }
 
-    memcpy(lastframe + skip_pix, framebuffer + skip_pix, w * outh * sizeof(int));
+    memcpy(this->lastframe + skip_pix, framebuffer + skip_pix, w * outh * sizeof(int));
 
 #ifndef NO_MMX
 #ifdef _MSC_VER  // MSVC asm
@@ -627,13 +600,22 @@ mmx_water_loop1:
     __asm__ __volatile__("emms");
 #endif  // _MSC_VER
 #endif
-    timingLeave(0);
 }
 
-C_RBASE* R_Water(char* desc) {
-    if (desc) {
-        strcpy(desc, MOD_NAME);
-        return NULL;
+void E_Water::load_legacy(unsigned char* data, int len) {
+    int pos = 0;
+    if (len - pos >= 4) {
+        this->enabled = GET_INT() != 0;
+        pos += 4;
     }
-    return (C_RBASE*)new C_THISCLASS();
 }
+
+int E_Water::save_legacy(unsigned char* data) {
+    int pos = 0;
+    PUT_INT(this->enabled);
+    pos += 4;
+    return pos;
+}
+
+Effect_Info* create_Water_Info() { return new Water_Info(); }
+Effect* create_Water() { return new E_Water(); }

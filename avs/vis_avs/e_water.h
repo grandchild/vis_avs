@@ -1,26 +1,37 @@
 #pragma once
 
-#include "c__base.h"
+#include "effect.h"
+#include "effect_info.h"
 
-#define C_THISCLASS C_WaterClass
-#define MOD_NAME    "Trans / Water"
+struct Water_Config : public Effect_Config {};
 
-class C_THISCLASS : public C_RBASE2 {
-   protected:
+struct Water_Info : public Effect_Info {
+    static constexpr char* group = "Trans";
+    static constexpr char* name = "Water";
+    static constexpr char* help = "";
+    static constexpr int32_t legacy_id = 20;
+    static constexpr char* legacy_ape_id = NULL;
+
+    static constexpr uint32_t num_parameters = 0;
+    static constexpr Parameter parameters[num_parameters] = {};
+
+    EFFECT_INFO_GETTERS;
+};
+
+class E_Water : public Configurable_Effect<Water_Info, Water_Config> {
    public:
-    C_THISCLASS();
-    virtual ~C_THISCLASS();
+    E_Water();
+    virtual ~E_Water();
     virtual int render(char visdata[2][2][576],
                        int isBeat,
                        int* framebuffer,
                        int* fbout,
                        int w,
                        int h);
-    virtual char* get_desc() { return MOD_NAME; }
-    virtual void load_config(unsigned char* data, int len);
-    virtual int save_config(unsigned char* data);
+    virtual void load_legacy(unsigned char* data, int len);
+    virtual int save_legacy(unsigned char* data);
 
-    virtual int smp_getflags() { return 1; }
+    virtual bool can_multithread() { return true; };
     virtual int smp_begin(int max_threads,
                           char visdata[2][2][576],
                           int isBeat,
@@ -44,7 +55,5 @@ class C_THISCLASS : public C_RBASE2 {
                            int h);  // return value is that of render() for fbstuff etc
 
     unsigned int* lastframe;
-    int lastframe_len;
-
-    int enabled;
+    int lastframe_size;
 };
