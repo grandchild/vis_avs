@@ -1,4 +1,4 @@
-#include "c_rotstar.h"
+#include "e_rotstar.h"
 
 #include "g__defs.h"
 #include "g__lib.h"
@@ -8,18 +8,19 @@
 #include <windows.h>
 
 int win32_dlgproc_rotstar(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    C_THISCLASS* g_this = (C_THISCLASS*)g_current_render;
+    E_RotStar* g_this = (E_RotStar*)g_current_render;
+    const Parameter& p_colors = g_this->info.parameters[0];
 
     switch (uMsg) {
         case WM_DRAWITEM: {
             DRAWITEMSTRUCT* di = (DRAWITEMSTRUCT*)lParam;
-            if (di->CtlID == IDC_DEFCOL && g_this->num_colors > 0) {
-                int x;
+            if (di->CtlID == IDC_DEFCOL && g_this->config.colors.size() > 0) {
+                uint32_t x;
                 int w = di->rcItem.right - di->rcItem.left;
                 int l = 0, nl;
-                for (x = 0; x < g_this->num_colors; x++) {
-                    unsigned int color = g_this->colors[x];
-                    nl = (w * (x + 1)) / g_this->num_colors;
+                for (x = 0; x < g_this->config.colors.size(); x++) {
+                    unsigned int color = g_this->config.colors[x].color;
+                    nl = (w * (x + 1)) / g_this->config.colors.size();
                     color = ((color >> 16) & 0xff) | (color & 0xff00)
                             | ((color << 16) & 0xff0000);
 
@@ -45,17 +46,27 @@ int win32_dlgproc_rotstar(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
             return 0;
         case WM_INITDIALOG:
-            SetDlgItemInt(hwndDlg, IDC_NUMCOL, g_this->num_colors, FALSE);
+            SetDlgItemInt(hwndDlg, IDC_NUMCOL, g_this->config.colors.size(), false);
             return 1;
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
                 case IDC_NUMCOL: {
                     int p;
-                    BOOL tr = FALSE;
-                    p = GetDlgItemInt(hwndDlg, IDC_NUMCOL, &tr, FALSE);
-                    if (tr) {
-                        if (p > 16) p = 16;
-                        g_this->num_colors = p;
+                    WINBOOL success = FALSE;
+                    bool check_for_negative = false;
+                    p = GetDlgItemInt(
+                        hwndDlg, IDC_NUMCOL, &success, check_for_negative);
+                    if (success) {
+                        int64_t length = g_this->parameter_list_length(&p_colors);
+                        if (length < p) {
+                            for (; length < p; length++) {
+                                g_this->parameter_list_entry_add(&p_colors, -1, {});
+                            }
+                        } else {
+                            for (; length > p; length--) {
+                                g_this->parameter_list_entry_remove(&p_colors, -1);
+                            }
+                        }
                         InvalidateRect(GetDlgItem(hwndDlg, IDC_DEFCOL), NULL, TRUE);
                     }
                 } break;
@@ -70,10 +81,11 @@ int win32_dlgproc_rotstar(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     w = r.right - r.left;
                     h = r.bottom - r.top;
                     if (p.x >= 0 && p.x < w && p.y >= 0 && p.y < h) {
-                        wc = (p.x * g_this->num_colors) / w;
+                        wc = (p.x * g_this->config.colors.size()) / w;
                     }
                     if (wc >= 0) {
-                        GR_SelectColor(hwndDlg, g_this->colors + wc);
+                        GR_SelectColor(hwndDlg,
+                                       (int*)&(g_this->config.colors[wc].color));
                         InvalidateRect(GetDlgItem(hwndDlg, IDC_DEFCOL), NULL, TRUE);
                     }
                 }
