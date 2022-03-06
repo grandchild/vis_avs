@@ -975,7 +975,7 @@ void random_preset(HWND hwnd) {
         int state = 0;
         find_preset(i_path, 0, NULL, dirmask, &state);
 
-        if (dirmask[0]) {
+        if (dirmask[0] && g_render_transition) {
             if (g_render_transition->LoadPreset(dirmask, 4) != 2)
                 lstrcpyn(last_preset, dirmask, sizeof(last_preset));
         }
