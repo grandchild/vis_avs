@@ -116,7 +116,7 @@ void C_RLibrary::add_dofx(void* rf,
     add_dofx(NULL, false, create_##name##_Info, create_##name);
 
 void C_RLibrary::initfx(void) {
-    DECLARE_EFFECT_LEGACY(R_SimpleSpectrum);
+    DECLARE_EFFECT_NEW(Simple);
     DECLARE_EFFECT_LEGACY(R_DotPlane);
     DECLARE_EFFECT_LEGACY(R_OscStars);
     DECLARE_EFFECT_NEW(Fadeout);

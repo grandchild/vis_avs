@@ -78,7 +78,7 @@ IDD_CFG_SIMPLE DIALOG DISCARDABLE  0, 0, 137, 137
 STYLE DS_CONTROL | WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "Spectrum",IDC_SA,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+    CONTROL         "Spectrum",IDC_SPEC,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
                     WS_TABSTOP,6,9,46,10
     CONTROL         "Oscilliscope",IDC_OSC,"Button",BS_AUTORADIOBUTTON,53,9,
                     53,10
