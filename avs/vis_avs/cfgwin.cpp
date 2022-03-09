@@ -1742,6 +1742,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                             (C_RenderListClass::T_RenderListType*)i.lParam;
                         ren.effect =
                             g_render_library->CreateRenderer(&tp->effect_index);
+                        ren.effect_index = tp->effect_index;
                         if (ren.effect.valid()) {
                             HTREEITEM hParent = TreeView_GetParent(
                                 GetDlgItem(hwndDlg, IDC_TREE1), hTreeItem);
