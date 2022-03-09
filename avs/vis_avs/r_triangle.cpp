@@ -281,7 +281,7 @@ inline void C_Triangle::draw_pixel(int* pixel,
             break;
         }
         case OUT_ADJUSTABLE: {
-            *pixel = BLEND_ADJ(color, *pixel, adjustable_blend);
+            *pixel = BLEND_ADJ_NOMMX(*pixel, color, adjustable_blend);
             break;
         }
         case OUT_XOR: {
