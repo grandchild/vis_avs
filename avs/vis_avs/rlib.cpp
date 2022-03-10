@@ -153,7 +153,7 @@ void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_LEGACY(R_Picture);
     DECLARE_EFFECT_LEGACY(R_DDM);
     DECLARE_EFFECT_NEW(SuperScope);
-    DECLARE_EFFECT_LEGACY(R_Invert);
+    DECLARE_EFFECT_NEW(Invert);
     DECLARE_EFFECT_LEGACY(R_Onetone);
     DECLARE_EFFECT_LEGACY(R_Timescope);
     DECLARE_EFFECT_LEGACY(R_LineMode);
