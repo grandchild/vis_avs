@@ -2,6 +2,19 @@
 
 #include <stdint.h>
 
+enum Blend_Modes {
+    BLEND_REPLACE = 0,
+    BLEND_ADDITIVE = 1,
+    BLEND_MAXIMUM = 2,
+    BLEND_5050 = 3,
+    BLEND_SUB1 = 4,
+    BLEND_SUB2 = 5,
+    BLEND_MULTIPLY = 6,
+    BLEND_ADJUSTABLE = 7,
+    BLEND_XOR = 8,
+    BLEND_MINIMUM = 9,
+};
+
 enum Audio_Sources { AUDIO_WAVEFORM = 0, AUDIO_SPECTRUM = 1 };
 enum Audio_Channels { AUDIO_LEFT = 0, AUDIO_RIGHT = 1, AUDIO_CENTER = 2 };
 enum Draw_Modes { DRAW_DOTS = 0, DRAW_LINES = 1, DRAW_SOLID = 2 };
