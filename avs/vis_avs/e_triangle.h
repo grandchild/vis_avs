@@ -1,24 +1,38 @@
 #pragma once
 
-#include "ape.h"
-#include "c__base.h"
-#include "effect_code.h"
+#include "effect.h"
+#include "effect_info.h"
+#include "effect_programmable.h"
 
-#define MOD_NAME "Render / Triangle"
+#include <string>
 
-#define OUT_REPLACE    0
-#define OUT_ADDITIVE   1
-#define OUT_MAXIMUM    2
-#define OUT_5050       3
-#define OUT_SUB1       4
-#define OUT_SUB2       5
-#define OUT_MULTIPLY   6
-#define OUT_ADJUSTABLE 7
-#define OUT_XOR        8
-#define OUT_MINIMUM    9
+struct Triangle_Config : public Effect_Config {
+    std::string init = "";
+    std::string frame = "";
+    std::string beat = "";
+    std::string point = "";
+};
 
-class TriangleVars : public VarsBase {
-   public:
+struct Triangle_Info : public Effect_Info {
+    static constexpr char* group = "Render";
+    static constexpr char* name = "Triangle";
+    static constexpr char* help = "";
+    static constexpr int32_t legacy_id = -1;
+    static constexpr char* legacy_ape_id = "Render: Triangle";
+
+    static void recompile(Effect*, const Parameter*, std::vector<int64_t>);
+    static constexpr uint32_t num_parameters = 4;
+    static constexpr Parameter parameters[num_parameters] = {
+        P_STRING(offsetof(Triangle_Config, init), "Init", NULL, recompile),
+        P_STRING(offsetof(Triangle_Config, frame), "Frame", NULL, recompile),
+        P_STRING(offsetof(Triangle_Config, beat), "Beat", NULL, recompile),
+        P_STRING(offsetof(Triangle_Config, point), "Triangle", NULL, recompile),
+    };
+
+    EFFECT_INFO_GETTERS;
+};
+
+struct Triangle_Vars : public Variables {
     double* w;
     double* h;
     double* n;
@@ -43,8 +57,8 @@ class TriangleVars : public VarsBase {
     double* zbuf;
     double* zbclear;
 
-    virtual void register_variables(void*);
-    virtual void init_variables(int, int, int, va_list);
+    virtual void register_(void*);
+    virtual void init(int, int, int, va_list);
 };
 
 class TriangleDepthBuffer {
@@ -64,20 +78,20 @@ typedef struct {
     uint64_t z;
 } Vertex;
 
-class C_Triangle : public C_RBASE {
+class E_Triangle
+    : public Programmable_Effect<Triangle_Info, Triangle_Config, Triangle_Vars> {
    public:
-    C_Triangle();
-    virtual ~C_Triangle();
+    E_Triangle();
+    virtual ~E_Triangle();
     virtual int render(char visdata[2][2][576],
                        int isBeat,
                        int* framebuffer,
                        int* fbout,
                        int w,
                        int h);
-    virtual char* get_desc();
-    virtual void load_config(unsigned char* data, int len);
-    virtual int save_config(unsigned char* data);
-    ComponentCode<TriangleVars> code;
+    virtual void load_legacy(unsigned char* data, int len);
+    virtual int save_legacy(unsigned char* data);
+    void recompile(const char* parameter_name);
 
    private:
     static unsigned int instance_count;

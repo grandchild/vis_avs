@@ -228,7 +228,7 @@ void C_RLibrary::initbuiltinape(void) {
     ADD(R_Normalise, "Trans: Normalise");
     ADD_NEW(ColorMap, "Color Map");
     ADD(R_AddBorders, "Virtual Effect: Addborders");
-    ADD(R_Triangle, "Render: Triangle");
+    ADD_NEW(Triangle, "Render: Triangle");
     ADD(R_EelTrans, "Misc: AVSTrans Automation");
     ADD(R_GlobalVars, "Jheriko: Global");
     ADD(R_MultiFilter, "Jheriko : MULTIFILTER");
