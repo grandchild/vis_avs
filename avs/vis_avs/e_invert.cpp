@@ -29,62 +29,23 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "c_invert.h"
+#include "e_invert.h"
 
 #include "r_defs.h"
 
 #include <stdlib.h>
 
-C_THISCLASS::~C_THISCLASS() {}
+constexpr Parameter Invert_Info::parameters[];
 
-// configuration read/write
+E_Invert::E_Invert() { enabled = 1; }
+E_Invert::~E_Invert() {}
 
-C_THISCLASS::C_THISCLASS()  // set up default configuration
-{
-    enabled = 1;
-}
-
-#define GET_INT() \
-    (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
-void C_THISCLASS::load_config(unsigned char* data, int len)  // read configuration of
-                                                             // max length "len" from
-                                                             // data.
-{
-    int pos = 0;
-    if (len - pos >= 4) {
-        enabled = GET_INT();
-        pos += 4;
-    }
-}
-
-#define PUT_INT(y)                   \
-    data[pos] = (y)&255;             \
-    data[pos + 1] = (y >> 8) & 255;  \
-    data[pos + 2] = (y >> 16) & 255; \
-    data[pos + 3] = (y >> 24) & 255
-int C_THISCLASS::save_config(unsigned char* data)  // write configuration to data,
-                                                   // return length. config data should
-                                                   // not exceed 64k.
-{
-    int pos = 0;
-    PUT_INT(enabled);
-    pos += 4;
-    return pos;
-}
-
-// render function
-// render should return 0 if it only used framebuffer, or 1 if the new output data is in
-// fbout. this is used when you want to do something that you'd otherwise need to make a
-// copy of the framebuffer. w and h are the width and height of the screen, in pixels.
-// isBeat is 1 if a beat has been detected.
-// visdata is in the format of [spectrum:0,wave:1][channel][band].
-
-int C_THISCLASS::render(char[2][2][576],
-                        int isBeat,
-                        int* framebuffer,
-                        int*,
-                        int w,
-                        int h) {
+int E_Invert::render(char[2][2][576],
+                     int isBeat,
+                     int* framebuffer,
+                     int*,
+                     int w,
+                     int h) {
     int i = w * h;
     int* p = framebuffer;
 
@@ -177,12 +138,27 @@ _mmx_invert_noendloop:
     return 0;
 }
 
-C_RBASE* R_Invert(char* desc)  // creates a new effect object if desc is NULL, otherwise
-                               // fills in desc with description
-{
-    if (desc) {
-        strcpy(desc, MOD_NAME);
-        return NULL;
+#define GET_INT() \
+    (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
+void E_Invert::load_legacy(unsigned char* data, int len) {
+    int pos = 0;
+    if (len - pos >= 4) {
+        enabled = GET_INT();
+        pos += 4;
     }
-    return (C_RBASE*)new C_THISCLASS();
 }
+
+#define PUT_INT(y)                   \
+    data[pos] = (y)&255;             \
+    data[pos + 1] = (y >> 8) & 255;  \
+    data[pos + 2] = (y >> 16) & 255; \
+    data[pos + 3] = (y >> 24) & 255
+int E_Invert::save_legacy(unsigned char* data) {
+    int pos = 0;
+    PUT_INT(enabled);
+    pos += 4;
+    return pos;
+}
+
+Effect_Info* create_Invert_Info() { return new Invert_Info(); }
+Effect* create_Invert() { return new E_Invert(); }
