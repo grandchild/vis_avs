@@ -163,6 +163,9 @@ uint32_t Effect::string_save_legacy(std::string& src, char* dest, uint32_t max_l
 uint32_t Effect::string_nt_load_legacy(const char* src,
                                        std::string& dest,
                                        uint32_t max_length) {
+    if (max_length < 1) {
+        return 0;
+    }
     auto code_len = strnlen(src, max_length);
     dest.assign(src, code_len);
     return code_len + 1;
@@ -171,6 +174,9 @@ uint32_t Effect::string_nt_load_legacy(const char* src,
 uint32_t Effect::string_nt_save_legacy(std::string& src,
                                        char* dest,
                                        uint32_t max_length) {
+    if (max_length < 1) {
+        return 0;
+    }
     auto code_len = src.length();
     if (code_len > max_length) {
         code_len = max_length;
