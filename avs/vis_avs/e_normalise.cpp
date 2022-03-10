@@ -1,4 +1,4 @@
-#include "c_normalise.h"
+#include "e_normalise.h"
 
 #include "r_defs.h"
 
@@ -14,11 +14,13 @@ Must be divisible by four, or early-exit check condition will never be hit! */
 #define TRY_BAIL_SCAN_EARLY_EVERY_NTH_PIXEL 512
 #define NUM_COLOR_VALUES                    256  // 2 ^ BITS_PER_CHANNEL (i.e. 8)
 
-C_Normalise::C_Normalise() { this->enabled = true; }
+constexpr Parameter Normalise_Info::parameters[];
 
-C_Normalise::~C_Normalise() {}
+E_Normalise::E_Normalise() { this->enabled = true; }
 
-int C_Normalise::scan_min_max(int* framebuffer,
+E_Normalise::~E_Normalise() {}
+
+int E_Normalise::scan_min_max(int* framebuffer,
                               int fb_length,
                               unsigned char* max_out,
                               unsigned char* min_out) {
@@ -44,7 +46,7 @@ int C_Normalise::scan_min_max(int* framebuffer,
     return 0;
 }
 
-int C_Normalise::scan_min_max_sse2(int* framebuffer,
+int E_Normalise::scan_min_max_sse2(int* framebuffer,
                                    int fb_length,
                                    unsigned char* max_out,
                                    unsigned char* min_out) {
@@ -88,7 +90,7 @@ int C_Normalise::scan_min_max_sse2(int* framebuffer,
     return 0;
 }
 
-void C_Normalise::make_scale_table(unsigned char max,
+void E_Normalise::make_scale_table(unsigned char max,
                                    unsigned char min,
                                    unsigned int scale_table_out[]) {
     if (max - min) {
@@ -101,7 +103,7 @@ void C_Normalise::make_scale_table(unsigned char max,
     }
 }
 
-void C_Normalise::apply(int* framebuffer, int fb_length, unsigned int scale_table[]) {
+void E_Normalise::apply(int* framebuffer, int fb_length, unsigned int scale_table[]) {
     for (int i = 0; i < fb_length; i++) {
         unsigned char r = framebuffer[i] & 0xff;
         unsigned char g = (framebuffer[i] & 0xff00) >> 8;
@@ -111,7 +113,7 @@ void C_Normalise::apply(int* framebuffer, int fb_length, unsigned int scale_tabl
     }
 }
 
-int C_Normalise::render(char[2][2][576], int, int* framebuffer, int*, int w, int h) {
+int E_Normalise::render(char[2][2][576], int, int* framebuffer, int*, int w, int h) {
     unsigned char max = 0;
     unsigned char min = 0xff;
     unsigned int scale_table[NUM_COLOR_VALUES];
@@ -125,11 +127,9 @@ int C_Normalise::render(char[2][2][576], int, int* framebuffer, int*, int w, int
     return 0;
 }
 
-char* C_Normalise::get_desc(void) { return MOD_NAME; }
-
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
-void C_Normalise::load_config(unsigned char* data, int len) {
+void E_Normalise::load_legacy(unsigned char* data, int len) {
     int pos = 0;
     if (len - pos >= 4) {
         this->enabled = GET_INT();
@@ -143,16 +143,11 @@ void C_Normalise::load_config(unsigned char* data, int len) {
     data[pos + 1] = ((y) >> 8) & 255;  \
     data[pos + 2] = ((y) >> 16) & 255; \
     data[pos + 3] = ((y) >> 24) & 255
-int C_Normalise::save_config(unsigned char* data) {
+int E_Normalise::save_legacy(unsigned char* data) {
     int pos = 0;
     PUT_INT((int)this->enabled);
     return 4;
 }
 
-C_RBASE* R_Normalise(char* desc) {
-    if (desc) {
-        strcpy(desc, MOD_NAME);
-        return NULL;
-    }
-    return (C_RBASE*)new C_Normalise();
-}
+Effect_Info* create_Normalise_Info() { return new Normalise_Info(); }
+Effect* create_Normalise() { return new E_Normalise(); }

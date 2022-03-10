@@ -1,23 +1,35 @@
 #pragma once
 
-#include "c__base.h"
+#include "effect.h"
+#include "effect_info.h"
 
-#define MOD_NAME "Trans / Normalise"
+struct Normalise_Config : public Effect_Config {};
 
-class C_Normalise : public C_RBASE {
+struct Normalise_Info : public Effect_Info {
+    static constexpr char* group = "Trans";
+    static constexpr char* name = "Normalise";
+    static constexpr char* help = "";
+    static constexpr int32_t legacy_id = -1;
+    static constexpr char* legacy_ape_id = "Trans: Normalise";
+
+    static constexpr uint32_t num_parameters = 0;
+    static constexpr Parameter parameters[num_parameters] = {};
+
+    EFFECT_INFO_GETTERS;
+};
+
+class E_Normalise : public Configurable_Effect<Normalise_Info, Normalise_Config> {
    public:
-    C_Normalise();
-    virtual ~C_Normalise();
+    E_Normalise();
+    virtual ~E_Normalise();
     virtual int render(char visdata[2][2][576],
                        int isBeat,
                        int* framebuffer,
                        int* fbout,
                        int w,
-                       int);
-    virtual char* get_desc();
-    virtual void load_config(unsigned char* data, int len);
-    virtual int save_config(unsigned char* data);
-    bool enabled;
+                       int h);
+    virtual void load_legacy(unsigned char* data, int len);
+    virtual int save_legacy(unsigned char* data);
 
    protected:
     int scan_min_max(int* framebuffer,
