@@ -30,39 +30,23 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 // alphachannel safe 11/21/99
-#include "c_comment.h"
+#include "e_comment.h"
 
 #include "r_defs.h"
 
-#include "timing.h"
+constexpr Parameter Comment_Info::parameters[];
 
-#define PUT_INT(y)                   \
-    data[pos] = (y)&255;             \
-    data[pos + 1] = (y >> 8) & 255;  \
-    data[pos + 2] = (y >> 16) & 255; \
-    data[pos + 3] = (y >> 24) & 255
-#define GET_INT() \
-    (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
-void C_THISCLASS::load_config(unsigned char* data, int len) {
-    int pos = 0;
-    load_string(msgdata, data, pos, len);
+E_Comment::E_Comment() {}
+E_Comment::~E_Comment() {}
+
+int E_Comment::render(char[2][2][576], int, int*, int*, int, int) { return 0; }
+
+void E_Comment::load_legacy(unsigned char* data, int) {
+    this->string_load_legacy((char*)data, this->config.comment, MAX_CODE_LEN);
 }
-int C_THISCLASS::save_config(unsigned char* data) {
-    int pos = 0;
-    save_string(data, pos, msgdata);
-    return pos;
+int E_Comment::save_legacy(unsigned char* data) {
+    return this->string_save_legacy(this->config.comment, (char*)data, MAX_CODE_LEN);
 }
 
-C_THISCLASS::C_THISCLASS() { msgdata.assign(""); }
-
-C_THISCLASS::~C_THISCLASS() {}
-
-int C_THISCLASS::render(char[2][2][576], int, int*, int*, int, int) { return 0; }
-
-C_RBASE* R_Comment(char* desc) {
-    if (desc) {
-        strcpy(desc, MOD_NAME);
-        return NULL;
-    }
-    return (C_RBASE*)new C_THISCLASS();
-}
+Effect_Info* create_Comment_Info() { return new Comment_Info(); }
+Effect* create_Comment() { return new E_Comment(); }

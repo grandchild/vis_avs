@@ -137,7 +137,7 @@ void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_LEGACY(R_Stack);
     DECLARE_EFFECT_LEGACY(R_DotFountain);
     DECLARE_EFFECT_NEW(Water);
-    DECLARE_EFFECT_LEGACY(R_Comment);
+    DECLARE_EFFECT_NEW(Comment);
     DECLARE_EFFECT_LEGACY_MT(R_Brightness);
     DECLARE_EFFECT_LEGACY(R_Interleave);
     DECLARE_EFFECT_LEGACY(R_Grain);
