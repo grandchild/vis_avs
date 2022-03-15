@@ -41,7 +41,7 @@ class C_THISCLASS : public C_RBASE {
     int ratio;
     int axis_ratio;
     char image[LEGACY_SAVE_PATH_LEN];
-    pixel_rgb8* image_data;
+    pixel_rgb0_8* image_data;
     lock_t* image_lock;
 
     static std::vector<char*> file_list;

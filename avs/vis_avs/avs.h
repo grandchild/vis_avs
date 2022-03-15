@@ -47,7 +47,7 @@
  *                    height,
  *                    0,               // zero for realtime rendering
  *                    false,           // ignored, since AVS_BEAT_INTERNAL
- *                    AVS_PIXEL_RGB08  // the only valid pixel format
+ *                    AVS_PIXEL_RGB0_8  // the only valid pixel format
  *             )) {
  *                 // -------------------------------------
  *                 // Do something with `framebuffer` here,
@@ -74,7 +74,7 @@ extern "C" {
 
 typedef uint32_t AVS_Handle;
 
-enum AVS_Pixel_Format { AVS_PIXEL_RGB08 = 0 };  // To be expanded.
+enum AVS_Pixel_Format { AVS_PIXEL_RGB0_8 = 0 };  // To be expanded.
 
 enum AVS_Audio_Source { AVS_AUDIO_INTERNAL = 0, AVS_AUDIO_EXTERNAL = 1 };
 enum AVS_Beat_Source { AVS_BEAT_INTERNAL = 0, AVS_BEAT_EXTERNAL = 1 };
@@ -152,7 +152,7 @@ AVS_Handle avs_init(AVS_Audio_Source audio_source, AVS_Beat_Source beat_source);
  *       ignored.
  *
  *   `pixel_format`
- *       Must be `AVS_PIXEL_RGB08`. Any other value is invalid at the moment.
+ *       Must be `AVS_PIXEL_RGB0_8`. Any other value is invalid at the moment.
  *       Note: Has no impact on what pixel format the preset can use internally. Only
  *       defines the pixel format of the final rendered frame.
  */

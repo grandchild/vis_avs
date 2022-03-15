@@ -209,7 +209,7 @@ class AVS {
                       size_t height,
                       uint64_t time_ms = 0,
                       bool is_beat = false,
-                      AVS_Pixel_Format pixel_format = AVS_PIXEL_RGB08) {
+                      AVS_Pixel_Format pixel_format = AVS_PIXEL_RGB0_8) {
         return avs_render_frame(
             this->handle, framebuffer, width, height, time_ms, is_beat, pixel_format);
     }

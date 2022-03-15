@@ -101,7 +101,7 @@ void C_THISCLASS::clear_image_files() {
 void C_THISCLASS::load_image() {
     char file_path[MAX_PATH];
     snprintf(file_path, MAX_PATH, "%s\\%s", g_path, this->image);
-    AVS_image* tmp_image = image_load(file_path, AVS_PXL_FMT_RGB8);
+    AVS_Image* tmp_image = image_load(file_path, AVS_PIXEL_RGB0_8);
     if (tmp_image->data == NULL || tmp_image->w == 0 || tmp_image->h == 0
         || tmp_image->error != NULL) {
         image_free(tmp_image);
@@ -127,7 +127,7 @@ void C_THISCLASS::load_image() {
     lock(this->image_lock);
     free(this->image_data);
     this->image_data =
-        (pixel_rgb8*)malloc(this->width * this->height * sizeof(pixel_rgb8));
+        (pixel_rgb0_8*)malloc(this->width * this->height * sizeof(pixel_rgb0_8));
     for (int y = 0; y < this->height; y++) {
         for (int x = 0; x < this->width; x++) {
             int source_x = (x - x_start) * tmp_image->w / screen_width;
@@ -137,7 +137,8 @@ void C_THISCLASS::load_image() {
                 this->image_data[x + y * this->width] = 0;
             } else {
                 this->image_data[x + y * this->width] =
-                    ((pixel_rgb8*)tmp_image->data)[source_x + source_y * tmp_image->w];
+                    ((pixel_rgb0_8*)
+                         tmp_image->data)[source_x + source_y * tmp_image->w];
             }
         }
     }
@@ -265,7 +266,7 @@ int C_THISCLASS::render(char[2][2][576],
             framebuffer[i] = BLEND_AVG(framebuffer[i], this->image_data[i]);
         }
     } else {
-        memcpy(framebuffer, this->image_data, w * h * sizeof(pixel_rgb8));
+        memcpy(framebuffer, this->image_data, w * h * sizeof(pixel_rgb0_8));
     }
     lock_unlock(this->image_lock);
 
