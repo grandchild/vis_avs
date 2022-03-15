@@ -83,7 +83,7 @@ bool C_Picture2::load_image() {
     lock(this->image_lock);
     char filename[MAX_PATH];
     snprintf(filename, MAX_PATH, "%s\\%s", g_path, this->config.image);
-    AVS_image* tmp_image = image_load(filename);
+    AVS_Image* tmp_image = image_load(filename);
     if (tmp_image->data == NULL) {
         this->image = NULL;
         lock_unlock(this->image_lock);
@@ -95,12 +95,12 @@ bool C_Picture2::load_image() {
     this->iw = tmp_image->w + 2;
     this->ih = tmp_image->h + 2;
     delete[] this->image;
-    this->image = (int*)new unsigned char[this->iw * this->ih * sizeof(pixel_rgb8)];
+    this->image = (int*)new unsigned char[this->iw * this->ih * sizeof(pixel_rgb0_8)];
     for (int y = 0; y < this->ih; ++y) {
         for (int x = 0; x < this->iw; ++x) {
             int tmp_index = max(0, min(this->iw - 3, x - 1))
                             + max(0, min(this->ih - 3, y - 1)) * (this->iw - 2);
-            this->image[x + y * this->iw] = ((pixel_rgb8*)tmp_image->data)[tmp_index];
+            this->image[x + y * this->iw] = ((pixel_rgb0_8*)tmp_image->data)[tmp_index];
         }
     }
     image_free(tmp_image);

@@ -75,7 +75,7 @@ bool C_Texer::load_image() {
     if (printed >= MAX_PATH) {
         filename[MAX_PATH - 1] = '\0';
     }
-    AVS_image* tmp_image = image_load(filename);
+    AVS_Image* tmp_image = image_load(filename);
     if (tmp_image->data == NULL || tmp_image->w == 0 || tmp_image->h == 0
         || tmp_image->error != NULL) {
         image_free(tmp_image);
@@ -91,7 +91,7 @@ bool C_Texer::load_image() {
     this->image_height_other_half = this->image_height - this->image_height_half;
 
     delete[] this->image_data;
-    this->image_data = new pixel_rgb8[this->image_data_width * this->image_height];
+    this->image_data = new pixel_rgb0_8[this->image_data_width * this->image_height];
     for (int y = 0; y < this->image_height; y++) {
         int x = 0;
         // Prepend each row by black pixels, so that we can render 4 pixels at once and
@@ -103,7 +103,7 @@ bool C_Texer::load_image() {
         }
         for (; x < this->image_width + IMAGE_DATA_ROW_EXPAND; x++) {
             this->image_data[x + y * this->image_data_width] =
-                ((pixel_rgb8*)
+                ((pixel_rgb0_8*)
                      tmp_image->data)[x - IMAGE_DATA_ROW_EXPAND + y * tmp_image->w];
         }
         // Expand each row by black pixels, so that we can render 4 pixels at once and
@@ -135,7 +135,7 @@ int C_Texer::render(char[2][2][576], int, int* framebuffer, int* fbout, int w, i
     int p = 0;
     for (int y = 0; y < h; y++) {
         for (int x = 0; x < w; x++) {
-            if ((framebuffer[x + y * w] & AVS_PXL_COLOR_MASK_RGB8) != 0) {
+            if ((framebuffer[x + y * w] & AVS_PIXEL_COLOR_MASK_RGB0_8) != 0) {
                 this->render_particle_sse2(framebuffer, fbout, x, y, w, h);
                 p++;
                 if (p >= this->num_particles) {
@@ -163,14 +163,15 @@ inline void C_Texer::render_particle(int* framebuffer,
     int image_end_y = this->image_height + min(0, h - fb_end_y);
     fb_start_x = max(0, fb_start_x);
     fb_start_y = max(0, fb_start_y);
-    pixel_rgb8 mask = AVS_PXL_COLOR_MASK_RGB8;  // a sane, but unused, default value
+    // a sane default value, but unused
+    pixel_rgb0_8 mask = AVS_PIXEL_COLOR_MASK_RGB0_8;
     if (this->output_mode == TEXER_OUTPUT_MASKED) {
         mask = framebuffer[x + y * w];
     }
     for (int iy = image_start_y, fby = fb_start_y; iy < image_end_y; iy++, fby++) {
         for (int ix = image_start_x, fbx = fb_start_x; ix < image_end_x; ix++, fbx++) {
-            pixel_rgb8 dest_pixel = this->image_data[ix + IMAGE_DATA_ROW_EXPAND
-                                                     + iy * this->image_data_width];
+            pixel_rgb0_8 dest_pixel = this->image_data[ix + IMAGE_DATA_ROW_EXPAND
+                                                       + iy * this->image_data_width];
             if (this->output_mode == TEXER_OUTPUT_MASKED) {
                 dest_pixel = BLEND_MUL(dest_pixel, mask);
             }

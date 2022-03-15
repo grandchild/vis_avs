@@ -93,7 +93,7 @@ class C_Texer2 : public C_RBASE {
     void delete_image();
 
     void DrawParticle(int* framebuffer,
-                      pixel_rgb8* texture,
+                      pixel_rgb0_8* texture,
                       int w,
                       int h,
                       double x,
@@ -110,10 +110,10 @@ class C_Texer2 : public C_RBASE {
     static std::vector<char*> file_list;
     int iw;
     int ih;
-    pixel_rgb8* image_normal;
-    pixel_rgb8* image_flipped;
-    pixel_rgb8* image_mirrored;
-    pixel_rgb8* image_rot180;
+    pixel_rgb0_8* image_normal;
+    pixel_rgb0_8* image_flipped;
+    pixel_rgb0_8* image_mirrored;
+    pixel_rgb0_8* image_rot180;
 
     lock_t* image_lock;
     lock_t* code_lock;

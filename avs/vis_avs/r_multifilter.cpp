@@ -1,6 +1,6 @@
 #include "c_multifilter.h"
 
-#include "pixel_format.h"  // AVS_PXL_COLOR_MASK_RGB8
+#include "pixel_format.h"  // AVS_PIXEL_COLOR_MASK_RGB0_8
 
 #include "../util.h"  // ssizeof32()
 
@@ -189,7 +189,7 @@ inline void C_MultiFilter::infroot_borderconvo(int* framebuffer, int w, int h) {
     for (int y = 0; y < h; y++) {
         for (int x = 0; x < w; x++) {
             unsigned int p = x + y * w;
-            if (framebuffer[p] & AVS_PXL_COLOR_MASK_RGB8) {
+            if (framebuffer[p] & AVS_PIXEL_COLOR_MASK_RGB0_8) {
                 framebuffer[p] = 0xffffff;
                 if (y > 0) {
                     framebuffer[p - w] = 0xffffff;

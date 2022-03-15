@@ -45,7 +45,7 @@ class C_Texer : public C_RBASE {
     void render_particle(int* framebuffer, int* fbout, int x, int y, int w, int h);
     void render_particle_sse2(int* framebuffer, int* fbout, int x, int y, int w, int h);
 
-    pixel_rgb8* image_data;
+    pixel_rgb0_8* image_data;
     int32_t image_width;
     int32_t image_width_half;
     int32_t image_width_other_half;

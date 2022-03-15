@@ -1,14 +1,16 @@
+#pragma once
+
 #include "pixel_format.h"
 
-typedef struct {
+struct AVS_Image {
     void* data;
-    AVSPixelFormat pixel_format;
+    AVS_Pixel_Format pixel_format;
     size_t pixel_size;
     int w;
     int h;
     const char* error;
-} AVS_image;
+};
 
-AVS_image* image_load(const char* filename,
-                      AVSPixelFormat pixel_format = AVS_PXL_FMT_RGB8);
-void image_free(AVS_image* image);
+AVS_Image* image_load(const char* filename,
+                      AVS_Pixel_Format pixel_format = AVS_PIXEL_RGB0_8);
+void image_free(AVS_Image* image);
