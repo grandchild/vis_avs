@@ -50,6 +50,8 @@ enabled for the cases where it might actually catch something.
  * the project, so we can define them all the same for all platforms. */
 int min(int a, int b);
 int max(int a, int b);
+unsigned int umin(unsigned int a, unsigned int b);
+unsigned int umax(unsigned int a, unsigned int b);
 
 /* The number of milliseconds since the system was booted. May return 0 on error. */
 uint64_t timer_ms();
