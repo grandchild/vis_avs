@@ -71,6 +71,7 @@ void library_unload(dlib_t* library);
 signal_t* signal_create_single();
 signal_t* signal_create_broadcast();
 void signal_set(signal_t* signal);
+void signal_unset(signal_t* signal);
 // All wait functions return NULL if timeout was hit or other error occurred.
 signal_t* signal_wait(signal_t* signal, int32_t wait_ms);
 signal_t* signal_wait_any(signal_t** signals, uint32_t num_signals, int32_t wait_ms);

@@ -63,6 +63,8 @@ signal_t* signal_create_broadcast() { return _signal_create(/*manual*/ true); }
 
 void signal_set(signal_t* signal) { SetEvent(signal); }
 
+void signal_unset(signal_t* signal) { ResetEvent(signal); }
+
 signal_t* signal_wait(signal_t* signal, int32_t wait_ms) {
     uint32_t wait = wait_ms == WAIT_INFINITE ? INFINITE : (uint32_t)wait_ms;
     uint32_t wait_result = WaitForSingleObject(signal, wait);
