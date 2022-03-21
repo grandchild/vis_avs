@@ -374,7 +374,7 @@ int C_RenderListClass::render(char visdata[2][2][576],
 
     if (!isroot && use_code) {
         if (need_recompile) {
-            lock(this->code_lock);
+            lock_lock(this->code_lock);
 
             if (!var_beat || g_reset_vars_on_recompile) {
                 clearVars();
@@ -928,7 +928,7 @@ int C_RenderListClass::insertRender(T_RenderListType* r, int index)  // index=-1
 char C_RenderListClass::sig_str[] = "Nullsoft AVS Preset 0.2\x1a";
 
 int C_RenderListClass::__SavePreset(char* filename) {
-    lock(g_render_cs);
+    lock_lock(g_render_cs);
     unsigned char* data = (unsigned char*)calloc(1024 * 1024, 1);
     int success = -1;
     if (data) {
@@ -953,7 +953,7 @@ int C_RenderListClass::__SavePreset(char* filename) {
 }
 
 int C_RenderListClass::__LoadPreset(char* filename, int clear) {
-    lock(g_render_cs);
+    lock_lock(g_render_cs);
     unsigned char* data = (unsigned char*)calloc(1024 * 1024, 1);
     int success = 1;
     if (clear) clearRenders();
@@ -981,7 +981,7 @@ int C_RenderListClass::__LoadPreset(char* filename, int clear) {
 }
 
 int C_RenderListClass::__SavePresetToUndo(C_UndoItem& item) {
-    lock(g_render_cs);
+    lock_lock(g_render_cs);
     unsigned char* data = (unsigned char*)calloc(1024 * 1024, 1);
     int success = -1;
     if (data) {
@@ -1005,7 +1005,7 @@ int C_RenderListClass::__SavePresetToUndo(C_UndoItem& item) {
 }
 
 int C_RenderListClass::__LoadPresetFromUndo(C_UndoItem& item, int clear) {
-    lock(g_render_cs);
+    lock_lock(g_render_cs);
     unsigned char* data = (unsigned char*)calloc(1024 * 1024, 1);
     int success = 1;
     if (clear) clearRenders();

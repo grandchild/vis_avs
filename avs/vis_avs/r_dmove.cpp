@@ -250,7 +250,7 @@ int C_THISCLASS::smp_begin(int max_threads,
 
     if (need_recompile) {
         int x;
-        lock(this->code_lock);
+        lock_lock(this->code_lock);
         if (!var_b || g_reset_vars_on_recompile) {
             clearVars();
             var_d = registerVar("d");

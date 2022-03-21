@@ -111,19 +111,19 @@ int win32_dlgproc_bump(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                     IsDlgButtonChecked(hwndDlg, IDC_INVERTDEPTH) ? 1 : 0;
             }
             if (LOWORD(wParam) == IDC_CODE1 && HIWORD(wParam) == EN_CHANGE) {
-                lock(g_ConfigThis->code_lock);
+                lock_lock(g_ConfigThis->code_lock);
                 g_ConfigThis->code1 = string_from_dlgitem(hwndDlg, IDC_CODE1);
                 g_ConfigThis->need_recompile = 1;
                 lock_unlock(g_ConfigThis->code_lock);
             }
             if (LOWORD(wParam) == IDC_CODE2 && HIWORD(wParam) == EN_CHANGE) {
-                lock(g_ConfigThis->code_lock);
+                lock_lock(g_ConfigThis->code_lock);
                 g_ConfigThis->code2 = string_from_dlgitem(hwndDlg, IDC_CODE2);
                 g_ConfigThis->need_recompile = 1;
                 lock_unlock(g_ConfigThis->code_lock);
             }
             if (LOWORD(wParam) == IDC_CODE3 && HIWORD(wParam) == EN_CHANGE) {
-                lock(g_ConfigThis->code_lock);
+                lock_lock(g_ConfigThis->code_lock);
                 g_ConfigThis->code3 = string_from_dlgitem(hwndDlg, IDC_CODE3);
                 g_ConfigThis->need_recompile = 1;
                 g_ConfigThis->initted = 0;

@@ -248,7 +248,7 @@ static int render(struct winampVisModule* this_mod) {
 #ifndef WA3_COMPONENT
     int x, avs_beat = 0, b;
     if (g_ThreadQuit) return 1;
-    lock(g_cs);
+    lock_lock(g_cs);
     if (g_ThreadQuit) {
         lock_unlock(g_cs);
         return 1;
@@ -425,13 +425,13 @@ static unsigned int WINAPI RenderThread(LPVOID) {
                 } else
                     beat_peak2 = (beat_peak2 * 14) / 16;
             }
-            //     lock(g_title_cs);
+            //     lock_lock(g_title_cs);
             beat = refineBeat(beat);
             //      lock_unlock(g_title_cs);
         }
 
 #else
-        lock(g_cs);
+        lock_lock(g_cs);
         memcpy(&vis_data[0][0][0], &g_visdata[0][0][0], 576 * 2 * 2);
         g_visdata_pstat = 1;
         beat = g_is_beat;
@@ -447,7 +447,7 @@ static unsigned int WINAPI RenderThread(LPVOID) {
             if (fb && fb2) {
                 extern int g_dlg_w, g_dlg_h, g_dlg_fps;
 
-                lock(g_render_cs);
+                lock_lock(g_render_cs);
                 int t = g_render_transition->render(
                     vis_data, beat, s ? fb2 : fb, s ? fb : fb2, w, h);
                 lock_unlock(g_render_cs);

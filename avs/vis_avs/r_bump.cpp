@@ -216,7 +216,7 @@ int C_THISCLASS::render(char visdata[2][2][576],
     if (!enabled) return 0;
 
     if (need_recompile) {
-        lock(this->code_lock);
+        lock_lock(this->code_lock);
         if (!var_bi || g_reset_vars_on_recompile) {
             clearVars();
             var_x = registerVar("x");

@@ -56,7 +56,7 @@ int C_THISCLASS::save_config(unsigned char* data) {
 }
 
 void C_THISCLASS::SetLibrary() {
-    lock(this->library_lock);
+    lock_lock(this->library_lock);
     if (this->library) {
         if (this->vi) this->vi->SaveSettings("avs.ini");
         this->vi = NULL;
@@ -116,7 +116,7 @@ int C_THISCLASS::render(char visdata[2][2][576],
                         int w,
                         int h) {
     if (isBeat & 0x80000000) return 0;
-    lock(this->library_lock);
+    lock_lock(this->library_lock);
     if (this->vi) {
         //   if (vi->lRequired & VI_WAVEFORM)
         {

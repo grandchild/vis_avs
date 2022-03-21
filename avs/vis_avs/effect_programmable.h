@@ -95,7 +95,7 @@ class Code_Section {
         if (this->code == NULL) {
             return;
         }
-        lock(this->code_lock);
+        lock_lock(this->code_lock);
         AVS_EEL_IF_Execute(this->code, visdata);
         lock_unlock(this->code_lock);
     };
@@ -134,7 +134,7 @@ class Programmable_Effect : public Configurable_Effect<Info_T, Config_T> {
     }
 
     void recompile_if_needed() {
-        lock(this->code_lock);
+        lock_lock(this->code_lock);
         if (this->vm_context == NULL) {
             this->vm_context = NSEEL_VM_alloc();
             if (this->vm_context == NULL) {

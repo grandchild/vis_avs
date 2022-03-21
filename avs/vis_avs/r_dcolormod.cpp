@@ -118,7 +118,7 @@ int C_THISCLASS::render(char visdata[2][2][576],
                         int w,
                         int h) {
     if (need_recompile) {
-        lock(this->code_lock);
+        lock_lock(this->code_lock);
         if (!var_beat || g_reset_vars_on_recompile) {
             clearVars();
             var_r = registerVar("red");

@@ -117,7 +117,7 @@ int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                 case IDC_EDIT4:
                 case IDC_EDIT5:
                     if (!g_this->isstart && HIWORD(wParam) == EN_CHANGE) {
-                        lock(g_this->code_lock);
+                        lock_lock(g_this->code_lock);
                         g_this->effect_exp[0] = string_from_dlgitem(hwndDlg, IDC_EDIT4);
                         g_this->effect_exp[1] = string_from_dlgitem(hwndDlg, IDC_EDIT5);
                         g_this->need_recompile = 1;

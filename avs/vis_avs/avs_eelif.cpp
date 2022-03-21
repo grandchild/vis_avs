@@ -215,7 +215,7 @@ static void movestringover(char* str, int amount) {
 
 int AVS_EEL_IF_Compile(int context, char* code) {
     NSEEL_CODEHANDLE ret;
-    lock(g_eval_cs);
+    lock_lock(g_eval_cs);
     ret = NSEEL_code_compile((NSEEL_VMCTX)context, code);
     if (!ret) {
         if (g_log_errors) {
@@ -236,7 +236,7 @@ int AVS_EEL_IF_Compile(int context, char* code) {
 
 void AVS_EEL_IF_Execute(void* handle, char visdata[2][2][576]) {
     if (handle) {
-        lock(g_eval_cs);
+        lock_lock(g_eval_cs);
         g_evallib_visdata = (char*)visdata;
         NSEEL_code_execute((NSEEL_CODEHANDLE)handle);
         g_evallib_visdata = NULL;

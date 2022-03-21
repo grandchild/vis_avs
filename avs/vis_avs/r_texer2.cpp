@@ -43,7 +43,7 @@ C_Texer2::C_Texer2(int default_version)
 }
 
 C_Texer2::~C_Texer2() {
-    lock(this->image_lock);
+    lock_lock(this->image_lock);
     if (this->image_normal) {
         this->delete_image();
     }
@@ -94,7 +94,7 @@ void C_Texer2::delete_image() {
 
 extern unsigned char rawData[1323];  // example pic
 void C_Texer2::load_image() {
-    lock(this->image_lock);
+    lock_lock(this->image_lock);
     if (this->image_normal) this->delete_image();
     if (!strlen(this->config.image)) {
         this->load_default_image();
@@ -1527,7 +1527,7 @@ int C_Texer2::render(char visdata[2][2][576],
                      int*,
                      int w,
                      int h) {
-    lock(this->code_lock);
+    lock_lock(this->code_lock);
     this->code.recompile_if_needed();
     this->code.init_variables(w, h, is_beat, this->iw, this->ih);
     if (this->code.need_init || (is_beat & 0x80000000)) {
@@ -1542,7 +1542,7 @@ int C_Texer2::render(char visdata[2][2][576],
     int n = RoundToInt((double)*this->code.vars.n);
     n = max(0, min(65536, n));
 
-    lock(this->image_lock);
+    lock_lock(this->image_lock);
     if (n) {
         double step = 1.0 / (n - 1);
         double i = 0.0;
