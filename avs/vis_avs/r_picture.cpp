@@ -124,7 +124,7 @@ void C_THISCLASS::load_image() {
         }
     }
 
-    lock(this->image_lock);
+    lock_lock(this->image_lock);
     free(this->image_data);
     this->image_data =
         (pixel_rgb0_8*)malloc(this->width * this->height * sizeof(pixel_rgb0_8));
@@ -256,7 +256,7 @@ int C_THISCLASS::render(char[2][2][576],
         persistCount--;
     }
 
-    lock(this->image_lock);
+    lock_lock(this->image_lock);
     if (blend || (adapt && (isBeat || persistCount))) {
         for (int i = 0; i < w * h; i++) {
             framebuffer[i] = BLEND(framebuffer[i], this->image_data[i]);

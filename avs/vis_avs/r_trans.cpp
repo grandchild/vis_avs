@@ -360,7 +360,7 @@ int C_THISCLASS::smp_begin(int max_threads,
                                                 : descriptions[trans_effect].uses_rect;
             *pw = w;
             *ph = h;
-            lock(this->code_lock);
+            lock_lock(this->code_lock);
             codehandle = compileCode(trans_effect == 32767
                                          ? (char*)effect_exp.c_str()
                                          : descriptions[trans_effect].eval_desc);

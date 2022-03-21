@@ -40,7 +40,7 @@ lock_t* lock_init() {
     return (lock_t*)lock_obj;
 }
 
-void lock(lock_t* lock_obj) { EnterCriticalSection(WIN_LOCK(lock_obj)); }
+void lock_lock(lock_t* lock_obj) { EnterCriticalSection(WIN_LOCK(lock_obj)); }
 
 bool lock_try(lock_t* lock_obj) { return TryEnterCriticalSection(WIN_LOCK(lock_obj)); }
 

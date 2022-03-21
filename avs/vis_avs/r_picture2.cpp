@@ -80,7 +80,7 @@ bool C_Picture2::load_image() {
     if (this->config.image[0] == 0) {
         return true;
     }
-    lock(this->image_lock);
+    lock_lock(this->image_lock);
     char filename[MAX_PATH];
     snprintf(filename, MAX_PATH, "%s\\%s", g_path, this->config.image);
     AVS_Image* tmp_image = image_load(filename);
@@ -113,7 +113,7 @@ bool C_Picture2::load_image() {
 void C_Picture2::refresh_image(int w, int h) {
     int* wit;
     int y;
-    lock(this->image_lock);
+    lock_lock(this->image_lock);
     delete[] this->work_image;
     delete[] this->work_image_bilinear;
     this->wiw = w;

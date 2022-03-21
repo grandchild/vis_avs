@@ -60,7 +60,7 @@ uint64_t timer_us();
 double timer_us_precision();
 
 lock_t* lock_init();
-void lock(lock_t* lock_obj);
+void lock_lock(lock_t* lock_obj);
 bool lock_try(lock_t* lock_obj);
 void lock_unlock(lock_t* lock_obj);
 void lock_destroy(lock_t* lock_obj);

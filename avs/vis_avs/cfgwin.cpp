@@ -817,7 +817,7 @@ static BOOL CALLBACK debugProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
 
                 if (g_log_errors) {
                     // IDC_EDIT1
-                    lock(g_eval_cs);
+                    lock_lock(g_eval_cs);
                     char buf[1025];
                     GetDlgItemText(hwndDlg, IDC_EDIT1, buf, sizeof(buf) - 1);
                     buf[sizeof(buf) - 1] = 0;
@@ -854,7 +854,7 @@ static BOOL CALLBACK debugProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                     g_config_seh = !IsDlgButtonChecked(hwndDlg, IDC_CHECK3);
                     return 0;
                 case IDC_BUTTON1:
-                    lock(g_eval_cs);
+                    lock_lock(g_eval_cs);
                     last_error_string[0] = 0;
                     SetDlgItemText(hwndDlg, IDC_EDIT1, "");
                     lock_unlock(g_eval_cs);
@@ -1230,7 +1230,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         int b = d->findRender(dest);
                         int err = 1;
                         if (a >= 0) {
-                            lock(g_render_cs);
+                            lock_lock(g_render_cs);
                             err = s->removeRender(a, 0);
                             if (!err) {
                                 d->insertRender(source, b + (g_dragplaceisbelow & 1));
@@ -1638,7 +1638,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 }
                             }
 
-                            lock(g_render_cs);
+                            lock_lock(g_render_cs);
                             parentrender->insertRender(&ren, insert_pos);
                             lock_unlock(g_render_cs);
                             C_RenderListClass::T_RenderListType* newt =
@@ -1688,7 +1688,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         TreeView_GetSelection(GetDlgItem(hwndDlg, IDC_TREE1));
                     if (hTreeItem == g_hroot) {
                         CfgWnd_Unpopulate();
-                        lock(g_render_cs);
+                        lock_lock(g_render_cs);
                         g_render_effects->clearRenders();
                         lock_unlock(g_render_cs);
                         CfgWnd_Populate();
@@ -1711,7 +1711,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                     (C_RenderListClass::T_RenderListType*)i2.lParam;
                                 parentrender =
                                     (C_RenderListClass*)tparent->effect.legacy_effect;
-                                lock(g_render_cs);
+                                lock_lock(g_render_cs);
                                 if (!parentrender->removeRenderFrom(tp, 1)) {
                                     TreeView_DeleteItem(GetDlgItem(hwndDlg, IDC_TREE1),
                                                         hTreeItem);
@@ -1770,7 +1770,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                     ren.effect.load_config(buf, len);
                                     free(buf);
                                 }
-                                lock(g_render_cs);
+                                lock_lock(g_render_cs);
                                 parentrender->insertRender(&ren, insert_pos);
                                 lock_unlock(g_render_cs);
 

@@ -123,7 +123,7 @@ int C_THISCLASS::render(char visdata[2][2][576],
     // pow(sin(d),dpos)*1.7
     if (need_recompile) {
         int x;
-        lock(this->code_lock);
+        lock_lock(this->code_lock);
         if (!var_b || g_reset_vars_on_recompile) {
             clearVars();
             var_x = registerVar("x");

@@ -112,7 +112,7 @@ int C_RenderTransitionClass::LoadPreset(char* file, int which, C_UndoItem* item)
         initThread = 0;
     }
 
-    lock(g_render_cs);
+    lock_lock(g_render_cs);
     if (enabled) {
         enabled = 0;
     }
