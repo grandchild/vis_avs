@@ -158,6 +158,7 @@
 #define IDC_BBLUE                       1047
 #define IDC_SPEED                       1048
 #define IDC_DOTS                        1049
+#define IDC_AVI_RESAMPLE                1050
 #define IDC_DISTANCE                    1051
 #define IDC_METHOD_SLUDGE               1052
 #define IDC_PERSIST_TEXT1               1053
