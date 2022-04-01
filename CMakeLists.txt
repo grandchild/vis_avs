@@ -103,8 +103,6 @@ add_library(vis_avs SHARED
 target_link_libraries(vis_avs
     ddraw  # draw.cpp includes ddraw.h
            # https://docs.microsoft.com/en-us/windows/win32/api/ddraw/nf-ddraw-directdrawcreate
-    vfw32  # r_avi.cpp includes vfw.h
-           # https://docs.microsoft.com/en-us/windows/win32/multimedia/avifile-functions-and-macros
 )
 
 check_include_files(
