@@ -150,7 +150,7 @@ uint32_t Effect::string_save_legacy(std::string& src, char* dest, uint32_t max_l
         }
         size_t length = src.length() + 1;
         *((uint32_t*)dest) = length;
-        uint32_t pos = 4;
+        uint32_t pos = sizeof(uint32_t);
         memcpy(dest + pos, src.c_str(), length);
         pos += length;
         return pos;
