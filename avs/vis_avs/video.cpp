@@ -36,7 +36,8 @@ AVS_Video::AVS_Video(const char* filename,
       stop_caching(signal_create_single()),
       playback_lock(lock_init()) {
     if (!this->av->loaded) {
-        this->error = "libav not loaded";
+        this->error =
+            this->av->load_error != NULL ? this->av->load_error : "libav not loaded";
         return;
     }
     this->init(filename);
