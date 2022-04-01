@@ -2,11 +2,7 @@
 
 #ifndef NO_FFMPEG
 
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libswscale/swscale.h>
-}
+#include "video_libav.h"
 
 /**
  * The maximum wait time for a frame to be decoded (`WAIT_FRAMES_AVAILABLE`) is hard to
@@ -21,17 +17,6 @@ extern "C" {
 #define WAIT_FRAMES_AVAILABLE      20000
 #define WAIT_NEED_FRAMES_OR_STOP   500
 #define WAIT_CACHING_THREAD_FINISH WAIT_NEED_FRAMES_OR_STOP * 2
-
-// Hide libav types in here so that video.h doesn't have to include any libav headers.
-struct AVS_Video::LibAV {
-    AVFormatContext* demuxer = NULL;
-    AVCodecContext* decoder = NULL;
-    const AVCodec* codec = NULL;
-    AVCodecParameters* codec_params = NULL;
-    AVFrame* frame = NULL;
-    AVPacket* packet = NULL;
-    SwsContext* scaler = NULL;
-};
 
 uint32_t AVS_Video::frame_cache_thread_func(void* this_video) {
     auto thisv = (AVS_Video*)this_video;
@@ -50,18 +35,24 @@ AVS_Video::AVS_Video(const char* filename,
       frames_available(signal_create_single()),
       stop_caching(signal_create_single()),
       playback_lock(lock_init()) {
+    if (!this->av->loaded) {
+        this->error = "libav not loaded";
+        return;
+    }
     this->init(filename);
     this->caching_thread = thread_create(frame_cache_thread_func, this);
 }
 
 AVS_Video::~AVS_Video() {
-    signal_set(this->stop_caching);
-    thread_join(this->caching_thread, WAIT_CACHING_THREAD_FINISH);
-    signal_destroy(this->need_frames);
-    signal_destroy(this->frames_available);
-    signal_destroy(this->stop_caching);
-    lock_destroy(this->playback_lock);
-    this->close();
+    if (this->av->loaded) {
+        signal_set(this->stop_caching);
+        thread_join(this->caching_thread, WAIT_CACHING_THREAD_FINISH);
+        signal_destroy(this->need_frames);
+        signal_destroy(this->frames_available);
+        signal_destroy(this->stop_caching);
+        lock_destroy(this->playback_lock);
+        this->close();
+    }
     delete this->av;
 }
 
@@ -69,12 +60,12 @@ bool AVS_Video::init(const char* filename) {
     if (this->av->demuxer != NULL) {
         this->close();
     }
-    this->av->demuxer = avformat_alloc_context();
+    this->av->demuxer = this->av->avformat_alloc_context();
     if (!this->av->demuxer) {
         this->error = "demuxer context alloc failed";
         return false;
     }
-    if (avformat_open_input(&this->av->demuxer, filename, NULL, NULL) != 0) {
+    if (this->av->avformat_open_input(&this->av->demuxer, filename, NULL, NULL) != 0) {
         this->error = "open input failed";
         return false;
     }
@@ -90,8 +81,8 @@ bool AVS_Video::init(const char* filename) {
         this->error = "no video stream found";
         return false;
     }
-    this->video_stream =
-        av_find_best_stream(this->av->demuxer, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
+    this->video_stream = this->av->av_find_best_stream(
+        this->av->demuxer, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
     if (this->video_stream < 0) {
         this->error = "select best video stream failed (this shouldn't occur)";
         return false;
@@ -108,33 +99,35 @@ bool AVS_Video::init_codec() {
     this->cache.video_length = this->length;
     this->duration_ms = ((double)1000.0) * stream->duration * stream->time_base.num
                         / stream->time_base.den;
-    this->av->codec = avcodec_find_decoder(
+    this->av->codec = this->av->avcodec_find_decoder(
         this->av->demuxer->streams[this->video_stream]->codecpar->codec_id);
     if (this->av->codec == NULL) {
         this->error = "no decoder for video codec";
         return false;
     }
 
-    this->av->decoder = avcodec_alloc_context3(this->av->codec);
+    this->av->decoder = this->av->avcodec_alloc_context3(this->av->codec);
     if (!this->av->decoder) {
         this->error = "decoder context alloc failed";
         return false;
     }
-    if (avcodec_parameters_to_context(this->av->decoder, this->av->codec_params) < 0) {
+    if (this->av->avcodec_parameters_to_context(this->av->decoder,
+                                                this->av->codec_params)
+        < 0) {
         this->error = "decoder context init failed";
         return false;
     }
-    if (avcodec_open2(this->av->decoder, this->av->codec, NULL) < 0) {
+    if (this->av->avcodec_open2(this->av->decoder, this->av->codec, NULL) < 0) {
         this->error = "decoder open failed";
         return false;
     }
 
-    this->av->packet = av_packet_alloc();
+    this->av->packet = this->av->av_packet_alloc();
     if (!this->av->packet) {
         this->error = "cannot allocate decoder packet";
         return false;
     }
-    this->av->frame = av_frame_alloc();
+    this->av->frame = this->av->av_frame_alloc();
     if (!this->av->frame) {
         this->error = "cannot allocate decoder frame";
         return false;
@@ -144,14 +137,14 @@ bool AVS_Video::init_codec() {
 
 void AVS_Video::close() {
     this->close_codec();
-    avformat_close_input(&this->av->demuxer);  // also frees the context
+    this->av->avformat_close_input(&this->av->demuxer);  // also frees the context
     this->av->demuxer = NULL;
 }
 
 void AVS_Video::close_codec() {
-    avcodec_free_context(&this->av->decoder);
-    av_frame_free(&this->av->frame);
-    av_packet_free(&this->av->packet);
+    this->av->avcodec_free_context(&this->av->decoder);
+    this->av->av_frame_free(&this->av->frame);
+    this->av->av_packet_free(&this->av->packet);
     this->av->decoder = NULL;
     this->av->frame = NULL;
     this->av->packet = NULL;
@@ -165,6 +158,9 @@ AVS_Video::Frame* AVS_Video::get_frame(int64_t frame_index,
                                        AVS_Pixel_Format pixel_format,
                                        AVS_Video::Scale scale_mode,
                                        bool clamp_to_cache) {
+    if (!this->av->loaded) {
+        return NULL;
+    }
     frame_index = this->wrap_frame_index(frame_index);
     lock_lock(this->playback_lock);
     if (clamp_to_cache && this->cache.size() > 0) {
@@ -226,19 +222,21 @@ bool AVS_Video::next_frame() {
     bool success = false;
     if (this->pf_status == PF_STATUS_HAVE_FRAME) {
         success = this->frame_from_packet();
-        av_packet_unref(this->av->packet);
+        this->av->av_packet_unref(this->av->packet);
         if (this->pf_status != PF_STATUS_NEXT_PACKET) {
             return success;
         }
     }
     while (true) {
-        int read_frame_result = av_read_frame(this->av->demuxer, this->av->packet);
+        int read_frame_result =
+            this->av->av_read_frame(this->av->demuxer, this->av->packet);
         if (read_frame_result == AVERROR_EOF || this->pf_status == PF_STATUS_EOF) {
-            av_seek_frame(this->av->demuxer, -1, 0, 0);
+            this->av->av_seek_frame(this->av->demuxer, -1, 0, 0);
             continue;
         }
         if (this->av->packet->stream_index == this->video_stream) {
-            response = avcodec_send_packet(this->av->decoder, this->av->packet);
+            response =
+                this->av->avcodec_send_packet(this->av->decoder, this->av->packet);
             if (response < 0) {
                 this->error = "packet decode failed (send)";
                 this->pf_status = PF_STATUS_ERROR;
@@ -252,7 +250,7 @@ bool AVS_Video::next_frame() {
         } else {
             this->pf_status = PF_STATUS_NEXT_PACKET;
         }
-        av_packet_unref(this->av->packet);
+        this->av->av_packet_unref(this->av->packet);
         if (this->pf_status != PF_STATUS_NEXT_PACKET) {
             break;
         }
@@ -263,7 +261,7 @@ bool AVS_Video::next_frame() {
 bool AVS_Video::frame_from_packet() {
     int response = 0;
     while (response >= 0) {
-        response = avcodec_receive_frame(this->av->decoder, this->av->frame);
+        response = this->av->avcodec_receive_frame(this->av->decoder, this->av->frame);
         if (response == AVERROR_EOF) {
             this->pf_status = PF_STATUS_EOF;
             return false;
@@ -279,7 +277,7 @@ bool AVS_Video::frame_from_packet() {
         if (!this->resample_and_cache_frame()) {
             return false;
         }
-        av_frame_unref(this->av->frame);
+        this->av->av_frame_unref(this->av->frame);
         return true;
     }
     return false;
@@ -304,13 +302,13 @@ bool AVS_Video::resample_and_cache_frame() {
     auto dest_linesize = this->resampler.dest.width
                          * (int32_t)pixel_size(this->resampler.dest.pixel_format);
     const int dest_linesizes[4] = {dest_linesize, 0, 0, 0};
-    sws_scale(this->av->scaler,
-              this->av->frame->data,
-              this->av->frame->linesize,
-              0,
-              this->av->frame->height,
-              dest_bufs,
-              dest_linesizes);
+    this->av->sws_scale(this->av->scaler,
+                        this->av->frame->data,
+                        this->av->frame->linesize,
+                        0,
+                        this->av->frame->height,
+                        dest_bufs,
+                        dest_linesizes);
     return true;
 }
 
@@ -361,17 +359,17 @@ bool AVS_Video::recreate_resampler_if_needed() {
             case AVS_Video::SCALE_BICUBIC: scaling = SWS_BICUBIC; break;
             case AVS_Video::SCALE_SPLINE: scaling = SWS_SPLINE; break;
         }
-        sws_freeContext(this->av->scaler);
-        this->av->scaler = sws_getContext(this->resampler.src_width,
-                                          this->resampler.src_height,
-                                          src_pixel_format,
-                                          this->resampler.dest.width,
-                                          this->resampler.dest.height,
-                                          dest_pixel_format,
-                                          scaling,
-                                          NULL,
-                                          NULL,
-                                          0);
+        this->av->sws_freeContext(this->av->scaler);
+        this->av->scaler = this->av->sws_getContext(this->resampler.src_width,
+                                                    this->resampler.src_height,
+                                                    src_pixel_format,
+                                                    this->resampler.dest.width,
+                                                    this->resampler.dest.height,
+                                                    dest_pixel_format,
+                                                    scaling,
+                                                    NULL,
+                                                    NULL,
+                                                    0);
         if (this->av->scaler == NULL) {
             this->error = "scaler context alloc failed";
             return false;
@@ -478,11 +476,12 @@ bool AVS_Video::copy_with_aspect_ratio(Frame* src,
 bool AVS_Video::seek(int64_t frame_index) {
     frame_index = max(0, frame_index);
     auto stream = this->av->demuxer->streams[this->video_stream];
-    return av_seek_frame(this->av->demuxer,
-                         this->video_stream,
-                         (double)frame_index * stream->duration / this->length,
-                         0)
-           >= 0;
+    auto result =
+        this->av->av_seek_frame(this->av->demuxer,
+                                this->video_stream,
+                                (double)frame_index * stream->duration / this->length,
+                                0);
+    return result >= 0;
 }
 
 size_t AVS_Video::get_video_stream_count() { return this->video_streams.size(); }
@@ -694,7 +693,7 @@ bool AVS_Video::copy_with_aspect_ratio(Frame*,
     return false;
 }
 size_t AVS_Video::get_video_stream_count() { return 0; }
-bool AVS_Video::set_video_stream(size_t stream_index) { return false; }
+bool AVS_Video::set_video_stream(size_t) { return false; }
 AVS_Video::Cache_State AVS_Video::cache_state() { return Cache_State(); }
 
 #endif

@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 project(vis_avs VERSION 2.82)
 
+include(CheckIncludeFiles)
+
 file(GLOB SRC_FILES_NS_EEL
     avs/ns-eel/*.c
 )
@@ -104,6 +106,14 @@ target_link_libraries(vis_avs
     vfw32  # r_avi.cpp includes vfw.h
            # https://docs.microsoft.com/en-us/windows/win32/multimedia/avifile-functions-and-macros
 )
+
+check_include_files(
+    "libavcodec/avcodec.h;libavformat/avformat.h;libswscale/swscale.h"
+    HAVE_FFMPEG
+)
+if(NOT HAVE_FFMPEG OR NO_FFMPEG)
+    add_compile_definitions(NO_FFMPEG)
+endif()
 
 if(WIN32)
     get_filename_component(WINAMP_DIR "[HKEY_CURRENT_USER\\SOFTWARE\\Winamp]" ABSOLUTE)
