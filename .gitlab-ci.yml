@@ -3,7 +3,11 @@ image: gcc:8
 build:
   stage: build
   before_script:
-    - apt update && apt -y install gcc-mingw-w64 g++-mingw-w64 cmake make
+    - >
+      apt update &&
+      apt -y install
+      gcc-mingw-w64 g++-mingw-w64 cmake make
+      libavformat-dev libavcodec-dev libswscale-dev
   script:
     - mkdir -p build
     - cd build
