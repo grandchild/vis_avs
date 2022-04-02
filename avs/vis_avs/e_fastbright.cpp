@@ -29,7 +29,7 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "c_fastbright.h"
+#include "e_fastbright.h"
 
 #include "r_defs.h"
 
@@ -37,34 +37,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
-void C_THISCLASS::load_config(unsigned char* data, int len)  // read configuration of
-                                                             // max length "len" from
-                                                             // data.
-{
-    int pos = 0;
-    dir = 0;
-    if (len - pos >= 4) {
-        dir = GET_INT();
-        pos += 4;
-    }
-}
-
 #define PUT_INT(y)                   \
     data[pos] = (y)&255;             \
     data[pos + 1] = (y >> 8) & 255;  \
     data[pos + 2] = (y >> 16) & 255; \
     data[pos + 3] = (y >> 24) & 255
-int C_THISCLASS::save_config(unsigned char* data)  // write configuration to data,
-                                                   // return length. config data should
-                                                   // not exceed 64k.
-{
-    int pos = 0;
-    PUT_INT(dir);
-    pos += 4;
-    return pos;
-}
 
-C_THISCLASS::C_THISCLASS() {
+constexpr Parameter FastBright_Info::parameters[];
+
+E_FastBright::E_FastBright() {
 #ifdef NO_MMX
     int x;
     for (x = 0; x < 128; x++) {
@@ -78,27 +59,27 @@ C_THISCLASS::C_THISCLASS() {
         tab[2][x] = 255 << 16;
     }
 #endif
-    dir = 0;
 }
 
-C_THISCLASS::~C_THISCLASS() {}
+E_FastBright::~E_FastBright() {}
 
-int C_THISCLASS::render(char[2][2][576],
-                        int isBeat,
-                        int* framebuffer,
-                        int*,
-                        int w,
-                        int h) {
-    if (isBeat & 0x80000000) return 0;
-#ifdef NO_MMX  // the non mmx x2 version really isn't any , in terms faster than normal
-               // brightness with no exclusions turned on
+int E_FastBright::render(char[2][2][576],
+                         int is_beat,
+                         int* framebuffer,
+                         int*,
+                         int w,
+                         int h) {
+    if (is_beat & 0x80000000) return 0;
+#ifdef NO_MMX
+    // the non mmx x2 version really isn't in any terms faster than normal brightness
+    // with no exclusions turned on
     {
         unsigned int* t = (unsigned int*)framebuffer;
         int x;
         unsigned int mask = 0x7F7F7F7F;
 
         x = w * h / 2;
-        if (dir == 0)
+        if (this->config.multiply == FASTBRIGHT_MULTIPLY_DOUBLE)
             while (x--) {
                 unsigned int v1 = t[0];
                 unsigned int v2 = t[1];
@@ -110,7 +91,7 @@ int C_THISCLASS::render(char[2][2][576],
                 t[1] = v2;
                 t += 2;
             }
-        else if (dir == 1)
+        else if (this->config.multiply == FASTBRIGHT_MULTIPLY_HALF)
             while (x--) {
                 unsigned int v1 = t[0] >> 1;
                 unsigned int v2 = t[1] >> 1;
@@ -125,7 +106,7 @@ int C_THISCLASS::render(char[2][2][576],
         0x7F7F7F7F,
     };
     int l = (w * h);
-    if (dir == 0) {
+    if (this->config.multiply == FASTBRIGHT_MULTIPLY_DOUBLE) {
 #ifdef _MSC_VER  // MSVC asm
         __asm {
 			mov edx, l
@@ -205,7 +186,7 @@ int C_THISCLASS::render(char[2][2][576],
             : [l] "m"(l), [framebuffer] "m"(framebuffer)
             : "edx", "esi");
 #endif           // _MSC_VER
-    } else if (dir == 1) {
+    } else if (this->config.multiply == FASTBRIGHT_MULTIPLY_HALF) {
 #ifdef _MSC_VER  // MSVC asm
         __asm {
 			mov edx, l
@@ -309,10 +290,30 @@ int C_THISCLASS::render(char[2][2][576],
     return 0;
 }
 
-C_RBASE* R_FastBright(char* desc) {
-    if (desc) {
-        strcpy(desc, MOD_NAME);
-        return NULL;
+void E_FastBright::load_legacy(unsigned char* data, int len) {
+    int pos = 0;
+    this->config.multiply = FASTBRIGHT_MULTIPLY_DOUBLE;
+    if (len - pos >= 4) {
+        int64_t multiply = GET_INT();
+        if (multiply == 2) {
+            this->enabled = false;
+        } else if (multiply == 1) {
+            this->config.multiply = FASTBRIGHT_MULTIPLY_HALF;
+        }
+        pos += 4;
     }
-    return (C_RBASE*)new C_THISCLASS();
 }
+
+int E_FastBright::save_legacy(unsigned char* data) {
+    int pos = 0;
+    if (this->enabled) {
+        PUT_INT(this->config.multiply);
+    } else {
+        PUT_INT(2);
+    }
+    pos += 4;
+    return pos;
+}
+
+Effect_Info* create_FastBright_Info() { return new FastBright_Info(); }
+Effect* create_FastBright() { return new E_FastBright(); }
