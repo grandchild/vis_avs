@@ -29,9 +29,9 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "c_svp.h"
+#include "e_svp.h"
 
-#include "r_defs.h"
+#include "files.h"
 
 #define PUT_INT(y)                   \
     data[pos] = (y)&255;             \
@@ -40,22 +40,63 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     data[pos + 3] = (y >> 24) & 255
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
-void C_THISCLASS::load_config(unsigned char* data, int len) {
-    int pos = 0;
-    if (pos + MAX_PATH <= len) {
-        memcpy(m_library, data + pos, MAX_PATH);
-        pos += MAX_PATH;
-        SetLibrary();
-    }
-}
-int C_THISCLASS::save_config(unsigned char* data) {
-    int pos = 0;
-    memcpy(data + pos, m_library, MAX_PATH);
-    pos += MAX_PATH;
-    return pos;
+
+constexpr Parameter SVP_Info::parameters[];
+std::vector<std::string> E_SVP::filenames;
+const char** E_SVP::c_filenames;
+
+void set_library(Effect* component, const Parameter*, std::vector<int64_t>) {
+    E_SVP* svp = (E_SVP*)component;
+    svp->set_library();
 }
 
-void C_THISCLASS::SetLibrary() {
+const char* const* SVP_Info::library_files(int64_t* length_out) {
+    *length_out = E_SVP::filenames.size();
+    auto new_list = (const char**)malloc(E_SVP::filenames.size() * sizeof(char*));
+    for (size_t i = 0; i < E_SVP::filenames.size(); i++) {
+        new_list[i] = E_SVP::filenames[i].c_str();
+    }
+    auto old_list = E_SVP::c_filenames;
+    E_SVP::c_filenames = new_list;
+    free(old_list);
+    return E_SVP::c_filenames;
+}
+
+E_SVP::E_SVP() : library(0), library_lock(lock_init()), vi(NULL) {
+    this->find_library_files();
+}
+
+E_SVP::~E_SVP() {
+    if (this->vi) this->vi->SaveSettings("avs.ini");
+    if (this->library) library_unload(this->library);
+    lock_destroy(this->library_lock);
+}
+
+static void add_file_callback(const char* file, void* data) {
+    E_SVP* avi = (E_SVP*)data;
+    size_t filename_length = strnlen(file, MAX_PATH);
+    char* filename = (char*)calloc(filename_length + 1, sizeof(char));
+    strncpy(filename, file, filename_length + 1);
+    avi->filenames.push_back(filename);
+}
+
+void E_SVP::find_library_files() {
+    this->clear_library_files();
+    const int num_extensions = 2;
+    char* extensions[num_extensions] = {".SVP", ".UVS"};
+    find_files_by_extensions(g_path,
+                             extensions,
+                             num_extensions,
+                             add_file_callback,
+                             this,
+                             sizeof(*this),
+                             /*recursive*/ false,
+                             /*background*/ false);
+}
+
+void E_SVP::clear_library_files() { this->filenames.clear(); }
+
+void E_SVP::set_library() {
     lock_lock(this->library_lock);
     if (this->library) {
         if (this->vi) this->vi->SaveSettings("avs.ini");
@@ -64,7 +105,7 @@ void C_THISCLASS::SetLibrary() {
         this->library = NULL;
     }
 
-    if (!m_library[0]) {
+    if (this->config.library < 0) {
         lock_unlock(this->library_lock);
         return;
     }
@@ -72,7 +113,7 @@ void C_THISCLASS::SetLibrary() {
     char buf1[MAX_PATH];
     strcpy(buf1, g_path);
     strcat(buf1, "\\");
-    strcat(buf1, m_library);
+    strcat(buf1, this->filenames[this->config.library].c_str());
 
     this->vi = NULL;
     this->library = library_load(buf1);
@@ -96,38 +137,23 @@ void C_THISCLASS::SetLibrary() {
     lock_unlock(this->library_lock);
 }
 
-C_THISCLASS::C_THISCLASS() {
-    this->library_lock = lock_init();
-    m_library[0] = 0;
-    this->library = 0;
-    this->vi = NULL;
-}
-
-C_THISCLASS::~C_THISCLASS() {
-    if (this->vi) this->vi->SaveSettings("avs.ini");
-    if (this->library) library_unload(this->library);
-    lock_destroy(this->library_lock);
-}
-
-int C_THISCLASS::render(char visdata[2][2][576],
-                        int isBeat,
-                        int* framebuffer,
-                        int*,
-                        int w,
-                        int h) {
+int E_SVP::render(char visdata[2][2][576],
+                  int isBeat,
+                  int* framebuffer,
+                  int*,
+                  int w,
+                  int h) {
     if (isBeat & 0x80000000) return 0;
     lock_lock(this->library_lock);
     if (this->vi) {
-        //   if (vi->lRequired & VI_WAVEFORM)
-        {
+        if (vi->lRequired & VI_WAVEFORM) {
             int ch, p;
             for (ch = 0; ch < 2; ch++) {
                 unsigned char* v = (unsigned char*)visdata[1][ch];
                 for (p = 0; p < 512; p++) this->vd.Waveform[ch][p] = v[p];
             }
         }
-        // if (vi->lRequired & VI_SPECTRUM)
-        {
+        if (vi->lRequired & VI_SPECTRUM) {
             int ch, p;
             for (ch = 0; ch < 2; ch++) {
                 unsigned char* v = (unsigned char*)visdata[0][ch];
@@ -143,10 +169,37 @@ int C_THISCLASS::render(char visdata[2][2][576],
     return 0;
 }
 
-C_RBASE* R_SVP(char* desc) {
-    if (desc) {
-        strcpy(desc, MOD_NAME);
-        return NULL;
+void E_SVP::load_legacy(unsigned char* data, int len) {
+    if (len >= LEGACY_SAVE_PATH_LEN) {
+        char* str_data = (char*)data;
+        std::string search_filename;
+        this->string_nt_load_legacy(str_data, search_filename, LEGACY_SAVE_PATH_LEN);
+        bool found = false;
+        for (size_t i = 0; i < this->filenames.size(); i++) {
+            if (this->filenames[i] == search_filename) {
+                found = true;
+                this->config.library = i;
+            }
+        }
+        if (!found) {
+            this->config.library = -1;
+        }
+        this->set_library();
     }
-    return (C_RBASE*)new C_THISCLASS();
 }
+
+int E_SVP::save_legacy(unsigned char* data) {
+    char* str_data = (char*)data;
+    if (this->config.library < 0 || this->config.library > this->filenames.size()) {
+        memset(data, '\0', LEGACY_SAVE_PATH_LEN);
+    } else {
+        auto& filename = this->filenames[this->config.library];
+        this->string_nt_save_legacy(filename, str_data, LEGACY_SAVE_PATH_LEN);
+        memset(
+            &data[filename.length()], '\0', LEGACY_SAVE_PATH_LEN - filename.length());
+    }
+    return LEGACY_SAVE_PATH_LEN;
+}
+
+Effect_Info* create_SVP_Info() { return new SVP_Info(); }
+Effect* create_SVP() { return new E_SVP(); }
