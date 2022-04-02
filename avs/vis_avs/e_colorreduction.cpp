@@ -29,25 +29,23 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "c_colorreduction.h"
+#include "e_colorreduction.h"
 
 #include "r_defs.h"
 
-// set up default configuration
-C_THISCLASS::C_THISCLASS() {
-    memset(&config, 0, sizeof(colorReductionConfig));
-    config.levels = 7;
-}
+#include "../util.h"  // ssizeof32()
 
-// virtual destructor
-C_THISCLASS::~C_THISCLASS() {}
+constexpr Parameter ColorReduction_Info::parameters[];
 
-int C_THISCLASS::render(char[2][2][576],
-                        int isBeat,
-                        int* framebuffer,
-                        int*,
-                        int w,
-                        int h) {
+E_ColorReduction::E_ColorReduction() {}
+E_ColorReduction::~E_ColorReduction() {}
+
+int E_ColorReduction::render(char[2][2][576],
+                             int isBeat,
+                             int* framebuffer,
+                             int*,
+                             int w,
+                             int h) {
     if (isBeat & 0x80000000) return 0;
 
     int a, b, c;
@@ -95,24 +93,19 @@ int C_THISCLASS::render(char[2][2][576],
     return 0;
 }
 
-char* C_THISCLASS::get_desc(void) { return MOD_NAME; }
-
-void C_THISCLASS::load_config(unsigned char* data, int len) {
-    if (len == sizeof(colorReductionConfig))
-        memcpy(&this->config, data, len);
-    else
-        memset(&this->config, 0, sizeof(colorReductionConfig));
-}
-
-int C_THISCLASS::save_config(unsigned char* data) {
-    memcpy(data, &this->config, sizeof(colorReductionConfig));
-    return sizeof(colorReductionConfig);
-}
-
-C_RBASE* R_ColorReduction(char* desc) {
-    if (desc) {
-        strcpy(desc, MOD_NAME);
-        return NULL;
+void E_ColorReduction::load_legacy(unsigned char* data, int len) {
+    if (len - LEGACY_SAVE_PATH_LEN >= ssizeof32(uint32_t)) {
+        this->config.levels = *(uint32_t*)&data[LEGACY_SAVE_PATH_LEN];
+    } else {
+        this->config.levels = COLRED_LEVELS_256;
     }
-    return (C_RBASE*)new C_THISCLASS();
 }
+
+int E_ColorReduction::save_legacy(unsigned char* data) {
+    memset(data, '\0', LEGACY_SAVE_PATH_LEN);
+    *(uint32_t*)&data[LEGACY_SAVE_PATH_LEN] = (uint32_t)this->config.levels;
+    return LEGACY_SAVE_PATH_LEN + sizeof(uint32_t);
+}
+
+Effect_Info* create_ColorReduction_Info() { return new ColorReduction_Info(); }
+Effect* create_ColorReduction() { return new E_ColorReduction(); }
