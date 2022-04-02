@@ -219,7 +219,7 @@ void C_RLibrary::initbuiltinape(void) {
     this->add_dll(NULL, ape_id, false, create_##name##_Info, create_##name)
 
     ADD(R_ChannelShift, "Channel Shift");
-    ADD(R_ColorReduction, "Color Reduction");
+    ADD_NEW(ColorReduction, "Color Reduction");
     ADD_NEW(Multiplier, "Multiplier");
     ADD(R_VideoDelay, "Holden04: Video Delay");
     ADD(R_MultiDelay, "Holden05: Multi Delay");
