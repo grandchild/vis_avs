@@ -220,7 +220,7 @@ void C_RLibrary::initbuiltinape(void) {
 
     ADD(R_ChannelShift, "Channel Shift");
     ADD(R_ColorReduction, "Color Reduction");
-    ADD(R_Multiplier, "Multiplier");
+    ADD_NEW(Multiplier, "Multiplier");
     ADD(R_VideoDelay, "Holden04: Video Delay");
     ADD(R_MultiDelay, "Holden05: Multi Delay");
     ADD(R_Convolution, "Holden03: Convolution Filter");

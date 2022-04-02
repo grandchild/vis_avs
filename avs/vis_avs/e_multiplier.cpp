@@ -29,33 +29,30 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "c_multiplier.h"
+#include "e_multiplier.h"
 
 #include "r_defs.h"
 
-// set up default configuration
-C_THISCLASS::C_THISCLASS() {
-    memset(&config, 0, sizeof(apeconfig));
-    config.ml = MD_X2;
-}
+constexpr Parameter Multiplier_Info::parameters[];
 
-// virtual destructor
-C_THISCLASS::~C_THISCLASS() {}
+E_Multiplier::E_Multiplier() {}
 
-int C_THISCLASS::render(char[2][2][576],
-                        int isBeat,
-                        int* framebuffer,
-                        int*,
-                        int w,
-                        int h) {
+E_Multiplier::~E_Multiplier() {}
+
+int E_Multiplier::render(char[2][2][576],
+                         int isBeat,
+                         int* framebuffer,
+                         int*,
+                         int w,
+                         int h) {
     if (isBeat & 0x80000000) return 0;
 
     int /*b,*/ c;  // TODO [cleanup]: see below
     __int64 mask;
 
     c = w * h;
-    switch (config.ml) {
-        case MD_XI:
+    switch (config.multiply) {
+        case MULTIPLY_XI:
 #ifdef _MSC_VER
             __asm {
 			mov ebx, framebuffer;
@@ -96,7 +93,7 @@ int C_THISCLASS::render(char[2][2][576],
                 : end);
 #endif
             break;
-        case MD_XS:
+        case MULTIPLY_XS:
 #ifdef _MSC_VER
             __asm {
 			mov ebx, framebuffer;
@@ -142,7 +139,7 @@ int C_THISCLASS::render(char[2][2][576],
                 : end);
 #endif
             break;
-        case MD_X8: c = w * h / 2;
+        case MULTIPLY_X8: c = w * h / 2;
 #ifdef _MSC_VER
             __asm {
 			mov ebx, framebuffer;
@@ -180,7 +177,7 @@ int C_THISCLASS::render(char[2][2][576],
                 : end);
 #endif
             break;
-        case MD_X4: c = w * h / 2;
+        case MULTIPLY_X4: c = w * h / 2;
 #ifdef _MSC_VER
             __asm {
 			mov ebx, framebuffer;
@@ -216,7 +213,7 @@ int C_THISCLASS::render(char[2][2][576],
                 : end);
 #endif
             break;
-        case MD_X2: c = w * h / 2;
+        case MULTIPLY_X2: c = w * h / 2;
 #ifdef _MSC_VER
             __asm {
 			mov ebx, framebuffer;
@@ -250,7 +247,7 @@ int C_THISCLASS::render(char[2][2][576],
                 : end);
 #endif
             break;
-        case MD_X05: c = w * h / 2; mask = 0x7F7F7F7F7F7F7F7F;
+        case MULTIPLY_X05: c = w * h / 2; mask = 0x7F7F7F7F7F7F7F7F;
 #ifdef _MSC_VER
             __asm {
 			mov ebx, framebuffer;
@@ -288,7 +285,7 @@ int C_THISCLASS::render(char[2][2][576],
                 : end);
 #endif
             break;
-        case MD_X025: c = w * h / 2; mask = 0x3F3F3F3F3F3F3F3F;
+        case MULTIPLY_X025: c = w * h / 2; mask = 0x3F3F3F3F3F3F3F3F;
 #ifdef _MSC_VER
             __asm {
 			mov ebx, framebuffer;
@@ -326,7 +323,7 @@ int C_THISCLASS::render(char[2][2][576],
                 : end);
 #endif
             break;
-        case MD_X0125: c = w * h / 2; mask = 0x1F1F1F1F1F1F1F1F;
+        case MULTIPLY_X0125: c = w * h / 2; mask = 0x1F1F1F1F1F1F1F1F;
 #ifdef _MSC_VER
             __asm {
 			mov ebx, framebuffer;
@@ -374,24 +371,18 @@ end:
     return 0;
 }
 
-char* C_THISCLASS::get_desc(void) { return MOD_NAME; }
-
-void C_THISCLASS::load_config(unsigned char* data, int len) {
-    if (len == sizeof(apeconfig))
-        memcpy(&this->config, data, len);
-    else
-        memset(&this->config, 0, sizeof(apeconfig));
-}
-
-int C_THISCLASS::save_config(unsigned char* data) {
-    memcpy(data, &this->config, sizeof(apeconfig));
-    return sizeof(apeconfig);
-}
-
-C_RBASE* R_Multiplier(char* desc) {
-    if (desc) {
-        strcpy(desc, MOD_NAME);
-        return NULL;
+void E_Multiplier::load_legacy(unsigned char* data, int len) {
+    if (len == sizeof(uint32_t)) {
+        this->config.multiply = *(uint32_t*)data;
+    } else {
+        this->config.multiply = MULTIPLY_X2;
     }
-    return (C_RBASE*)new C_THISCLASS();
 }
+
+int E_Multiplier::save_legacy(unsigned char* data) {
+    *(uint32_t*)data = (uint32_t)this->config.multiply;
+    return sizeof(uint32_t);
+}
+
+Effect_Info* create_Multiplier_Info() { return new Multiplier_Info(); }
+Effect* create_Multiplier() { return new E_Multiplier(); }
