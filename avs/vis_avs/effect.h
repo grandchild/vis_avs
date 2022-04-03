@@ -315,7 +315,7 @@ class Configurable_Effect : public Effect {
     };
 
     bool run_action(AVS_Parameter_Handle parameter,
-                    std::vector<int64_t> parameter_path) {
+                    std::vector<int64_t> parameter_path = {}) {
         if (parameter == 0) {
             return false;
         }
