@@ -153,6 +153,56 @@ void AVS_Video::close_codec() {
     this->duration_ms = 0;
 }
 
+/**
+ * The `get_frame()` method and the `cache_frames()` thread interact in the following
+ * way. `get_frame()` sets the play head and then lets the decoding-/caching thread
+ * know that new frames might be needed. If the frame is already in the cache,
+ * `get_frame()` doesn't wait and returns the frame. Meanwhile, the decoder got to work
+ * and as soon as the current play head is in the cache, if it wasn't before, a signal
+ * is sent back to the waiting `get_frame()` which now returns the frame. The decoding
+ * loop continues until the frame cache is filled. Finally, older frames are discarded,
+ * and the thread waits for another "need frames" signal.
+ *
+ * This is a high-level overview and glosses over details such as the necessary locking
+ * or cache reset on output format change or `clamp_to_cache` etc.
+ *
+ *     ┌───────────┐                                 ┌──────────────┐
+ *     │get_frame()│                                 │cache_frames()│
+ *     └───────────┘                                 └──────────────┘
+ *           │
+ *           ▼
+ *      set play head
+ *           │                                                     ┌────────────────┐
+ *           ▼                                                     ▼                │
+ *        [signal]►──────── need frames ────────────────────────►[wait]             │
+ *           │                                                     │                │
+ *    ───────▼──────────                                 ──────────▼─────────────   │
+ *    is frame in cache?                                 is frame in cache range?   │
+ *    ───YES───NO───────                                 ─────────YES────NO──────   │
+ *        │    │                                                   │     │          │
+ *        │    │                                                   │     ▼          │
+ *        │    │                                                   │ seek to frame  │
+ *        │    │                                                   │  clear cache   │
+ *        │    │                             ┌──────────────┐      ├─────┘          │
+ *        │    │                             │          ────▼──────▼────            │
+ *        │    │                             │          is cache filled?            │
+ *        │    │                             │          ────NO────YES───            │
+ *        │    │                             │              │      │                │
+ *        │    │                             │              ▼      │                │
+ *        │    │                             │     decode a frame  │                │
+ *        │    │                             │              │      │                ▲
+ *        │    │                             │     ─────────▼───   │                │
+ *        │    │                             │     decoded frame   │                │
+ *        │    │                             │     >= play head?   │                │
+ *        │    │                             ▲     ──NO────YES──   │                │
+ *        │    │                             ├───────┘      │      │                │
+ *        │  [wait]◄── frames available ─◄[signal]          ▼      │                │
+ *        └─┬──┘                             └──────────────┘      │                │
+ *          │                                                      ▼                │
+ *          ▼                                              prune backward cache     │
+ *     return frame                                                └────────────────┘
+ */
+
 AVS_Video::Frame* AVS_Video::get_frame(int64_t frame_index,
                                        int32_t wanted_width,
                                        int32_t wanted_height,
