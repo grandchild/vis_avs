@@ -168,7 +168,7 @@ int win32_dlgproc_superscope(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                    NULL);
                 if (x >= index_offset && x < index_offset + options_length) {
                     g_this->set_int(p_example.handle, x - index_offset);
-                    g_this->run_action(p_load_example.handle, {});
+                    g_this->run_action(p_load_example.handle);
                     SetDlgItemText(
                         hwndDlg, IDC_EDIT1, (char*)g_this->config.point.c_str());
                     SetDlgItemText(
