@@ -35,12 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "avs_eelif.h"
 
-#include <math.h>
-#if 0  // syntax highlighting
-#include "richedit.h"
-#endif
-#include "timing.h"
-
 #define PUT_INT(y)                   \
     data[pos] = (y)&255;             \
     data[pos + 1] = (y >> 8) & 255;  \
@@ -51,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 constexpr Parameter SuperScope_Info::color_params[];
 constexpr Parameter SuperScope_Info::parameters[];
-constexpr Code_Example E_SuperScope::examples[];
+constexpr SuperScope_Example SuperScope_Info::examples[];
 
 void SuperScope_Info::recompile(Effect* component,
                                 const Parameter* parameter,
@@ -72,7 +66,7 @@ void SuperScope_Info::load_example(Effect* component,
                                    const Parameter*,
                                    std::vector<int64_t>) {
     auto ssc = ((E_SuperScope*)component);
-    const Code_Example& to_load = ssc->examples[ssc->config.example];
+    const SuperScope_Example& to_load = ssc->info.examples[ssc->config.example];
     ssc->config.init = to_load.init;
     ssc->config.frame = to_load.frame;
     ssc->config.beat = to_load.beat;
