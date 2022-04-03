@@ -31,11 +31,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 // alphachannel safe 11/21/99
 
-#include "c_blur.h"
+#include "e_blur.h"
 
 #include "r_defs.h"
-
-#include "timing.h"
 
 #define PUT_INT(y)                   \
     data[pos] = (y)&255;             \
@@ -44,33 +42,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     data[pos + 3] = (y >> 24) & 255
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
-void C_THISCLASS::load_config(unsigned char* data, int len) {
-    int pos = 0;
-    if (len - pos >= 4) {
-        enabled = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        roundmode = GET_INT();
-        pos += 4;
-    } else
-        roundmode = 0;
-}
-int C_THISCLASS::save_config(unsigned char* data) {
-    int pos = 0;
-    PUT_INT(enabled);
-    pos += 4;
-    PUT_INT(roundmode);
-    pos += 4;
-    return pos;
-}
-
-C_THISCLASS::C_THISCLASS() {
-    roundmode = 0;
-    enabled = 1;
-}
-
-C_THISCLASS::~C_THISCLASS() {}
 
 #define MASK_SH1 (~(((1u << 7u) | (1u << 15u) | (1u << 23u)) << 1u))
 #define MASK_SH2 (~(((3u << 6u) | (3u << 14u) | (3u << 22u)) << 2u))
@@ -86,18 +57,19 @@ static unsigned int mmx_mask4[2] = {MASK_SH4, MASK_SH4};
 #define DIV_8(x)  (((x)&MASK_SH3) >> 3)
 #define DIV_16(x) (((x)&MASK_SH4) >> 4)
 
-void C_THISCLASS::smp_render(int this_thread,
-                             int max_threads,
-                             char[2][2][576],
-                             int,
-                             int* framebuffer,
-                             int* fbout,
-                             int w,
-                             int h) {
-    if (!enabled) return;
+constexpr Parameter Blur_Info::parameters[];
 
-    timingEnter(0);
+E_Blur::E_Blur() {}
+E_Blur::~E_Blur() {}
 
+void E_Blur::smp_render(int this_thread,
+                        int max_threads,
+                        char[2][2][576],
+                        int,
+                        int* framebuffer,
+                        int* fbout,
+                        int w,
+                        int h) {
     unsigned int* f = (unsigned int*)framebuffer;
     unsigned int* of = (unsigned int*)fbout;
 
@@ -124,13 +96,13 @@ void C_THISCLASS::smp_render(int this_thread,
     if (!this_thread) at_top = 1;
     if (this_thread >= max_threads - 1) at_bottom = 1;
 
-    if (enabled == 2) {
+    if (this->config.level == BLUR_LIGHT) {
         // top line
         if (at_top) {
             unsigned int* f2 = f + w;
             int x;
             int adj_tl = 0, adj_tl2 = 0;
-            if (roundmode) {
+            if (this->config.round == BLUR_ROUND_UP) {
                 adj_tl = 0x03030303;
                 adj_tl2 = 0x04040404;
             }
@@ -171,7 +143,7 @@ void C_THISCLASS::smp_render(int this_thread,
             int y = outh - at_top - at_bottom;
             unsigned int adj_tl1 = 0, adj_tl2 = 0;
             unsigned __int64 adj2 = 0;
-            if (roundmode) {
+            if (this->config.round == BLUR_ROUND_UP) {
                 adj_tl1 = 0x04040404;
                 adj_tl2 = 0x05050505;
                 adj2 = 0x0505050505050505L;
@@ -191,7 +163,7 @@ void C_THISCLASS::smp_render(int this_thread,
                 // middle of line
 #ifdef NO_MMX
                 x = (w - 2) / 4;
-                if (roundmode) {
+                if (this->config.round == BLUR_ROUND_UP) {
                     while (x--) {
                         of[0] = DIV_2(f[0]) + DIV_4(f[0]) + DIV_16(f[1]) + DIV_16(f[-1])
                                 + DIV_16(f2[0]) + DIV_16(f3[0]) + 0x05050505;
@@ -425,7 +397,7 @@ mmx_light_blur_loop:
             unsigned int* f2 = f - w;
             int x;
             int adj_tl = 0, adj_tl2 = 0;
-            if (roundmode) {
+            if (this->config.round == BLUR_ROUND_UP) {
                 adj_tl = 0x03030303;
                 adj_tl2 = 0x04040404;
             }
@@ -460,14 +432,14 @@ mmx_light_blur_loop:
             f++;
             f2++;
         }
-    } else if (enabled == 3)  // more blur
+    } else if (this->config.level == 3)  // more blur
     {
         // top line
         if (at_top) {
             unsigned int* f2 = f + w;
             int x;
             int adj_tl = 0, adj_tl2 = 0;
-            if (roundmode) {
+            if (this->config.round == BLUR_ROUND_UP) {
                 adj_tl = 0x02020202;
                 adj_tl2 = 0x01010101;
             }
@@ -503,7 +475,7 @@ mmx_light_blur_loop:
             int y = outh - at_top - at_bottom;
             int adj_tl1 = 0, adj_tl2 = 0;
             unsigned __int64 adj2 = 0;
-            if (roundmode) {
+            if (this->config.round == BLUR_ROUND_UP) {
                 adj_tl1 = 0x02020202;
                 adj_tl2 = 0x03030303;
                 adj2 = 0x0303030303030303L;
@@ -523,7 +495,7 @@ mmx_light_blur_loop:
                 // middle of line
 #ifdef NO_MMX
                 x = (w - 2) / 4;
-                if (roundmode) {
+                if (this->config.round == BLUR_ROUND_UP) {
                     while (x--) {
                         of[0] = DIV_4(f[1]) + DIV_4(f[-1]) + DIV_4(f2[0]) + DIV_4(f3[0])
                                 + 0x03030303;
@@ -720,7 +692,7 @@ mmx_heavy_blur_loop:
             unsigned int* f2 = f - w;
             int x;
             int adj_tl = 0, adj_tl2 = 0;
-            if (roundmode) {
+            if (this->config.round == BLUR_ROUND_UP) {
                 adj_tl = 0x02020202;
                 adj_tl2 = 0x01010101;
             }
@@ -756,7 +728,7 @@ mmx_heavy_blur_loop:
             unsigned int* f2 = f + w;
             int x;
             int adj_tl = 0, adj_tl2 = 0;
-            if (roundmode) {
+            if (this->config.round == BLUR_ROUND_UP) {
                 adj_tl = 0x02020202;
                 adj_tl2 = 0x03030303;
             }
@@ -797,7 +769,7 @@ mmx_heavy_blur_loop:
             int y = outh - at_top - at_bottom;
             int adj_tl1 = 0, adj_tl2 = 0;
             unsigned __int64 adj2 = 0;
-            if (roundmode) {
+            if (this->config.round == BLUR_ROUND_UP) {
                 adj_tl1 = 0x03030303;
                 adj_tl2 = 0x04040404;
                 adj2 = 0x0404040404040404L;
@@ -817,7 +789,7 @@ mmx_heavy_blur_loop:
                 // middle of line
 #ifdef NO_MMX
                 x = (w - 2) / 4;
-                if (roundmode) {
+                if (this->config.round == BLUR_ROUND_UP) {
                     while (x--) {
                         of[0] = DIV_2(f[0]) + DIV_8(f[1]) + DIV_8(f[-1]) + DIV_8(f2[0])
                                 + DIV_8(f3[0]) + 0x04040404;
@@ -1030,7 +1002,7 @@ mmx_normal_blur_loop:
         if (at_bottom) {
             unsigned int* f2 = f - w;
             int adj_tl = 0, adj_tl2 = 0;
-            if (roundmode) {
+            if (this->config.round == BLUR_ROUND_UP) {
                 adj_tl = 0x02020202;
                 adj_tl2 = 0x03030303;
             }
@@ -1075,42 +1047,71 @@ mmx_normal_blur_loop:
     __asm__ __volatile__("emms");
 #endif  // _MSC_VER
 #endif
-
-    timingLeave(0);
 }
 
-int C_THISCLASS::smp_begin(int max_threads,
-                           char[2][2][576],
-                           int,
-                           int*,
-                           int*,
-                           int,
-                           int) {
-    if (!enabled) return 0;
+int E_Blur::smp_begin(int max_threads, char[2][2][576], int, int*, int*, int, int) {
     return max_threads;
 }
 
-int C_THISCLASS::smp_finish(char[2][2][576], int, int*, int*, int, int) {
-    return !!enabled;
+int E_Blur::smp_finish(char[2][2][576], int, int*, int*, int, int) { return 1; }
+
+int E_Blur::render(char visdata[2][2][576],
+                   int is_beat,
+                   int* framebuffer,
+                   int* fbout,
+                   int w,
+                   int h) {
+    this->smp_begin(1, visdata, is_beat, framebuffer, fbout, w, h);
+    if (is_beat & 0x80000000) return 0;
+
+    this->smp_render(0, 1, visdata, is_beat, framebuffer, fbout, w, h);
+    return this->smp_finish(visdata, is_beat, framebuffer, fbout, w, h);
 }
 
-int C_THISCLASS::render(char visdata[2][2][576],
-                        int isBeat,
-                        int* framebuffer,
-                        int* fbout,
-                        int w,
-                        int h) {
-    smp_begin(1, visdata, isBeat, framebuffer, fbout, w, h);
-    if (isBeat & 0x80000000) return 0;
-
-    smp_render(0, 1, visdata, isBeat, framebuffer, fbout, w, h);
-    return smp_finish(visdata, isBeat, framebuffer, fbout, w, h);
-}
-
-C_RBASE* R_Blur(char* desc) {
-    if (desc) {
-        strcpy(desc, MOD_NAME);
-        return NULL;
+void E_Blur::load_legacy(unsigned char* data, int len) {
+    int pos = 0;
+    uint32_t blur_level = BLUR_MEDIUM;
+    if (len - pos >= 4) {
+        blur_level = GET_INT();
+        this->enabled = true;
+        // Note that in the legacy save format Medium is 1 and Light is 2.
+        // This is not a mistake.
+        switch (blur_level) {
+            case 0: this->enabled = false; break;
+            default:
+            case 1: this->config.level = BLUR_MEDIUM; break;
+            case 2: this->config.level = BLUR_LIGHT; break;
+            case 3: this->config.level = BLUR_HEAVY; break;
+        }
+        pos += 4;
     }
-    return (C_RBASE*)new C_THISCLASS();
+    if (len - pos >= 4) {
+        this->config.round = GET_INT() == 1 ? BLUR_ROUND_UP : BLUR_ROUND_DOWN;
+        pos += 4;
+    } else {
+        this->config.round = BLUR_ROUND_DOWN;
+    }
 }
+
+int E_Blur::save_legacy(unsigned char* data) {
+    int pos = 0;
+    uint32_t blur_level;
+    if (this->enabled) {
+        switch (this->config.level) {
+            case BLUR_LIGHT: blur_level = 2; break;
+            default:
+            case BLUR_MEDIUM: blur_level = 1; break;
+            case BLUR_HEAVY: blur_level = 3; break;
+        }
+    } else {
+        blur_level = 0;
+    }
+    PUT_INT(blur_level);
+    pos += 4;
+    PUT_INT(this->config.round == BLUR_ROUND_UP ? 1 : 0);
+    pos += 4;
+    return pos;
+}
+
+Effect_Info* create_Blur_Info() { return new Blur_Info(); }
+Effect* create_Blur() { return new E_Blur(); }
