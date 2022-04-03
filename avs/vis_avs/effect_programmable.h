@@ -108,7 +108,7 @@ class Programmable_Effect : public Configurable_Effect<Info_T, Config_T> {
     void* vm_context;
     lock_t* code_lock;
 
-   protected:
+   public:
     Vars_T vars;
     Code_Section code_init;
     Code_Section code_frame;
@@ -116,7 +116,6 @@ class Programmable_Effect : public Configurable_Effect<Info_T, Config_T> {
     Code_Section code_point;
     bool need_init;
 
-   public:
     Programmable_Effect()
         : vm_context(NULL),
           code_lock(lock_init()),
