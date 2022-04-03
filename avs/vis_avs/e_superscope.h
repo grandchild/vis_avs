@@ -156,8 +156,6 @@ class E_SuperScope
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
-    void recompile(const char* parameter_name);
-    void load_example();
 
     uint32_t color_pos;
 

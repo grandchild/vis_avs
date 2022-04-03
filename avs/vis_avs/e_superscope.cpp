@@ -56,12 +56,28 @@ constexpr Code_Example E_SuperScope::examples[];
 void SuperScope_Info::recompile(Effect* component,
                                 const Parameter* parameter,
                                 std::vector<int64_t>) {
-    ((E_SuperScope*)component)->recompile(parameter->name);
+    auto ssc = ((E_SuperScope*)component);
+    if (std::string("Init") == parameter->name) {
+        ssc->code_init.need_recompile = true;
+    } else if (std::string("Frame") == parameter->name) {
+        ssc->code_frame.need_recompile = true;
+    } else if (std::string("Beat") == parameter->name) {
+        ssc->code_beat.need_recompile = true;
+    } else if (std::string("Point") == parameter->name) {
+        ssc->code_point.need_recompile = true;
+    }
+    ssc->recompile_if_needed();
 }
 void SuperScope_Info::load_example(Effect* component,
                                    const Parameter*,
                                    std::vector<int64_t>) {
-    ((E_SuperScope*)component)->load_example();
+    auto ssc = ((E_SuperScope*)component);
+    const Code_Example& to_load = ssc->examples[ssc->config.example];
+    ssc->config.init = to_load.init;
+    ssc->config.frame = to_load.frame;
+    ssc->config.beat = to_load.beat;
+    ssc->config.point = to_load.point;
+    ssc->need_full_recompile();
 }
 
 E_SuperScope::E_SuperScope() { this->need_full_recompile(); }
@@ -175,28 +191,6 @@ int E_SuperScope::render(char visdata[2][2][576],
     }
 
     return 0;
-}
-
-void E_SuperScope::recompile(const char* parameter_name) {
-    if (std::string("Init") == parameter_name) {
-        this->code_init.need_recompile = true;
-    } else if (std::string("Frame") == parameter_name) {
-        this->code_frame.need_recompile = true;
-    } else if (std::string("Beat") == parameter_name) {
-        this->code_beat.need_recompile = true;
-    } else if (std::string("Point") == parameter_name) {
-        this->code_point.need_recompile = true;
-    }
-    this->recompile_if_needed();
-}
-
-void E_SuperScope::load_example() {
-    const Code_Example& to_load = this->examples[this->config.example];
-    this->config.init = to_load.init;
-    this->config.frame = to_load.frame;
-    this->config.beat = to_load.beat;
-    this->config.point = to_load.point;
-    this->need_full_recompile();
 }
 
 void SuperScope_Vars::register_(void* vm_context) {
