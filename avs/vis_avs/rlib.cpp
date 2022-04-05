@@ -158,7 +158,7 @@ void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_LEGACY(R_Timescope);
     DECLARE_EFFECT_LEGACY(R_LineMode);
     DECLARE_EFFECT_LEGACY(R_Interferences);
-    DECLARE_EFFECT_LEGACY(R_Shift);
+    DECLARE_EFFECT_NEW(DynamicShift);
     DECLARE_EFFECT_LEGACY_MT(R_DMove);
     DECLARE_EFFECT_NEW(FastBright);
     DECLARE_EFFECT_NEW(ColorModifier);
