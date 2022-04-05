@@ -29,7 +29,7 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "c_ddm.h"
+#include "e_dynamicdistancemodifier.h"
 
 #include "r_defs.h"
 
@@ -63,7 +63,7 @@ static unsigned const char sq_table[] = {
     239, 240, 240, 241, 241, 242, 242, 243, 243, 244, 244, 245, 245, 246, 246, 247,
     247, 248, 248, 249, 249, 250, 250, 251, 251, 252, 252, 253, 253, 254, 254, 255};
 
-static __inline unsigned long isqrt(unsigned long n) {
+static inline unsigned long isqrt(unsigned long n) {
     if (n >= 0x10000)
         if (n >= 0x1000000)
             if (n >= 0x10000000)
@@ -113,158 +113,92 @@ static __inline unsigned long isqrt(unsigned long n) {
     data[pos + 3] = (y >> 24) & 255
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
-void C_THISCLASS::load_config(unsigned char* data, int len) {
-    int pos = 0;
-    if (data[pos] == 1) {
-        pos++;
-        load_string(effect_exp[0], data, pos, len);
-        load_string(effect_exp[1], data, pos, len);
-        load_string(effect_exp[2], data, pos, len);
-        load_string(effect_exp[3], data, pos, len);
-    } else {
-        char buf[513];
-        if (len - pos >= 256 * 2) {
-            memcpy(buf, data + pos, 256 * 2);
-            pos += 256 * 2;
-            buf[512] = 0;
-            effect_exp[1].assign(buf + 256);
-            buf[256] = 0;
-            effect_exp[0].assign(buf);
-        }
-        if (len - pos >= 256 * 2) {
-            memcpy(buf, data + pos, 256 * 2);
-            pos += 256 * 2;
-            buf[512] = 0;
-            effect_exp[3].assign(buf + 256);
-            buf[256] = 0;
-            effect_exp[2].assign(buf);
-        }
+
+// --------------------------
+
+constexpr Parameter DynamicDistanceModifier_Info::parameters[];
+
+void DynamicDistanceModifier_Info::recompile(Effect* component,
+                                             const Parameter* parameter,
+                                             std::vector<int64_t>) {
+    auto ddm = (E_DynamicDistanceModifier*)component;
+    if (std::string("Init") == parameter->name) {
+        ddm->code_init.need_recompile = true;
+    } else if (std::string("Frame") == parameter->name) {
+        ddm->code_frame.need_recompile = true;
+    } else if (std::string("Beat") == parameter->name) {
+        ddm->code_beat.need_recompile = true;
+    } else if (std::string("Point") == parameter->name) {
+        ddm->code_point.need_recompile = true;
     }
-    if (len - pos >= 4) {
-        blend = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        subpixel = GET_INT();
-        pos += 4;
-    }
-}
-int C_THISCLASS::save_config(unsigned char* data) {
-    int pos = 0;
-    data[pos++] = 1;
-    save_string(data, pos, effect_exp[0]);
-    save_string(data, pos, effect_exp[1]);
-    save_string(data, pos, effect_exp[2]);
-    save_string(data, pos, effect_exp[3]);
-    PUT_INT(blend);
-    pos += 4;
-    PUT_INT(subpixel);
-    pos += 4;
-    return pos;
+    ddm->recompile_if_needed();
 }
 
-C_THISCLASS::C_THISCLASS() {
-    AVS_EEL_INITINST();
-    this->code_lock = lock_init();
-    need_recompile = 1;
-    memset(codehandle, 0, sizeof(codehandle));
-    m_lasth = m_lastw = 0;
-    m_wmul = 0;
-    m_tab = 0;
-    m_wt = 0;
-    effect_exp[0].assign("d=d-sigmoid((t-50)/100,2)");
-    effect_exp[3].assign("u=1;t=0");
-    effect_exp[1].assign(
-        "t=t+u;t=min(100,t);t=max(0,t);u=if(equal(t,100),-1,u);u=if(equal(t,0),1,u)");
-    effect_exp[2].assign("");
-
-    blend = 0;
-    subpixel = 0;
-
-    var_b = 0;
+E_DynamicDistanceModifier::E_DynamicDistanceModifier()
+    : m_lastw(0), m_lasth(0), m_wmul(NULL), m_tab(NULL) {
+    this->need_full_recompile();
 }
 
-C_THISCLASS::~C_THISCLASS() {
-    int x;
-    for (x = 0; x < 4; x++) {
-        freeCode(codehandle[x]);
-        codehandle[x] = 0;
-    }
-    if (m_wmul) free(m_wmul);
-    if (m_tab) free(m_tab);
-    AVS_EEL_QUITINST();
-
-    m_tab = 0;
-    m_wmul = 0;
-    lock_destroy(this->code_lock);
+E_DynamicDistanceModifier::~E_DynamicDistanceModifier() {
+    free(this->m_wmul);
+    free(this->m_tab);
+    this->m_tab = 0;
+    this->m_wmul = 0;
 }
 
-int C_THISCLASS::render(char visdata[2][2][576],
-                        int isBeat,
-                        int* framebuffer,
-                        int* fbout,
-                        int w,
-                        int h) {
+int E_DynamicDistanceModifier::render(char visdata[2][2][576],
+                                      int is_beat,
+                                      int* framebuffer,
+                                      int* fbout,
+                                      int w,
+                                      int h) {
     int* fbin = framebuffer;
-    if (m_lasth != h || m_lastw != w || !m_tab || !m_wmul) {
+    if (this->m_lasth != h || this->m_lastw != w || !this->m_tab || !this->m_wmul) {
         int y;
-        m_lastw = w;  // jf 121100 - added (oops)
-        m_lasth = h;
-        max_d = sqrt((w * w + h * h) / 4.0);
-        if (m_wmul) free(m_wmul);
-        m_wmul = (int*)malloc(sizeof(int) * h);
-        for (y = 0; y < h; y++) m_wmul[y] = y * w;
-        if (m_tab) free(m_tab);
-        m_tab = 0;
+        this->m_lastw = w;  // jf 121100 - added (oops)
+        this->m_lasth = h;
+        this->max_d = sqrt((w * w + h * h) / 4.0);
+        free(this->m_wmul);
+        this->m_wmul = (int*)malloc(sizeof(int) * h);
+        for (y = 0; y < h; y++) this->m_wmul[y] = y * w;
+        free(this->m_tab);
+        this->m_tab = NULL;
     }
-    int imax_d = (int)(max_d + 32.9);
+    int imax_d = (int)(this->max_d + 32.9);
+    if (imax_d < 33) {
+        imax_d = 33;
+    }
+    if (!this->m_tab) {
+        this->m_tab = (int*)malloc(sizeof(int) * imax_d);
+    }
 
-    if (imax_d < 33) imax_d = 33;
+    this->recompile_if_needed();
+    if (is_beat & 0x80000000) {
+        return 0;
+    }
 
-    if (!m_tab) m_tab = (int*)malloc(sizeof(int) * imax_d);
-
+    if (this->need_init) {
+        this->code_init.exec(visdata);
+        this->need_init = false;
+    }
+    this->init_variables(w, h, is_beat);
+    this->code_frame.exec(visdata);
+    if (is_beat) {
+        this->code_beat.exec(visdata);
+    }
     int x;
-
-    // pow(sin(d),dpos)*1.7
-    if (need_recompile) {
-        lock_lock(this->code_lock);
-        if (!var_b || g_reset_vars_on_recompile) {
-            clearVars();
-            var_d = registerVar("d");
-            var_b = registerVar("b");
-            inited = 0;
-        }
-        need_recompile = 0;
-        for (x = 0; x < 4; x++) {
-            freeCode(codehandle[x]);
-            codehandle[x] = compileCode((char*)effect_exp[x].c_str());
-        }
-        lock_unlock(this->code_lock);
-    }
-    if (isBeat & 0x80000000) return 0;
-
-    *var_b = isBeat ? 1.0 : 0.0;
-
-    if (codehandle[3] && !inited) {
-        executeCode(codehandle[3], visdata);
-        inited = 1;
-    }
-    executeCode(codehandle[1], visdata);
-    if (isBeat) executeCode(codehandle[2], visdata);
-    if (codehandle[0]) {
+    if (this->code_point.is_valid()) {
         for (x = 0; x < imax_d - 32; x++) {
-            *var_d = x / (max_d - 1);
-            executeCode(codehandle[0], visdata);
-            m_tab[x] = (int)(*var_d * 256.0 * max_d / (x + 1));
+            *this->vars.d = x / (this->max_d - 1);
+            this->code_point.exec(visdata);
+            this->m_tab[x] = (int)(*this->vars.d * 256.0 * this->max_d / (x + 1));
         }
         for (; x < imax_d; x++) {
-            m_tab[x] = m_tab[x - 1];
+            this->m_tab[x] = this->m_tab[x - 1];
         }
-    } else
-        for (x = 0; x < imax_d; x++) m_tab[x] = 0;
-
-    m_wt++;
-    m_wt &= 63;
+    } else {
+        for (x = 0; x < imax_d; x++) this->m_tab[x] = 0;
+    }
 
     {
         int w2 = w / 2;
@@ -277,10 +211,10 @@ int C_THISCLASS::render(char visdata[2][2][576],
             int yysc = ty;
             int xxsc = -w2;
             int x = w;
-            if (subpixel) {
-                if (blend)
+            if (this->config.bilinear) {
+                if (this->config.blend_mode == BLEND_SIMPLE_5050) {
                     while (x--) {
-                        int qd = m_tab[isqrt(x2)];
+                        int qd = this->m_tab[isqrt(x2)];
                         int ow, oh;
                         int xpart, ypart;
                         x2 += dx2;
@@ -303,15 +237,15 @@ int C_THISCLASS::render(char visdata[2][2][576],
                             oh = h - 2;
 
                         *fbout++ = BLEND_AVG(
-                            BLEND4((unsigned int*)framebuffer + ow + m_wmul[oh],
+                            BLEND4((unsigned int*)framebuffer + ow + this->m_wmul[oh],
                                    w,
                                    xpart,
                                    ypart),
                             *fbin++);
                     }
-                else
+                } else {
                     while (x--) {
-                        int qd = m_tab[isqrt(x2)];
+                        int qd = this->m_tab[isqrt(x2)];
                         int ow, oh;
                         int xpart, ypart;
                         x2 += dx2;
@@ -333,15 +267,17 @@ int C_THISCLASS::render(char visdata[2][2][576],
                         else if (oh >= h - 1)
                             oh = h - 2;
 
-                        *fbout++ = BLEND4((unsigned int*)framebuffer + ow + m_wmul[oh],
-                                          w,
-                                          xpart,
-                                          ypart);
+                        *fbout++ =
+                            BLEND4((unsigned int*)framebuffer + ow + this->m_wmul[oh],
+                                   w,
+                                   xpart,
+                                   ypart);
                     }
+                }
             } else {
-                if (blend)
+                if (this->config.blend_mode == BLEND_SIMPLE_5050) {
                     while (x--) {
-                        int qd = m_tab[isqrt(x2)];
+                        int qd = this->m_tab[isqrt(x2)];
                         int ow, oh;
                         x2 += dx2;
                         dx2 += 2;
@@ -358,11 +294,12 @@ int C_THISCLASS::render(char visdata[2][2][576],
                         else if (oh >= h)
                             oh = h - 1;
 
-                        *fbout++ = BLEND_AVG(framebuffer[ow + m_wmul[oh]], *fbin++);
+                        *fbout++ =
+                            BLEND_AVG(framebuffer[ow + this->m_wmul[oh]], *fbin++);
                     }
-                else
+                } else {
                     while (x--) {
-                        int qd = m_tab[isqrt(x2)];
+                        int qd = this->m_tab[isqrt(x2)];
                         int ow, oh;
                         x2 += dx2;
                         dx2 += 2;
@@ -379,13 +316,14 @@ int C_THISCLASS::render(char visdata[2][2][576],
                         else if (oh >= h)
                             oh = h - 1;
 
-                        *fbout++ = framebuffer[ow + m_wmul[oh]];
+                        *fbout++ = framebuffer[ow + this->m_wmul[oh]];
                     }
+                }
             }
         }
     }
 #ifndef NO_MMX
-    if (subpixel) {
+    if (this->config.bilinear) {
 #ifdef _MSC_VER
         __asm emms;
 #else  // _MSC_VER
@@ -396,10 +334,66 @@ int C_THISCLASS::render(char visdata[2][2][576],
     return 1;
 }
 
-C_RBASE* R_DDM(char* desc) {
-    if (desc) {
-        strcpy(desc, MOD_NAME);
-        return NULL;
-    }
-    return (C_RBASE*)new C_THISCLASS();
+void DynamicDistanceModifier_Vars::register_(void* vm_context) {
+    this->d = NSEEL_VM_regvar(vm_context, "d");
+    this->b = NSEEL_VM_regvar(vm_context, "b");
 }
+
+void DynamicDistanceModifier_Vars::init(int, int, int is_beat, va_list) {
+    *this->b = is_beat ? 1.0 : 0.0;
+}
+
+void E_DynamicDistanceModifier::load_legacy(unsigned char* data, int len) {
+    char* str_data = (char*)data;
+    int pos = 0;
+    if (data[pos] == 1) {
+        pos++;
+        pos += this->string_load_legacy(&str_data[pos], this->config.point, len - pos);
+        pos += this->string_load_legacy(&str_data[pos], this->config.frame, len - pos);
+        pos += this->string_load_legacy(&str_data[pos], this->config.beat, len - pos);
+        pos += this->string_load_legacy(&str_data[pos], this->config.init, len - pos);
+    } else {
+        char buf[1025];
+        if (len - pos >= 1024) {
+            memcpy(buf, data + pos, 1024);
+            pos += 1024;
+            buf[1024] = 0;
+            this->config.init.assign(buf + 768);
+            buf[768] = 0;
+            this->config.beat.assign(buf + 512);
+            buf[512] = 0;
+            this->config.frame.assign(buf + 256);
+            buf[256] = 0;
+            this->config.point.assign(buf);
+        }
+    }
+    this->need_full_recompile();
+    if (len - pos >= 4) {
+        this->config.blend_mode = GET_INT() ? BLEND_SIMPLE_5050 : BLEND_SIMPLE_REPLACE;
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        this->config.bilinear = GET_INT();
+        pos += 4;
+    }
+}
+
+int E_DynamicDistanceModifier::save_legacy(unsigned char* data) {
+    char* str_data = (char*)data;
+    int pos = 0;
+    data[pos++] = 1;
+    pos += this->string_save_legacy(this->config.point, &str_data[pos]);
+    pos += this->string_save_legacy(this->config.frame, &str_data[pos]);
+    pos += this->string_save_legacy(this->config.beat, &str_data[pos]);
+    pos += this->string_save_legacy(this->config.init, &str_data[pos]);
+    PUT_INT(this->config.blend_mode);
+    pos += 4;
+    PUT_INT(this->config.bilinear ? 1 : 0);
+    pos += 4;
+    return pos;
+}
+
+Effect_Info* create_DynamicDistanceModifier_Info() {
+    return new DynamicDistanceModifier_Info();
+}
+Effect* create_DynamicDistanceModifier() { return new E_DynamicDistanceModifier(); }

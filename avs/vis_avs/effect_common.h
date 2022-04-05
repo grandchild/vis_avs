@@ -15,6 +15,11 @@ enum Blend_Modes {
     BLEND_MINIMUM = 9,
 };
 
+enum Blend_Modes_Simple {
+    BLEND_SIMPLE_REPLACE = 0,
+    BLEND_SIMPLE_5050 = 1,
+};
+
 enum Audio_Sources { AUDIO_WAVEFORM = 0, AUDIO_SPECTRUM = 1 };
 enum Audio_Channels { AUDIO_LEFT = 0, AUDIO_RIGHT = 1, AUDIO_CENTER = 2 };
 enum Draw_Modes { DRAW_DOTS = 0, DRAW_LINES = 1, DRAW_SOLID = 2 };
