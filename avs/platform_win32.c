@@ -123,7 +123,11 @@ void* library_get(dlib_t* library, char* func_name) {
     return (void*)GetProcAddress((HMODULE)library, func_name);
 }
 
-void library_unload(dlib_t* library) { FreeLibrary((HMODULE)library); }
+void library_unload(dlib_t* library) {
+    if (library != NULL) {
+        FreeLibrary((HMODULE)library);
+    }
+}
 
 /* mkdir */
 
