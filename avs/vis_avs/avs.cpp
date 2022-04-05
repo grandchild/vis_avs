@@ -25,6 +25,7 @@ AVS_Instance* get_instance_from_handle(AVS_Handle avs) {
     if (avs > 0) {
         auto search = g_instances.find(avs);
         if (search != g_instances.end()) {
+            g_error = NULL;
             return search->second;
         }
     }
@@ -41,6 +42,7 @@ AVS_Handle avs_init(AVS_Audio_Source audio_source, AVS_Beat_Source beat_source) 
         return 0;
     }
     g_instances[new_handle] = new AVS_Instance(audio_source, beat_source);
+    g_error = NULL;
     return new_handle;
 }
 
