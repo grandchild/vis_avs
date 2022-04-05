@@ -90,32 +90,32 @@ int win32_dlgproc_colormodifier(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
                 char* buf = NULL;
                 switch (LOWORD(wParam)) {
                     case IDC_EDIT1:
-                        length = GetWindowTextLength((HWND)lParam);
-                        buf = (char*)calloc(length, sizeof(char));
-                        GetDlgItemText(hwndDlg, IDC_EDIT1, buf, length + 1);
+                        length = GetWindowTextLength((HWND)lParam) + 1;
+                        buf = new char[length];
+                        GetDlgItemText(hwndDlg, IDC_EDIT1, buf, length);
                         g_this->set_string(p_point, buf);
-                        free(buf);
+                        delete[] buf;
                         break;
                     case IDC_EDIT2:
-                        length = GetWindowTextLength((HWND)lParam);
-                        buf = (char*)calloc(length, sizeof(char));
-                        GetDlgItemText(hwndDlg, IDC_EDIT2, buf, length + 1);
+                        length = GetWindowTextLength((HWND)lParam) + 1;
+                        buf = new char[length];
+                        GetDlgItemText(hwndDlg, IDC_EDIT2, buf, length);
                         g_this->set_string(p_frame, buf);
-                        free(buf);
+                        delete[] buf;
                         break;
                     case IDC_EDIT3:
-                        length = GetWindowTextLength((HWND)lParam);
-                        buf = (char*)calloc(length, sizeof(char));
-                        GetDlgItemText(hwndDlg, IDC_EDIT3, buf, length + 1);
+                        length = GetWindowTextLength((HWND)lParam) + 1;
+                        buf = new char[length];
+                        GetDlgItemText(hwndDlg, IDC_EDIT3, buf, length);
                         g_this->set_string(p_beat, buf);
-                        free(buf);
+                        delete[] buf;
                         break;
                     case IDC_EDIT4:
-                        length = GetWindowTextLength((HWND)lParam);
-                        buf = (char*)calloc(length, sizeof(char));
-                        GetDlgItemText(hwndDlg, IDC_EDIT4, buf, length + 1);
+                        length = GetWindowTextLength((HWND)lParam) + 1;
+                        buf = new char[length];
+                        GetDlgItemText(hwndDlg, IDC_EDIT4, buf, length);
                         g_this->set_string(p_init, buf);
-                        free(buf);
+                        delete[] buf;
                         break;
                 }
             }
