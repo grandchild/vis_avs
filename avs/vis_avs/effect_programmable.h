@@ -123,7 +123,10 @@ class Programmable_Effect : public Configurable_Effect<Info_T, Config_T> {
           code_frame(this->vm_context, this->config.frame, this->code_lock),
           code_beat(this->vm_context, this->config.beat, this->code_lock),
           code_point(this->vm_context, this->config.point, this->code_lock){};
-    ~Programmable_Effect() { AVS_EEL_IF_VM_free(this->vm_context); };
+    ~Programmable_Effect() {
+        AVS_EEL_IF_VM_free(this->vm_context);
+        lock_destroy(this->code_lock);
+    };
 
     void need_full_recompile() {
         this->code_init.need_recompile = true;
