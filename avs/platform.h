@@ -86,7 +86,7 @@ bool thread_join(thread_t* thread, int32_t wait_ms);
 bool thread_join_all(thread_t** threads, uint32_t num_threads, int32_t wait_ms);
 void thread_destroy(thread_t* thread);
 
-int create_directory(char* path);
+int create_directory(const char* path);
 
 #ifdef __cplusplus
 }

@@ -131,4 +131,4 @@ void library_unload(dlib_t* library) {
 
 /* mkdir */
 
-int create_directory(char* path) { return CreateDirectory(path, NULL); }
+int create_directory(const char* path) { return CreateDirectory(path, NULL); }
