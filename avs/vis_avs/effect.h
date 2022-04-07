@@ -26,6 +26,8 @@ class Effect {
     Effect* move(Effect* to_move, Effect* relative_to, Insert_Direction direction);
     void remove(Effect* to_remove);
     Effect* duplicate(Effect* to_duplicate);
+    void set_enabled(bool enabled);
+    virtual void on_enable(bool enabled) { (void)enabled; };
     Effect* find_by_handle(AVS_Component_Handle handle);
     const AVS_Component_Handle* get_child_handles_for_api();
 

@@ -102,6 +102,11 @@ Effect* Effect::duplicate_with_children() {
     return duplicate_;
 }
 
+void Effect::set_enabled(bool enabled) {
+    this->enabled = enabled;
+    this->on_enable(enabled);
+}
+
 Effect* Effect::find_by_handle(AVS_Component_Handle handle) {
     if (this->handle == handle) {
         return this;
