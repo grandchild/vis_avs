@@ -309,7 +309,7 @@ bool avs_component_set_enabled(AVS_Handle avs,
     if (!resolve_handles(avs, 0, component, 0, &instance, NULL, &_component)) {
         return false;
     }
-    _component->enabled = enabled;
+    _component->set_enabled(enabled);
     return true;
 }
 
