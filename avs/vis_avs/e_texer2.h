@@ -1,124 +1,49 @@
 #pragma once
 
-#include "r_defs.h"
-
-#include "c__base.h"
-#include "effect_code.h"
+#include "effect.h"
+#include "effect_common.h"
+#include "effect_info.h"
+#include "effect_programmable.h"
 #include "pixel_format.h"
 
+#include "../platform.h"
+
 #include <vector>
-
-#define MOD_NAME "Render / Texer II"
-
-#define OUT_REPLACE    0
-#define OUT_ADDITIVE   1
-#define OUT_MAXIMUM    2
-#define OUT_5050       3
-#define OUT_SUB1       4
-#define OUT_SUB2       5
-#define OUT_MULTIPLY   6
-#define OUT_ADJUSTABLE 7
-#define OUT_XOR        8
-#define OUT_MINIMUM    9
-
-#define TEXERII_NUM_EXAMPLES      4
-#define TEXERII_EXAMPLES_FIRST_ID 31337
 
 #define TEXER_II_VERSION_V2_81D 0
 #define TEXER_II_VERSION_V2_81D_UPGRADE_HELP \
     "Saved version wraps x/y only once. Upgrade to wrap around forever."
 #define TEXER_II_VERSION_CURRENT 1
 
-struct texer2_apeconfig {
-    int version; /* formerly "mode", which was unused. */
-    char image[LEGACY_SAVE_PATH_LEN];
-    int resize;
-    int wrap;
-    int mask;
-    int d;
+struct Texer2_Config : public Effect_Config {
+    int64_t version = TEXER_II_VERSION_CURRENT;
+    int64_t image = 0;
+    bool resize = false;
+    bool wrap = false;
+    bool colorize = true;
+    std::string init;
+    std::string frame;
+    std::string beat;
+    std::string point;
+    int64_t example = 0;
+    Texer2_Config();  // Fill with first example
 };
 
-class Texer2Vars : public VarsBase {
-   public:
-    double* n;
-    double* i;
-    double* x;
-    double* y;
-    double* v;
-    double* w;
-    double* h;
-    double* b;
-    double* iw;
-    double* ih;
-    double* sizex;
-    double* sizey;
-    double* red;
-    double* green;
-    double* blue;
-    double* skip;
-
-    virtual void register_variables(void*);
-    virtual void init_variables(int, int, int, va_list);
+struct Texer2_Example {
+    const char* name;
+    const char* init;
+    const char* frame;
+    const char* beat;
+    const char* point;
+    const bool resize;
+    const bool wrap;
+    const bool colorize;
 };
 
-struct Texer2Example {
-    char* name;
-    char* init;
-    char* frame;
-    char* beat;
-    char* point;
-    int resize;
-    int wrap;
-    int mask;
-};
-
-class C_Texer2 : public C_RBASE {
-   public:
-    C_Texer2(int default_version);
-    virtual ~C_Texer2();
-    virtual int render(char visdata[2][2][576],
-                       int isBeat,
-                       int* framebuffer,
-                       int* fbout,
-                       int w,
-                       int h);
-    virtual char* get_desc();
-    virtual void load_config(unsigned char* data, int len);
-    virtual int save_config(unsigned char* data);
-
-    void find_image_files();
-    void clear_image_files();
-    void load_image();
-    void load_default_image();
-    void delete_image();
-
-    void DrawParticle(int* framebuffer,
-                      pixel_rgb0_8* texture,
-                      int w,
-                      int h,
-                      double x,
-                      double y,
-                      double sizex,
-                      double sizey,
-                      unsigned int color);
-
-    texer2_apeconfig config;
-
-    ComponentCode<Texer2Vars> code;
-
-    static int instance_count;
-    static std::vector<char*> file_list;
-    int iw;
-    int ih;
-    pixel_rgb0_8* image_normal;
-    pixel_rgb0_8* image_flipped;
-    pixel_rgb0_8* image_mirrored;
-    pixel_rgb0_8* image_rot180;
-
-    lock_t* image_lock;
-    lock_t* code_lock;
-
-    char* help_text =
+struct Texer2_Info : public Effect_Info {
+    static constexpr char* group = "Render";
+    static constexpr char* name = "Texer II";
+    static constexpr char* help =
         "Texer II is a rendering component that draws what is commonly known as "
         "particles.\r\n"
         "At specified positions on screen, a copy of the source image is placed and "
@@ -179,72 +104,62 @@ class C_Texer2 : public C_RBASE {
         "forums for feedback, especially Deamon and gaekwad2 for providing the "
         "examples and Tuggummi for providing the default image.\r\n";
 
-    Texer2Example examples[TEXERII_NUM_EXAMPLES] = {
+    static constexpr int32_t legacy_id = -1;
+    static constexpr char* legacy_ape_id = "Acko.net: Texer II";
+
+    static constexpr int32_t num_examples = 4;
+    static constexpr Texer2_Example examples[num_examples] = {
         {
             "Colored Oscilloscope",
-            /* init */
             "// This example needs Maximum render mode\r\n"
             "n=300;",
-            /* frame */
             "",
-            /* beat */
             "",
-            /* point */
             "x=(i*2-1)*2;y=v;\r\n"
             "red=1-y*2;green=abs(y)*2;blue=y*2-1;",
-            0,
-            0,
-            1,
+            false,
+            false,
+            true,
         },
         {
             "Flummy Spectrum",
-            /* init */
             "// This example needs Maximum render mode",
-            /* frame */
             "n=w/20+1;",
-            /* beat */
             "",
-            /* point */
             "x=i*1.8-.9;\r\n"
             "y=0;\r\n"
             "vol=1.001-getspec(abs(x)*.5,.05,0)*min(1,abs(x)+.5)*2;\r\n"
             "sizex=vol;sizey=(1/vol)*2;\r\n"
             "j=abs(x);red=1-j;green=1-abs(.5-j);blue=j",
-            1,
-            0,
-            1,
+            true,
+            false,
+            true,
         },
         {
             "Beat-responsive Circle",
-            /* init */
             "// This example needs Maximum render mode\r\n"
             "n=30;newradius=.5;",
-            /* frame */
             "rotation=rotation+step;step=step*.9;\r\n"
             "radius=radius*.9+newradius*.1;\r\n"
             "point=0;\r\n"
             "aspect=h/w;",
-            /* beat */
             "step=.05;\r\n"
             "newradius=rand(100)*.005+.5;",
-            /* point */
             "angle=rotation+point/n*$pi*2;\r\n"
             "x=cos(angle)*radius*aspect;y=sin(angle)*radius;\r\n"
             "red=sin(i*$pi*2)*.5+.5;green=1-red;blue=.5;\r\n"
             "point=point+1;",
-            0,
-            0,
-            1,
+            false,
+            false,
+            true,
         },
         {
             "3D Beat Rings",
-            /* init */
             "// This shows how to use texer for 3D particles\r\n"
             "// Additive or maximum blend mode should be used\r\n"
             "xr=(rand(50)/500)-0.05;\r\n"
             "yr=(rand(50)/500)-0.05;\r\n"
             "zr=(rand(50)/500)-0.05;",
-            /* frame */
             "// Rotation along x/y/z axes\r\n"
             "xt=xt+xr;yt=yt+yr;zt=zt+zr;\r\n"
             "// Shrink rings\r\n"
@@ -253,7 +168,6 @@ class C_Texer2 : public C_RBASE {
             "asp=w/h;\r\n"
             "// Dynamically adjust particle count based on ring size\r\n"
             "n=((bt*40)|0)*3;",
-            /* beat */
             "// New rotation speeds\r\n"
             "xr=(rand(50)/500)-0.05;\r\n"
             "yr=(rand(50)/500)-0.05;\r\n"
@@ -261,7 +175,6 @@ class C_Texer2 : public C_RBASE {
             "// Ring size\r\n"
             "bt=1.2;\r\n"
             "n=((bt*40)|0)*3;",
-            /* point */
             "// 3D object\r\n"
             "x1=sin(i*$pi*6)/2*bt;\r\n"
             "y1=above(i,.66)-below(i,.33);\r\n"
@@ -276,9 +189,108 @@ class C_Texer2 : public C_RBASE {
             "iz=1/(z3+2);\r\n"
             "x=x3*iz;y=y3*iz*asp;\r\n"
             "sizex=iz*2;sizey=iz*2;",
-            1,
-            0,
-            0,
+            true,
+            false,
+            false,
         },
     };
+
+    static const char* const* example_names(int64_t* length_out) {
+        *length_out = 4;
+        static const char* const options[4] = {
+            examples[0].name,
+            examples[1].name,
+            examples[2].name,
+            examples[3].name,
+        };
+        return options;
+    };
+    static const char* const* image_files(int64_t* length_out);
+
+    static void on_file_change(Effect*, const Parameter*, std::vector<int64_t>);
+    static void recompile(Effect*, const Parameter*, std::vector<int64_t>);
+    static void load_example(Effect*, const Parameter*, std::vector<int64_t>);
+    static constexpr uint32_t num_parameters = 11;
+    static constexpr Parameter parameters[num_parameters] = {
+        P_INT(offsetof(Texer2_Config, version), "Effect Version"),
+        P_SELECT(offsetof(Texer2_Config, image),
+                 "Image",
+                 image_files,
+                 NULL,
+                 on_file_change),
+        P_BOOL(offsetof(Texer2_Config, resize), "Resize"),
+        P_BOOL(offsetof(Texer2_Config, wrap), "Wrap"),
+        P_BOOL(offsetof(Texer2_Config, colorize), "Colorize"),
+        P_STRING(offsetof(Texer2_Config, init), "Init", NULL, recompile),
+        P_STRING(offsetof(Texer2_Config, frame), "Frame", NULL, recompile),
+        P_STRING(offsetof(Texer2_Config, beat), "Beat", NULL, recompile),
+        P_STRING(offsetof(Texer2_Config, point), "Point", NULL, recompile),
+        P_SELECT_X(offsetof(Texer2_Config, example), "Example", example_names),
+        P_ACTION("Load Example", load_example, "Load the selected example code"),
+    };
+
+    EFFECT_INFO_GETTERS;
+};
+
+struct Texer2_Vars : public Variables {
+    double* n;
+    double* i;
+    double* x;
+    double* y;
+    double* v;
+    double* w;
+    double* h;
+    double* b;
+    double* iw;
+    double* ih;
+    double* sizex;
+    double* sizey;
+    double* red;
+    double* green;
+    double* blue;
+    double* skip;
+
+    virtual void register_(void*);
+    virtual void init(int, int, int, va_list);
+};
+
+class E_Texer2 : public Programmable_Effect<Texer2_Info, Texer2_Config, Texer2_Vars> {
+   public:
+    E_Texer2();
+    virtual ~E_Texer2();
+    virtual int render(char visdata[2][2][576],
+                       int is_beat,
+                       int* framebuffer,
+                       int* fbout,
+                       int w,
+                       int h);
+    virtual void load_legacy(unsigned char* data, int len);
+    virtual int save_legacy(unsigned char* data);
+
+    void find_image_files();
+    void clear_image_files();
+    void load_image();
+    void load_default_image();
+    void delete_image();
+
+    void DrawParticle(int* framebuffer,
+                      pixel_rgb0_8* texture,
+                      int w,
+                      int h,
+                      double x,
+                      double y,
+                      double sizex,
+                      double sizey,
+                      unsigned int color);
+
+    static std::vector<std::string> filenames;
+    static const char** c_filenames;
+    int iw;
+    int ih;
+    pixel_rgb0_8* image_normal;
+    pixel_rgb0_8* image_flipped;
+    pixel_rgb0_8* image_mirrored;
+    pixel_rgb0_8* image_rot180;
+
+    lock_t* image_lock;
 };

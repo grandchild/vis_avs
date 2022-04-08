@@ -1,5 +1,5 @@
-#include "c_texer2.h"
-#include "r_texer2.h"
+#include "e_texer2.h"
+#include "e_texer2_macros.h"
 
 #include "r_defs.h"
 
@@ -13,55 +13,105 @@
 #include <math.h>
 #include <stdio.h>
 
-int C_Texer2::instance_count = 0;
-std::vector<char*> C_Texer2::file_list;
+constexpr Texer2_Example Texer2_Info::examples[];
+constexpr Parameter Texer2_Info::parameters[];
 
-C_Texer2::C_Texer2(int default_version)
-    : config{default_version,
-             "",
-             this->examples[0].resize,
-             this->examples[0].wrap,
-             this->examples[0].mask,
-             0},
-      iw(0),
-      ih(0),
-      image_normal(0),
-      image_flipped(0),
-      image_mirrored(0),
-      image_rot180(0),
-      image_lock(lock_init()),
-      code_lock(lock_init()) {
-    this->code.init.set(this->examples[0].init,
-                        strnlen(this->examples[0].init, 65334) + 1);
-    this->code.frame.set(this->examples[0].frame,
-                         strnlen(this->examples[0].frame, 65334) + 1);
-    this->code.beat.set(this->examples[0].beat,
-                        strnlen(this->examples[0].beat, 65334) + 1);
-    this->code.point.set(this->examples[0].point,
-                         strnlen(this->examples[0].point, 65334) + 1);
-    this->find_image_files();
+std::vector<std::string> E_Texer2::filenames;
+const char** E_Texer2::c_filenames;
+
+void Texer2_Info::on_file_change(Effect* component,
+                                 const Parameter*,
+                                 std::vector<int64_t>) {
+    E_Texer2* texer2 = (E_Texer2*)component;
+    texer2->load_image();
 }
 
-C_Texer2::~C_Texer2() {
+void Texer2_Info::recompile(Effect* component,
+                            const Parameter* parameter,
+                            std::vector<int64_t>) {
+    auto texer2 = (E_Texer2*)component;
+    if (std::string("Init") == parameter->name) {
+        texer2->code_init.need_recompile = true;
+    } else if (std::string("Frame") == parameter->name) {
+        texer2->code_frame.need_recompile = true;
+    } else if (std::string("Beat") == parameter->name) {
+        texer2->code_beat.need_recompile = true;
+    } else if (std::string("Point") == parameter->name) {
+        texer2->code_point.need_recompile = true;
+    }
+    texer2->recompile_if_needed();
+}
+
+void Texer2_Info::load_example(Effect* component,
+                               const Parameter*,
+                               std::vector<int64_t>) {
+    auto texer2 = ((E_Texer2*)component);
+    const Texer2_Example& to_load = texer2->info.examples[texer2->config.example];
+    texer2->config.init = to_load.init;
+    texer2->config.frame = to_load.frame;
+    texer2->config.beat = to_load.beat;
+    texer2->config.point = to_load.point;
+    texer2->need_full_recompile();
+    texer2->config.resize = to_load.resize;
+    texer2->config.wrap = to_load.wrap;
+    texer2->config.colorize = to_load.colorize;
+}
+
+const char* const* Texer2_Info::image_files(int64_t* length_out) {
+    *length_out = E_Texer2::filenames.size();
+    auto new_list = (const char**)malloc(E_Texer2::filenames.size() * sizeof(char*));
+    for (size_t i = 0; i < E_Texer2::filenames.size(); i++) {
+        new_list[i] = E_Texer2::filenames[i].c_str();
+    }
+    auto old_list = E_Texer2::c_filenames;
+    E_Texer2::c_filenames = new_list;
+    free(old_list);
+    return E_Texer2::c_filenames;
+}
+
+Texer2_Config::Texer2_Config()
+    : image(0),
+      resize(Texer2_Info::examples[0].resize),
+      wrap(Texer2_Info::examples[0].wrap),
+      colorize(Texer2_Info::examples[0].colorize),
+      init(Texer2_Info::examples[0].init),
+      frame(Texer2_Info::examples[0].frame),
+      beat(Texer2_Info::examples[0].beat),
+      point(Texer2_Info::examples[0].point) {}
+
+E_Texer2::E_Texer2()
+    : iw(0),
+      ih(0),
+      image_normal(NULL),
+      image_flipped(NULL),
+      image_mirrored(NULL),
+      image_rot180(NULL),
+      image_lock(lock_init()) {
+    this->config.init.assign(this->info.examples[0].init);
+    this->config.frame.assign(this->info.examples[0].frame);
+    this->config.beat.assign(this->info.examples[0].beat);
+    this->config.point.assign(this->info.examples[0].point);
+    this->need_full_recompile();
+    this->find_image_files();
+    this->load_image();
+}
+
+E_Texer2::~E_Texer2() {
     lock_lock(this->image_lock);
     if (this->image_normal) {
         this->delete_image();
     }
     lock_unlock(this->image_lock);
     lock_destroy(this->image_lock);
-    lock_destroy(this->code_lock);
 }
 
 static void add_file_callback(const char* file, void* data) {
-    C_Texer2* texer2 = (C_Texer2*)data;
-    size_t filename_length = strnlen(file, MAX_PATH);
-    char* filename = (char*)calloc(filename_length + 1, sizeof(char));
-    strncpy(filename, file, filename_length + 1);
-    texer2->file_list.push_back(filename);
+    ((E_Texer2*)data)->filenames.push_back(file);
 }
 
-void C_Texer2::find_image_files() {
+void E_Texer2::find_image_files() {
     this->clear_image_files();
+    this->filenames.push_back("(default image)");
     const int num_extensions = 5;
     char* extensions[num_extensions] = {".bmp", ".png", ".jpg", ".jpeg", ".gif"};
     find_files_by_extensions(g_path,
@@ -74,14 +124,9 @@ void C_Texer2::find_image_files() {
                              /*background*/ false);
 }
 
-void C_Texer2::clear_image_files() {
-    for (auto file : this->file_list) {
-        free(file);
-    }
-    this->file_list.clear();
-}
+void E_Texer2::clear_image_files() { this->filenames.clear(); }
 
-void C_Texer2::delete_image() {
+void E_Texer2::delete_image() {
     if (this->image_normal) {
         iw = 0;
         ih = 0;
@@ -93,16 +138,17 @@ void C_Texer2::delete_image() {
 }
 
 extern unsigned char rawData[1323];  // example pic
-void C_Texer2::load_image() {
+void E_Texer2::load_image() {
     lock_lock(this->image_lock);
     if (this->image_normal) this->delete_image();
-    if (!strlen(this->config.image)) {
+    if (this->config.image == 0) {
         this->load_default_image();
         lock_unlock(this->image_lock);
         return;
     }
     char filename[MAX_PATH];
-    int printed = snprintf(filename, MAX_PATH, "%s\\%s", g_path, this->config.image);
+    int printed = snprintf(
+        filename, MAX_PATH, "%s\\%s", g_path, this->filenames[config.image].c_str());
     if (printed >= MAX_PATH) {
         filename[MAX_PATH - 1] = '\0';
     }
@@ -138,7 +184,7 @@ void C_Texer2::load_image() {
     image_free(tmp_image);
 }
 
-void C_Texer2::load_default_image() {
+void E_Texer2::load_default_image() {
     this->iw = 21;
     this->ih = 21;
     this->image_normal = new pixel_rgb0_8[this->iw * this->ih];
@@ -168,7 +214,7 @@ struct RECTf {
     double bottom;
 };
 
-void C_Texer2::DrawParticle(int* framebuffer,
+void E_Texer2::DrawParticle(int* framebuffer,
                             pixel_rgb0_8* texture,
                             int w,
                             int h,
@@ -271,7 +317,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
             T2_PREP_MASK_COLOR
 
             switch (g_line_blend_mode & 0xFF) {
-                case OUT_REPLACE: {
+                case BLEND_REPLACE: {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
                     int tot = r2.right - r2.left;
                     int* outp = &framebuffer[r2.top * (w + 1) + r2.left];
@@ -293,7 +339,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_ADDITIVE: {
+                case BLEND_ADDITIVE: {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
                     int tot = r2.right - r2.left;
                     int* outp = &framebuffer[r2.top * (w + 1) + r2.left];
@@ -319,7 +365,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_MAXIMUM: {
+                case BLEND_MAXIMUM: {
                     int signmask = 0x808080;
                     T2_SCALE_MINMAX_SIGNMASK
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
@@ -377,7 +423,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_5050: {
+                case BLEND_5050: {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
                     int tot = r2.right - r2.left;
                     int* outp = &framebuffer[r2.top * (w + 1) + r2.left];
@@ -409,7 +455,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_SUB1: {
+                case BLEND_SUB1: {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
                     int tot = r2.right - r2.left;
                     int* outp = &framebuffer[r2.top * (w + 1) + r2.left];
@@ -441,7 +487,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_SUB2: {
+                case BLEND_SUB2: {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
                     int tot = r2.right - r2.left;
                     int* outp = &framebuffer[r2.top * (w + 1) + r2.left];
@@ -469,7 +515,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_MULTIPLY: {
+                case BLEND_MULTIPLY: {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
                     int tot = r2.right - r2.left;
                     int* outp = &framebuffer[r2.top * (w + 1) + r2.left];
@@ -503,7 +549,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_ADJUSTABLE: {
+                case BLEND_ADJUSTABLE: {
                     __int64 alphavalue = 0x0;
                     __int64* alpha = &alphavalue;
                     // TODO [bugfix]: shouldn't salpha be 255, not 256?
@@ -553,7 +599,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_XOR: {
+                case BLEND_XOR: {
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
                     int tot = r2.right - r2.left;
                     int* outp = &framebuffer[r2.top * (w + 1) + r2.left];
@@ -577,7 +623,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_MINIMUM: {
+                case BLEND_MINIMUM: {
                     int signmask = 0x808080;
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
                     int tot = r2.right - r2.left;
@@ -682,11 +728,11 @@ void C_Texer2::DrawParticle(int* framebuffer,
 
         int ty = cy0;
 
-        if (this->config.mask) {
+        if (this->config.colorize) {
             // Second easiest path, masking, but no scaling
             T2_PREP_MASK_COLOR
             switch (g_line_blend_mode & 0xFF) {
-                case OUT_REPLACE: {
+                case BLEND_REPLACE: {
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
@@ -721,7 +767,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_ADDITIVE: {
+                case BLEND_ADDITIVE: {
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
@@ -760,7 +806,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_MAXIMUM: {
+                case BLEND_MAXIMUM: {
                     int maxmask = 0xFFFFFF;   // -> mm4
                     int signmask = 0x808080;  // -> mm6
                     T2_NONSCALE_PUSH_ESI_EDI
@@ -820,7 +866,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_5050: {
+                case BLEND_5050: {
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
@@ -867,7 +913,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_SUB1: {
+                case BLEND_SUB1: {
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
@@ -906,7 +952,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_SUB2: {
+                case BLEND_SUB2: {
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
@@ -943,7 +989,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_MULTIPLY: {
+                case BLEND_MULTIPLY: {
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
@@ -985,7 +1031,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_ADJUSTABLE: {
+                case BLEND_ADJUSTABLE: {
                     __int64 alphavalue = 0x0;
                     __int64* alpha = &alphavalue;
                     // TODO [bugfix]: shouldn't salpha be 255, not 256?
@@ -1044,7 +1090,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_XOR: {
+                case BLEND_XOR: {
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
@@ -1083,7 +1129,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_MINIMUM: {
+                case BLEND_MINIMUM: {
                     int maxmask = 0xFFFFFF;
                     int signmask = 0x808080;
                     T2_NONSCALE_PUSH_ESI_EDI
@@ -1147,7 +1193,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
             // Most basic path, no scaling or masking
             T2_ZERO_MM5
             switch (g_line_blend_mode & 0xFF) {
-                case OUT_REPLACE: {
+                case BLEND_REPLACE: {
                     // the push order was reversed (edi, esi) in the original code here
                     // (and only here) -- i assume that was not intentional...
                     T2_NONSCALE_PUSH_ESI_EDI
@@ -1172,7 +1218,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_ADDITIVE: {
+                case BLEND_ADDITIVE: {
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
@@ -1197,7 +1243,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_MAXIMUM: {
+                case BLEND_MAXIMUM: {
                     int maxmask = 0xFFFFFF;
                     int signmask = 0x808080;
                     T2_NONSCALE_PUSH_ESI_EDI
@@ -1245,7 +1291,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_5050: {
+                case BLEND_5050: {
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
@@ -1280,7 +1326,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_SUB1: {
+                case BLEND_SUB1: {
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
@@ -1305,7 +1351,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_SUB2: {
+                case BLEND_SUB2: {
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
@@ -1330,7 +1376,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_MULTIPLY: {
+                case BLEND_MULTIPLY: {
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
@@ -1365,7 +1411,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_ADJUSTABLE: {
+                case BLEND_ADJUSTABLE: {
                     __int64 alphavalue = 0x0;
                     __int64* alpha = &alphavalue;
                     // TODO [bugfix]: shouldn't salpha be 255, not 256?
@@ -1418,7 +1464,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_XOR: {
+                case BLEND_XOR: {
                     T2_NONSCALE_PUSH_ESI_EDI
                     for (int y = r2.top; y <= r2.bottom; ++y) {
                         int* outp = &framebuffer[y * (w + 1) + r2.left];
@@ -1443,7 +1489,7 @@ void C_Texer2::DrawParticle(int* framebuffer,
                     break;
                 }
 
-                case OUT_MINIMUM: {
+                case BLEND_MINIMUM: {
                     int maxmask = 0xFFFFFF;
                     int signmask = 0x808080;
                     T2_NONSCALE_PUSH_ESI_EDI
@@ -1504,7 +1550,7 @@ skippart:
 
 inline double wrap_diff_to_plusminus1(double x) { return round(x / 2.0) * 2.0; }
 
-/* For AVS 2.81d compatibility. TexerII v1.0 only wrapped once. */
+/* For AVS 2.81d compatibility. Texer2 v1.0 only wrapped once. */
 inline double wrap_once_diff_to_plusminus1(double x) {
     return (x > 1.0) ? +2.0 : (x < -1.0 ? -2.0 : 0.0);
 }
@@ -1521,25 +1567,24 @@ bool overlaps_edge(double wrapped_coord,
            && ((abs_wrapped_coord - rel_size_half) < 1.0);
 }
 
-int C_Texer2::render(char visdata[2][2][576],
+int E_Texer2::render(char visdata[2][2][576],
                      int is_beat,
                      int* framebuffer,
                      int*,
                      int w,
                      int h) {
-    lock_lock(this->code_lock);
-    this->code.recompile_if_needed();
-    this->code.init_variables(w, h, is_beat, this->iw, this->ih);
-    if (this->code.need_init || (is_beat & 0x80000000)) {
-        *this->code.vars.n = 0.0f;
-        this->code.init.exec(visdata);
-        this->code.need_init = false;
+    this->recompile_if_needed();
+    this->init_variables(w, h, is_beat, this->iw, this->ih);
+    if (this->need_init || (is_beat & 0x80000000)) {
+        *this->vars.n = 0.0f;
+        this->code_init.exec(visdata);
+        this->need_init = false;
     }
-    this->code.frame.exec(visdata);
+    this->code_frame.exec(visdata);
     if ((is_beat & 0x00000001)) {
-        this->code.beat.exec(visdata);
+        this->code_beat.exec(visdata);
     }
-    int n = RoundToInt((double)*this->code.vars.n);
+    int n = RoundToInt((double)*this->vars.n);
     n = max(0, min(65536, n));
 
     lock_lock(this->image_lock);
@@ -1547,64 +1592,58 @@ int C_Texer2::render(char visdata[2][2][576],
         double step = 1.0 / (n - 1);
         double i = 0.0;
         for (int j = 0; j < n; ++j) {
-            *this->code.vars.i = i;
-            *this->code.vars.skip = 0.0;
-            *this->code.vars.v =
+            *this->vars.i = i;
+            *this->vars.skip = 0.0;
+            *this->vars.v =
                 ((int)visdata[1][0][j * 575 / n] + (int)visdata[1][1][j * 575 / n])
                 / 256.0;
             i += step;
 
-            this->code.point.exec(visdata);
+            this->code_point.exec(visdata);
 
             // TODO [cleanup]: invert to if+continue
-            if (*this->code.vars.skip == 0.0) {
-                unsigned int color = min(
-                    255, max(0, RoundToInt(255.0f * (double)*this->code.vars.blue)));
+            if (*this->vars.skip == 0.0) {
+                unsigned int color =
+                    min(255, max(0, RoundToInt(255.0f * (double)*this->vars.blue)));
                 color |=
-                    min(255,
-                        max(0, RoundToInt(255.0f * (double)*this->code.vars.green)))
+                    min(255, max(0, RoundToInt(255.0f * (double)*this->vars.green)))
                     << 8;
-                color |=
-                    min(255, max(0, RoundToInt(255.0f * (double)*this->code.vars.red)))
-                    << 16;
+                color |= min(255, max(0, RoundToInt(255.0f * (double)*this->vars.red)))
+                         << 16;
 
-                if (this->config.mask == 0) color = 0xFFFFFF;
+                if (this->config.colorize == 0) color = 0xFFFFFF;
 
                 pixel_rgb0_8* texture = this->image_normal;
-                if (*this->code.vars.sizex < 0 && *this->code.vars.sizey > 0) {
+                if (*this->vars.sizex < 0 && *this->vars.sizey > 0) {
                     texture = this->image_mirrored;
-                } else if (*this->code.vars.sizex > 0 && *this->code.vars.sizey < 0) {
+                } else if (*this->vars.sizex > 0 && *this->vars.sizey < 0) {
                     texture = this->image_flipped;
-                } else if (*this->code.vars.sizex < 0 && *this->code.vars.sizey < 0) {
+                } else if (*this->vars.sizex < 0 && *this->vars.sizey < 0) {
                     texture = this->image_rot180;
                 }
 
-                double szx = fabs(*this->code.vars.sizex);
-                double szy = fabs(*this->code.vars.sizey);
+                double szx = fabs(*this->vars.sizex);
+                double szy = fabs(*this->vars.sizey);
 
                 // TODO [cleanup]: put more of the above into this if-case, or invert to
                 // if+continue
                 // TODO [bugfix]: really large images would be clipped while still
                 // potentially visible, should be relative to image size
                 if ((szx > .01) && (szy > .01)) {
-                    double x = *this->code.vars.x;
-                    double y = *this->code.vars.y;
+                    double x = *this->vars.x;
+                    double y = *this->vars.y;
                     if (this->config.wrap != 0) {
                         bool overlaps_x, overlaps_y;
                         if (this->config.version == TEXER_II_VERSION_V2_81D) {
                             /* Wrap only once (when crossing +/-1, not when crossing
                              * +/-3 etc. */
-                            x -= wrap_once_diff_to_plusminus1(*this->code.vars.x);
-                            y -= wrap_once_diff_to_plusminus1(*this->code.vars.y);
-                            overlaps_x =
-                                overlaps_edge(*this->code.vars.x, szx, this->iw, w);
-                            overlaps_y =
-                                overlaps_edge(*this->code.vars.y, szy, this->ih, h);
+                            x -= wrap_once_diff_to_plusminus1(*this->vars.x);
+                            y -= wrap_once_diff_to_plusminus1(*this->vars.y);
+                            overlaps_x = overlaps_edge(*this->vars.x, szx, this->iw, w);
+                            overlaps_y = overlaps_edge(*this->vars.y, szy, this->ih, h);
                         } else {
-                            x = *this->code.vars.x
-                                - wrap_diff_to_plusminus1(*this->code.vars.x);
-                            y = *this->code.vars.y
-                                - wrap_diff_to_plusminus1(*this->code.vars.y);
+                            x = *this->vars.x - wrap_diff_to_plusminus1(*this->vars.x);
+                            y = *this->vars.y - wrap_diff_to_plusminus1(*this->vars.y);
                             overlaps_x = overlaps_edge(x, szx, this->iw, w);
                             overlaps_y = overlaps_edge(y, szy, this->ih, h);
                         }
@@ -1649,13 +1688,11 @@ int C_Texer2::render(char visdata[2][2][576],
             }
         }
     }
-
-    lock_unlock(this->code_lock);
     lock_unlock(this->image_lock);
     return 0;
 }
 
-void Texer2Vars::register_variables(void* vm_context) {
+void Texer2_Vars::register_(void* vm_context) {
     this->n = NSEEL_VM_regvar(vm_context, "n");
     this->i = NSEEL_VM_regvar(vm_context, "i");
     this->x = NSEEL_VM_regvar(vm_context, "x");
@@ -1674,7 +1711,7 @@ void Texer2Vars::register_variables(void* vm_context) {
     this->skip = NSEEL_VM_regvar(vm_context, "skip");
 }
 
-void Texer2Vars::init_variables(int w, int h, int is_beat, va_list extra_args) {
+void Texer2_Vars::init(int w, int h, int is_beat, va_list extra_args) {
     *this->i = 0.0f;
     *this->x = 0.0f;
     *this->y = 0.0f;
@@ -1692,46 +1729,71 @@ void Texer2Vars::init_variables(int w, int h, int is_beat, va_list extra_args) {
     *this->skip = 0.0f;
 }
 
-char* C_Texer2::get_desc(void) { return MOD_NAME; }
-
-void C_Texer2::load_config(unsigned char* data, int len) {
-    if (len >= ssizeof32(texer2_apeconfig)) {
-        memcpy(&this->config, data, sizeof(texer2_apeconfig));
-    }
+void E_Texer2::load_legacy(unsigned char* data, int len) {
+    char* str_data = (char*)data;
+    int pos = 0;
+    this->config.version = *(int32_t*)&data[pos];
     if (this->config.version < TEXER_II_VERSION_V2_81D
         || this->config.version > TEXER_II_VERSION_CURRENT) {
         // If the version value is not in the known set, assume an old preset version.
         this->config.version = TEXER_II_VERSION_V2_81D;
     }
-    unsigned int pos = sizeof(texer2_apeconfig);
-    char* str_data = (char*)data;
-    pos += this->code.init.load_length_prefixed(&str_data[pos], max(0, len - pos));
-    pos += this->code.frame.load_length_prefixed(&str_data[pos], max(0, len - pos));
-    pos += this->code.beat.load_length_prefixed(&str_data[pos], max(0, len - pos));
-    pos += this->code.point.load_length_prefixed(&str_data[pos], max(0, len - pos));
-    load_image();
+    pos += 4;
+    std::string search_filename;
+    this->string_nt_load_legacy(&str_data[pos], search_filename, LEGACY_SAVE_PATH_LEN);
+    bool found = false;
+    for (size_t i = 0; i < this->filenames.size(); i++) {
+        if (this->filenames[i] == search_filename) {
+            found = true;
+            this->config.image = i;
+        }
+    }
+    if (!found) {
+        this->config.image = 0;
+    }
+    pos += LEGACY_SAVE_PATH_LEN;
+    this->config.resize = *(int32_t*)&data[pos];
+    pos += 4;
+    this->config.wrap = *(int32_t*)&data[pos];
+    pos += 4;
+    this->config.colorize = *(int32_t*)&data[pos];
+    pos += 4;
+    pos += 4;  // unused 4 bytes
+    pos += this->string_load_legacy(&str_data[pos], this->config.init, len - pos);
+    pos += this->string_load_legacy(&str_data[pos], this->config.frame, len - pos);
+    pos += this->string_load_legacy(&str_data[pos], this->config.beat, len - pos);
+    pos += this->string_load_legacy(&str_data[pos], this->config.point, len - pos);
+    this->need_full_recompile();
+    this->load_image();
 }
 
-int C_Texer2::save_config(unsigned char* data) {
-    memcpy(data, &this->config, sizeof(texer2_apeconfig));
-    unsigned int pos = sizeof(texer2_apeconfig);
+int E_Texer2::save_legacy(unsigned char* data) {
     char* str_data = (char*)data;
-    pos += this->code.init.save_length_prefixed(&str_data[pos],
-                                                max(0, MAX_CODE_LEN - 1 - pos));
-    pos += this->code.frame.save_length_prefixed(&str_data[pos],
-                                                 max(0, MAX_CODE_LEN - 1 - pos));
-    pos += this->code.beat.save_length_prefixed(&str_data[pos],
-                                                max(0, MAX_CODE_LEN - 1 - pos));
-    pos += this->code.point.save_length_prefixed(&str_data[pos],
-                                                 max(0, MAX_CODE_LEN - 1 - pos));
+    int pos = 0;
+    *(int32_t*)&data[pos] = this->config.version;
+    pos += 4;
+    auto str_len = string_nt_save_legacy(
+        this->filenames[this->config.image], &str_data[pos], LEGACY_SAVE_PATH_LEN);
+    memset(&str_data[pos + str_len], '\0', LEGACY_SAVE_PATH_LEN - str_len);
+    pos += LEGACY_SAVE_PATH_LEN;
+    *(int32_t*)&data[pos] = this->config.resize;
+    pos += 4;
+    *(int32_t*)&data[pos] = this->config.wrap;
+    pos += 4;
+    *(int32_t*)&data[pos] = this->config.colorize;
+    pos += 4;
+    *(int32_t*)&data[pos] = 0;  // unused 4 bytes
+    pos += 4;
+    pos += this->string_save_legacy(
+        this->config.init, &str_data[pos], MAX_CODE_LEN - 1 - pos);
+    pos += this->string_save_legacy(
+        this->config.frame, &str_data[pos], MAX_CODE_LEN - 1 - pos);
+    pos += this->string_save_legacy(
+        this->config.beat, &str_data[pos], MAX_CODE_LEN - 1 - pos);
+    pos += this->string_save_legacy(
+        this->config.point, &str_data[pos], MAX_CODE_LEN - 1 - pos);
     return pos;
 }
 
-/* APE interface */
-C_RBASE* R_Texer2(char* desc) {
-    if (desc) {
-        strcpy(desc, MOD_NAME);
-        return NULL;
-    }
-    return (C_RBASE*)new C_Texer2(TEXER_II_VERSION_CURRENT);
-}
+Effect_Info* create_Texer2_Info() { return new Texer2_Info(); }
+Effect* create_Texer2() { return new E_Texer2(); }
