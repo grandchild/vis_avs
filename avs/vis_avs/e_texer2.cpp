@@ -1434,8 +1434,8 @@ void E_Texer2::DrawParticle(int* framebuffer,
                             punpcklbw mm0, mm5
                             punpcklbw mm1, mm5
 
-                            pmullw    mm0, mm3;  // * alph
-                            pmullw    mm1, mm6;  // * 256 - alph
+                            pmullw    mm0, mm6;  // * alph
+                            pmullw    mm1, mm3;  // * 256 - alph
 
                             paddusw   mm0, mm1
                             psrlw     mm0, 8
@@ -1449,8 +1449,8 @@ void E_Texer2::DrawParticle(int* framebuffer,
                             "punpcklbw  %%mm0, %%mm5\n\t"
                             "punpcklbw  %%mm1, %%mm5\n\t"
 
-                            "pmullw     %%mm0, %%mm3\n\t" // * alpha
-                            "pmullw     %%mm1, %%mm6\n\t" // * 256 - alpha
+                            "pmullw     %%mm0, %%mm6\n\t" // * alpha
+                            "pmullw     %%mm1, %%mm3\n\t" // * 256 - alpha
 
                             "paddusw    %%mm0, %%mm1\n\t"
                             "psrlw      %%mm0, 8\n\t"
