@@ -42,7 +42,7 @@ INLINE double Fractional(double f) { return f - (int)f; }
                                                                         \
         /* store alpha and (256 - alpha) */                             \
         __asm movq mm6,                                                 \
-        qword ptr alpha __asm movq mm3, salpha __asm psubusw mm3, mm6
+        qword ptr mmxxor __asm psubusw mm6, qword ptr alpha
 
 #define T2_SCALE_BLEND_ASM_ENTER(LOOP_LABEL)                                               \
     __asm push esi __asm push edi __asm push edx /* esi = texture width */                 \
@@ -228,12 +228,11 @@ INLINE double Fractional(double f) { return f - (int)f; }
                          "mov      [%[alpha] + 4], %%eax\n\t"                   \
                                                                                 \
                          /* store alpha and (256 - alpha) */                    \
-                         "movq     %%mm6, qword ptr %[alpha]\n\t"               \
-                         "movq     %%mm3, %[salpha]\n\t"                        \
-                         "psubusw  %%mm3, %%mm6\n\t"                            \
+                         "movq     %%mm6, qword ptr %[mmxxor]\n\t"              \
+                         "psubusw  %%mm6, qword ptr %[alpha]\n\t"               \
                          :                                                      \
-                         : [alpha] "m"(alpha), [salpha] "m"(salpha), [t] "r"(t) \
-                         : "eax", "edx", "mm3", "mm6");
+                         : [alpha] "m"(alpha), [mmxxor] "m"(mmxxor), [t] "r"(t) \
+                         : "eax", "edx", "mm6");
 
 #define T2_SCALE_BLEND_ASM_ENTER(LOOP_LABEL)                                   \
     __asm__ __volatile__(                                                      \
