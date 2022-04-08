@@ -70,11 +70,7 @@ E_AVI::E_AVI()
 E_AVI::~E_AVI() { close_file(); }
 
 static void add_file_callback(const char* file, void* data) {
-    E_AVI* avi = (E_AVI*)data;
-    size_t filename_length = strnlen(file, MAX_PATH);
-    char* filename = (char*)calloc(filename_length + 1, sizeof(char));
-    strncpy(filename, file, filename_length + 1);
-    avi->filenames.push_back(filename);
+    ((E_AVI*)data)->filenames.push_back(file);
 }
 
 void E_AVI::find_video_files() {
