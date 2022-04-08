@@ -1587,106 +1587,91 @@ int E_Texer2::render(char visdata[2][2][576],
     int n = RoundToInt((double)*this->vars.n);
     n = max(0, min(65536, n));
 
+    if (n <= 0) {
+        return 0;
+    }
+
     lock_lock(this->image_lock);
-    if (n) {
-        double step = 1.0 / (n - 1);
-        double i = 0.0;
-        for (int j = 0; j < n; ++j) {
-            *this->vars.i = i;
-            *this->vars.skip = 0.0;
-            *this->vars.v =
-                ((int)visdata[1][0][j * 575 / n] + (int)visdata[1][1][j * 575 / n])
-                / 256.0;
-            i += step;
+    double step = 1.0 / (n - 1);
+    double i = 0.0;
+    for (int j = 0; j < n; ++j) {
+        *this->vars.i = i;
+        *this->vars.skip = 0.0;
+        *this->vars.v =
+            ((int)visdata[1][0][j * 575 / n] + (int)visdata[1][1][j * 575 / n]) / 256.0;
+        i += step;
 
-            this->code_point.exec(visdata);
+        this->code_point.exec(visdata);
 
-            // TODO [cleanup]: invert to if+continue
-            if (*this->vars.skip == 0.0) {
-                unsigned int color =
-                    min(255, max(0, RoundToInt(255.0f * (double)*this->vars.blue)));
-                color |=
-                    min(255, max(0, RoundToInt(255.0f * (double)*this->vars.green)))
-                    << 8;
-                color |= min(255, max(0, RoundToInt(255.0f * (double)*this->vars.red)))
-                         << 16;
+        if (*this->vars.skip != 0.0) {
+            continue;
+        }
 
-                if (this->config.colorize == 0) color = 0xFFFFFF;
+        double szx = fabs(*this->vars.sizex);
+        double szy = fabs(*this->vars.sizey);
 
-                pixel_rgb0_8* texture = this->image_normal;
-                if (*this->vars.sizex < 0 && *this->vars.sizey > 0) {
-                    texture = this->image_mirrored;
-                } else if (*this->vars.sizex > 0 && *this->vars.sizey < 0) {
-                    texture = this->image_flipped;
-                } else if (*this->vars.sizex < 0 && *this->vars.sizey < 0) {
-                    texture = this->image_rot180;
-                }
+        // TODO [bugfix]: really large images would be clipped while still
+        // potentially visible, should be relative to image size
+        if ((szx <= .01) || (szy <= .01)) {
+            continue;
+        }
+        unsigned int color =
+            min(255, max(0, RoundToInt(255.0f * (double)*this->vars.blue)));
+        color |= min(255, max(0, RoundToInt(255.0f * (double)*this->vars.green))) << 8;
+        color |= min(255, max(0, RoundToInt(255.0f * (double)*this->vars.red))) << 16;
 
-                double szx = fabs(*this->vars.sizex);
-                double szy = fabs(*this->vars.sizey);
+        if (!this->config.colorize) {
+            color = 0xFFFFFF;
+        }
 
-                // TODO [cleanup]: put more of the above into this if-case, or invert to
-                // if+continue
-                // TODO [bugfix]: really large images would be clipped while still
-                // potentially visible, should be relative to image size
-                if ((szx > .01) && (szy > .01)) {
-                    double x = *this->vars.x;
-                    double y = *this->vars.y;
-                    if (this->config.wrap != 0) {
-                        bool overlaps_x, overlaps_y;
-                        if (this->config.version == TEXER_II_VERSION_V2_81D) {
-                            /* Wrap only once (when crossing +/-1, not when crossing
-                             * +/-3 etc. */
-                            x -= wrap_once_diff_to_plusminus1(*this->vars.x);
-                            y -= wrap_once_diff_to_plusminus1(*this->vars.y);
-                            overlaps_x = overlaps_edge(*this->vars.x, szx, this->iw, w);
-                            overlaps_y = overlaps_edge(*this->vars.y, szy, this->ih, h);
-                        } else {
-                            x = *this->vars.x - wrap_diff_to_plusminus1(*this->vars.x);
-                            y = *this->vars.y - wrap_diff_to_plusminus1(*this->vars.y);
-                            overlaps_x = overlaps_edge(x, szx, this->iw, w);
-                            overlaps_y = overlaps_edge(y, szy, this->ih, h);
-                        }
-                        double sign_x2 = x > 0 ? 2.0 : -2.0;
-                        double sign_y2 = y > 0 ? 2.0 : -2.0;
-                        if (overlaps_x) {
-                            DrawParticle(framebuffer,
-                                         texture,
-                                         w,
-                                         h,
-                                         x - sign_x2,
-                                         y,
-                                         szx,
-                                         szy,
-                                         color);
-                        }
-                        if (overlaps_y) {
-                            DrawParticle(framebuffer,
-                                         texture,
-                                         w,
-                                         h,
-                                         x,
-                                         y - sign_y2,
-                                         szx,
-                                         szy,
-                                         color);
-                        }
-                        if (overlaps_x && overlaps_y) {
-                            DrawParticle(framebuffer,
-                                         texture,
-                                         w,
-                                         h,
-                                         x - sign_x2,
-                                         y - sign_y2,
-                                         szx,
-                                         szy,
-                                         color);
-                        }
-                    }
-                    DrawParticle(framebuffer, texture, w, h, x, y, szx, szy, color);
-                }
+        pixel_rgb0_8* texture = this->image_normal;
+        if (*this->vars.sizex < 0 && *this->vars.sizey > 0) {
+            texture = this->image_mirrored;
+        } else if (*this->vars.sizex > 0 && *this->vars.sizey < 0) {
+            texture = this->image_flipped;
+        } else if (*this->vars.sizex < 0 && *this->vars.sizey < 0) {
+            texture = this->image_rot180;
+        }
+
+        double x = *this->vars.x;
+        double y = *this->vars.y;
+        if (this->config.wrap) {
+            bool overlaps_x, overlaps_y;
+            if (this->config.version == TEXER_II_VERSION_V2_81D) {
+                /* Wrap only once (when crossing +/-1, not when crossing +/-3 etc. */
+                x -= wrap_once_diff_to_plusminus1(*this->vars.x);
+                y -= wrap_once_diff_to_plusminus1(*this->vars.y);
+                overlaps_x = overlaps_edge(*this->vars.x, szx, this->iw, w);
+                overlaps_y = overlaps_edge(*this->vars.y, szy, this->ih, h);
+            } else {
+                x = *this->vars.x - wrap_diff_to_plusminus1(*this->vars.x);
+                y = *this->vars.y - wrap_diff_to_plusminus1(*this->vars.y);
+                overlaps_x = overlaps_edge(x, szx, this->iw, w);
+                overlaps_y = overlaps_edge(y, szy, this->ih, h);
+            }
+            double sign_x2 = x > 0 ? 2.0 : -2.0;
+            double sign_y2 = y > 0 ? 2.0 : -2.0;
+            if (overlaps_x) {
+                DrawParticle(
+                    framebuffer, texture, w, h, x - sign_x2, y, szx, szy, color);
+            }
+            if (overlaps_y) {
+                DrawParticle(
+                    framebuffer, texture, w, h, x, y - sign_y2, szx, szy, color);
+            }
+            if (overlaps_x && overlaps_y) {
+                DrawParticle(framebuffer,
+                             texture,
+                             w,
+                             h,
+                             x - sign_x2,
+                             y - sign_y2,
+                             szx,
+                             szy,
+                             color);
             }
         }
+        DrawParticle(framebuffer, texture, w, h, x, y, szx, szy, color);
     }
     lock_unlock(this->image_lock);
     return 0;
