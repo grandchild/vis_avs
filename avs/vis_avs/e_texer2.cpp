@@ -552,13 +552,9 @@ void E_Texer2::DrawParticle(int* framebuffer,
                 case BLEND_ADJUSTABLE: {
                     __int64 alphavalue = 0x0;
                     __int64* alpha = &alphavalue;
-                    // TODO [bugfix]: shouldn't salpha be 255, not 256?
-                    // it's used to calculate 256 - alpha, and if max_alpha = 255,
-                    // then...
-                    __int64 salpha = 0x0100010001000100;
                     int t = (g_line_blend_mode & 0xFF00) >> 8;
-                    T2_SCALE_BLEND_AND_STORE_ALPHA
                     __int64 mmxxor = 0x00FF00FF00FF00FF;
+                    T2_SCALE_BLEND_AND_STORE_ALPHA
                     int tot = r2.right - r2.left;
                     int* outp = &framebuffer[r2.top * (w + 1) + r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -583,7 +579,7 @@ void E_Texer2::DrawParticle(int* framebuffer,
 
                         // Merged filter/alpha
                         // save
-                        "movd       %%mm1, dword ptr [edi]\n\t"
+                        "movd       %%mm1, dword ptr [%%edi]\n\t"
                         "punpcklbw  %%mm1, %%mm5\n\t"
                         "pmullw     %%mm1, %%mm6\n\t"
                         "psrlw      %%mm1, 8\n\t"
