@@ -531,6 +531,7 @@ void E_Texer2::DrawParticle(int* framebuffer,
                             pmullw mm1, mm0
                             psrlw mm1, 8
                             packuswb mm1, mm1
+                            movq mm0, mm1
                         }
 #else  // GCC
                         "psrlw %%mm0, 8\n\t"
@@ -541,6 +542,7 @@ void E_Texer2::DrawParticle(int* framebuffer,
                         "pmullw %%mm1, %%mm0\n\t"
                         "psrlw %%mm1, 8\n\t"
                         "packuswb %%mm1, %%mm1\n\t"
+                        "movq %%mm0, %%mm1\n\t"
 #endif
                         T2_SCALE_BLEND_ASM_LEAVE(t2_scale_loop_mul)
                         cy0 += sdy;
