@@ -72,8 +72,19 @@ void matrixApply(float* m,
                  float* outy,
                  float* outz);
 
-// linedraw.cpp
+/**
+ * struct line_blend_mode {
+ *     uint8_t blendmode;         // 0 - 9
+ *     uint8_t adjustable_value;  // 0 - 255
+ *     uint8_t linesize;          // 0 - 255
+ *     // (_special & 0x80) != 0 ? pre-render call on transition, skip rendering.
+ *     // Within SetRenderMode, bit 32 is used to signal effect disabled (if set!)
+ *     uint8_t _special;
+ * }
+ */
 extern int g_line_blend_mode;
+
+// linedraw.cpp
 void line(int* fb,
           int x1,
           int y1,
