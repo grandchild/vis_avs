@@ -472,13 +472,13 @@ void E_Texer2::DrawParticle(int* framebuffer,
                             movq mm0, mm1
                         }
 #else  // GCC
-                        "psrlw mm0, 8\n\t"
-                        "packuswb mm0, mm0\n\t"
+                        "psrlw %%mm0, 8\n\t"
+                        "packuswb %%mm0, %%mm0\n\t"
 
                         // save
-                        "movd mm1, dword ptr [edi]\n\t"
-                        "psubusb mm1, mm0\n\t"
-                        "movq mm0, mm1\n\t"
+                        "movd %%mm1, dword ptr [%%edi]\n\t"
+                        "psubusb %%mm1, %%mm0\n\t"
+                        "movq %%mm0, %%mm1\n\t"
 #endif
                         T2_SCALE_BLEND_ASM_LEAVE(t2_scale_loop_sub1)
                         cy0 += sdy;
@@ -502,11 +502,11 @@ void E_Texer2::DrawParticle(int* framebuffer,
                             psubusb mm0, qword ptr [edi]
                         }
 #else  // GCC
-                        "psrlw mm0, 8\n\t"
-                        "packuswb mm0, mm0\n\t"
+                        "psrlw %%mm0, 8\n\t"
+                        "packuswb %%mm0, %%mm0\n\t"
 
                         // save
-                        "psubusb mm0, qword ptr [edi]\n\t"
+                        "psubusb %%mm0, qword ptr [%%edi]\n\t"
 #endif
                         T2_SCALE_BLEND_ASM_LEAVE(t2_scale_loop_sub2)
                         cy0 += sdy;
@@ -533,14 +533,14 @@ void E_Texer2::DrawParticle(int* framebuffer,
                             packuswb mm1, mm1
                         }
 #else  // GCC
-                        "psrlw mm0, 8\n\t"
+                        "psrlw %%mm0, 8\n\t"
 
                         // save
-                        "movd mm1, dword ptr [edi]\n\t"
-                        "punpcklbw mm1, mm5\n\t"
-                        "pmullw mm1, mm0\n\t"
-                        "psrlw mm1, 8\n\t"
-                        "packuswb mm1, mm1\n\t"
+                        "movd %%mm1, dword ptr [%%edi]\n\t"
+                        "punpcklbw %%mm1, %%mm5\n\t"
+                        "pmullw %%mm1, %%mm0\n\t"
+                        "psrlw %%mm1, 8\n\t"
+                        "packuswb %%mm1, %%mm1\n\t"
 #endif
                         T2_SCALE_BLEND_ASM_LEAVE(t2_scale_loop_mul)
                         cy0 += sdy;
