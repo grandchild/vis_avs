@@ -45,7 +45,8 @@ void E_Comment::load_legacy(unsigned char* data, int) {
     this->string_load_legacy((char*)data, this->config.comment, MAX_CODE_LEN);
 }
 int E_Comment::save_legacy(unsigned char* data) {
-    return this->string_save_legacy(this->config.comment, (char*)data, MAX_CODE_LEN);
+    return this->string_save_legacy(
+        this->config.comment, (char*)data, MAX_CODE_LEN, /*with_nt*/ true);
 }
 
 Effect_Info* create_Comment_Info() { return new Comment_Info(); }

@@ -1,5 +1,7 @@
 #include "effect.h"
 
+#include "../platform.h"  // min/max
+
 #include <stdint.h>
 
 Effect::~Effect() {
@@ -142,18 +144,28 @@ uint32_t Effect::string_load_legacy(const char* src,
     if (size > 0 && max_length >= size) {
         dest.assign(&src[pos], size);
         pos += size;
+        // So far so good. But some older effects's save format has length-prefixed
+        // strings which _include_ the null-terminator. If that's the case remove
+        // anything including and after it.
+        size_t first_null_byte = dest.find_first_of('\0');
+        if (first_null_byte != std::string::npos) {
+            dest.resize(first_null_byte);
+        }
     } else {
         dest.assign("");
     }
     return pos;
 }
 
-uint32_t Effect::string_save_legacy(std::string& src, char* dest, uint32_t max_length) {
+uint32_t Effect::string_save_legacy(std::string& src,
+                                    char* dest,
+                                    uint32_t max_length,
+                                    bool with_nt) {
     if (!src.empty()) {
         if (src.length() > max_length) {
             printf("string truncated for legacy save format\n");
         }
-        size_t length = src.length() + 1;
+        size_t length = min(max_length, src.length() + (with_nt ? 1 : 0));
         *((uint32_t*)dest) = length;
         uint32_t pos = sizeof(uint32_t);
         memcpy(dest + pos, src.c_str(), length);

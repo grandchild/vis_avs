@@ -281,10 +281,14 @@ int E_SuperScope::save_legacy(unsigned char* data) {
     char* str_data = (char*)data;
     int pos = 0;
     data[pos++] = 1;
-    pos += this->string_save_legacy(this->config.point, &str_data[pos]);
-    pos += this->string_save_legacy(this->config.frame, &str_data[pos]);
-    pos += this->string_save_legacy(this->config.beat, &str_data[pos]);
-    pos += this->string_save_legacy(this->config.init, &str_data[pos]);
+    pos += this->string_save_legacy(
+        this->config.point, &str_data[pos], MAX_CODE_LEN - 1 - pos, /*with_nt*/ true);
+    pos += this->string_save_legacy(
+        this->config.frame, &str_data[pos], MAX_CODE_LEN - 1 - pos, /*with_nt*/ true);
+    pos += this->string_save_legacy(
+        this->config.beat, &str_data[pos], MAX_CODE_LEN - 1 - pos, /*with_nt*/ true);
+    pos += this->string_save_legacy(
+        this->config.init, &str_data[pos], MAX_CODE_LEN - 1 - pos, /*with_nt*/ true);
     uint32_t channel_and_source;
     switch (this->config.audio_channel) {
         default:
