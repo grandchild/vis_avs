@@ -2025,16 +2025,21 @@ STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "Texture", IDC_STATIC, "Button", BS_GROUPBOX, 5, 5, 220, 35
-    COMBOBOX        IDC_TEXER_IMAGE, 13, 19, 204, 104, CBS_DROPDOWNLIST | CBS_SORT |
-                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_TEXER_IMAGE, 13, 19, 204, 104, CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
     GROUPBOX        "Input", IDC_STATIC, 5, 45, 105, 50
-    CONTROL         "Ignore", IDC_TEXER_INPUT_IGNORE, "Button", BS_AUTORADIOBUTTON | WS_GROUP, 15, 60, 55, 10
-    CONTROL         "Replace", IDC_TEXER_INPUT_REPLACE, "Button", BS_AUTORADIOBUTTON, 15, 76, 55, 10
+    CONTROL         "Ignore", IDC_TEXER_INPUT_IGNORE, "Button", BS_AUTORADIOBUTTON |
+                    WS_GROUP, 15, 60, 55, 10
+    CONTROL         "Replace", IDC_TEXER_INPUT_REPLACE, "Button", BS_AUTORADIOBUTTON,
+                    15, 76, 55, 10
     GROUPBOX        "Output", IDC_STATIC, 120, 45, 105, 50
-    CONTROL         "Texture", IDC_TEXER_OUTPUT_NORMAL, "Button", BS_AUTORADIOBUTTON | WS_GROUP, 130, 60, 75, 10
-    CONTROL         "Masked Texture", IDC_TEXER_OUTPUT_MASKED, "Button", BS_AUTORADIOBUTTON, 130, 76, 75, 10
+    CONTROL         "Texture", IDC_TEXER_OUTPUT_NORMAL, "Button", BS_AUTORADIOBUTTON |
+                    WS_GROUP, 130, 60, 75, 10
+    CONTROL         "Masked Texture", IDC_TEXER_OUTPUT_MASKED, "Button",
+                    BS_AUTORADIOBUTTON, 130, 76, 75, 10
     GROUPBOX        "Particles", IDC_STATIC, 5, 100, 220, 30
-    CONTROL         "Slider1", IDC_TEXER_NUM_PARTICLES, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 10, 110, 185, 15
+    CONTROL         "Slider1", IDC_TEXER_NUM_PARTICLES, "msctls_trackbar32", TBS_HORZ |
+                    TBS_AUTOTICKS | WS_TABSTOP, 10, 110, 185, 15
     CTEXT           "", IDC_TEXER_NUM_PARTICLES_LABEL, 200, 113, 19, 10
     LTEXT           "", IDC_TEXER_ERROR, 13, 138, 210, 10
 END
