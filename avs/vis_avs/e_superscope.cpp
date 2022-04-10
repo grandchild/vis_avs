@@ -60,8 +60,8 @@ void SuperScope_Info::recompile(Effect* component,
     } else if (std::string("Point") == parameter->name) {
         ssc->code_point.need_recompile = true;
     }
-    ssc->recompile_if_needed();
 }
+
 void SuperScope_Info::load_example(Effect* component,
                                    const Parameter*,
                                    std::vector<int64_t>) {
@@ -92,7 +92,14 @@ int E_SuperScope::render(char visdata[2][2][576],
                          int*,
                          int w,
                          int h) {
-    this->recompile_if_needed();
+    if (this->recompile_if_needed()) {
+        // Resetting "n" to 100 and running init again on every section's recompile is a
+        // bit weird but replicates the original's behavior.
+        // TODO [bug][feature]: Make this behave like other codeable effects.
+        //                      (i.e. no "n" default value reset?)
+        *this->vars.n = 100.0;
+        this->need_init = true;
+    }
     if (isBeat & 0x80000000 || this->config.colors.empty()) {
         return 0;
     }
@@ -209,7 +216,6 @@ void SuperScope_Vars::register_(void* vm_context) {
 }
 
 void SuperScope_Vars::init(int w, int h, int is_beat, va_list extra_args) {
-    *this->n = 100.0;
     *this->h = h;
     *this->w = w;
     *this->b = is_beat ? 1.0 : 0.0;
