@@ -234,7 +234,7 @@ void C_RLibrary::initbuiltinape(void) {
     ADD(R_MultiFilter, "Jheriko : MULTIFILTER");
     ADD(R_Picture2, "Picture II");
     ADD_NEW(FramerateLimiter, "VFX FRAMERATE LIMITER");
-    ADD(R_Texer, "Texer");
+    ADD_NEW(Texer, "Texer");
 #undef ADD
 }
 

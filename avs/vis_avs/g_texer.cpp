@@ -1,4 +1,4 @@
-#include "c_texer.h"
+#include "e_texer.h"
 
 #include "g__defs.h"
 #include "g__lib.h"
@@ -10,7 +10,14 @@
 #include <commctrl.h>
 
 int win32_dlgproc_texer(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    C_Texer* config_this = (C_Texer*)g_current_render;
+    E_Texer* g_this = (E_Texer*)g_current_render;
+    const Parameter& p_image = g_this->info.parameters[0];
+    const AVS_Parameter_Handle p_add_to_input = g_this->info.parameters[1].handle;
+    const AVS_Parameter_Handle p_colorize = g_this->info.parameters[2].handle;
+    const AVS_Parameter_Handle p_num_particles = g_this->info.parameters[3].handle;
+
+    int64_t options_length;
+    const char* const* options;
     char num_particles_label[5];
     switch (uMsg) {
         case WM_INITDIALOG: {
@@ -20,27 +27,28 @@ int win32_dlgproc_texer(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                                IDC_TEXER_NUM_PARTICLES,
                                TBM_SETPOS,
                                1,
-                               config_this->num_particles);
-            wsprintf(num_particles_label, "%d", config_this->num_particles);
+                               g_this->get_int(p_num_particles));
+            wsprintf(num_particles_label, "%d", g_this->get_int(p_num_particles));
             SetDlgItemText(hwndDlg, IDC_TEXER_NUM_PARTICLES_LABEL, num_particles_label);
             CheckDlgButton(hwndDlg,
-                           config_this->input_mode == TEXER_INPUT_REPLACE
-                               ? IDC_TEXER_INPUT_REPLACE
-                               : IDC_TEXER_INPUT_IGNORE,
+                           g_this->get_bool(p_add_to_input) ? IDC_TEXER_INPUT_REPLACE
+                                                            : IDC_TEXER_INPUT_IGNORE,
                            BST_CHECKED);
             CheckDlgButton(hwndDlg,
-                           config_this->output_mode == TEXER_OUTPUT_MASKED
-                               ? IDC_TEXER_OUTPUT_MASKED
-                               : IDC_TEXER_OUTPUT_NORMAL,
+                           g_this->get_bool(p_colorize) ? IDC_TEXER_OUTPUT_MASKED
+                                                        : IDC_TEXER_OUTPUT_NORMAL,
                            BST_CHECKED);
-            for (auto file : config_this->file_list) {
-                int p = SendDlgItemMessage(
-                    hwndDlg, IDC_TEXER_IMAGE, CB_ADDSTRING, 0, (LPARAM)file);
 
-                if (strncmp(file, config_this->image, MAX_PATH) == 0) {
-                    SendDlgItemMessage(hwndDlg, IDC_TEXER_IMAGE, CB_SETCURSEL, p, 0);
-                }
+            options = p_image.get_options(&options_length);
+            for (int i = 0; i < options_length; i++) {
+                SendDlgItemMessage(
+                    hwndDlg, IDC_TEXER_IMAGE, CB_ADDSTRING, 0, (LPARAM)options[i]);
             }
+            SendDlgItemMessage(hwndDlg,
+                               IDC_TEXER_IMAGE,
+                               CB_SETCURSEL,
+                               g_this->get_int(p_image.handle),
+                               0);
             return 1;
         }
         case WM_COMMAND: {
@@ -49,28 +57,20 @@ int win32_dlgproc_texer(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             if (command == CBN_SELCHANGE && control == IDC_TEXER_IMAGE) {
                 int p = SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0);
                 if (p >= 0) {
-                    SendMessage(
-                        (HWND)lParam, CB_GETLBTEXT, p, (LPARAM)config_this->image);
-                    if (config_this->load_image()) {
-                        SetDlgItemText(hwndDlg, IDC_TEXER_ERROR, "");
-                    } else {
-                        SetDlgItemText(hwndDlg, IDC_TEXER_ERROR, "Error loading image");
-                    }
+                    g_this->set_int(p_image.handle, p);
                 }
                 return 1;
             } else if (command == BN_CLICKED) {
                 if (control == IDC_TEXER_INPUT_IGNORE
                     || control == IDC_TEXER_INPUT_REPLACE) {
-                    config_this->input_mode =
-                        IsDlgButtonChecked(hwndDlg, IDC_TEXER_INPUT_REPLACE)
-                            ? TEXER_INPUT_REPLACE
-                            : TEXER_INPUT_IGNORE;
+                    g_this->set_bool(
+                        p_add_to_input,
+                        IsDlgButtonChecked(hwndDlg, IDC_TEXER_INPUT_REPLACE));
                 } else if (control == IDC_TEXER_OUTPUT_NORMAL
                            || control == IDC_TEXER_OUTPUT_MASKED) {
-                    config_this->output_mode =
-                        IsDlgButtonChecked(hwndDlg, IDC_TEXER_OUTPUT_MASKED)
-                            ? TEXER_OUTPUT_MASKED
-                            : TEXER_OUTPUT_NORMAL;
+                    g_this->set_bool(
+                        p_colorize,
+                        IsDlgButtonChecked(hwndDlg, IDC_TEXER_OUTPUT_MASKED));
                 }
                 return 1;
             }
@@ -78,9 +78,9 @@ int win32_dlgproc_texer(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_HSCROLL: {
             if ((HWND)lParam == GetDlgItem(hwndDlg, IDC_TEXER_NUM_PARTICLES)) {
-                config_this->num_particles =
-                    SendMessage((HWND)lParam, TBM_GETPOS, 0, 0);
-                wsprintf(num_particles_label, "%d", config_this->num_particles);
+                g_this->set_int(p_num_particles,
+                                SendMessage((HWND)lParam, TBM_GETPOS, 0, 0));
+                wsprintf(num_particles_label, "%d", g_this->get_int(p_num_particles));
                 SetDlgItemText(
                     hwndDlg, IDC_TEXER_NUM_PARTICLES_LABEL, num_particles_label);
                 return 1;
