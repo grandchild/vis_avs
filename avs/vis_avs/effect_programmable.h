@@ -135,23 +135,26 @@ class Programmable_Effect : public Configurable_Effect<Info_T, Config_T> {
         this->code_point.need_recompile = true;
     }
 
-    void recompile_if_needed() {
+    bool recompile_if_needed() {
         lock_lock(this->code_lock);
         if (this->vm_context == NULL) {
             this->vm_context = NSEEL_VM_alloc();
             if (this->vm_context == NULL) {
                 lock_unlock(this->code_lock);
-                return;
+                return false;
             }
             this->vars.register_(this->vm_context);
         }
+        bool any_recompiled = false;
         if (this->code_init.recompile_if_needed()) {
             this->need_init = true;
+            any_recompiled = true;
         }
-        this->code_frame.recompile_if_needed();
-        this->code_beat.recompile_if_needed();
-        this->code_point.recompile_if_needed();
+        any_recompiled |= this->code_frame.recompile_if_needed();
+        any_recompiled |= this->code_beat.recompile_if_needed();
+        any_recompiled |= this->code_point.recompile_if_needed();
         lock_unlock(this->code_lock);
+        return any_recompiled;
     };
     virtual void init_variables(int w, int h, int is_beat, ...) {
         va_list extra_args;
