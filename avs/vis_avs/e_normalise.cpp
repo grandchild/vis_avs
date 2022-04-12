@@ -14,8 +14,6 @@ Must be divisible by four, or early-exit check condition will never be hit! */
 #define TRY_BAIL_SCAN_EARLY_EVERY_NTH_PIXEL 512
 #define NUM_COLOR_VALUES                    256  // 2 ^ BITS_PER_CHANNEL (i.e. 8)
 
-constexpr Parameter Normalise_Info::parameters[];
-
 E_Normalise::E_Normalise() { this->enabled = true; }
 
 E_Normalise::~E_Normalise() {}

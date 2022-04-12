@@ -35,8 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdlib.h>
 
-constexpr Parameter Invert_Info::parameters[];
-
 E_Invert::E_Invert() { enabled = 1; }
 E_Invert::~E_Invert() {}
 

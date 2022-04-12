@@ -12,10 +12,7 @@ struct Normalise_Info : public Effect_Info {
     static constexpr int32_t legacy_id = -1;
     static constexpr char* legacy_ape_id = "Trans: Normalise";
 
-    static constexpr uint32_t num_parameters = 0;
-    static constexpr Parameter parameters[num_parameters] = {};
-
-    EFFECT_INFO_GETTERS;
+    EFFECT_INFO_GETTERS_NO_PARAMETERS;
 };
 
 class E_Normalise : public Configurable_Effect<Normalise_Info, Normalise_Config> {

@@ -44,8 +44,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
 
-constexpr Parameter Scatter_Info::parameters[];
-
 void E_Scatter::load_legacy(unsigned char* data, int len) {
     int pos = 0;
     if (len - pos >= 4) {

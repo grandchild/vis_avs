@@ -12,10 +12,7 @@ struct Water_Info : public Effect_Info {
     static constexpr int32_t legacy_id = 20;
     static constexpr char* legacy_ape_id = NULL;
 
-    static constexpr uint32_t num_parameters = 0;
-    static constexpr Parameter parameters[num_parameters] = {};
-
-    EFFECT_INFO_GETTERS;
+    EFFECT_INFO_GETTERS_NO_PARAMETERS;
 };
 
 class E_Water : public Configurable_Effect<Water_Info, Water_Config> {
