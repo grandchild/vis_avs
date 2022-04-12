@@ -51,7 +51,7 @@ int win32_dlgproc_videodelay(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
             }
             if (LOWORD(wParam) == IDC_EDIT1) {
                 if (HIWORD(wParam) == EN_CHANGE) {
-                    WINBOOL success = false;
+                    int success = false;
                     delay_value = GetDlgItemInt(hwndDlg, IDC_EDIT1, &success, false);
                     if (success) {
                         g_this->set_int(p_delay, delay_value);
