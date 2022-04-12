@@ -90,7 +90,7 @@ int win32_dlgproc_simple(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                 case IDC_NUMCOL: {
                     int p;
-                    WINBOOL success = FALSE;
+                    int success = FALSE;
                     bool check_for_negative = false;
                     p = GetDlgItemInt(
                         hwndDlg, IDC_NUMCOL, &success, check_for_negative);

@@ -182,7 +182,7 @@ int win32_dlgproc_superscope(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             }
             if (LOWORD(wParam) == IDC_NUMCOL) {
                 int p;
-                WINBOOL success = false;
+                int success = false;
                 bool check_for_negative = false;
                 p = GetDlgItemInt(hwndDlg, IDC_NUMCOL, &success, check_for_negative);
                 if (success) {
