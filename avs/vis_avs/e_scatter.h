@@ -9,11 +9,10 @@ struct Scatter_Info : public Effect_Info {
     static constexpr char* group = "Trans";
     static constexpr char* name = "Scatter";
     static constexpr char* help = "A constantly changing fuzzy effect";
+    static constexpr int32_t legacy_id = 16;
+    static constexpr char* legacy_ape_id = NULL;
 
-    static constexpr uint32_t num_parameters = 0;
-    static constexpr Parameter parameters[num_parameters] = {};
-
-    EFFECT_INFO_GETTERS;
+    EFFECT_INFO_GETTERS_NO_PARAMETERS;
 };
 
 class E_Scatter : public Configurable_Effect<Scatter_Info, Scatter_Config> {

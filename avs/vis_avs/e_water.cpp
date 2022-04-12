@@ -47,8 +47,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _B(x)         (((x)) & 0xff0000)
 #define _RGB(r, g, b) ((r) | ((g)&0xff00) | ((b)&0xff0000))
 
-constexpr Parameter Water_Info::parameters[];
-
 E_Water::E_Water() : lastframe(NULL), lastframe_size(0) {}
 E_Water::~E_Water() { free(this->lastframe); }
 

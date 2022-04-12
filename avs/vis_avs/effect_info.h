@@ -513,9 +513,11 @@ struct Effect_Info {
     virtual const char* get_group() const = 0;
     virtual const char* get_name() const = 0;
     virtual const char* get_help() const = 0;
-    virtual uint32_t get_num_parameters() const = 0;
-    virtual const Parameter* get_parameters() const = 0;
-    virtual const AVS_Parameter_Handle* get_parameters_for_api() const = 0;
+    static constexpr uint32_t num_parameters = 0;
+    static constexpr Parameter* parameters = NULL;
+    virtual uint32_t get_num_parameters() const { return 0; };
+    virtual const Parameter* get_parameters() const { return NULL; };
+    virtual const AVS_Parameter_Handle* get_parameters_for_api() const { return NULL; };
     virtual bool can_have_child_components() const { return false; };
     const Parameter* get_parameter_from_handle(AVS_Parameter_Handle to_find) {
         return this->_get_parameter_from_handle(
@@ -623,14 +625,19 @@ struct Effect_Info {
  * Every struct inheriting from Effect_Info should add this macro to the bottom of the
  * effect's info-struct declaration. This macro defines all the accessor methods to the
  * static members an Effect_Info subclass should define.
- * We need this construct because static members in the child class cannot be accessed
+ * We need these constructs because static members in the child class cannot be accessed
  * by automatically inherited virtual functions. So we need to explicitly override each
  * one in each child class.
  */
+// Use this first one only for effects that have no parameters, i.e. only "enable".
+// Use EFFECT_INFO_GETTERS for all other effects.
+#define EFFECT_INFO_GETTERS_NO_PARAMETERS                          \
+    virtual const char* get_group() const { return this->group; }; \
+    virtual const char* get_name() const { return this->name; };   \
+    virtual const char* get_help() const { return this->help; };
+
 #define EFFECT_INFO_GETTERS                                                       \
-    virtual const char* get_group() const { return this->group; };                \
-    virtual const char* get_name() const { return this->name; };                  \
-    virtual const char* get_help() const { return this->help; };                  \
+    EFFECT_INFO_GETTERS_NO_PARAMETERS                                             \
     virtual uint32_t get_num_parameters() const { return this->num_parameters; }; \
     virtual const Parameter* get_parameters() const { return this->parameters; }; \
     virtual const AVS_Parameter_Handle* get_parameters_for_api() const {          \
@@ -642,9 +649,9 @@ struct Effect_Info {
     };
 
 /**
- * This one is only useful for Root and Effect List. All other effects simply inherit
- * the `can_have_child_components()` method (which always returns `false`) from the
- * `Effect_Info` base.
+ * This one is only useful for Root and Effect List. All other effects automatically
+ * inherit the default `can_have_child_components()` method (which always returns
+ * `false`) from the `Effect_Info` base.
  */
 #define EFFECT_INFO_GETTERS_WITH_CHILDREN \
     EFFECT_INFO_GETTERS;                  \
