@@ -1060,11 +1060,11 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         temp = TreeView_GetParent(hwnd, temp);
                     }
                     if (h == g_dragsource_item) {
-                        SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_NO)));
+                        SetCursor(LoadCursor(NULL, IDC_NO));
                         if (g_dragplace) TreeView_DeleteItem(hwnd, g_dragplace);
                         g_dragplace = 0;
                     } else {
-                        SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
+                        SetCursor(LoadCursor(NULL, IDC_ARROW));
                         TV_ITEM i = {
                             TVIF_HANDLE | TVIF_PARAM, h, 0, 0, 0, 0, 0, 0, 0, 0};
                         TreeView_GetItem(hwnd, &i);
@@ -1132,7 +1132,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
         case WM_LBUTTONUP:
             if (g_dragsource_item) {
                 HWND hwnd = GetDlgItem(hwndDlg, IDC_TREE1);
-                SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
+                SetCursor(LoadCursor(NULL, IDC_ARROW));
                 if (g_dragplace) {
                     TreeView_DeleteItem(hwnd, g_dragplace);
                     g_dragplace = 0;
@@ -1306,8 +1306,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
                             TreeView_Select(
                                 p->hdr.hwndFrom, g_dragsource_item, TVGN_CARET);
-                            SetCursor(
-                                LoadCursor(NULL, MAKEINTRESOURCE(IDC_APPSTARTING)));
+                            SetCursor(LoadCursor(NULL, IDC_APPSTARTING));
                         } else
                             g_dragsource_item = NULL;
                     } else

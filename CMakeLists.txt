@@ -48,10 +48,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
                             # into the base build directory.
     )
     # C++-specific flags
-    set(AVS_CXX_COMPILER_FLAGS
-        -fpermissive        # -fpermissive needed for MAKEINTRESOURCE macro, which casts
-                            # LPSTR to WORD, a.k.a. char* to short unsigned int.
-    )
+    set(AVS_CXX_COMPILER_FLAGS)
     # (CMake generator expressions cannot be multiline, hence the AVS_CXX_COMPILE_FLAGS
     # variable in a foreach workaround.)
     foreach(FLAG ${AVS_CXX_COMPILER_FLAGS})
