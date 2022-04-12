@@ -1878,7 +1878,7 @@ BEGIN
    LTEXT            "Color", IDC_STATIC, 9, 20, 17, 8, SS_LEFT | WS_GROUP
    LTEXT            "AddBorder APE by Goebish", IDC_STATIC, 15, 60, 90, 9, SS_LEFT |
                     WS_GROUP
-   CONTROL          "Slider1", IDC_ADDBORDERS_WIDTH, "msctls_trackbar32", TBS_HORZ |
+   CONTROL          "Slider1", IDC_ADDBORDERS_SIZE, "msctls_trackbar32", TBS_HORZ |
                     TBS_AUTOTICKS | TBS_BOTH | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                     3, 44, 106, 11
    LTEXT            "Width", IDC_STATIC, 41, 35, 27, 9, SS_CENTER | WS_GROUP

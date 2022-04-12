@@ -227,7 +227,7 @@ void C_RLibrary::initbuiltinape(void) {
     ADD_NEW(Texer2, "Acko.net: Texer II");
     ADD_NEW(Normalise, "Trans: Normalise");
     ADD_NEW(ColorMap, "Color Map");
-    ADD(R_AddBorders, "Virtual Effect: Addborders");
+    ADD_NEW(AddBorders, "Virtual Effect: Addborders");
     ADD_NEW(Triangle, "Render: Triangle");
     ADD_NEW(EelTrans, "Misc: AVSTrans Automation");
     ADD(R_GlobalVars, "Jheriko: Global");
