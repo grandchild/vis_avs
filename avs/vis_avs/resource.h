@@ -488,7 +488,7 @@
 #define IDC_COLORMAP_COLOR_POSITION     1300
 #define IDC_ADDBORDERS_ENABLE           1301
 #define IDC_ADDBORDERS_COLOR            1302
-#define IDC_ADDBORDERS_WIDTH            1303
+#define IDC_ADDBORDERS_SIZE             1303
 #define IDC_TRIANGLE_INIT               1304
 #define IDC_TRIANGLE_FRAME              1305
 #define IDC_TRIANGLE_BEAT               1306
