@@ -158,6 +158,7 @@ std::string E_EelTrans::all_code() {
     std::string all;
     for (auto it : E_EelTrans::instances) {
         all += it->config.code;
+        all += "\r\n";
     }
     return all;
 }
