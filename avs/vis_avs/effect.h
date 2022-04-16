@@ -150,7 +150,6 @@ class Configurable_Effect : public Effect {
         return cloned;
     };
     bool can_have_child_components() { return this->info.can_have_child_components(); };
-    static Configurable_Effect* create() { return new Configurable_Effect(); };
     Effect_Info* get_info() { return &this->info; };
     virtual void set_desc(char* desc) {
         Configurable_Effect::_set_desc();
