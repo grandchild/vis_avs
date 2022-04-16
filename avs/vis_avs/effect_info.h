@@ -444,7 +444,7 @@ constexpr Parameter P_FRANGE(size_t offset,
                              value_change_handler on_value_change = NULL,
                              bool is_saved = true) {
     Parameter _param =
-        PARAM(offset, AVS_PARAM_INT, name, description, on_value_change, is_saved);
+        PARAM(offset, AVS_PARAM_FLOAT, name, description, on_value_change, is_saved);
     _param.float_min = float_min;
     _param.float_max = float_max;
     return _param;
