@@ -102,8 +102,12 @@ class Code_Section {
     bool is_valid() { return this->code != NULL; };
 };
 
-template <class Info_T, class Config_T, class Vars_T>
-class Programmable_Effect : public Configurable_Effect<Info_T, Config_T> {
+template <class Info_T,
+          class Config_T,
+          class Vars_T,
+          class Global_Config_T = Effect_Config>
+class Programmable_Effect
+    : public Configurable_Effect<Info_T, Config_T, Global_Config_T> {
    private:
     void* vm_context;
     lock_t* code_lock;
@@ -116,8 +120,9 @@ class Programmable_Effect : public Configurable_Effect<Info_T, Config_T> {
     Code_Section code_point;
     bool need_init;
 
-    Programmable_Effect()
-        : vm_context(NULL),
+    Programmable_Effect(AVS_Handle avs = 0)
+        : Configurable_Effect<Info_T, Config_T, Global_Config_T>(avs),
+          vm_context(NULL),
           code_lock(lock_init()),
           code_init(this->vm_context, this->config.init, this->code_lock),
           code_frame(this->vm_context, this->config.frame, this->code_lock),

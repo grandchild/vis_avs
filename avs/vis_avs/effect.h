@@ -3,9 +3,13 @@
 #include "avs_editor.h"
 #include "effect_info.h"
 
+#include <algorithm>  // std::remove
+#include <memory>     // std::shared_ptr, std::weak_ptr
+#include <set>
 #include <stdint.h>
 #include <string.h>
 #include <string>
+#include <type_traits>  // std::is_same<T1, T2>
 #include <vector>
 
 class Effect {
@@ -19,7 +23,8 @@ class Effect {
     bool enabled;
     std::vector<Effect*> children;
     AVS_Component_Handle* child_handles_for_api;
-    Effect() : handle(h_components.get()), enabled(true), child_handles_for_api(NULL){};
+    Effect(AVS_Handle = 0)
+        : handle(h_components.get()), enabled(true), child_handles_for_api(NULL){};
     virtual ~Effect();
     Effect* insert(Effect* to_insert, Effect* relative_to, Insert_Direction direction);
     Effect* lift(Effect* to_lift);
@@ -34,17 +39,17 @@ class Effect {
     virtual Effect* clone() = 0;
     virtual bool can_have_child_components() = 0;
     virtual Effect_Info* get_info() = 0;
-    virtual size_t parameter_list_length(const Parameter* parameter,
+    virtual size_t parameter_list_length(AVS_Parameter_Handle parameter,
                                          std::vector<int64_t> parameter_path) = 0;
-    virtual bool parameter_list_entry_add(const Parameter* parameter,
+    virtual bool parameter_list_entry_add(AVS_Parameter_Handle parameter,
                                           int64_t before,
                                           std::vector<AVS_Parameter_Value>,
                                           std::vector<int64_t> parameter_path) = 0;
-    virtual bool parameter_list_entry_move(const Parameter* parameter,
+    virtual bool parameter_list_entry_move(AVS_Parameter_Handle parameter,
                                            int64_t from,
                                            int64_t to,
                                            std::vector<int64_t> parameter_path) = 0;
-    virtual bool parameter_list_entry_remove(const Parameter* parameter,
+    virtual bool parameter_list_entry_remove(AVS_Parameter_Handle parameter,
                                              int64_t to_remove,
                                              std::vector<int64_t> parameter_path) = 0;
     virtual bool run_action(AVS_Parameter_Handle parameter,
@@ -137,13 +142,18 @@ class Effect {
     Effect* duplicate_with_children();
 };
 
-template <class Info_T, class Config_T>
+template <class Info_T, class Config_T, class Global_Config_T = Effect_Config>
 class Configurable_Effect : public Effect {
    public:
     // TODO [clean]: make info & config protected.
     static Info_T info;
     Config_T config;
 
+    Configurable_Effect(AVS_Handle avs = 0) {
+        this->prune_empty_globals();
+        this->init_global_config(avs);
+    };
+    ~Configurable_Effect() { this->remove_from_global_instances(); };
     Effect* clone() {
         auto cloned = new Configurable_Effect(*this);
         cloned->handle = h_components.get();
@@ -167,11 +177,12 @@ class Configurable_Effect : public Effect {
         if (parameter == 0) {
             return parameter_dispatch<T>::zero();
         }
-        auto config_param = this->get_config_parameter(parameter, parameter_path);
-        if (config_param.info == NULL) {
+        auto param = this->info.get_parameter_from_handle(parameter);
+        if (param == NULL) {
             return parameter_dispatch<T>::zero();
         }
-        return parameter_dispatch<T>::get(config_param.value_addr);
+        auto addr = this->get_config_address(param, parameter_path);
+        return parameter_dispatch<T>::get(addr);
     };
 
     template <typename T>
@@ -181,13 +192,14 @@ class Configurable_Effect : public Effect {
         if (parameter == 0) {
             return false;
         }
-        auto config_param = this->get_config_parameter(parameter, parameter_path);
-        if (config_param.info == NULL) {
+        auto param = this->info.get_parameter_from_handle(parameter);
+        if (param == NULL) {
             return false;
         }
-        parameter_dispatch<T>::set(config_param, value);
-        if (config_param.info->on_value_change != NULL) {
-            config_param.info->on_value_change(this, config_param.info, parameter_path);
+        auto addr = this->get_config_address(param, parameter_path);
+        parameter_dispatch<T>::set(param, addr, value);
+        if (param->on_value_change != NULL) {
+            param->on_value_change(this, param, parameter_path);
         }
         return true;
     };
@@ -199,119 +211,115 @@ class Configurable_Effect : public Effect {
         if (parameter == 0) {
             return empty;
         }
-        auto config_param = this->get_config_parameter(parameter, parameter_path);
-        if (config_param.info == NULL) {
+        auto param = this->info.get_parameter_from_handle(parameter);
+        if (param == NULL) {
             return empty;
         }
-        return parameter_dispatch<T>::get_array(config_param.value_addr);
+        auto addr = this->get_config_address(param, parameter_path);
+        return parameter_dispatch<T>::get_array(addr);
     };
 
-    size_t parameter_list_length(const Parameter* parameter,
+    size_t parameter_list_length(AVS_Parameter_Handle parameter,
                                  std::vector<int64_t> parameter_path = {}) {
         if (parameter == 0) {
             return 0;
         }
-        auto config_param =
-            this->get_config_parameter(parameter->handle, parameter_path);
-        if (config_param.info == NULL) {
+        auto param = this->info.get_parameter_from_handle(parameter);
+        if (param == NULL) {
             return 0;
         }
-        return parameter->list_length(config_param.value_addr);
+        auto addr = this->get_config_address(param, parameter_path);
+        return param->list_length(addr);
     };
     bool parameter_list_entry_add(
-        const Parameter* parameter,
+        AVS_Parameter_Handle parameter,
         int64_t before,
         std::vector<AVS_Parameter_Value> parameter_values = {},
         std::vector<int64_t> parameter_path = {}) {
         if (parameter == 0) {
             return false;
         }
-        auto config_param =
-            this->get_config_parameter(parameter->handle, parameter_path);
-        if (config_param.info == NULL) {
+        auto param = this->info.get_parameter_from_handle(parameter);
+        if (param == NULL) {
             return false;
         }
-        bool success = parameter->list_add(
-            config_param.value_addr, parameter->num_child_parameters_max, &before);
+        auto addr = this->get_config_address(param, parameter_path);
+        bool success = param->list_add(addr, param->num_child_parameters_max, &before);
         if (success) {
             std::vector<int64_t> new_parameter_path = parameter_path;
             new_parameter_path.push_back(before);
             for (auto const& pv : parameter_values) {
-                auto value_config_param =
-                    this->get_config_parameter(pv.parameter, new_parameter_path);
-                if (value_config_param.info == NULL) {
+                auto pv_param = this->info.get_parameter_from_handle(pv.parameter);
+                auto pv_addr = this->get_config_address(pv_param, new_parameter_path);
+                if (pv_param == NULL) {
                     continue;
                 }
-                switch (value_config_param.info->type) {
+                switch (pv_param->type) {
                     case AVS_PARAM_BOOL:
-                        parameter_dispatch<bool>::set(value_config_param, pv.value.b);
+                        parameter_dispatch<bool>::set(pv_param, pv_addr, pv.value.b);
                         break;
                     case AVS_PARAM_SELECT:
                     case AVS_PARAM_INT:
-                        parameter_dispatch<int64_t>::set(value_config_param,
-                                                         pv.value.i);
+                        parameter_dispatch<int64_t>::set(pv_param, pv_addr, pv.value.i);
                         break;
                     case AVS_PARAM_FLOAT:
-                        parameter_dispatch<double>::set(value_config_param, pv.value.f);
+                        parameter_dispatch<double>::set(pv_param, pv_addr, pv.value.f);
                         break;
                     case AVS_PARAM_COLOR:
-                        parameter_dispatch<uint64_t>::set(value_config_param,
-                                                          pv.value.c);
+                        parameter_dispatch<uint64_t>::set(
+                            pv_param, pv_addr, pv.value.c);
                         break;
                     case AVS_PARAM_STRING:
-                        parameter_dispatch<const char*>::set(value_config_param,
-                                                             pv.value.s);
+                        parameter_dispatch<const char*>::set(
+                            pv_param, pv_addr, pv.value.s);
                         break;
                     case AVS_PARAM_LIST:
-                    case AVS_PARAM_INVALID:
                     case AVS_PARAM_INT_ARRAY:
                     case AVS_PARAM_FLOAT_ARRAY:
                     case AVS_PARAM_COLOR_ARRAY:
+                    case AVS_PARAM_INVALID:
                     default: break;
                 }
             }
-            if (config_param.info->on_list_add != NULL) {
-                config_param.info->on_list_add(
-                    this, config_param.info, parameter_path, before, 0);
+            if (param->on_list_add != NULL) {
+                param->on_list_add(this, param, parameter_path, before, 0);
             }
         }
         return success;
     };
-    bool parameter_list_entry_move(const Parameter* parameter,
+    bool parameter_list_entry_move(AVS_Parameter_Handle parameter,
                                    int64_t from,
                                    int64_t to,
                                    std::vector<int64_t> parameter_path = {}) {
         if (parameter == 0) {
             return 0;
         }
-        auto config_param =
-            this->get_config_parameter(parameter->handle, parameter_path);
-        if (config_param.info == NULL) {
+        auto param = this->info.get_parameter_from_handle(parameter);
+        if (param == NULL) {
             return false;
         }
-        bool success = parameter->list_move(config_param.value_addr, &from, &to);
-        if (success && config_param.info->on_list_move != NULL) {
-            config_param.info->on_list_move(
-                this, config_param.info, parameter_path, from, to);
+        auto addr = this->get_config_address(param, parameter_path);
+        bool success = param->list_move(addr, &from, &to);
+        if (success && param->on_list_move != NULL) {
+            param->on_list_move(this, param, parameter_path, from, to);
         }
         return success;
     };
-    bool parameter_list_entry_remove(const Parameter* parameter,
+    bool parameter_list_entry_remove(AVS_Parameter_Handle parameter,
                                      int64_t to_remove,
                                      std::vector<int64_t> parameter_path = {}) {
         if (parameter == 0) {
             return 0;
         }
-        auto config_param =
-            this->get_config_parameter(parameter->handle, parameter_path);
-        if (config_param.info == NULL) {
+        auto param = this->info.get_parameter_from_handle(parameter);
+        if (param == NULL) {
             return false;
         }
-        bool success = parameter->list_remove(
-            config_param.value_addr, parameter->num_child_parameters_min, &to_remove);
-        if (success && config_param.info->on_list_remove != NULL) {
-            config_param.info->on_list_remove(
-                this, config_param.info, parameter_path, to_remove, 0);
+        auto addr = this->get_config_address(param, parameter_path);
+        bool success =
+            param->list_remove(addr, param->num_child_parameters_min, &to_remove);
+        if (success && param->on_list_remove != NULL) {
+            param->on_list_remove(this, param, parameter_path, to_remove, 0);
         }
         return success;
     };
@@ -321,11 +329,11 @@ class Configurable_Effect : public Effect {
         if (parameter == 0) {
             return false;
         }
-        auto config_param = this->get_config_parameter(parameter, parameter_path);
-        if (config_param.info == NULL || config_param.info->on_value_change == NULL) {
+        auto param = this->info.get_parameter_from_handle(parameter);
+        if (param == NULL || param->on_value_change == NULL) {
             return false;
         }
-        config_param.info->on_value_change(this, config_param.info, parameter_path);
+        param->on_value_change(this, param, parameter_path);
         return true;
     };
 
@@ -366,19 +374,76 @@ class Configurable_Effect : public Effect {
         }
     };
 
+    struct Global {
+        AVS_Handle avs;
+        Global_Config_T config;
+        std::set<Configurable_Effect*> instances;
+        Global(AVS_Handle avs) : avs(avs){};
+    };
+    std::shared_ptr<Global> global = nullptr;
+
+   protected:  // TODO [clean]: Make this private as soon as NSEEL & EELTrans are fixed
+    static std::vector<std::weak_ptr<Global>> globals;
+
    private:
-    Config_Parameter get_config_parameter(AVS_Parameter_Handle parameter,
-                                          std::vector<int64_t> parameter_path) {
-        return this->info.get_config_parameter(this->config,
-                                               parameter,
-                                               this->info.num_parameters,
-                                               this->info.parameters,
-                                               parameter_path,
-                                               0);
+    static void prune_empty_globals() {
+        for (auto it = Configurable_Effect::globals.begin();
+             it != Configurable_Effect::globals.end();) {
+            if (it->expired()) {
+                it = Configurable_Effect::globals.erase(it);
+            } else {
+                it++;
+            }
+        }
+    }
+    void init_global_config(AVS_Handle avs) {
+        if (std::is_same<Global_Config_T, Effect_Config>::value) {
+            return;
+        }
+        {
+            std::shared_ptr<Global> tmp;
+            for (auto& g : Configurable_Effect::globals) {
+                if (g.expired()) {
+                    continue;
+                }
+                tmp = g.lock();
+                if (tmp->avs == avs) {
+                    this->global = g.lock();
+                    this->global->instances.insert(this);
+                    return;
+                }
+            }
+            tmp = std::make_shared<Global>(avs);
+            this->globals.emplace_back(tmp);
+            this->global = tmp;
+            this->global->instances.insert(this);
+        }
+    };
+    void remove_from_global_instances() {
+        if (this->global.get()) {
+            this->global->instances.erase(this);
+        }
+    };
+
+    uint8_t* get_config_address(const Parameter* parameter,
+                                std::vector<int64_t> parameter_path) {
+        Effect_Config* _config = parameter->is_global
+                                     ? (Effect_Config*)&this->global->config
+                                     : (Effect_Config*)&this->config;
+        return this->info.get_config_address(_config,
+                                             parameter,
+                                             this->info.num_parameters,
+                                             this->info.parameters,
+                                             parameter_path,
+                                             0);
     };
 };
 
-template <class Info_T, class Config_T>
-Info_T Configurable_Effect<Info_T, Config_T>::info;
-template <class Info_T, class Config_T>
-std::string Configurable_Effect<Info_T, Config_T>::desc;
+template <class Info_T, class Config_T, class Global_Config_T>
+Info_T Configurable_Effect<Info_T, Config_T, Global_Config_T>::info;
+template <class Info_T, class Config_T, class Global_Config_T>
+std::string Configurable_Effect<Info_T, Config_T, Global_Config_T>::desc;
+template <class Info_T, class Config_T, class Global_Config_T>
+std::vector<std::weak_ptr<
+    typename Configurable_Effect<Info_T, Config_T, Global_Config_T>::Global>>
+    Configurable_Effect<Info_T, Config_T, Global_Config_T>::globals;

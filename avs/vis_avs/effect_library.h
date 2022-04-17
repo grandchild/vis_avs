@@ -14,4 +14,4 @@ extern AVS_Effect_Handle g_root_handle;
 
 bool make_effect_lib();
 AVS_Effect_Handle get_handle_from_effect_info(Effect_Info* effect);
-Effect* component_factory(const Effect_Info* effect);
+Effect* component_factory(const Effect_Info* effect, AVS_Handle avs);
