@@ -283,6 +283,7 @@ struct Parameter {
     const char* name = NULL;
     const char* description = NULL;
     bool is_saved = true;
+    bool is_global = false;
     value_change_handler on_value_change = NULL;
 
     options_getter get_options = NULL;
@@ -409,6 +410,24 @@ constexpr Parameter PARAM(size_t offset,
                                      value_change_handler on_value_change = NULL) {  \
         return PARAM(                                                                \
             offset, AVS_PARAM_##TYPE, name, description, on_value_change, false);    \
+    }                                                                                \
+    constexpr Parameter P_##TYPE##_G(size_t offset,                                  \
+                                     const char* name,                               \
+                                     const char* description = NULL,                 \
+                                     value_change_handler on_value_change = NULL,    \
+                                     bool is_saved = true) {                         \
+        Parameter _param =                                                           \
+            P_##TYPE(offset, name, description, on_value_change, is_saved);          \
+        _param.is_global = true;                                                     \
+        return _param;                                                               \
+    }                                                                                \
+    constexpr Parameter P_##TYPE##_GX(size_t offset,                                 \
+                                      const char* name,                              \
+                                      const char* description = NULL,                \
+                                      value_change_handler on_value_change = NULL) { \
+        Parameter _param = P_##TYPE##_X(offset, name, description, on_value_change); \
+        _param.is_global = true;                                                     \
+        return _param;                                                               \
     }
 PARAM_SIMPLE(BOOL)
 PARAM_SIMPLE(INT)
@@ -432,6 +451,18 @@ constexpr Parameter P_IRANGE(size_t offset,
     _param.int_max = int_max;
     return _param;
 }
+constexpr Parameter P_IRANGE_G(size_t offset,
+                               const char* name,
+                               int64_t int_min = 0,
+                               int64_t int_max = 0,
+                               const char* description = NULL,
+                               value_change_handler on_value_change = NULL,
+                               bool is_saved = false) {
+    Parameter _param = P_IRANGE(
+        offset, name, int_min, int_max, description, on_value_change, is_saved);
+    _param.is_global = true;
+    return _param;
+}
 
 constexpr Parameter P_FRANGE(size_t offset,
                              const char* name,
@@ -444,6 +475,18 @@ constexpr Parameter P_FRANGE(size_t offset,
         PARAM(offset, AVS_PARAM_FLOAT, name, description, on_value_change, is_saved);
     _param.float_min = float_min;
     _param.float_max = float_max;
+    return _param;
+}
+constexpr Parameter P_FRANGE_G(size_t offset,
+                               const char* name,
+                               double float_min = 0,
+                               double float_max = 0,
+                               const char* description = NULL,
+                               value_change_handler on_value_change = NULL,
+                               bool is_saved = true) {
+    Parameter _param = P_FRANGE(
+        offset, name, float_min, float_max, description, on_value_change, is_saved);
+    _param.is_global = true;
     return _param;
 }
 
@@ -466,6 +509,27 @@ constexpr Parameter P_SELECT_X(size_t offset,
     Parameter _param =
         PARAM(offset, AVS_PARAM_SELECT, name, description, on_value_change, false);
     _param.get_options = get_options;
+    return _param;
+}
+constexpr Parameter P_SELECT_G(size_t offset,
+                               const char* name,
+                               options_getter get_options,
+                               const char* description = NULL,
+                               value_change_handler on_value_change = NULL,
+                               bool is_saved = true) {
+    Parameter _param =
+        P_SELECT(offset, name, get_options, description, on_value_change, is_saved);
+    _param.is_global = true;
+    return _param;
+}
+constexpr Parameter P_SELECT_GX(size_t offset,
+                                const char* name,
+                                options_getter get_options,
+                                const char* description = NULL,
+                                value_change_handler on_value_change = NULL) {
+    Parameter _param =
+        P_SELECT_X(offset, name, get_options, description, on_value_change);
+    _param.is_global = true;
     return _param;
 }
 
@@ -497,17 +561,38 @@ constexpr Parameter P_LIST(size_t offset,
     _param.on_list_remove = on_remove;
     return _param;
 }
+template <typename Subtype>
+constexpr Parameter P_LIST_G(size_t offset,
+                             const char* name,
+                             const Parameter* list,
+                             uint32_t length,
+                             uint32_t length_min = 0,
+                             uint32_t length_max = 0,
+                             const char* description = NULL,
+                             list_edit_handler on_add = NULL,
+                             list_edit_handler on_move = NULL,
+                             list_edit_handler on_remove = NULL,
+                             bool is_saved = true) {
+    Parameter _param = P_LIST<Subtype>(offset,
+                                       name,
+                                       list,
+                                       length,
+                                       length_min,
+                                       length_max,
+                                       description,
+                                       on_add,
+                                       on_move,
+                                       on_remove,
+                                       is_saved);
+    _param.is_global = true;
+    return _param;
+}
 
 constexpr Parameter P_ACTION(const char* name,
                              value_change_handler on_run,
                              const char* description = NULL) {
     return PARAM(0, AVS_PARAM_ACTION, name, description, on_run, false);
 }
-
-struct Config_Parameter {
-    const Parameter* info;
-    uint8_t* value_addr;
-};
 
 struct Effect_Info {
     virtual const char* get_group() const = 0;
@@ -548,14 +633,14 @@ struct Effect_Info {
      * `sizeof` and `offsetof`, both recorded in each field's Parameter struct, to find
      * and return the data address for a specific parameter in the config struct.
      */
-    static Config_Parameter get_config_parameter(Effect_Config& config,
-                                                 AVS_Parameter_Handle parameter,
-                                                 uint32_t num_params,
-                                                 const Parameter* param_list,
-                                                 std::vector<int64_t>& parameter_path,
-                                                 uint32_t cur_depth) {
+    static uint8_t* get_config_address(Effect_Config* config,
+                                       const Parameter* parameter,
+                                       uint32_t num_params,
+                                       const Parameter* param_list,
+                                       std::vector<int64_t>& parameter_path,
+                                       uint32_t cur_depth) {
         for (uint32_t i = 0; i < num_params; i++) {
-            uint8_t* config_data = (uint8_t*)&config;
+            uint8_t* config_data = (uint8_t*)config;
             uint8_t* parameter_address = &config_data[param_list[i].offset];
             if (param_list[i].type == AVS_PARAM_LIST
                 && cur_depth < parameter_path.size()) {
@@ -578,22 +663,22 @@ struct Effect_Info {
                 }
                 auto child_config =
                     (list->data() + list_index * param_list[i].sizeof_child);
-                auto subtree_result = Effect_Info::get_config_parameter(
-                    *child_config,
-                    parameter,
-                    param_list[i].num_child_parameters,
-                    param_list[i].child_parameters,
-                    parameter_path,
-                    cur_depth + 1);
-                if (subtree_result.info != NULL) {
+                auto subtree_result =
+                    Effect_Info::get_config_address(child_config,
+                                                    parameter,
+                                                    param_list[i].num_child_parameters,
+                                                    param_list[i].child_parameters,
+                                                    parameter_path,
+                                                    cur_depth + 1);
+                if (subtree_result != NULL) {
                     return subtree_result;
                 }
             }
-            if (parameter == param_list[i].handle) {
-                return Config_Parameter{&param_list[i], parameter_address};
+            if (parameter->handle == param_list[i].handle) {
+                return parameter_address;
             }
         }
-        return {NULL, NULL};
+        return NULL;
     };
 
     /**
@@ -688,8 +773,8 @@ struct parameter_dispatch;
 template <>
 struct parameter_dispatch<bool> {
     static bool get(uint8_t* config_data) { return *(bool*)config_data; };
-    static void set(Config_Parameter config_param, bool value) {
-        *(bool*)config_param.value_addr = value;
+    static void set(const Parameter*, uint8_t* addr, bool value) {
+        *(bool*)addr = value;
     }
     static bool zero() { return false; };
 };
@@ -697,13 +782,13 @@ struct parameter_dispatch<bool> {
 template <>
 struct parameter_dispatch<int64_t> {
     static int64_t get(uint8_t* config_data) { return *((int64_t*)config_data); };
-    static void set(const Config_Parameter& config_param, int64_t value) {
-        auto _min = config_param.info->int_min;
-        auto _max = config_param.info->int_max;
+    static void set(const Parameter* parameter, uint8_t* addr, int64_t value) {
+        auto _min = parameter->int_min;
+        auto _max = parameter->int_max;
         if (_min != _max) {
             value = value < _min ? _min : value > _max ? _max : value;
         }
-        *(int64_t*)config_param.value_addr = value;
+        *(int64_t*)addr = value;
     }
     static std::vector<int64_t>& get_array(uint8_t* config_data) {
         return *(std::vector<int64_t>*)config_data;
@@ -714,13 +799,13 @@ struct parameter_dispatch<int64_t> {
 template <>
 struct parameter_dispatch<double> {
     static double get(uint8_t* config_data) { return *(double*)config_data; };
-    static void set(const Config_Parameter& config_param, double value) {
-        auto _min = config_param.info->float_min;
-        auto _max = config_param.info->float_max;
+    static void set(const Parameter* parameter, uint8_t* addr, double value) {
+        auto _min = parameter->float_min;
+        auto _max = parameter->float_max;
         if (_min != _max) {
             value = value < _min ? _min : value > _max ? _max : value;
         }
-        *(double*)config_param.value_addr = value;
+        *(double*)addr = value;
     }
     static std::vector<double>& get_array(uint8_t* config_data) {
         return *(std::vector<double>*)config_data;
@@ -731,8 +816,8 @@ struct parameter_dispatch<double> {
 template <>
 struct parameter_dispatch<uint64_t> {
     static uint64_t get(uint8_t* config_data) { return *((uint64_t*)config_data); };
-    static void set(const Config_Parameter& config_param, uint64_t value) {
-        *(uint64_t*)config_param.value_addr = value;
+    static void set(const Parameter*, uint8_t* addr, uint64_t value) {
+        *(uint64_t*)addr = value;
     }
     static std::vector<uint64_t>& get_array(uint8_t* config_data) {
         return *(std::vector<uint64_t>*)config_data;
@@ -745,8 +830,8 @@ struct parameter_dispatch<const char*> {
     static const char* get(uint8_t* config_data) {
         return ((std::string*)config_data)->c_str();
     };
-    static void set(const Config_Parameter& config_param, const char* value) {
-        *(std::string*)config_param.value_addr = value;
+    static void set(const Parameter*, uint8_t* addr, const char* value) {
+        *(std::string*)addr = value;
     };
 
     static const char* zero() { return ""; };

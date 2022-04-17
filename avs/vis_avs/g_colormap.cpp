@@ -59,7 +59,7 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
     }
     int64_t num_maps = 0;
     if (g_this != NULL) {
-        num_maps = g_this->parameter_list_length(&p_maps);
+        num_maps = g_this->parameter_list_length(p_maps.handle);
         if (current_map >= num_maps) {
             current_map = num_maps - 1;
         }
@@ -351,7 +351,7 @@ static int win32_dlgproc_colormap_edit(HWND hwndDlg,
     if (current_map < 0) {
         current_map = 0;
     }
-    int64_t num_maps = g_this->parameter_list_length(&p_maps);
+    int64_t num_maps = g_this->parameter_list_length(p_maps.handle);
     if (current_map >= num_maps) {
         current_map = num_maps - 1;
     }
@@ -626,7 +626,7 @@ static int win32_dlgproc_colormap_edit(HWND hwndDlg,
                             {p_color.handle, color_value},
                         };
                         g_this->parameter_list_entry_add(
-                            &p_colors, -1, new_color, {current_map});
+                            p_colors.handle, -1, new_color, {current_map});
                         // c.config["Maps"][current_map]["Colors"].add_child(
                         //     -1,
                         //     {{"Position", position_value}, {"Color", color_value}});
@@ -654,7 +654,7 @@ static int win32_dlgproc_colormap_edit(HWND hwndDlg,
                         if (g_this->config.maps[current_map].colors[i].color_id
                             == g_currently_selected_color_id) {
                             g_this->parameter_list_entry_remove(
-                                &p_colors, i, {current_map});
+                                p_colors.handle, i, {current_map});
                         }
                     }
                     break;

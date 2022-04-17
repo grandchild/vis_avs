@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-typedef Effect* (*effect_component_factory)(void);
+typedef Effect* (*effect_component_factory)(AVS_Handle);
 
 std::unordered_map<AVS_Effect_Handle, Effect_Info*> g_effect_lib;
 std::vector<AVS_Effect_Handle> g_effect_lib_handles_for_api;
@@ -65,10 +65,10 @@ AVS_Effect_Handle get_handle_from_effect_info(Effect_Info* effect) {
     return 0;
 }
 
-Effect* component_factory(const Effect_Info* effect) {
+Effect* component_factory(const Effect_Info* effect, AVS_Handle avs) {
     for (auto const& factory : g_component_factories) {
         if (factory.first == effect) {
-            return factory.second();
+            return factory.second(avs);
         }
     }
     return NULL;

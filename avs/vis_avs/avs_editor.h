@@ -78,6 +78,7 @@ typedef struct {
     AVS_Parameter_Type type;
     const char* name;
     const char* description;
+    bool is_global;
     int64_t int_min;
     int64_t int_max;
     double float_min;

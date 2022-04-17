@@ -177,7 +177,7 @@ AVS_Component_Handle avs_component_create(AVS_Handle avs,
         return 0;
     }
 
-    Effect* component = component_factory(_effect);
+    Effect* component = component_factory(_effect, avs);
     if (component == NULL) {
         instance->error = "Failed to find internal component class";
         return 0;
@@ -329,6 +329,7 @@ bool avs_parameter_info(AVS_Handle avs,
         info_out->type = AVS_PARAM_INVALID;
         info_out->name = "";
         info_out->description = "";
+        info_out->is_global = false;
         info_out->int_min = 0;
         info_out->int_max = 0;
         info_out->float_min = 0.0;
@@ -344,6 +345,7 @@ bool avs_parameter_info(AVS_Handle avs,
     info_out->type = _parameter->type;
     info_out->name = _parameter->name;
     info_out->description = _parameter->description;
+    info_out->is_global = _parameter->is_global;
     info_out->int_min = _parameter->int_min;
     info_out->int_max = _parameter->int_max;
     info_out->float_min = _parameter->float_min;
@@ -588,7 +590,7 @@ int64_t avs_parameter_list_length(AVS_Handle avs,
         return -1;
     }
     size_t length = _component->parameter_list_length(
-        _parameter, make_parameter_tree_path(list_depth, list_indices));
+        parameter, make_parameter_tree_path(list_depth, list_indices));
 #if SIZE_MAX > INT64_MAX
     if (length > INT64_MAX) {
         instance->error = "List length clamped";
@@ -619,7 +621,7 @@ bool avs_parameter_list_element_add(AVS_Handle avs,
         return false;
     }
     return _component->parameter_list_entry_add(
-        _parameter,
+        parameter,
         before,
         std::vector<AVS_Parameter_Value>(values, values + values_length),
         make_parameter_tree_path(list_depth, list_indices));
@@ -644,7 +646,7 @@ bool avs_parameter_list_element_move(AVS_Handle avs,
         return -1;
     }
     return _component->parameter_list_entry_move(
-        _parameter,
+        parameter,
         from_index,
         to_index,
         make_parameter_tree_path(list_depth, list_indices));
@@ -668,5 +670,5 @@ bool avs_parameter_list_element_remove(AVS_Handle avs,
         return -1;
     }
     return _component->parameter_list_entry_remove(
-        _parameter, remove_index, make_parameter_tree_path(list_depth, list_indices));
+        parameter, remove_index, make_parameter_tree_path(list_depth, list_indices));
 }

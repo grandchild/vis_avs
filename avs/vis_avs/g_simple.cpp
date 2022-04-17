@@ -9,7 +9,7 @@
 
 int win32_dlgproc_simple(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     E_Simple* g_this = (E_Simple*)g_current_render;
-    const Parameter& p_colors = g_this->info.parameters[4];
+    const AVS_Parameter_Handle p_colors = g_this->info.parameters[4].handle;
 
     switch (uMsg) {
         case WM_DRAWITEM: {
@@ -95,14 +95,14 @@ int win32_dlgproc_simple(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     p = GetDlgItemInt(
                         hwndDlg, IDC_NUMCOL, &success, check_for_negative);
                     if (success) {
-                        int64_t length = g_this->parameter_list_length(&p_colors);
+                        int64_t length = g_this->parameter_list_length(p_colors);
                         if (length < p) {
                             for (; length < p; length++) {
-                                g_this->parameter_list_entry_add(&p_colors, -1, {});
+                                g_this->parameter_list_entry_add(p_colors, -1, {});
                             }
                         } else {
                             for (; length > p; length--) {
-                                g_this->parameter_list_entry_remove(&p_colors, -1);
+                                g_this->parameter_list_entry_remove(p_colors, -1);
                             }
                         }
                         InvalidateRect(GetDlgItem(hwndDlg, IDC_DEFCOL), NULL, TRUE);
