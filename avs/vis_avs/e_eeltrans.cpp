@@ -19,83 +19,53 @@
 
 constexpr Parameter EelTrans_Info::parameters[];
 
-bool E_EelTrans::translate_enabled = false;
-std::string E_EelTrans::log_path = "";
-bool E_EelTrans::log_enabled = false;
-bool E_EelTrans::translate_firstlevel = false;
-bool E_EelTrans::read_comment_codes = false;
-bool E_EelTrans::need_new_first_instance = true;
-
-std::set<E_EelTrans*> E_EelTrans::instances;
-
+// TODO [bug][feature]: NSEEL-per-AVS-instance. NSEEL is currently one global instance,
+// and is not separated per AVS instance. Instance-global configuration of EELTrans
+// works, but any interaction with NSEEL currently still only uses preprocessor code
+// from EELTrans effects in the first AVS instance, and conversely applies to all code
+// sections everywhere.
 std::vector<void*> comp_ctxs;
 char* newbuf;
 
-void EelTrans_Info::apply_global(Effect* component,
-                                 const Parameter*,
-                                 std::vector<int64_t>) {
-    auto eeltrans = (E_EelTrans*)component;
-    E_EelTrans::log_enabled = eeltrans->config.log_enabled;
-    E_EelTrans::log_path = eeltrans->config.log_path;
-    E_EelTrans::translate_firstlevel = eeltrans->config.translate_firstlevel;
-    E_EelTrans::read_comment_codes = eeltrans->config.read_comment_codes;
-    for (auto it : E_EelTrans::instances) {
-        it->config.log_enabled = E_EelTrans::log_enabled;
-        it->config.log_path = E_EelTrans::log_path;
-        it->config.translate_firstlevel = E_EelTrans::translate_firstlevel;
-        it->config.read_comment_codes = E_EelTrans::read_comment_codes;
-    }
-}
-
 void E_EelTrans::on_enable(bool enabled) {
-    E_EelTrans::translate_enabled = enabled;
-    for (auto it : E_EelTrans::instances) {
+    this->global->config.translate_enabled = enabled;
+    for (auto it : this->global->instances) {
         it->enabled = enabled;
     }
 }
 
-E_EelTrans::E_EelTrans() {
-    if (this->need_new_first_instance) {
-        this->need_new_first_instance = false;
-        this->enabled = false;
-        this->translate_enabled = 0;
-        this->log_enabled = 0;
-
-        this->translate_firstlevel = 0;
-        this->read_comment_codes = 1;
-
+E_EelTrans::E_EelTrans(AVS_Handle avs) : Configurable_Effect(avs) {
+    if (this->global->config.need_new_first_instance) {
         this->is_first_instance = true;
+        this->global->config.need_new_first_instance = false;
+        this->enabled = this->global->config.translate_enabled;
 
         std::string filename = std::string(g_path) + "\\eeltrans.ini";
         FILE* ini = fopen(filename.c_str(), "r");
         if (ini) {
             char* tmp = new char[2048];
             fscanf(ini, "%s", tmp);
-            log_path = tmp;
+            this->global->config.log_path = tmp;
             fclose(ini);
-        } else {
-            log_path = "C:\\avslog";
         }
 
         NSEEL_set_compile_hooks(this->pre_compile_hook, this->post_compile_hook);
     } else {
         this->is_first_instance = false;
     }
-    this->instances.insert(this);
 }
 
 E_EelTrans::~E_EelTrans() {
     if (this->is_first_instance) {
-        this->need_new_first_instance = true;
+        this->global->config.need_new_first_instance = true;
         std::string filename = std::string(g_path) + "\\eeltrans.ini";
         FILE* ini = fopen(filename.c_str(), "w");
         if (ini) {
-            fprintf(ini, "%s", log_path.c_str());
+            fprintf(ini, "%s", this->global->config.log_path.c_str());
             fclose(ini);
         }
     }
-    this->instances.erase(this);
-    if (this->instances.empty()) {
+    if (this->global->instances.size() == 1) {
         NSEEL_unset_compile_hooks();
     }
 }
@@ -107,6 +77,7 @@ unsigned int compnum(void* ctx) {
             return i;
         }
     }
+    // TODO [bug]: When does this list get cleared?
     comp_ctxs.push_back(ctx);
     return i;
 }
@@ -114,58 +85,57 @@ unsigned int compnum(void* ctx) {
 char* E_EelTrans::pre_compile_hook(void* ctx, char* expression) {
     static void* lastctx = 0;
     static int num = 0;
-    if (expression) {
-        if (E_EelTrans::log_enabled) {
-            if (ctx == lastctx) {
-                num = (num % 4) + 1;
-            } else {
-                num = 1;
-                lastctx = ctx;
-            }
-            char filename[200];
-            sprintf(filename,
-                    "%s\\comp%02dpart%d.log",
-                    log_path.c_str(),
-                    compnum(ctx),
-                    num);
-            FILE* logfile = fopen(filename, "w");
-            if (logfile) {
-                fprintf(logfile, "%s", expression);
-                fclose(logfile);
-            } else {
-                if (!create_directory((char*)log_path.c_str())) {
-                    printf(
-                        "Could not create log directory, deactivating Code Logger.\n");
-                    E_EelTrans::log_enabled = 0;
-                }
+    if (expression == NULL) {
+        return NULL;
+    }
+    // TODO [bug][feature]: NSEEL-per-AVS-instance. See above for details.
+    // This line simply selects the first available global config. Should be fixed to
+    // select one based on the AVS-instance the NSEEL compiler instance is for.
+    auto g = E_EelTrans::globals.begin()->lock();
+    if (g->config.log_enabled) {
+        if (ctx == lastctx) {
+            num = (num % 4) + 1;
+        } else {
+            num = 1;
+            lastctx = ctx;
+        }
+        char filename[200];
+        sprintf(filename,
+                "%s\\comp%02dpart%d.log",
+                g->config.log_path.c_str(),
+                compnum(ctx),
+                num);
+        FILE* logfile = fopen(filename, "w");
+        if (logfile) {
+            fprintf(logfile, "%s", expression);
+            fclose(logfile);
+        } else {
+            if (!create_directory((char*)g->config.log_path.c_str())) {
+                printf("Could not create log directory, deactivating Code Logger.\n");
+                g->config.log_enabled = 0;
             }
         }
-        if (E_EelTrans::translate_enabled
-            && (strncmp(expression, "//$notrans", 10) != 0)) {
-            std::string tmp = translate(
-                E_EelTrans::all_code(), expression, E_EelTrans::translate_firstlevel);
-            newbuf = new char[tmp.size() + 1];
-            strcpy(newbuf, tmp.c_str());
-            return newbuf;
+    }
+    if (g->config.translate_enabled && (strncmp(expression, "//$notrans", 10) != 0)) {
+        std::string all_code;
+        for (auto it : g->instances) {
+            all_code += it->config.code;
+            all_code += "\r\n";
         }
+        std::string tmp =
+            translate(all_code, expression, g->config.translate_firstlevel);
+        newbuf = new char[tmp.size() + 1];
+        strcpy(newbuf, tmp.c_str());
+        return newbuf;
     }
     return expression;
 }
 
 void E_EelTrans::post_compile_hook() { delete[] newbuf; }
 
-std::string E_EelTrans::all_code() {
-    std::string all;
-    for (auto it : E_EelTrans::instances) {
-        all += it->config.code;
-        all += "\r\n";
-    }
-    return all;
-}
-
 int E_EelTrans::render(char[2][2][576], int, int*, int*, int, int) {
-    if (this->need_new_first_instance && !this->is_first_instance) {
-        this->need_new_first_instance = false;
+    if (this->global->config.need_new_first_instance && !this->is_first_instance) {
+        this->global->config.need_new_first_instance = false;
         this->is_first_instance = true;
     }
     return 0;
@@ -175,23 +145,20 @@ void E_EelTrans::load_legacy(unsigned char* data, int len) {
     int pos = 0;
 
     if (len - pos >= 4) {
-        this->translate_enabled = (GET_INT() != 0);
-        this->enabled = this->translate_enabled;
+        this->global->config.translate_enabled = (GET_INT() != 0);
+        this->enabled = this->global->config.translate_enabled;
         pos += 4;
     }
     if (len - pos >= 4) {
-        this->log_enabled = (GET_INT() != 0);
-        this->config.log_enabled = this->log_enabled;
+        this->global->config.log_enabled = (GET_INT() != 0);
         pos += 4;
     }
     if (len - pos >= 4) {
-        this->translate_firstlevel = (GET_INT() != 0);
-        this->config.translate_firstlevel = this->translate_firstlevel;
+        this->global->config.translate_firstlevel = (GET_INT() != 0);
         pos += 4;
     }
     if (len - pos >= 4) {
-        this->read_comment_codes = (GET_INT() != 0);
-        this->config.read_comment_codes = this->read_comment_codes;
+        this->global->config.read_comment_codes = (GET_INT() != 0);
         pos += 4;
     }
     if (len > pos) {
@@ -208,13 +175,13 @@ int E_EelTrans::save_legacy(unsigned char* data) {
     PUT_INT(this->enabled);
     pos += 4;
 
-    PUT_INT(this->log_enabled);
+    PUT_INT(this->global->config.log_enabled);
     pos += 4;
 
-    PUT_INT(((int)this->translate_firstlevel));
+    PUT_INT(((int)this->global->config.translate_firstlevel));
     pos += 4;
 
-    PUT_INT(this->read_comment_codes);
+    PUT_INT(this->global->config.read_comment_codes);
     pos += 4;
 
     char* str_data = (char*)data;
