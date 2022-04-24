@@ -222,7 +222,7 @@ void C_RLibrary::initbuiltinape(void) {
     ADD_NEW(ColorReduction, "Color Reduction");
     ADD_NEW(Multiplier, "Multiplier");
     ADD_NEW(VideoDelay, "Holden04: Video Delay");
-    ADD(R_MultiDelay, "Holden05: Multi Delay");
+    ADD_NEW(MultiDelay, "Holden05: Multi Delay");
     ADD(R_Convolution, "Holden03: Convolution Filter");
     ADD_NEW(Texer2, "Acko.net: Texer II");
     ADD_NEW(Normalise, "Trans: Normalise");
