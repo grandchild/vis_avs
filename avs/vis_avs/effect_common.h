@@ -26,6 +26,7 @@ enum Audio_Channels { AUDIO_LEFT = 0, AUDIO_RIGHT = 1, AUDIO_CENTER = 2 };
 enum Draw_Modes { DRAW_DOTS = 0, DRAW_LINES = 1, DRAW_SOLID = 2 };
 enum Horizontal_Positions { HPOS_LEFT = 0, HPOS_RIGHT = 1, HPOS_CENTER = 2 };
 enum Vertical_Positions { VPOS_TOP = 0, VPOS_BOTTOM = 1, VPOS_CENTER = 2 };
+enum Coordinates { COORDS_POLAR = 0, COORDS_CARTESIAN = 1 };
 
 const char* const* audio_sources(int64_t* length_out);
 const char* const* draw_modes(int64_t* length_out);

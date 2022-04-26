@@ -159,7 +159,7 @@ void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_LEGACY(R_LineMode);
     DECLARE_EFFECT_NEW(Interferences);
     DECLARE_EFFECT_NEW(DynamicShift);
-    DECLARE_EFFECT_LEGACY_MT(R_DMove);
+    DECLARE_EFFECT_NEW(DynamicMovement);
     DECLARE_EFFECT_NEW(FastBright);
     DECLARE_EFFECT_NEW(ColorModifier);
 }
