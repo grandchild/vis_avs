@@ -640,7 +640,7 @@ struct Effect_Info {
                                        const Parameter* parameter,
                                        uint32_t num_params,
                                        const Parameter* param_list,
-                                       std::vector<int64_t>& parameter_path,
+                                       const std::vector<int64_t>& parameter_path,
                                        uint32_t cur_depth) {
         for (uint32_t i = 0; i < num_params; i++) {
             uint8_t* config_data = (uint8_t*)config;

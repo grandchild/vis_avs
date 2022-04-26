@@ -39,28 +39,32 @@ class Effect {
     virtual Effect* clone() = 0;
     virtual bool can_have_child_components() = 0;
     virtual Effect_Info* get_info() = 0;
-    virtual size_t parameter_list_length(AVS_Parameter_Handle parameter,
-                                         std::vector<int64_t> parameter_path) = 0;
-    virtual bool parameter_list_entry_add(AVS_Parameter_Handle parameter,
-                                          int64_t before,
-                                          std::vector<AVS_Parameter_Value>,
-                                          std::vector<int64_t> parameter_path) = 0;
-    virtual bool parameter_list_entry_move(AVS_Parameter_Handle parameter,
-                                           int64_t from,
-                                           int64_t to,
-                                           std::vector<int64_t> parameter_path) = 0;
-    virtual bool parameter_list_entry_remove(AVS_Parameter_Handle parameter,
-                                             int64_t to_remove,
-                                             std::vector<int64_t> parameter_path) = 0;
+    virtual size_t parameter_list_length(
+        AVS_Parameter_Handle parameter,
+        const std::vector<int64_t>& parameter_path) = 0;
+    virtual bool parameter_list_entry_add(
+        AVS_Parameter_Handle parameter,
+        int64_t before,
+        std::vector<AVS_Parameter_Value>,
+        const std::vector<int64_t>& parameter_path) = 0;
+    virtual bool parameter_list_entry_move(
+        AVS_Parameter_Handle parameter,
+        int64_t from,
+        int64_t to,
+        const std::vector<int64_t>& parameter_path) = 0;
+    virtual bool parameter_list_entry_remove(
+        AVS_Parameter_Handle parameter,
+        int64_t to_remove,
+        const std::vector<int64_t>& parameter_path) = 0;
     virtual bool run_action(AVS_Parameter_Handle parameter,
-                            std::vector<int64_t> parameter_path = {}) = 0;
+                            const std::vector<int64_t>& parameter_path = {}) = 0;
 
-#define GET_SET_PARAMETER_ABSTRACT(AVS_TYPE, TYPE)                             \
-    virtual TYPE get_##AVS_TYPE(AVS_Parameter_Handle parameter,                \
-                                std::vector<int64_t> parameter_path = {}) = 0; \
-    virtual bool set_##AVS_TYPE(AVS_Parameter_Handle parameter,                \
-                                TYPE value,                                    \
-                                std::vector<int64_t> parameter_path = {}) = 0
+#define GET_SET_PARAMETER_ABSTRACT(AVS_TYPE, TYPE)                                    \
+    virtual TYPE get_##AVS_TYPE(AVS_Parameter_Handle parameter,                       \
+                                const std::vector<int64_t>& parameter_path = {}) = 0; \
+    virtual bool set_##AVS_TYPE(AVS_Parameter_Handle parameter,                       \
+                                TYPE value,                                           \
+                                const std::vector<int64_t>& parameter_path = {}) = 0
     GET_SET_PARAMETER_ABSTRACT(bool, bool);
     GET_SET_PARAMETER_ABSTRACT(int, int64_t);
     GET_SET_PARAMETER_ABSTRACT(float, double);
@@ -69,7 +73,8 @@ class Effect {
 
 #define GET_ARRAY_PARAMETER_ABSTRACT(AVS_TYPE, TYPE)  \
     virtual std::vector<TYPE> get_##AVS_TYPE##_array( \
-        AVS_Parameter_Handle parameter, std::vector<int64_t> parameter_path = {}) = 0
+        AVS_Parameter_Handle parameter,               \
+        const std::vector<int64_t>& parameter_path = {}) = 0
     GET_ARRAY_PARAMETER_ABSTRACT(int, int64_t);
     GET_ARRAY_PARAMETER_ABSTRACT(float, double);
     GET_ARRAY_PARAMETER_ABSTRACT(color, uint64_t);
@@ -173,7 +178,8 @@ class Configurable_Effect : public Effect {
     };
 
     template <typename T>
-    T get(AVS_Parameter_Handle parameter, std::vector<int64_t> parameter_path = {}) {
+    T get(AVS_Parameter_Handle parameter,
+          const std::vector<int64_t>& parameter_path = {}) {
         if (parameter == 0) {
             return parameter_dispatch<T>::zero();
         }
@@ -188,7 +194,7 @@ class Configurable_Effect : public Effect {
     template <typename T>
     bool set(AVS_Parameter_Handle parameter,
              T value,
-             std::vector<int64_t> parameter_path = {}) {
+             const std::vector<int64_t>& parameter_path = {}) {
         if (parameter == 0) {
             return false;
         }
@@ -206,7 +212,7 @@ class Configurable_Effect : public Effect {
 
     template <typename T>
     std::vector<T>& get_array(AVS_Parameter_Handle parameter,
-                              std::vector<int64_t> parameter_path = {}) {
+                              const std::vector<int64_t>& parameter_path = {}) {
         static std::vector<T> empty;
         if (parameter == 0) {
             return empty;
@@ -220,7 +226,7 @@ class Configurable_Effect : public Effect {
     };
 
     size_t parameter_list_length(AVS_Parameter_Handle parameter,
-                                 std::vector<int64_t> parameter_path = {}) {
+                                 const std::vector<int64_t>& parameter_path = {}) {
         if (parameter == 0) {
             return 0;
         }
@@ -235,7 +241,7 @@ class Configurable_Effect : public Effect {
         AVS_Parameter_Handle parameter,
         int64_t before,
         std::vector<AVS_Parameter_Value> parameter_values = {},
-        std::vector<int64_t> parameter_path = {}) {
+        const std::vector<int64_t>& parameter_path = {}) {
         if (parameter == 0) {
             return false;
         }
@@ -290,7 +296,7 @@ class Configurable_Effect : public Effect {
     bool parameter_list_entry_move(AVS_Parameter_Handle parameter,
                                    int64_t from,
                                    int64_t to,
-                                   std::vector<int64_t> parameter_path = {}) {
+                                   const std::vector<int64_t>& parameter_path = {}) {
         if (parameter == 0) {
             return 0;
         }
@@ -307,7 +313,7 @@ class Configurable_Effect : public Effect {
     };
     bool parameter_list_entry_remove(AVS_Parameter_Handle parameter,
                                      int64_t to_remove,
-                                     std::vector<int64_t> parameter_path = {}) {
+                                     const std::vector<int64_t>& parameter_path = {}) {
         if (parameter == 0) {
             return 0;
         }
@@ -325,7 +331,7 @@ class Configurable_Effect : public Effect {
     };
 
     bool run_action(AVS_Parameter_Handle parameter,
-                    std::vector<int64_t> parameter_path = {}) {
+                    const std::vector<int64_t>& parameter_path = {}) {
         if (parameter == 0) {
             return false;
         }
@@ -337,15 +343,15 @@ class Configurable_Effect : public Effect {
         return true;
     };
 
-#define GET_SET_PARAMETER(AVS_TYPE, TYPE)                                   \
-    virtual TYPE get_##AVS_TYPE(AVS_Parameter_Handle parameter,             \
-                                std::vector<int64_t> parameter_path = {}) { \
-        return get<TYPE>(parameter, parameter_path);                        \
-    };                                                                      \
-    virtual bool set_##AVS_TYPE(AVS_Parameter_Handle parameter,             \
-                                TYPE value,                                 \
-                                std::vector<int64_t> parameter_path = {}) { \
-        return set<TYPE>(parameter, value, parameter_path);                 \
+#define GET_SET_PARAMETER(AVS_TYPE, TYPE)                                          \
+    virtual TYPE get_##AVS_TYPE(AVS_Parameter_Handle parameter,                    \
+                                const std::vector<int64_t>& parameter_path = {}) { \
+        return get<TYPE>(parameter, parameter_path);                               \
+    };                                                                             \
+    virtual bool set_##AVS_TYPE(AVS_Parameter_Handle parameter,                    \
+                                TYPE value,                                        \
+                                const std::vector<int64_t>& parameter_path = {}) { \
+        return set<TYPE>(parameter, value, parameter_path);                        \
     }
     GET_SET_PARAMETER(bool, bool);
     GET_SET_PARAMETER(int, int64_t);
@@ -353,10 +359,11 @@ class Configurable_Effect : public Effect {
     GET_SET_PARAMETER(color, uint64_t);
     GET_SET_PARAMETER(string, const char*);
 
-#define GET_ARRAY_PARAMETER(AVS_TYPE, TYPE)                                         \
-    virtual std::vector<TYPE> get_##AVS_TYPE##_array(                               \
-        AVS_Parameter_Handle parameter, std::vector<int64_t> parameter_path = {}) { \
-        return get_array<TYPE>(parameter, parameter_path);                          \
+#define GET_ARRAY_PARAMETER(AVS_TYPE, TYPE)                \
+    virtual std::vector<TYPE> get_##AVS_TYPE##_array(      \
+        AVS_Parameter_Handle parameter,                    \
+        const std::vector<int64_t>& parameter_path = {}) { \
+        return get_array<TYPE>(parameter, parameter_path); \
     }
     GET_ARRAY_PARAMETER(int, int64_t);
     GET_ARRAY_PARAMETER(float, double);
@@ -426,7 +433,7 @@ class Configurable_Effect : public Effect {
     };
 
     uint8_t* get_config_address(const Parameter* parameter,
-                                std::vector<int64_t> parameter_path) {
+                                const std::vector<int64_t>& parameter_path) {
         Effect_Config* _config = parameter->is_global
                                      ? (Effect_Config*)&this->global->config
                                      : (Effect_Config*)&this->config;
