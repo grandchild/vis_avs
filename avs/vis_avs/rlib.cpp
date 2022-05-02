@@ -140,7 +140,7 @@ void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_NEW(Comment);
     DECLARE_EFFECT_LEGACY_MT(R_Brightness);
     DECLARE_EFFECT_LEGACY(R_Interleave);
-    DECLARE_EFFECT_LEGACY(R_Grain);
+    DECLARE_EFFECT_NEW(Grain);
     DECLARE_EFFECT_LEGACY(R_Clear);
     DECLARE_EFFECT_LEGACY(R_Mirror);
     DECLARE_EFFECT_LEGACY(R_StarField);
