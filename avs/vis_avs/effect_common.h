@@ -18,6 +18,7 @@ enum Blend_Modes {
 enum Blend_Modes_Simple {
     BLEND_SIMPLE_REPLACE = 0,
     BLEND_SIMPLE_5050 = 1,
+    BLEND_SIMPLE_ADDITIVE = 2,
 };
 
 enum Audio_Sources { AUDIO_WAVEFORM = 0, AUDIO_SPECTRUM = 1 };
@@ -31,3 +32,5 @@ const char* const* draw_modes(int64_t* length_out);
 const char* const* audio_channels(int64_t* length_out);
 const char* const* h_positions(int64_t* length_out);
 const char* const* v_positions(int64_t* length_out);
+const char* const* blend_modes(int64_t* length_out);
+const char* const* blend_modes_simple(int64_t* length_out);

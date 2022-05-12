@@ -48,3 +48,30 @@ const char* const* v_positions(int64_t* length_out) {
     };
     return options;
 };
+
+const char* const* blend_modes(int64_t* length_out) {
+    *length_out = 10;
+    static const char* const options[10] = {
+        "Replace",
+        "Additive",
+        "Maximum",
+        "5050",
+        "Subtractive 1",
+        "Subtractive 2",
+        "Multiply",
+        "Adjustable",
+        "XOR",
+        "Minimum",
+    };
+    return options;
+};
+
+const char* const* blend_modes_simple(int64_t* length_out) {
+    *length_out = 3;
+    static const char* const options[3] = {
+        "Replace",
+        "50/50",
+        "Additive",
+    };
+    return options;
+};
