@@ -32,7 +32,7 @@ int win32_dlgproc_triangle(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                     case IDC_TRIANGLE_POINT: g_this->set_string(h_point, buf); break;
                     default: break;
                 }
-                delete buf;
+                delete[] buf;
             }
             return 1;
         }

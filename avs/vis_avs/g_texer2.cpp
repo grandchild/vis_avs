@@ -114,7 +114,7 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     case IDC_TEXERII_POINT: g_this->set_string(p_point, buf); break;
                     default: break;
                 }
-                delete buf;
+                delete[] buf;
             }
             return 1;
         }

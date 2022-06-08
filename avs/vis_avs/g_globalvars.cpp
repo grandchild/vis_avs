@@ -95,7 +95,7 @@ int win32_dlgproc_globalvars(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         break;
                     default: break;
                 }
-                delete buf;
+                delete[] buf;
             } else if (wNotifyCode == BN_CLICKED) {
                 switch (LOWORD(wParam)) {
                     case IDC_GLOBALVARS_SAVE_NOW:
