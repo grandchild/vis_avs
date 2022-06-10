@@ -269,7 +269,7 @@ void C_GlobalVars::load_config(unsigned char* data, int len) {
         return;
     }
     this->reg_ranges_str = &str[pos];
-    this->check_set_range(this->reg_ranges_str, this->reg_ranges, this->max_gmb_index);
+    this->check_set_range(this->reg_ranges_str, this->reg_ranges, this->max_regs_index);
     pos += strnlen(&str[pos], max(0, len - pos)) + 1;
     if (pos >= len) {
         return;
