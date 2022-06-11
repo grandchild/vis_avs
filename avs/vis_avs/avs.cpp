@@ -108,6 +108,9 @@ const char* avs_error_str(AVS_Handle avs) {
 
 AVS_API
 void avs_free(AVS_Handle avs) {
+    if (avs == 0) {
+        return;
+    }
     AVS_Instance* instance = get_instance_from_handle(avs);
     if (instance != NULL) {
         g_instances.erase(avs);
