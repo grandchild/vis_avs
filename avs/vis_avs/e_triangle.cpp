@@ -24,7 +24,18 @@ unsigned int E_Triangle::instance_count = 0;
 void Triangle_Info::recompile(Effect* component,
                               const Parameter* parameter,
                               std::vector<int64_t>) {
-    ((E_Triangle*)component)->recompile(parameter->name);
+    E_Triangle* triangle = (E_Triangle*)component;
+    std::string parameter_name = std::string(parameter->name);
+    if (parameter_name == "Init") {
+        triangle->code_init.need_recompile = true;
+    } else if (parameter_name == "Frame") {
+        triangle->code_frame.need_recompile = true;
+    } else if (parameter_name == "Beat") {
+        triangle->code_beat.need_recompile = true;
+    } else if (parameter_name == "Triangle") {
+        triangle->code_point.need_recompile = true;
+    }
+    triangle->recompile_if_needed();
 }
 
 E_Triangle::E_Triangle() {
@@ -377,19 +388,6 @@ void TriangleDepthBuffer::reset_if_needed(unsigned int w, unsigned int h, bool c
 }
 
 /* Code */
-void E_Triangle::recompile(const char* parameter_name) {
-    if (std::string("Init") == parameter_name) {
-        this->code_init.need_recompile = true;
-    } else if (std::string("Frame") == parameter_name) {
-        this->code_frame.need_recompile = true;
-    } else if (std::string("Beat") == parameter_name) {
-        this->code_beat.need_recompile = true;
-    } else if (std::string("Triangle") == parameter_name) {
-        this->code_point.need_recompile = true;
-    }
-    this->recompile_if_needed();
-}
-
 void Triangle_Vars::register_(void* vm_context) {
     this->w = NSEEL_VM_regvar(vm_context, "w");
     this->h = NSEEL_VM_regvar(vm_context, "h");

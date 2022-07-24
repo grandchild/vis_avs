@@ -91,7 +91,6 @@ class E_Triangle
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
-    void recompile(const char* parameter_name);
 
    private:
     static unsigned int instance_count;
