@@ -384,7 +384,7 @@ void E_Triangle::recompile(const char* parameter_name) {
         this->code_frame.need_recompile = true;
     } else if (std::string("Beat") == parameter_name) {
         this->code_beat.need_recompile = true;
-    } else if (std::string("Point") == parameter_name) {
+    } else if (std::string("Triangle") == parameter_name) {
         this->code_point.need_recompile = true;
     }
     this->recompile_if_needed();
