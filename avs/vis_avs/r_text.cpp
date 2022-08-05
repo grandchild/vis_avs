@@ -627,7 +627,7 @@ int C_THISCLASS::render(char[2][2][576],
         old_halign = _halign;
         old_valign = _valign;
         old_curword = curword;
-        if (thisText) strcpy(oldtxt, thisText);
+        strcpy(oldtxt, thisText);
         old_clipcolor = clipcolor;
         old_blend1 = (blend && !(onbeat && !nb));
         old_blend2 = (blendavg && !(onbeat && !nb));
