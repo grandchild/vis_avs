@@ -139,11 +139,11 @@ int E_SuperScope::render(char visdata[2][2][576],
     r3 = ((((c1 >> 16) & 255) * (63 - r)) + (((c2 >> 16) & 255) * r)) / 64;
     current_color = r1 | (r2 << 8) | (r3 << 16);
 
+    this->init_variables(w, h, isBeat, current_color, (uint32_t)this->config.draw_mode);
     if (this->need_init) {
         this->code_init.exec(visdata);
         this->need_init = false;
     }
-    this->init_variables(w, h, isBeat, current_color, (uint32_t)this->config.draw_mode);
     this->code_frame.exec(visdata);
     if (isBeat) this->code_beat.exec(visdata);
     if (this->code_point.is_valid()) {
