@@ -1077,7 +1077,7 @@ BEGIN
     LISTBOX         IDC_LIST1,101,0,132,142,LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_TABSTOP
     EDITTEXT        IDC_EDIT1,0,144,233,70,ES_MULTILINE | ES_AUTOVSCROLL | 
-                    ES_AUTOHSCROLL | ES_WANTRETURN
+                    ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL
     CONTROL         "Rectangular coordinates for user defined code",
                     IDC_CHECK3,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | 
                     WS_TABSTOP,0,114,100,15
