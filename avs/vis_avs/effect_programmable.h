@@ -138,7 +138,7 @@ class Programmable_Effect
         this->code_frame.need_recompile = true;
         this->code_beat.need_recompile = true;
         this->code_point.need_recompile = true;
-    }
+    };
 
     bool recompile_if_needed() {
         lock_lock(this->code_lock);
@@ -161,6 +161,14 @@ class Programmable_Effect
         lock_unlock(this->code_lock);
         return any_recompiled;
     };
+
+    void reset_code_context() {
+        lock_lock(this->code_lock);
+        AVS_EEL_IF_VM_free(this->vm_context);
+        this->vm_context = NULL;
+        lock_unlock(this->code_lock);
+    };
+
     virtual void init_variables(int w, int h, int is_beat, ...) {
         va_list extra_args;
         va_start(extra_args, is_beat);
