@@ -93,7 +93,7 @@ constexpr Parameter Movement_Info::parameters[];
 
 void Movement_Info::recreate_tab(Effect* component,
                                  const Parameter*,
-                                 std::vector<int64_t>) {
+                                 const std::vector<int64_t>&) {
     E_Movement* movement = (E_Movement*)component;
     lock_lock(movement->transform.lock);
     movement->transform.need_regen = true;
@@ -102,7 +102,7 @@ void Movement_Info::recreate_tab(Effect* component,
 
 void Movement_Info::recompile(Effect* component,
                               const Parameter*,
-                              std::vector<int64_t>) {
+                              const std::vector<int64_t>&) {
     E_Movement* movement = (E_Movement*)component;
     lock_lock(movement->transform.lock);
     movement->use_eel = true;
@@ -114,7 +114,7 @@ void Movement_Info::recompile(Effect* component,
 
 void Movement_Info::load_effect(Effect* component,
                                 const Parameter*,
-                                std::vector<int64_t>) {
+                                const std::vector<int64_t>&) {
     E_Movement* movement = (E_Movement*)component;
     const Movement_Effect& to_load = movement->info.effects[movement->config.effect];
     movement->config.init = to_load.code;

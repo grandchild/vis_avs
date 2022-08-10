@@ -50,7 +50,7 @@ constexpr Parameter DynamicMovement_Info::parameters[];
 
 void DynamicMovement_Info::recompile(Effect* component,
                                      const Parameter* parameter,
-                                     std::vector<int64_t>) {
+                                     const std::vector<int64_t>&) {
     auto dynamicmovement = (E_DynamicMovement*)component;
     if (std::string("Init") == parameter->name) {
         dynamicmovement->code_init.need_recompile = true;
@@ -65,7 +65,7 @@ void DynamicMovement_Info::recompile(Effect* component,
 
 void DynamicMovement_Info::load_example(Effect* component,
                                         const Parameter*,
-                                        std::vector<int64_t>) {
+                                        const std::vector<int64_t>&) {
     auto dm = ((E_DynamicMovement*)component);
     if (dm->config.example < 0 || dm->config.example >= dm->info.num_examples) {
         return;

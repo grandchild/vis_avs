@@ -47,7 +47,7 @@ constexpr Parameter DynamicShift_Info::parameters[];
 
 void DynamicShift_Info::recompile(Effect* component,
                                   const Parameter* parameter,
-                                  std::vector<int64_t>) {
+                                  const std::vector<int64_t>&) {
     auto dynamicshift = (E_DynamicShift*)component;
     if (std::string("Init") == parameter->name) {
         dynamicshift->code_init.need_recompile = true;

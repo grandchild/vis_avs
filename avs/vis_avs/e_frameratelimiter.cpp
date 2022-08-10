@@ -6,7 +6,9 @@
 
 constexpr Parameter FramerateLimiter_Info::parameters[];
 
-void update_time_diff(Effect* component, const Parameter*, std::vector<int64_t>) {
+void update_time_diff(Effect* component,
+                      const Parameter*,
+                      const std::vector<int64_t>&) {
     E_FramerateLimiter* frameratelimiter = (E_FramerateLimiter*)component;
     frameratelimiter->update_time_diff();
 }

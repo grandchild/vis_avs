@@ -20,7 +20,7 @@ struct Triangle_Info : public Effect_Info {
     static constexpr int32_t legacy_id = -1;
     static constexpr char* legacy_ape_id = "Render: Triangle";
 
-    static void recompile(Effect*, const Parameter*, std::vector<int64_t>);
+    static void recompile(Effect*, const Parameter*, const std::vector<int64_t>&);
     static constexpr uint32_t num_parameters = 4;
     static constexpr Parameter parameters[num_parameters] = {
         P_STRING(offsetof(Triangle_Config, init), "Init", NULL, recompile),

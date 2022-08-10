@@ -129,8 +129,8 @@ struct ColorModifier_Info : public Effect_Info {
         return options;
     };
 
-    static void recompile(Effect*, const Parameter*, std::vector<int64_t>);
-    static void load_example(Effect*, const Parameter*, std::vector<int64_t>);
+    static void recompile(Effect*, const Parameter*, const std::vector<int64_t>&);
+    static void load_example(Effect*, const Parameter*, const std::vector<int64_t>&);
     static constexpr uint32_t num_parameters = 7;
     static constexpr Parameter parameters[num_parameters] = {
         P_STRING(offsetof(ColorModifier_Config, init), "Init", NULL, recompile),

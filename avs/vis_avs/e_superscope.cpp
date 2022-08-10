@@ -49,7 +49,7 @@ constexpr SuperScope_Example SuperScope_Info::examples[];
 
 void SuperScope_Info::recompile(Effect* component,
                                 const Parameter* parameter,
-                                std::vector<int64_t>) {
+                                const std::vector<int64_t>&) {
     auto ssc = ((E_SuperScope*)component);
     if (std::string("Init") == parameter->name) {
         ssc->code_init.need_recompile = true;
@@ -64,7 +64,7 @@ void SuperScope_Info::recompile(Effect* component,
 
 void SuperScope_Info::load_example(Effect* component,
                                    const Parameter*,
-                                   std::vector<int64_t>) {
+                                   const std::vector<int64_t>&) {
     auto ssc = ((E_SuperScope*)component);
     if (ssc->config.example < 0 || ssc->config.example >= ssc->info.num_examples) {
         return;

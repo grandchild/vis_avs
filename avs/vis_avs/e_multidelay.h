@@ -59,7 +59,7 @@ struct MultiDelay_Info : public Effect_Info {
         return options;
     };
 
-    static void on_delay(Effect*, const Parameter*, std::vector<int64_t>);
+    static void on_delay(Effect*, const Parameter*, const std::vector<int64_t>&);
 
     static constexpr uint32_t num_buffer_parameters = 2;
     static constexpr Parameter buffer_parameters[num_buffer_parameters] = {

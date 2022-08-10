@@ -23,7 +23,7 @@ unsigned int E_Triangle::instance_count = 0;
 
 void Triangle_Info::recompile(Effect* component,
                               const Parameter* parameter,
-                              std::vector<int64_t>) {
+                              const std::vector<int64_t>&) {
     E_Triangle* triangle = (E_Triangle*)component;
     std::string parameter_name = std::string(parameter->name);
     if (parameter_name == "Init") {

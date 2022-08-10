@@ -45,7 +45,7 @@ const char** E_AVI::c_filenames;
 
 void AVI_Info::on_file_change(Effect* component,
                               const Parameter*,
-                              std::vector<int64_t>) {
+                              const std::vector<int64_t>&) {
     E_AVI* avi = (E_AVI*)component;
     avi->load_file();
 }

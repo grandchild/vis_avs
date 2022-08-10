@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 constexpr Parameter Fadeout_Info::parameters[];
 
-void maketab(Effect* component, const Parameter*, std::vector<int64_t>) {
+void maketab(Effect* component, const Parameter*, const std::vector<int64_t>&) {
     E_Fadeout* fadeout = (E_Fadeout*)component;
     fadeout->maketab();
 }

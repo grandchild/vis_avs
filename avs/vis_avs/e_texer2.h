@@ -207,9 +207,9 @@ struct Texer2_Info : public Effect_Info {
     };
     static const char* const* image_files(int64_t* length_out);
 
-    static void on_file_change(Effect*, const Parameter*, std::vector<int64_t>);
-    static void recompile(Effect*, const Parameter*, std::vector<int64_t>);
-    static void load_example(Effect*, const Parameter*, std::vector<int64_t>);
+    static void on_file_change(Effect*, const Parameter*, const std::vector<int64_t>&);
+    static void recompile(Effect*, const Parameter*, const std::vector<int64_t>&);
+    static void load_example(Effect*, const Parameter*, const std::vector<int64_t>&);
     static constexpr uint32_t num_parameters = 11;
     static constexpr Parameter parameters[num_parameters] = {
         P_INT(offsetof(Texer2_Config, version), "Effect Version"),

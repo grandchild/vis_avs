@@ -43,24 +43,27 @@ Handles ColorMap_Map::id_factory;
 
 void bake_full_map(Effect* component,
                    const Parameter*,
-                   std::vector<int64_t> parameter_path) {
+                   const std::vector<int64_t>& parameter_path) {
     E_ColorMap* colormap = (E_ColorMap*)component;
     colormap->bake_full_map(parameter_path[0]);
 }
-void on_current_map_change(Effect* component, const Parameter*, std::vector<int64_t>) {
+// TODO [clean]: Unused. Is it not necessary to (re)bake the map on map change?
+void on_current_map_change(Effect* component,
+                           const Parameter*,
+                           const std::vector<int64_t>&) {
     E_ColorMap* colormap = (E_ColorMap*)component;
     colormap->bake_full_map(colormap->config.current_map);
 }
 void on_map_colors_change(Effect* component,
                           const Parameter*,
-                          std::vector<int64_t> parameter_path,
+                          const std::vector<int64_t>& parameter_path,
                           int64_t,
                           int64_t) {
     bake_full_map(component, NULL, parameter_path);
 }
 void on_map_cycle_mode_change(Effect* component,
                               const Parameter*,
-                              std::vector<int64_t>) {
+                              const std::vector<int64_t>&) {
     E_ColorMap* colormap = (E_ColorMap*)component;
     if (colormap->config.map_cycle_mode == 0) {
         colormap->config.next_map = colormap->config.current_map;
@@ -71,22 +74,22 @@ void on_map_cycle_mode_change(Effect* component,
 
 void flip_map(Effect* component,
               const Parameter*,
-              std::vector<int64_t> parameter_path) {
+              const std::vector<int64_t>& parameter_path) {
     ((E_ColorMap*)component)->flip_map(CLAMP(parameter_path[0], 0, INT64_MAX));
 }
 void clear_map(Effect* component,
                const Parameter*,
-               std::vector<int64_t> parameter_path) {
+               const std::vector<int64_t>& parameter_path) {
     ((E_ColorMap*)component)->clear_map(CLAMP(parameter_path[0], 0, INT64_MAX));
 }
 void save_map(Effect* component,
               const Parameter*,
-              std::vector<int64_t> parameter_path) {
+              const std::vector<int64_t>& parameter_path) {
     ((E_ColorMap*)component)->save_map(CLAMP(parameter_path[0], 0, INT64_MAX));
 }
 void load_map(Effect* component,
               const Parameter*,
-              std::vector<int64_t> parameter_path) {
+              const std::vector<int64_t>& parameter_path) {
     ((E_ColorMap*)component)->load_map(CLAMP(parameter_path[0], 0, INT64_MAX));
 }
 

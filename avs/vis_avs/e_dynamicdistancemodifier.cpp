@@ -120,7 +120,7 @@ constexpr Parameter DynamicDistanceModifier_Info::parameters[];
 
 void DynamicDistanceModifier_Info::recompile(Effect* component,
                                              const Parameter* parameter,
-                                             std::vector<int64_t>) {
+                                             const std::vector<int64_t>&) {
     auto ddm = (E_DynamicDistanceModifier*)component;
     if (std::string("Init") == parameter->name) {
         ddm->code_init.need_recompile = true;

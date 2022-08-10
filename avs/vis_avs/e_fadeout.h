@@ -11,7 +11,7 @@ struct Fadeout_Config : public Effect_Config {
 
 void maketab(Effect* component,
              const Parameter* parameter,
-             std::vector<int64_t> parameter_path);
+             const std::vector<int64_t>& parameter_path);
 
 #define OFFSET(field) offsetof(Fadeout_Config, field)
 

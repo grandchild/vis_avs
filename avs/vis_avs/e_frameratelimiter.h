@@ -7,7 +7,7 @@ struct FramerateLimiter_Config : public Effect_Config {
     int64_t limit = 30;
 };
 
-void update_time_diff(Effect*, const Parameter*, std::vector<int64_t>);
+void update_time_diff(Effect*, const Parameter*, const std::vector<int64_t>&);
 
 struct FramerateLimiter_Info : public Effect_Info {
     static constexpr char* group = "Misc";

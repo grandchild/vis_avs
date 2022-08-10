@@ -50,7 +50,7 @@ constexpr Parameter MultiDelay_Info::parameters[];
 
 void MultiDelay_Info::on_delay(Effect* component,
                                const Parameter*,
-                               std::vector<int64_t> parameter_path) {
+                               const std::vector<int64_t>& parameter_path) {
     ((E_MultiDelay*)component)->set_frame_delay(parameter_path[0]);
 }
 

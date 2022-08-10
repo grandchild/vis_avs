@@ -283,9 +283,9 @@ struct Movement_Info : public Effect_Info {
         return options;
     };
 
-    static void recreate_tab(Effect*, const Parameter*, std::vector<int64_t>);
-    static void recompile(Effect*, const Parameter*, std::vector<int64_t>);
-    static void load_effect(Effect*, const Parameter*, std::vector<int64_t>);
+    static void recreate_tab(Effect*, const Parameter*, const std::vector<int64_t>&);
+    static void recompile(Effect*, const Parameter*, const std::vector<int64_t>&);
+    static void load_effect(Effect*, const Parameter*, const std::vector<int64_t>&);
 
     static constexpr uint32_t num_parameters = 10;
     static constexpr Parameter parameters[num_parameters] = {

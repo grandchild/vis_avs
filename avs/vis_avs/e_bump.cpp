@@ -51,7 +51,7 @@ constexpr Parameter Bump_Info::parameters[];
 
 void Bump_Info::recompile(Effect* component,
                           const Parameter* parameter,
-                          std::vector<int64_t>) {
+                          const std::vector<int64_t>&) {
     auto bump = (E_Bump*)component;
     if (std::string("Init") == parameter->name) {
         bump->code_init.need_recompile = true;

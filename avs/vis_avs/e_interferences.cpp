@@ -67,7 +67,7 @@ constexpr Parameter Interferences_Info::parameters[];
 
 void Interferences_Info::on_init_rotation(Effect* component,
                                           const Parameter*,
-                                          std::vector<int64_t>) {
+                                          const std::vector<int64_t>&) {
     auto interferences = (E_Interferences*)component;
     interferences->cur_rotation = interferences->config.init_rotation;
 }

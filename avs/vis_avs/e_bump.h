@@ -60,7 +60,7 @@ struct Bump_Info : public Effect_Info {
         return options;
     };
 
-    static void recompile(Effect*, const Parameter*, std::vector<int64_t>);
+    static void recompile(Effect*, const Parameter*, const std::vector<int64_t>&);
     static constexpr uint32_t num_parameters = 11;
     static constexpr Parameter parameters[num_parameters] = {
         P_STRING(offsetof(Bump_Config, init), "Init", NULL, recompile),

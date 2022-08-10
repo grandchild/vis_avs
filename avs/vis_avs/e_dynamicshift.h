@@ -38,7 +38,7 @@ struct DynamicShift_Info : public Effect_Info {
         return options;
     };
 
-    static void recompile(Effect*, const Parameter*, std::vector<int64_t>);
+    static void recompile(Effect*, const Parameter*, const std::vector<int64_t>&);
     static constexpr uint32_t num_parameters = 5;
     static constexpr Parameter parameters[num_parameters] = {
         P_STRING(offsetof(DynamicShift_Config, init), "Init", NULL, recompile),

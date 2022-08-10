@@ -25,7 +25,7 @@ struct Texer_Info : public Effect_Info {
 
     static const char* const* image_files(int64_t* length_out);
 
-    static void on_file_change(Effect*, const Parameter*, std::vector<int64_t>);
+    static void on_file_change(Effect*, const Parameter*, const std::vector<int64_t>&);
     static constexpr uint32_t num_parameters = 4;
     static constexpr Parameter parameters[num_parameters] = {
         P_SELECT(offsetof(Texer_Config, image),

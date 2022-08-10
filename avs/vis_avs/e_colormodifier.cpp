@@ -46,7 +46,7 @@ constexpr ColorModifier_Preset ColorModifier_Info::examples[];
 
 void ColorModifier_Info::recompile(Effect* component,
                                    const Parameter* parameter,
-                                   std::vector<int64_t>) {
+                                   const std::vector<int64_t>&) {
     auto color_modifier = (E_ColorModifier*)component;
     if (std::string("Init") == parameter->name) {
         color_modifier->code_init.need_recompile = true;
@@ -61,7 +61,7 @@ void ColorModifier_Info::recompile(Effect* component,
 }
 void ColorModifier_Info::load_example(Effect* component,
                                       const Parameter*,
-                                      std::vector<int64_t>) {
+                                      const std::vector<int64_t>&) {
     auto color_modifier = (E_ColorModifier*)component;
     const ColorModifier_Preset& to_load =
         color_modifier->info.examples[color_modifier->config.example];

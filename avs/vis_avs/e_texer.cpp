@@ -23,7 +23,7 @@ const char** E_Texer::c_filenames;
 
 void Texer_Info::on_file_change(Effect* component,
                                 const Parameter*,
-                                std::vector<int64_t>) {
+                                const std::vector<int64_t>&) {
     E_Texer* texer = (E_Texer*)component;
     texer->load_image();
 }

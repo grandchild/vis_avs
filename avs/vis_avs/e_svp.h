@@ -12,7 +12,7 @@ struct SVP_Config : public Effect_Config {
     int64_t library = -1;
 };
 
-void set_library(Effect*, const Parameter*, std::vector<int64_t>);
+void set_library(Effect*, const Parameter*, const std::vector<int64_t>&);
 
 struct SVP_Info : public Effect_Info {
     static constexpr char* group = "Render";

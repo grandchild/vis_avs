@@ -15,8 +15,10 @@ struct VideoDelay_Info : public Effect_Info {
     static constexpr int32_t legacy_id = -1;
     static constexpr char* legacy_ape_id = "Holden04: Video Delay";
 
-    static void on_use_beats_change(Effect*, const Parameter*, std::vector<int64_t>);
-    static void on_delay_change(Effect*, const Parameter*, std::vector<int64_t>);
+    static void on_use_beats_change(Effect*,
+                                    const Parameter*,
+                                    const std::vector<int64_t>&);
+    static void on_delay_change(Effect*, const Parameter*, const std::vector<int64_t>&);
 
     static constexpr uint32_t num_parameters = 2;
     static constexpr Parameter parameters[num_parameters] = {

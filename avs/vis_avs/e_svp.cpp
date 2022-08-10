@@ -45,7 +45,7 @@ constexpr Parameter SVP_Info::parameters[];
 std::vector<std::string> E_SVP::filenames;
 const char** E_SVP::c_filenames;
 
-void set_library(Effect* component, const Parameter*, std::vector<int64_t>) {
+void set_library(Effect* component, const Parameter*, const std::vector<int64_t>&) {
     E_SVP* svp = (E_SVP*)component;
     svp->set_library();
 }

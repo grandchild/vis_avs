@@ -265,7 +265,7 @@ struct Parameter;  // declared below
 /* Function types for various Parameter fields. */
 typedef void (*value_change_handler)(Effect* component,
                                      const Parameter* parameter,
-                                     std::vector<int64_t> parameter_path);
+                                     const std::vector<int64_t>& parameter_path);
 typedef const char* const* (*options_getter)(int64_t* length_out);
 typedef size_t (*list_length_getter)(uint8_t* list_address);
 typedef bool (*list_adder)(uint8_t* list_address, uint32_t length_max, int64_t* before);
@@ -275,7 +275,7 @@ typedef bool (*list_remover)(uint8_t* list_address,
                              int64_t* to_remove);
 typedef void (*list_edit_handler)(Effect* component,
                                   const Parameter* parameter,
-                                  std::vector<int64_t> parameter_path,
+                                  const std::vector<int64_t>& parameter_path,
                                   int64_t index1,
                                   int64_t index2);
 

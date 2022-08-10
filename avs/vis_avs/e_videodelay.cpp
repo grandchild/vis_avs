@@ -49,7 +49,7 @@ constexpr Parameter VideoDelay_Info::parameters[];
 
 void VideoDelay_Info::on_use_beats_change(Effect* component,
                                           const Parameter*,
-                                          std::vector<int64_t>) {
+                                          const std::vector<int64_t>&) {
     E_VideoDelay* delay = (E_VideoDelay*)component;
     if (delay->config.use_beats) {
         delay->frame_delay = 0;
@@ -61,7 +61,7 @@ void VideoDelay_Info::on_use_beats_change(Effect* component,
 
 void VideoDelay_Info::on_delay_change(Effect* component,
                                       const Parameter*,
-                                      std::vector<int64_t>) {
+                                      const std::vector<int64_t>&) {
     E_VideoDelay* delay = (E_VideoDelay*)component;
     if (delay->config.use_beats) {
         delay->frame_delay = 0;

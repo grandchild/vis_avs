@@ -21,14 +21,14 @@ const char** E_Texer2::c_filenames;
 
 void Texer2_Info::on_file_change(Effect* component,
                                  const Parameter*,
-                                 std::vector<int64_t>) {
+                                 const std::vector<int64_t>&) {
     E_Texer2* texer2 = (E_Texer2*)component;
     texer2->load_image();
 }
 
 void Texer2_Info::recompile(Effect* component,
                             const Parameter* parameter,
-                            std::vector<int64_t>) {
+                            const std::vector<int64_t>&) {
     auto texer2 = (E_Texer2*)component;
     if (std::string("Init") == parameter->name) {
         texer2->code_init.need_recompile = true;
@@ -44,7 +44,7 @@ void Texer2_Info::recompile(Effect* component,
 
 void Texer2_Info::load_example(Effect* component,
                                const Parameter*,
-                               std::vector<int64_t>) {
+                               const std::vector<int64_t>&) {
     auto texer2 = ((E_Texer2*)component);
     const Texer2_Example& to_load = texer2->info.examples[texer2->config.example];
     texer2->config.init = to_load.init;

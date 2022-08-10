@@ -98,18 +98,18 @@ struct ColorMap_Config : public Effect_Config {
     }
 };
 
-void bake_full_map(Effect*, const Parameter*, std::vector<int64_t>);
-void on_current_map_change(Effect*, const Parameter*, std::vector<int64_t>);
+void bake_full_map(Effect*, const Parameter*, const std::vector<int64_t>&);
+void on_current_map_change(Effect*, const Parameter*, const std::vector<int64_t>&);
 void on_map_colors_change(Effect*,
                           const Parameter*,
-                          std::vector<int64_t>,
+                          const std::vector<int64_t>&,
                           int64_t,
                           int64_t);
-void on_map_cycle_mode_change(Effect*, const Parameter*, std::vector<int64_t>);
-void flip_map(Effect*, const Parameter*, std::vector<int64_t>);
-void clear_map(Effect*, const Parameter*, std::vector<int64_t>);
-void save_map(Effect*, const Parameter*, std::vector<int64_t>);
-void load_map(Effect*, const Parameter*, std::vector<int64_t>);
+void on_map_cycle_mode_change(Effect*, const Parameter*, const std::vector<int64_t>&);
+void flip_map(Effect*, const Parameter*, const std::vector<int64_t>&);
+void clear_map(Effect*, const Parameter*, const std::vector<int64_t>&);
+void save_map(Effect*, const Parameter*, const std::vector<int64_t>&);
+void load_map(Effect*, const Parameter*, const std::vector<int64_t>&);
 
 struct ColorMap_Info : public Effect_Info {
     static constexpr char* group = "Trans";
