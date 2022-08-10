@@ -122,7 +122,7 @@ struct ColorMap_Info : public Effect_Info {
         " maps. If it's turned off, only Map 1 is used.\n"
         "\n"
         "To edit the map, drag the arrows around with the left mouse button. You can"
-        " add/edit /remove colors by right-clicking, double-click an empty position to"
+        " add/edit/remove colors by right-clicking, double-click an empty position to"
         " add a new point there or double-click an existing point to edit it.\n"
         "\n"
         "Note: While editing maps, cycling is temporarily disabled. Switch to another"
