@@ -617,7 +617,7 @@ BEGIN
     CONTROL         "Slider1",IDC_BLUE,"msctls_trackbar32",TBS_AUTOTICKS | 
                     TBS_BOTH | WS_BORDER | WS_TABSTOP,25,44,97,13
     PUSHBUTTON      "><",IDC_BBLUE,125,44,12,14
-    CONTROL         "Dissociate RGB values",IDC_DISSOC,"Button",
+    CONTROL         "Separate RGB values",IDC_SEPARATE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,0,60,89,10
     CONTROL         "Replace",IDC_REPLACE,"Button",BS_AUTORADIOBUTTON | 
                     WS_GROUP | WS_TABSTOP,0,71,43,10

@@ -91,7 +91,7 @@
 #define IDC_EFFECTS                     1000
 #define IDC_ENABLED                     1001
 #define IDC_FBCLEAR                     1002
-#define IDC_DISSOC                      1003
+#define IDC_SEPARATE                    1003
 #define IDC_DAMP                        1004
 #define OBJ_COMBO                       1005
 #define IDC_EFFECTRECT                  1006
