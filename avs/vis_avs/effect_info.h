@@ -724,18 +724,15 @@ struct Effect_Info {
     virtual const char* get_name() const { return this->name; };   \
     virtual const char* get_help() const { return this->help; };
 
-#define EFFECT_INFO_GETTERS                                                       \
-    EFFECT_INFO_GETTERS_NO_PARAMETERS                                             \
-    virtual uint32_t get_num_parameters() const { return this->num_parameters; }; \
-    virtual const Parameter* get_parameters() const { return this->parameters; }; \
-    virtual const AVS_Parameter_Handle* get_parameters_for_api() const {          \
-        static AVS_Parameter_Handle parameters_for_api[this->num_parameters];     \
-        for (int64_t i = 0; i < this->num_parameters; i++) {                      \
-            parameters_for_api[i] = this->parameters[i].handle;                   \
-        }                                                                         \
-        return parameters_for_api;                                                \
-    };
-
+#define EFFECT_INFO_GETTERS                                                           \
+    EFFECT_INFO_GETTERS_NO_PARAMETERS                                                 \
+    virtual uint32_t get_num_parameters() const { return this->num_parameters; };     \
+    virtual const Parameter* get_parameters() const { return this->parameters; };     \
+    virtual const AVS_Parameter_Handle* get_parameters_for_api() const {              \
+        static Parameter_Handle_List<this->num_parameters> parameter_handles_for_api( \
+            this->parameters);                                                        \
+        return parameter_handles_for_api.handles;                                     \
+    }
 /**
  * This one is only useful for Root and Effect List. All other effects automatically
  * inherit the default `can_have_child_components()` method (which always returns
@@ -744,6 +741,27 @@ struct Effect_Info {
 #define EFFECT_INFO_GETTERS_WITH_CHILDREN \
     EFFECT_INFO_GETTERS;                  \
     virtual bool can_have_child_components() const { return true; }
+
+/**
+ * Another glorious C++ trick: A constexpr-(a.k.a. compile-time-)array, initialized not
+ * by a `{ ... }`-literal, but from data in another array. `get_parameters_for_api()`
+ * used to contain a static `AVS_Parameter_Handle[]` array instead of this, which was
+ * filled when calling the method. However, this loop ran on each call and additionally
+ * some compilers are not happy about static arrays with constexpr but non-literal
+ * length.
+ *
+ * This way the looping can happen at compile time and the array is stored in the static
+ * Parameter_Handle_List-typed variable in `get_parameters_for_api()`
+ */
+template <int N>
+struct Parameter_Handle_List {
+    AVS_Parameter_Handle handles[N] = {};
+    constexpr Parameter_Handle_List(const Parameter* parameters) {
+        for (size_t i = 0; i < N; i++) {
+            handles[i] = parameters[i].handle;
+        }
+    }
+};
 
 /**
  * This is needed by the `Configurable_Effect` template class, but it's here since it
