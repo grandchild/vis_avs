@@ -27,7 +27,7 @@ jobs:
         shell: cmd
         run: copy build/Debug/vis_avs.dll vis_avs_281d_msvc_debug.dll
 
-      - uses: actions/upload-artifact@v3.0.0
+      - uses: actions/upload-artifact@v3.1.1
         with:
           name: vis_avs_msvc
           path: vis_avs_281d_msvc_debug.dll
