@@ -66,6 +66,20 @@ enum AVS_Component_Position {
     AVS_COMPONENT_POSITION_DONTCARE = AVS_COMPONENT_POSITION_AFTER
 };
 
+/**
+ * Metadata for an effect.
+ *
+ * Populate this struct by calling `avs_effect_info()`.
+ *
+ * Name is never empty.
+ *
+ * Group is one of "Render", "Trans", "Misc", rarely something else. No group, i.e. ""
+ * is possible.
+ *
+ * Help text can be empty, short or several paragraphs long.
+ *
+ * The list of parameters may be empty, in which case `parameters` will be NULL.
+ */
 typedef struct {
     const char* group;
     const char* name;
@@ -74,6 +88,27 @@ typedef struct {
     const AVS_Parameter_Handle* parameters;
 } AVS_Effect_Info;
 
+/**
+ * Metadata for one of an effect's parameters.
+ *
+ * Populate this struct by calling `avs_parameter_info()`.
+ *
+ * Name is never empty.
+ *
+ * Description may be empty.
+ *
+ * If `is_global` is `true`, then this parameter is shared across all components of this
+ * effect type within a preset. Changing the value of this parameter will change it for
+ * all components.
+ *
+ * The rest of the fields may be unused for a given parameter `type`, and will contain
+ * the appropriate null value for other types:
+ * - `int_min`, `int_max`, `float_min`, `float_max are only meaningful for their
+ *   respective numerical type.
+ * - `options_length` and `options` are only used for `AVS_PARAM_SELECT` type
+ *   parameters.
+ * - all `children*` parameters are only used for `AVS_PARAM_LIST` type parameters.
+ */
 typedef struct {
     AVS_Parameter_Type type;
     const char* name;
@@ -232,17 +267,15 @@ bool avs_parameter_info(AVS_Handle avs,
                         AVS_Parameter_Info* info_out);
 
 /**
- * Use these methods to retrieve parameter values from components or to set new ones.
+ * Use these methods to retrieve parameter values from components.
  *
  * If parameter lookup fails, a default zero value will be returned by all `get`
  * methods. It's `0` for all numerical types, `false` for booleans, and `""` for
  * strings.
  *
- * If the zero value was returned you should check `avs_error_str()`. It will
- * return the empty string `""` if the last call to a `get` or `set` method succeeded,
- * or an error message otherwise.
- *
- * The `set` methods all return `true` on success or `false` otherwise.
+ * If the zero value was returned you should check `avs_error_str()`. It will return the
+ * empty string `""` if the last call to a `get` method succeeded, or an error message
+ * otherwise.
  */
 #define NOT_IN_A_LIST 0
 bool avs_parameter_get_bool(AVS_Handle avs,
@@ -271,6 +304,16 @@ const char* avs_parameter_get_string(AVS_Handle avs,
                                      uint32_t list_depth,
                                      int64_t* list_indices);
 
+/**
+ * Use these methods to set new parameter values for components.
+ *
+ * The `set` methods all return `true` on success or `false` otherwise.
+ *
+ * Note: Parameters may internally have on-change handler functions registered for them.
+ * Setting a value will invoke that function if present. Only a minority of parameters
+ * make use of this. But consider that some parameters' setters might not always return
+ * quite as instantaneously as most do.
+ */
 bool avs_parameter_set_bool(AVS_Handle avs,
                             AVS_Component_Handle component,
                             AVS_Parameter_Handle parameter,
