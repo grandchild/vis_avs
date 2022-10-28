@@ -57,47 +57,27 @@ static int _lmovb(struct lextab* lp, int c, int st) {
 static int _Alextab(compileContext* ctx, int __na__) {
     if (__na__ >= 0 && __na__ <= 19) nseel_count(ctx);
     switch (__na__) {
-        case 0:
-            ctx->yylval = nseel_translate(ctx, HEXCONST);
-            return VALUE;
-        case 1:
-            ctx->yylval = nseel_translate(ctx, INTCONST);
-            return VALUE;
-        case 2:
-            ctx->yylval = nseel_translate(ctx, INTCONST);
-            return VALUE;
-        case 3:
-            ctx->yylval = nseel_translate(ctx, DBLCONST);
-            return VALUE;
+        case 0: ctx->yylval = nseel_translate(ctx, HEXCONST); return VALUE;
+        case 1: ctx->yylval = nseel_translate(ctx, INTCONST); return VALUE;
+        case 2: ctx->yylval = nseel_translate(ctx, INTCONST); return VALUE;
+        case 3: ctx->yylval = nseel_translate(ctx, DBLCONST); return VALUE;
         case 4:
         case 5:
             nseel_setLastVar(ctx);
             ctx->yylval = nseel_lookup(ctx, &__na__);
             return __na__;
-        case 6:
-            return '+';
-        case 7:
-            return '-';
-        case 8:
-            return '*';
-        case 9:
-            return '/';
-        case 10:
-            return '%';
-        case 11:
-            return '&';
-        case 12:
-            return '|';
-        case 13:
-            return '(';
-        case 14:
-            return ')';
-        case 15:
-            return '=';
-        case 16:
-            return ',';
-        case 17:
-            return ';';
+        case 6: return '+';
+        case 7: return '-';
+        case 8: return '*';
+        case 9: return '/';
+        case 10: return '%';
+        case 11: return '&';
+        case 12: return '|';
+        case 13: return '(';
+        case 14: return ')';
+        case 15: return '=';
+        case 16: return ',';
+        case 17: return ';';
     }
     return (LEXSKIP);
 }

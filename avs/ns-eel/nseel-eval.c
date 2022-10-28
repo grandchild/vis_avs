@@ -254,18 +254,10 @@ int nseel_lookup(compileContext* ctx, int* typeOfObject) {
         functionType* f = nseel_getFunctionFromTable(i);
         if (!strcmpi(f->name, ctx->yytext)) {
             switch (f->nParams) {
-                case 1:
-                    *typeOfObject = FUNCTION1;
-                    break;
-                case 2:
-                    *typeOfObject = FUNCTION2;
-                    break;
-                case 3:
-                    *typeOfObject = FUNCTION3;
-                    break;
-                default:
-                    *typeOfObject = IDENTIFIER;
-                    break;
+                case 1: *typeOfObject = FUNCTION1; break;
+                case 2: *typeOfObject = FUNCTION2; break;
+                case 3: *typeOfObject = FUNCTION3; break;
+                default: *typeOfObject = IDENTIFIER; break;
             }
             return i;
         }
