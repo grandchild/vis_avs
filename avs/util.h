@@ -6,6 +6,6 @@
 // unsigned types, which is not always desired or possible.
 // If the size assumption is violated the value will overflow and you will get negative
 // sizes.
-#define ssizeof8(x) ((int8_t)sizeof(x))
+#define ssizeof8(x)  ((int8_t)sizeof(x))
 #define ssizeof32(x) ((int32_t)sizeof(x))
 #define ssizeof64(x) ((int64_t)sizeof(x))

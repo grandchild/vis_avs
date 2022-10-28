@@ -910,7 +910,7 @@ NAKED void nseel_asm_repeat(void) {
 again:
       push ecx
       push esi  // revert back to last
-                                                                 // temp workspace
+                                                                // temp workspace
         mov ecx, 0FFFFFFFFh
         call ecx
       pop esi
