@@ -18,7 +18,7 @@
 #endif
 
 std::unordered_map<AVS_Handle, AVS_Instance*> g_instances;
-char* g_error = "";
+const char* g_error = "";
 #define NUM_EFFECTS 2
 
 AVS_Instance* get_instance_from_handle(AVS_Handle avs) {
