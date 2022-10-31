@@ -327,6 +327,29 @@ const char* avs_error_str(AVS_Handle avs);
  */
 void avs_free(AVS_Handle avs);
 
+/**
+ * The version of AVS. `major`, `minor` and `patch` adhere to "Semantic Versioning":
+ * https://semver.org
+ */
+typedef struct {
+    /** AVS major version: API changes */
+    uint32_t major;
+    /** AVS minor version: New features */
+    uint32_t minor;
+    /** AVS patch version: Bug fixes */
+    uint32_t patch;
+    /** Release candidate. Is 0 if not an RC, i.e. most of the time. */
+    uint32_t rc;
+    /** The 20-byte SHA1 commit hash of the git revision from which AVS was built. */
+    const uint8_t commit[20];
+    /** A hash of any uncommitted changes on top of `commit`. The same hash should point
+        to the same set of changes, although it might not be possible to guarantee that
+        completely. It's all zero when the repository was "clean" at build time. */
+    const uint8_t changes[20];
+} AVS_Version;
+
+AVS_Version avs_version();
+
 #ifdef __cplusplus
 }
 #endif

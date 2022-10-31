@@ -117,3 +117,21 @@ void avs_free(AVS_Handle avs) {
         delete instance;
     }
 }
+
+// TODO [build]: These fields should be set by the build system. For now set them here.
+#define AVS_VERSION_MAJOR   2
+#define AVS_VERSION_MINOR   81
+#define AVS_VERSION_PATCH   4  // It's actually "d", but SemVer can't have letters.
+#define AVS_VERSION_RC      0
+#define AVS_VERSION_COMMIT  "..................."
+#define AVS_VERSION_CHANGES "..................."
+
+AVS_API
+AVS_Version avs_version() {
+    return AVS_Version{AVS_VERSION_MAJOR,
+                       AVS_VERSION_MINOR,
+                       AVS_VERSION_PATCH,
+                       AVS_VERSION_RC,
+                       AVS_VERSION_COMMIT,
+                       AVS_VERSION_CHANGES};
+}
