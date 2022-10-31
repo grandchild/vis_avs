@@ -65,12 +65,14 @@
  */
 #pragma once
 
+#ifdef __cplusplus
+#include <cstddef>
+#include <cstdint>
+extern "C" {
+#else
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 typedef uint32_t AVS_Handle;
