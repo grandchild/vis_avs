@@ -212,7 +212,10 @@ struct Texer2_Info : public Effect_Info {
     static void load_example(Effect*, const Parameter*, const std::vector<int64_t>&);
     static constexpr uint32_t num_parameters = 11;
     static constexpr Parameter parameters[num_parameters] = {
-        P_INT(offsetof(Texer2_Config, version), "Effect Version"),
+        P_IRANGE(offsetof(Texer2_Config, version),
+                 "Effect Version",
+                 0,
+                 TEXER_II_VERSION_CURRENT),
         P_SELECT(offsetof(Texer2_Config, image),
                  "Image",
                  image_files,
