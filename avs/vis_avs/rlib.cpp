@@ -127,7 +127,7 @@ void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_LEGACY(R_Parts);
     DECLARE_EFFECT_LEGACY(R_RotBlit);
     DECLARE_EFFECT_NEW(SVP);
-    DECLARE_EFFECT_LEGACY_MT(R_ColorFade);
+    DECLARE_EFFECT_NEW(Colorfade);
     DECLARE_EFFECT_LEGACY(R_ColorClip);
     DECLARE_EFFECT_NEW(RotStar);
     DECLARE_EFFECT_LEGACY(R_OscRings);
