@@ -10,7 +10,7 @@
  *   "Effect":
  *     A type of visual effect that can be used in a preset. This is kind of like a type
  *     in programming. A "Component" is of an "Effect" type. AVS has a list of available
- *     Effects, that you can query with `avs_effects_get()`. Effects are described by
+ *     Effects, that you can query with `avs_effect_library()`. Effects are described by
  *     their name, group and parameters.
  *
  *   "Component":
@@ -381,48 +381,56 @@ bool avs_parameter_run_action(AVS_Handle avs,
                               int64_t* list_indices);
 
 /**
- * Use these methods to manage parameter lists. Parameter lists are rare, but they allow
- * effects to have a variable-length list of items with a set of multiple parameters.
- * The Effect_Info- and Parameter API around this is a bit complex.
+ *   Parameter Lists
  *
- * Consider an AVS effect "Foo" with two parameters, one regular, "awesome", the other a
- * list of the same set of sub-parameters, "things". In JSON the component may look a
+ * Parameter lists are rare but they allow effects to have a variable-length list of
+ * items with a set of multiple parameters. The `AVS_Effect_Info`- and
+ * `AVS_Parameter_Info` API around this can be a bit complex. First let's start with
+ * changing the value of a nested parameter.
+ *
+ *
+ *   Accessing Nested Parameters
+ *
+ * Consider an AVS effect "Foo" with two parameters, one regular, "Awesome", the other a
+ * list of the same set of sub-parameters, "Things". In JSON the component may look a
  * bit like this:
  *
  *     {
  *         "type" : "Foo",
  *         "config": {
- *             "awesome": true,
- *             "things": [
+ *             "Awesome": true,
+ *             "Things": [
  *                 {
- *                     "bar": true,
- *                     "baz": 3.14
+ *                     "Bar": true,
+ *                     "Baz": 3.14
  *                 },
  *                 {
- *                     "bar": false,
- *                     "baz": -1.0
+ *                     "Bar": false,
+ *                     "Baz": -1.0
  *                 }
  *             ]
  *         }
  *     }
  *
  * Remember these are the specific values for this component _instance_. How do you know
- * that "awesome" has a bool type, and "things" is a list, and "baz" inside "things"
- * should be a floating-point number? This is where the Effect_Info data comes in.
+ * that "Awesome" has a `bool` type, and "things" is a list, and "Baz" inside "things"
+ * should be a floating-point number? This is where the `AVS_Effect_Info` data comes in.
  *
- * You know the Effect_Info for a specific effect from the list of available effects
- * given to you by `avs_effects_get()`. In it you will find one Effect_Info struct that
- * has its "name" property set to "Foo". It's parameters and parameter types are
- * recorded within. So a (shortened) JSON representation of the Effect_Info struct may
- * look like below. Note that this is the _general_ parameter description for _all_
- * components that have type "Foo":
+ * You know the `AVS_Effect_Info` for a specific effect from the list of available
+ * effects given to you by `avs_effect_library()`. In that list you will find one
+ * `AVS_Effect_Info` struct that has its `name` property set to "Foo". If you have a
+ * specific component object, you can also directly get the corresponding
+ * `AVS_Effect_Info` through `avs_component_effect()`. Its parameters and parameter
+ * types are recorded within. So a (shortened) JSON representation of the
+ * `AVS_Effect_Info` struct may look like below. Note that this is the _general_
+ * parameter description for _all_ components that have type "Foo":
  *
  *     {
  *         "group": "Render",
  *         "name": "Foo",
  *         "parameters" [
  *             {
- *                 "name": "awesome",
+ *                 "name": "Awesome",
  *                 "type": "bool"
  *             },
  *             {
@@ -434,7 +442,7 @@ bool avs_parameter_run_action(AVS_Handle avs,
  *                         "type": "bool"
  *                     },
  *                     {
- *                         "name": "baz",
+ *                         "name": "Baz",
  *                         "type": "float"
  *                     }
  *                 ]
@@ -443,31 +451,145 @@ bool avs_parameter_run_action(AVS_Handle avs,
  *     }
  *
  * Take a second to compare this JSON representation with the `AVS_Effect_Info` and
- * `AVS_Parameter_Info` structs at the beginning of this file, to see how you may get at
+ * `AVS_Parameter_Info` structs at the beginning of this file to see how you may get at
  * the desired `AVS_Parameter_Info` reference which you will need to set the component's
  * parameter.
  *
- * Armed with this knowledge you can now get to any parameter within any component. To
- * set the second "thing"'s "baz" value, of a component `my_foo` to, say, 5.0, you have
- * to (recursively) scan the `AVS_Effect_Info` and `AVS_Parameter_Info` structs and find
- * that "baz"'s Parameter_Info tells you it's of type "float". Together with your
- * AVS_Handle `my_avs` and your `AVS_Component_Handle` `my_foo`, and your freshly
- * discovered `AVS_Parameter_Info` `things_baz`, you now call the setter for the correct
- * type:
+ * For example: To set the second "Thing"'s "Baz" value of a "Foo" component `my_foo` to
+ * some value you have to query for `my_foo`'s `AVS_Effect_Info` struct, then get the
+ * `AVS_Parameter_Info` structs for "Thing", then its child "Baz". Then check the type
+ * of "Things" > "Baz" and find it to be `AVS_PARAM_FLOAT`.
+ * Together with an AVS instance referenced by the `AVS_Handle`, `avs`, and your your
+ * freshly discovered `AVS_Component_Handle` `foo` and nested `AVS_Parameter_Info`
+ * `baz`, you then call the setter for the correct type.
  *
- *     uint32_t list_depth = 1;
- *     int64_t list_index[1] = {1};
- *     double new_value = 5.0;
- *     if (!avs_parameter_set_float(
- *             my_avs, my_foo, things_baz, new_value, list_depth, list_index)) {
- *         printf("Error setting new value: %s\n", avs_error_str(my_avs));
+ *     // Find a parameter handle and info by name, in either an effect
+ *     // (parent_info==NULL) or a list parameter (effect_info==NULL).
+ *     AVS_Parameter_Handle find_parameter(AVS_Handle avs,
+ *                                         AVS_Effect_Handle effect,
+ *                                         AVS_Effect_Info* effect_info,
+ *                                         AVS_Parameter_Info* parent_info,
+ *                                         const char* name,
+ *                                         AVS_Parameter_Info* info_out) {
+ *         AVS_Parameter_Handle parameter_out = 0;
+ *         uint32_t parameters_length = 0;
+ *         const AVS_Parameter_Handle* parameters = NULL;
+ *         if (effect_info) {
+ *             parameters_length = effect_info->parameters_length;
+ *             parameters = effect_info->parameters;
+ *         } else if (parent_info) {
+ *             parameters_length = parent_info->children_length;
+ *             parameters = parent_info->children;
+ *         }
+ *         for (int i = 0; i < parameters_length; ++i) {
+ *             if (!avs_parameter_info(avs, effect, parameters[i], info_out)) {
+ *                 printf("error getting parameter info: %s\n", avs_error_str(avs));
+ *                 return false;
+ *             }
+ *             if (strncmp(info_out->name, name, 512) == 0) {
+ *                 parameter_out = parameters[i];
+ *                 break;
+ *             }
+ *         }
+ *         return parameter_out;
  *     }
  *
- * Validate that this actually worked:
+ *     // Now the (a bit contrived) function to update the parameter to a fixed value:
+ *     bool update_things_baz(AVS_Handle avs,
+ *                            AVS_Component_Handle my_foo,
+ *                            double value) {
+ *         AVS_Effect_Handle foo = avs_component_effect(avs, my_foo);
+ *         if (foo == 0) {
+ *             printf("error getting effect for my_foo component\n");
+ *             return false;
+ *         }
+ *         AVS_Effect_Info foo_info;
+ *         if(avs_effect_info(avs, foo, &foo_info)) {
+ *             printf("error getting effect info: %s\n", avs_error_str(avs));
+ *             return false;
+ *         }
+ *         AVS_Parameter_Info things_info;
+ *         AVS_Parameter_Handle things =
+ *             find_parameter(avs, foo, &foo_info, NULL, "Things", &things_info);
+ *         if (things == 0) {
+ *             printf("error: parameter 'Things' not found\n");
+ *             return false;
+ *         }
+ *         AVS_Parameter_Info baz_info;
+ *         AVS_Parameter_Handle baz =
+ *             find_parameter(avs, foo, NULL, &things_info, "Baz", &baz_info);
+ *         if (baz == 0) {
+ *             printf("error: nested parameter 'Baz' not found\n");
+ *             return false;
+ *         }
  *
- *     double check = avs_parameter_get_float(my_avs, my_foo, things_baz, list_index);
- *     assert(check == new_value);
+ *         // "Baz" must be a floating point value!
+ *         assert(baz_info.type == AVS_PARAM_FLOAT);
+ *
+ *         // A "path" of length 1 which selects the *second* element (index 1) from
+ *         // "Things".
+ *         uint32_t depth = 1;
+ *         int64_t path[1] = {1};
+ *
+ *         // Finally set our new value! Note that the reference handle to "Things",
+ *         // `things` is not needed! `baz` alone is sufficient.
+ *         if (!avs_parameter_set_float(avs, foo, baz, value, depth, path)) {
+ *             printf("error: setting value failed: %s\n", avs_error_str(avs));
+ *         }
+ *
+ *         // Validate that this actually worked:
+ *         double check = avs_parameter_get_float(avs, my_foo, baz, depth, path);
+ *         assert(check == value);
+ *
+ *         return true;
+ *     }
+ *
+ * In actual code you might do things slightly differently, such as caching the
+ * `AVS_Effect_Info` struct for a component instead of querying it every time, and
+ * dispatching the type of value to set based on the type of the parameter, etc.
+ *
+ *
+ *   Manipulating a List of Parameters
+ *
+ * To add new elements to the list simply call `avs_parameter_list_element_add()`. You
+ * have to first specify the usual suspects as above: AVS instance, component and
+ * parameter handles. Next you need a reference index `before` which to place the new
+ * one. If the reference index is negative, it will count from the back (i.e. -1 places
+ * it before the last element). All positive indices ≥ the length of the list are
+ * interpreted as "at the end", so simply use a huge index to append to the list.
+ *
+ * You can (but don't have to) add initial values for some or all of the child
+ * parameters of the new list element. If a child parameter doesn't get an explicit
+ * initial value it will get the default value specified in the effect. To add initial
+ * values for a parameter create an `AVS_Parameter_Value` list.
+ *
+ * Note that all `list_depth` and `list_indices` arguments to the
+ * `avs_parameter_list_*()` functions point to the _list_ parameter, not any of its
+ * children. That means if the list is not itself inside another list then these two
+ * arguments will always be `0` and `NULL` respectively.
+ *
+ *     bool add_with_two_initial_values(AVS_Handle avs,
+ *                                      AVS_Component_Handle component,
+ *                                      AVS_Parameter_Handle list_param,
+ *                                      AVS_Parameter_Handle child_one,
+ *                                      AVS_Parameter_Handle child_two) {
+ *         uint32_t values_length = 2;
+ *         AVS_Parameter_Value values[2];
+ *         // Let's assume we _know_ that the type is AVS_PARAM_INT.
+ *         values[0].parameter = child_one;
+ *         values[0].value.i = 1000;
+ *         // Let's also assume we know that the other one is an AVS_PARAM_COLOR.
+ *         values[1].parameter = child_two;
+ *         values[1].value.c = 0xffa300;  // A pleasant orange
+ *
+ *         return avs_parameter_list_element_add(
+ *             avs, component, list_param, 0, values_length, values, 0, NULL);
+ *     }
+ *
+ * The order of the values in the array doesn't matter. If there are duplicates, the
+ * last one wins, but the on-change handler will be called for all of them!
  */
+
 typedef union {
     bool b;
     int64_t i;
