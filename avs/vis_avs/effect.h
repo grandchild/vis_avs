@@ -301,7 +301,7 @@ class Configurable_Effect : public Effect {
                                    int64_t to,
                                    const std::vector<int64_t>& parameter_path = {}) {
         if (parameter == 0) {
-            return 0;
+            return false;
         }
         auto param = this->info.get_parameter_from_handle(parameter);
         if (param == NULL) {
@@ -318,7 +318,7 @@ class Configurable_Effect : public Effect {
                                      int64_t to_remove,
                                      const std::vector<int64_t>& parameter_path = {}) {
         if (parameter == 0) {
-            return 0;
+            return false;
         }
         auto param = this->info.get_parameter_from_handle(parameter);
         if (param == NULL) {
