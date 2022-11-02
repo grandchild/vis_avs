@@ -375,9 +375,9 @@ class Configurable_Effect : public Effect {
    protected:
     static std::string desc;
     static void _set_desc() {
-        if (Configurable_Effect::desc == "") {
+        if (Configurable_Effect::desc.empty()) {
             Configurable_Effect::desc += Configurable_Effect::info.group;
-            if (Configurable_Effect::desc != "") {
+            if (!Configurable_Effect::desc.empty()) {
                 Configurable_Effect::desc += " / ";
             }
             Configurable_Effect::desc += Configurable_Effect::info.name;
