@@ -322,7 +322,13 @@ bool list_add(uint8_t* list_address, uint32_t length_max, int64_t* before) {
     if (list->size() >= length_max) {
         return false;
     }
-    if (*before < 0 || (size_t)(*before < 0 ? 0 : *before) >= list->size()) {
+    if (*before < 0) {
+        *before = list->size() + *before;
+    }
+    if (*before < 0) {
+        *before = 0;
+    }
+    if ((size_t)(*before) >= list->size()) {
         list->emplace_back();
         *before = list->size() - 1;
     } else {
