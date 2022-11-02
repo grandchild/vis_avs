@@ -280,6 +280,7 @@ class Configurable_Effect : public Effect {
                             pv_param, pv_addr, pv.value.s);
                         break;
                     case AVS_PARAM_LIST:
+                    case AVS_PARAM_ACTION:
                     case AVS_PARAM_INT_ARRAY:
                     case AVS_PARAM_FLOAT_ARRAY:
                     case AVS_PARAM_COLOR_ARRAY:
