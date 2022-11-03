@@ -125,7 +125,7 @@ void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_NEW(Blur);
     DECLARE_EFFECT_LEGACY(R_BSpin);
     DECLARE_EFFECT_LEGACY(R_Parts);
-    DECLARE_EFFECT_LEGACY(R_RotBlit);
+    DECLARE_EFFECT_NEW(RotoBlitter);
     DECLARE_EFFECT_NEW(SVP);
     DECLARE_EFFECT_NEW(Colorfade);
     DECLARE_EFFECT_LEGACY(R_ColorClip);
