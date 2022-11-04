@@ -27,65 +27,25 @@ int win32_dlgproc_interferences(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) 
     switch (uMsg) {
         case WM_INITDIALOG: {
             auto num_layers = g_this->get_int(p_num_layers.handle);
-            auto num_layers_range =
-                MAKELONG(p_num_layers.int_min, p_num_layers.int_max);
-            SendDlgItemMessage(
-                hwndDlg, IDC_NPOINTS, TBM_SETRANGE, TRUE, num_layers_range);
-            SendDlgItemMessage(hwndDlg, IDC_NPOINTS, TBM_SETPOS, TRUE, num_layers);
-
-            auto alpha_range = MAKELONG(p_alpha.int_min, p_alpha.int_max);
-            SendDlgItemMessage(hwndDlg, IDC_ALPHA, TBM_SETRANGE, TRUE, alpha_range);
-            SendDlgItemMessage(
-                hwndDlg, IDC_ALPHA, TBM_SETPOS, TRUE, g_this->get_int(p_alpha.handle));
-
+            init_ranged_slider(p_num_layers, num_layers, hwndDlg, IDC_NPOINTS);
+            auto alpha = g_this->get_int(p_alpha.handle);
+            init_ranged_slider(p_alpha, alpha, hwndDlg, IDC_ALPHA);
             auto distance = g_this->get_int(p_distance.handle);
-            auto distance_range = MAKELONG(p_distance.int_min, p_distance.int_max);
-            SendDlgItemMessage(
-                hwndDlg, IDC_DISTANCE, TBM_SETRANGE, TRUE, distance_range);
-            SendDlgItemMessage(hwndDlg, IDC_DISTANCE, TBM_SETPOS, TRUE, distance);
-
-            auto rotation = g_this->get_int(p_rotation.handle);
-            auto rotation_range = MAKELONG(0, p_rotation.int_max - p_rotation.int_min);
-            SendDlgItemMessage(hwndDlg, IDC_ROTATE, TBM_SETRANGE, TRUE, rotation_range);
-            SendDlgItemMessage(
-                hwndDlg, IDC_ROTATE, TBM_SETPOS, TRUE, -rotation - p_rotation.int_min);
-
+            init_ranged_slider(p_distance, distance, hwndDlg, IDC_DISTANCE);
+            auto rotation = -g_this->get_int(p_rotation.handle) - p_rotation.int_min;
+            init_ranged_slider(p_rotation, rotation, hwndDlg, IDC_ROTATE);
             auto on_beat_alpha = g_this->get_int(p_on_beat_alpha.handle);
-            auto on_beat_alpha_range =
-                MAKELONG(p_on_beat_alpha.int_min, p_on_beat_alpha.int_max);
-            SendDlgItemMessage(
-                hwndDlg, IDC_ALPHA2, TBM_SETRANGE, TRUE, on_beat_alpha_range);
-            SendDlgItemMessage(hwndDlg, IDC_ALPHA2, TBM_SETPOS, TRUE, on_beat_alpha);
-
+            init_ranged_slider(p_on_beat_alpha, on_beat_alpha, hwndDlg, IDC_ALPHA2);
             auto on_beat_distance = g_this->get_int(p_on_beat_distance.handle);
-            auto on_beat_distance_range =
-                MAKELONG(p_on_beat_distance.int_min, p_on_beat_distance.int_max);
-            SendDlgItemMessage(
-                hwndDlg, IDC_DISTANCE2, TBM_SETRANGE, TRUE, on_beat_distance_range);
-            SendDlgItemMessage(
-                hwndDlg, IDC_DISTANCE2, TBM_SETPOS, TRUE, on_beat_distance);
-
-            auto on_beat_rotation = g_this->get_int(p_on_beat_rotation.handle);
-            auto on_beat_rotation_range =
-                MAKELONG(0, p_on_beat_rotation.int_max - p_on_beat_rotation.int_min);
-            SendDlgItemMessage(
-                hwndDlg, IDC_ROTATE2, TBM_SETRANGE, TRUE, on_beat_rotation_range);
-            SendDlgItemMessage(hwndDlg,
-                               IDC_ROTATE2,
-                               TBM_SETPOS,
-                               TRUE,
-                               -on_beat_rotation - p_on_beat_rotation.int_min);
-
-            auto init_rotation = g_this->get_int(p_init_rotation.handle);
-            auto init_rotation_range =
-                MAKELONG(p_init_rotation.int_min, p_init_rotation.int_max);
-            SendDlgItemMessage(
-                hwndDlg, IDC_INITROT, TBM_SETRANGE, TRUE, init_rotation_range);
-            SendDlgItemMessage(hwndDlg,
-                               IDC_INITROT,
-                               TBM_SETPOS,
-                               TRUE,
-                               p_init_rotation.int_max - init_rotation);
+            init_ranged_slider(
+                p_on_beat_distance, on_beat_distance, hwndDlg, IDC_DISTANCE2);
+            auto on_beat_rotation = -g_this->get_int(p_on_beat_rotation.handle)
+                                    - p_on_beat_rotation.int_min;
+            init_ranged_slider(
+                p_on_beat_rotation, on_beat_rotation, hwndDlg, IDC_ROTATE2);
+            auto init_rotation =
+                p_init_rotation.int_max - g_this->get_int(p_init_rotation.handle);
+            init_ranged_slider(p_init_rotation, init_rotation, hwndDlg, IDC_INITROT);
 
             auto speed = g_this->get_float(p_on_beat_speed.handle);
             auto speed_range = MAKELONG((int)(p_on_beat_speed.float_min * 100.0),

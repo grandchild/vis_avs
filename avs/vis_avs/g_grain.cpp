@@ -15,18 +15,11 @@ int win32_dlgproc_grain(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     AVS_Parameter_Handle p_static = g_this->info.parameters[2].handle;
 
     switch (uMsg) {
-        case WM_INITDIALOG:
-            SendDlgItemMessage(hwndDlg, IDC_MAX, TBM_SETTICFREQ, 10, 0);
-            SendDlgItemMessage(hwndDlg,
-                               IDC_MAX,
-                               TBM_SETRANGE,
-                               TRUE,
-                               MAKELONG(p_amount.int_min, p_amount.int_max));
-            SendDlgItemMessage(
-                hwndDlg, IDC_MAX, TBM_SETPOS, TRUE, g_this->get_int(p_amount.handle));
-            if (g_this->enabled) CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
-            if (g_this->get_bool(p_static))
-                CheckDlgButton(hwndDlg, IDC_STATGRAIN, BST_CHECKED);
+        case WM_INITDIALOG: {
+            auto amount = g_this->get_int(p_amount.handle);
+            init_ranged_slider(p_amount, amount, hwndDlg, IDC_MAX);
+            CheckDlgButton(hwndDlg, IDC_CHECK1, g_this->enabled);
+            CheckDlgButton(hwndDlg, IDC_STATGRAIN, g_this->get_bool(p_static));
             switch (g_this->get_int(p_blend_mode)) {
                 default:
                 case BLEND_SIMPLE_REPLACE:
@@ -40,6 +33,7 @@ int win32_dlgproc_grain(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                     break;
             }
             return 1;
+        }
         case WM_NOTIFY: {
             if (LOWORD(wParam) == IDC_MAX) {
                 g_this->set_int(p_amount.handle,

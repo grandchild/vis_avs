@@ -20,7 +20,6 @@ int win32_dlgproc_addborders(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
     const Parameter& p_size = g_this->info.parameters[1];
 
     DRAWITEMSTRUCT* drawitem;
-    HWND width_slider;
 
     switch (uMsg) {
         case WM_DRAWITEM:  // 0x02b
@@ -41,17 +40,14 @@ int win32_dlgproc_addborders(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 DeleteObject(brush);
             }
             break;
-        case WM_INITDIALOG:  // 0x110
-            width_slider = GetDlgItem(hwndDlg, IDC_ADDBORDERS_SIZE);
-            SendMessage(width_slider,
-                        TBM_SETRANGE,
-                        0,
-                        MAKELONG(p_size.int_min, p_size.int_max));
-            SendMessage(width_slider, TBM_SETPOS, 1, g_this->get_int(p_size.handle));
+        case WM_INITDIALOG: {  // 0x110
+            auto size = g_this->get_int(p_size.handle);
+            init_ranged_slider(p_size, size, hwndDlg, IDC_ADDBORDERS_SIZE);
             if (g_this->enabled) {
                 CheckDlgButton(hwndDlg, IDC_ADDBORDERS_ENABLE, 1);
             }
             break;
+        }
         case WM_HSCROLL:  // 0x114
             if ((HWND)lParam == GetDlgItem(hwndDlg, IDC_ADDBORDERS_SIZE)) {
                 g_this->set_int(p_size.handle,

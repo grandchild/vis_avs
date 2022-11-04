@@ -22,39 +22,17 @@ int win32_dlgproc_brightness(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
     switch (uMsg) {
         case WM_INITDIALOG: {
             auto red = g_this->get_int(p_red.handle);
-            SendDlgItemMessage(hwndDlg, IDC_RED, TBM_SETRANGEMIN, TRUE, p_red.int_min);
-            SendDlgItemMessage(hwndDlg, IDC_RED, TBM_SETRANGEMAX, TRUE, p_red.int_max);
-            SendDlgItemMessage(hwndDlg, IDC_RED, TBM_SETPOS, TRUE, red);
-            SendDlgItemMessage(hwndDlg, IDC_RED, TBM_SETTICFREQ, 256, 0);
-
+            init_ranged_slider(p_red, red, hwndDlg, IDC_RED);
             auto green = g_this->get_int(p_green.handle);
-            SendDlgItemMessage(
-                hwndDlg, IDC_GREEN, TBM_SETRANGEMIN, TRUE, p_green.int_min);
-            SendDlgItemMessage(
-                hwndDlg, IDC_GREEN, TBM_SETRANGEMAX, TRUE, p_green.int_max);
-            SendDlgItemMessage(hwndDlg, IDC_GREEN, TBM_SETPOS, TRUE, green);
-            SendDlgItemMessage(hwndDlg, IDC_GREEN, TBM_SETTICFREQ, 256, 0);
-
+            init_ranged_slider(p_green, green, hwndDlg, IDC_GREEN);
             auto blue = g_this->get_int(p_blue.handle);
-            SendDlgItemMessage(
-                hwndDlg, IDC_BLUE, TBM_SETRANGEMIN, TRUE, p_blue.int_min);
-            SendDlgItemMessage(
-                hwndDlg, IDC_BLUE, TBM_SETRANGEMAX, TRUE, p_blue.int_max);
-            SendDlgItemMessage(hwndDlg, IDC_BLUE, TBM_SETPOS, TRUE, blue);
-            SendDlgItemMessage(hwndDlg, IDC_BLUE, TBM_SETTICFREQ, 256, 0);
-
+            init_ranged_slider(p_blue, blue, hwndDlg, IDC_BLUE);
             auto distance = g_this->get_int(p_exclude_distance.handle);
-            SendDlgItemMessage(hwndDlg,
-                               IDC_DISTANCE,
-                               TBM_SETRANGEMIN,
-                               TRUE,
-                               p_exclude_distance.int_min);
-            SendDlgItemMessage(hwndDlg,
-                               IDC_DISTANCE,
-                               TBM_SETRANGEMAX,
-                               TRUE,
-                               p_exclude_distance.int_max);
-            SendDlgItemMessage(hwndDlg, IDC_DISTANCE, TBM_SETPOS, TRUE, distance);
+            init_ranged_slider(p_exclude_distance, distance, hwndDlg, IDC_DISTANCE);
+
+            SendDlgItemMessage(hwndDlg, IDC_RED, TBM_SETTICFREQ, 256, 0);
+            SendDlgItemMessage(hwndDlg, IDC_GREEN, TBM_SETTICFREQ, 256, 0);
+            SendDlgItemMessage(hwndDlg, IDC_BLUE, TBM_SETTICFREQ, 256, 0);
             SendDlgItemMessage(hwndDlg, IDC_DISTANCE, TBM_SETTICFREQ, 16, 0);
 
             CheckDlgButton(hwndDlg, IDC_CHECK1, g_this->enabled);

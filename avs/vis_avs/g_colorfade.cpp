@@ -21,43 +21,20 @@ int win32_dlgproc_colorfade(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 
     switch (uMsg) {
         case WM_INITDIALOG: {
-            SendDlgItemMessage(
-                hwndDlg, IDC_SLIDER1, TBM_SETRANGEMIN, 0, p_fader_2nd.int_min);
-            SendDlgItemMessage(
-                hwndDlg, IDC_SLIDER1, TBM_SETRANGEMAX, 0, p_fader_2nd.int_max);
             auto fader_2nd = g_this->get_int(p_fader_2nd.handle);
-            SendDlgItemMessage(hwndDlg, IDC_SLIDER1, TBM_SETPOS, 1, fader_2nd);
-            SendDlgItemMessage(
-                hwndDlg, IDC_SLIDER2, TBM_SETRANGEMIN, 0, p_fader_max.int_min);
-            SendDlgItemMessage(
-                hwndDlg, IDC_SLIDER2, TBM_SETRANGEMAX, 0, p_fader_max.int_max);
+            init_ranged_slider(p_fader_2nd, fader_2nd, hwndDlg, IDC_SLIDER1);
             auto fader_max = g_this->get_int(p_fader_max.handle);
-            SendDlgItemMessage(hwndDlg, IDC_SLIDER2, TBM_SETPOS, 1, fader_max);
-            SendDlgItemMessage(
-                hwndDlg, IDC_SLIDER3, TBM_SETRANGEMIN, 0, p_fader_3rd_gray.int_min);
-            SendDlgItemMessage(
-                hwndDlg, IDC_SLIDER3, TBM_SETRANGEMAX, 0, p_fader_3rd_gray.int_max);
+            init_ranged_slider(p_fader_max, fader_max, hwndDlg, IDC_SLIDER2);
             auto fader_3rd_gray = g_this->get_int(p_fader_3rd_gray.handle);
-            SendDlgItemMessage(hwndDlg, IDC_SLIDER3, TBM_SETPOS, 1, fader_3rd_gray);
+            init_ranged_slider(p_fader_3rd_gray, fader_3rd_gray, hwndDlg, IDC_SLIDER3);
 
-            SendDlgItemMessage(
-                hwndDlg, IDC_SLIDER4, TBM_SETRANGEMIN, 0, p_on_beat_2nd.int_min);
-            SendDlgItemMessage(
-                hwndDlg, IDC_SLIDER4, TBM_SETRANGEMAX, 0, p_on_beat_2nd.int_max);
             auto on_beat_2nd = g_this->get_int(p_on_beat_2nd.handle);
-            SendDlgItemMessage(hwndDlg, IDC_SLIDER4, TBM_SETPOS, 1, on_beat_2nd);
-            SendDlgItemMessage(
-                hwndDlg, IDC_SLIDER5, TBM_SETRANGEMIN, 0, p_on_beat_max.int_min);
-            SendDlgItemMessage(
-                hwndDlg, IDC_SLIDER5, TBM_SETRANGEMAX, 0, p_on_beat_max.int_max);
+            init_ranged_slider(p_on_beat_2nd, on_beat_2nd, hwndDlg, IDC_SLIDER4);
             auto on_beat_max = g_this->get_int(p_on_beat_max.handle);
-            SendDlgItemMessage(hwndDlg, IDC_SLIDER5, TBM_SETPOS, 1, on_beat_max);
-            SendDlgItemMessage(
-                hwndDlg, IDC_SLIDER6, TBM_SETRANGEMIN, 0, p_on_beat_3rd_gray.int_min);
-            SendDlgItemMessage(
-                hwndDlg, IDC_SLIDER6, TBM_SETRANGEMAX, 0, p_on_beat_3rd_gray.int_max);
+            init_ranged_slider(p_on_beat_max, on_beat_max, hwndDlg, IDC_SLIDER5);
             auto on_beat_3rd_gray = g_this->get_int(p_on_beat_3rd_gray.handle);
-            SendDlgItemMessage(hwndDlg, IDC_SLIDER6, TBM_SETPOS, 1, on_beat_3rd_gray);
+            init_ranged_slider(
+                p_on_beat_3rd_gray, on_beat_3rd_gray, hwndDlg, IDC_SLIDER6);
 
             CheckDlgButton(hwndDlg, IDC_CHECK1, g_this->enabled);
             CheckDlgButton(hwndDlg, IDC_CHECK2, g_this->get_bool(p_on_beat_random));

@@ -19,15 +19,9 @@ int win32_dlgproc_frameratelimiter(HWND hwndDlg,
     char fps_slider_label[32];
     switch (uMsg) {
         case WM_INITDIALOG: {
-            CheckDlgButton(hwndDlg, IDC_FPSLIMITER_ENABLED, g_this->enabled);
-            SendDlgItemMessage(hwndDlg,
-                               IDC_FPSLIMITER_FPS_SLIDER,
-                               TBM_SETRANGE,
-                               1,
-                               MAKELONG(p_limit.int_min, p_limit.int_max));
             auto limit = g_this->get_int(p_limit.handle);
-            SendDlgItemMessage(
-                hwndDlg, IDC_FPSLIMITER_FPS_SLIDER, TBM_SETPOS, 1, limit);
+            init_ranged_slider(p_limit, limit, hwndDlg, IDC_FPSLIMITER_FPS_SLIDER);
+            CheckDlgButton(hwndDlg, IDC_FPSLIMITER_ENABLED, g_this->enabled);
             wsprintf(fps_slider_label, "%d FPS max.", limit);
             SetDlgItemText(hwndDlg, IDC_FPSLIMITER_FPS_LABEL, fps_slider_label);
             return 1;
