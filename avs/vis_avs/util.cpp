@@ -407,6 +407,15 @@ void compilerfunctionlist(HWND hwndDlg, const char* title, const char* text) {
                    (LONG)info.c_str());
 }
 
+void init_ranged_slider(const Parameter& param,
+                        int64_t value,
+                        HWND hwndDlg,
+                        uint32_t control_handle) {
+    SendDlgItemMessage(hwndDlg, control_handle, TBM_SETRANGEMIN, 0, param.int_min);
+    SendDlgItemMessage(hwndDlg, control_handle, TBM_SETRANGEMAX, 0, param.int_max);
+    SendDlgItemMessage(hwndDlg, control_handle, TBM_SETPOS, 1, value);
+}
+
 #if 0  // syntax highlighting
 // If you include richedit boxes, you need to load the richlib at the beginning:
 // HANDLE hRichLib = LoadLibrary("RICHED32.DLL");
