@@ -39,8 +39,8 @@ class AVS_Instance {
 
     AVS_Audio_Source audio_source;
     AVS_Beat_Source beat_source;
-    char* error;
-    char* audio_devices[1] = {""};
+    const char* error;
+    const char* audio_devices[1] = {""};
 
     E_Root root;
     std::vector<Effect*> scrap;
