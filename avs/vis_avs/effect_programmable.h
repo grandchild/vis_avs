@@ -108,8 +108,10 @@ template <class Info_T,
           class Global_Config_T = Effect_Config>
 class Programmable_Effect
     : public Configurable_Effect<Info_T, Config_T, Global_Config_T> {
-   private:
+   protected:
     void* vm_context;
+
+   private:
     lock_t* code_lock;
 
    public:
