@@ -92,7 +92,7 @@ C_GLibrary::C_GLibrary() {
     ADD_APE_COMPONENT("Virtual Effect: Addborders",   ADDBORDERS,     addborders);
     ADD_APE_COMPONENT("Render: Triangle",             TRIANGLE,       triangle);
     ADD_APE_COMPONENT("Misc: AVSTrans Automation",    EELTRANS,       eeltrans);
-    ADD_APE_COMPONENT("Jheriko: Global",              GLOBALVARS,     globalvars);
+    ADD_APE_COMPONENT("Jheriko: Global",              GLOBALVARS,     globalvariables);
     ADD_APE_COMPONENT("Jheriko : MULTIFILTER",        MULTIFILTER,    multifilter);
     ADD_APE_COMPONENT("Picture II",                   PICTUREII,      picture2);
     ADD_APE_COMPONENT("VFX FRAMERATE LIMITER",        FPSLIMITER,     frameratelimiter);

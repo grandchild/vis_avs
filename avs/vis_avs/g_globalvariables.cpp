@@ -1,4 +1,4 @@
-#include "c_globalvars.h"
+#include "e_globalvariables.h"
 
 #include "g__defs.h"
 #include "g__lib.h"
@@ -11,24 +11,38 @@
 void toggle_large_code_view(HWND hwndDlg, int button);
 static int enlarged = 0;
 
-int win32_dlgproc_globalvars(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    C_GlobalVars* config_this = (C_GlobalVars*)g_current_render;
+int win32_dlgproc_globalvariables(HWND hwndDlg,
+                                  UINT uMsg,
+                                  WPARAM wParam,
+                                  LPARAM lParam) {
+    auto g_this = (E_GlobalVariables*)g_current_render;
+    AVS_Parameter_Handle p_load = GlobalVariables_Info::parameters[0].handle;
+    AVS_Parameter_Handle p_init = GlobalVariables_Info::parameters[1].handle;
+    AVS_Parameter_Handle p_frame = GlobalVariables_Info::parameters[2].handle;
+    AVS_Parameter_Handle p_beat = GlobalVariables_Info::parameters[3].handle;
+    AVS_Parameter_Handle p_file = GlobalVariables_Info::parameters[4].handle;
+    AVS_Parameter_Handle p_save_reg_ranges = GlobalVariables_Info::parameters[5].handle;
+    AVS_Parameter_Handle p_save_buf_ranges = GlobalVariables_Info::parameters[6].handle;
+    AVS_Parameter_Handle p_error = GlobalVariables_Info::parameters[7].handle;
+    AVS_Parameter_Handle p_save = GlobalVariables_Info::parameters[8].handle;
 
     switch (uMsg) {
         case WM_INITDIALOG: {
             SetDlgItemText(
-                hwndDlg, IDC_GLOBALVARS_CODE_INIT, config_this->code.init.string);
+                hwndDlg, IDC_GLOBALVARS_CODE_INIT, g_this->get_string(p_init));
             SetDlgItemText(
-                hwndDlg, IDC_GLOBALVARS_CODE_FRAME, config_this->code.frame.string);
+                hwndDlg, IDC_GLOBALVARS_CODE_FRAME, g_this->get_string(p_frame));
             SetDlgItemText(
-                hwndDlg, IDC_GLOBALVARS_CODE_BEAT, config_this->code.beat.string);
+                hwndDlg, IDC_GLOBALVARS_CODE_BEAT, g_this->get_string(p_beat));
             SetDlgItemText(
-                hwndDlg, IDC_GLOBALVARS_FILEPATH, config_this->filepath.c_str());
-            SetDlgItemText(
-                hwndDlg, IDC_GLOBALVARS_REG_RANGE, config_this->reg_ranges_str.c_str());
-            SetDlgItemText(
-                hwndDlg, IDC_GLOBALVARS_BUF_RANGE, config_this->buf_ranges_str.c_str());
-            switch (config_this->load_option) {
+                hwndDlg, IDC_GLOBALVARS_FILEPATH, g_this->get_string(p_file));
+            SetDlgItemText(hwndDlg,
+                           IDC_GLOBALVARS_REG_RANGE,
+                           g_this->get_string(p_save_reg_ranges));
+            SetDlgItemText(hwndDlg,
+                           IDC_GLOBALVARS_BUF_RANGE,
+                           g_this->get_string(p_save_buf_ranges));
+            switch (g_this->get_int(p_load)) {
                 case GLOBALVARS_LOAD_NONE:
                     CheckDlgButton(hwndDlg, IDC_GLOBALVARS_LOAD_NONE, BST_CHECKED);
                     break;
@@ -54,94 +68,79 @@ int win32_dlgproc_globalvars(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 int l = GetWindowTextLength(h) + 1;
                 char* buf = new char[l];
                 GetWindowText(h, buf, l);
-                bool range_valid;
 
                 switch (LOWORD(wParam)) {
                     case IDC_GLOBALVARS_CODE_INIT:
-                        config_this->code.init.set(buf, l);
+                        g_this->set_string(p_init, buf);
                         break;
                     case IDC_GLOBALVARS_CODE_FRAME:
-                        config_this->code.frame.set(buf, l);
+                        g_this->set_string(p_frame, buf);
                         break;
                     case IDC_GLOBALVARS_CODE_BEAT:
-                        config_this->code.beat.set(buf, l);
+                        g_this->set_string(p_beat, buf);
                         break;
-                    case IDC_GLOBALVARS_FILEPATH: config_this->filepath = buf; break;
+                    case IDC_GLOBALVARS_FILEPATH:
+                        g_this->set_string(p_file, buf);
+                        break;
                     case IDC_GLOBALVARS_REG_RANGE:
-                        config_this->reg_ranges_str = buf;
-                        range_valid =
-                            config_this->check_set_range(config_this->reg_ranges_str,
-                                                         config_this->reg_ranges,
-                                                         config_this->max_regs_index);
-                        if (range_valid) {
-                            SetDlgItemText(hwndDlg, IDC_GLOBALVARS_REG_RANGE_ERR, "");
-                        } else {
-                            SetDlgItemText(
-                                hwndDlg, IDC_GLOBALVARS_REG_RANGE_ERR, "Err");
-                        }
+                        g_this->set_string(p_save_reg_ranges, buf);
+                        SetDlgItemText(hwndDlg,
+                                       IDC_GLOBALVARS_REG_RANGE_ERR,
+                                       g_this->get_string(p_error));
                         break;
                     case IDC_GLOBALVARS_BUF_RANGE:
-                        config_this->buf_ranges_str = buf;
-                        range_valid =
-                            config_this->check_set_range(config_this->buf_ranges_str,
-                                                         config_this->buf_ranges,
-                                                         config_this->max_gmb_index);
-                        if (range_valid) {
-                            SetDlgItemText(hwndDlg, IDC_GLOBALVARS_BUF_RANGE_ERR, "");
-                        } else {
-                            SetDlgItemText(
-                                hwndDlg, IDC_GLOBALVARS_BUF_RANGE_ERR, "Err");
-                        }
+                        g_this->set_string(p_save_buf_ranges, buf);
+                        SetDlgItemText(hwndDlg,
+                                       IDC_GLOBALVARS_BUF_RANGE_ERR,
+                                       g_this->get_string(p_error));
                         break;
                     default: break;
                 }
                 delete[] buf;
             } else if (wNotifyCode == BN_CLICKED) {
                 switch (LOWORD(wParam)) {
-                    case IDC_GLOBALVARS_SAVE_NOW:
-                        config_this->save_ranges_to_file();
-                        break;
+                    case IDC_GLOBALVARS_SAVE_NOW: g_this->run_action(p_save); break;
                     case IDC_GLOBALVARS_ENLARGE_INIT:
                         SetDlgItemText(hwndDlg,
                                        IDC_GLOBALVARS_CODE_LARGE,
-                                       config_this->code.init.string);
+                                       g_this->get_string(p_init));
                         toggle_large_code_view(hwndDlg, IDC_GLOBALVARS_ENLARGE_INIT);
                         break;
                     case IDC_GLOBALVARS_ENLARGE_FRAME:
                         SetDlgItemText(hwndDlg,
                                        IDC_GLOBALVARS_CODE_LARGE,
-                                       config_this->code.frame.string);
+                                       g_this->get_string(p_frame));
                         toggle_large_code_view(hwndDlg, IDC_GLOBALVARS_ENLARGE_FRAME);
                         break;
                     case IDC_GLOBALVARS_ENLARGE_BEAT:
                         SetDlgItemText(hwndDlg,
                                        IDC_GLOBALVARS_CODE_LARGE,
-                                       config_this->code.beat.string);
+                                       g_this->get_string(p_beat));
                         toggle_large_code_view(hwndDlg, IDC_GLOBALVARS_ENLARGE_BEAT);
                         break;
                     case IDC_GLOBALVARS_LOAD_NONE:
                         if (IsDlgButtonChecked(hwndDlg, IDC_GLOBALVARS_LOAD_NONE)) {
-                            config_this->load_option = GLOBALVARS_LOAD_NONE;
+                            g_this->set_int(p_load, GLOBALVARS_LOAD_NONE);
                         }
                         break;
                     case IDC_GLOBALVARS_LOAD_ONCE:
                         if (IsDlgButtonChecked(hwndDlg, IDC_GLOBALVARS_LOAD_ONCE)) {
-                            config_this->load_option = GLOBALVARS_LOAD_ONCE;
+                            g_this->set_int(p_load, GLOBALVARS_LOAD_ONCE);
                         }
                         break;
                     case IDC_GLOBALVARS_LOAD_CODE:
                         if (IsDlgButtonChecked(hwndDlg, IDC_GLOBALVARS_LOAD_CODE)) {
-                            config_this->load_option = GLOBALVARS_LOAD_CODE;
+                            g_this->set_int(p_load, GLOBALVARS_LOAD_CODE);
                         }
                         break;
                     case IDC_GLOBALVARS_LOAD_FRAME:
                         if (IsDlgButtonChecked(hwndDlg, IDC_GLOBALVARS_LOAD_FRAME)) {
-                            config_this->load_option = GLOBALVARS_LOAD_FRAME;
+                            g_this->set_int(p_load, GLOBALVARS_LOAD_FRAME);
                         }
                         break;
                     case IDC_GLOBALVARS_HELP:
                         compilerfunctionlist(
-                            hwndDlg, "Global Variable Manager", config_this->help_text);
+                            hwndDlg, g_this->info.get_name(), g_this->info.get_help());
                         break;
                 }
             }

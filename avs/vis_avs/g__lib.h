@@ -72,7 +72,7 @@ DECL_UIPREP(colormap);
 DECL_HANDLER(addborders);
 DECL_HANDLER(triangle);
 DECL_HANDLER(eeltrans);
-DECL_HANDLER(globalvars);
+DECL_HANDLER(globalvariables);
 DECL_HANDLER(multifilter);
 DECL_HANDLER(picture2);
 DECL_HANDLER(frameratelimiter);

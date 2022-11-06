@@ -230,7 +230,7 @@ void C_RLibrary::initbuiltinape(void) {
     ADD_NEW(AddBorders, "Virtual Effect: Addborders");
     ADD_NEW(Triangle, "Render: Triangle");
     ADD_NEW(EelTrans, "Misc: AVSTrans Automation");
-    ADD(R_GlobalVars, "Jheriko: Global");
+    ADD_NEW(GlobalVariables, "Jheriko: Global");
     ADD(R_MultiFilter, "Jheriko : MULTIFILTER");
     ADD(R_Picture2, "Picture II");
     ADD_NEW(FramerateLimiter, "VFX FRAMERATE LIMITER");
