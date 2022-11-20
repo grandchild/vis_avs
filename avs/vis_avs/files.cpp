@@ -16,7 +16,9 @@
 namespace fs = std::filesystem;
 #endif
 
-bool matches_file_suffix(std::string file, char** suffixes, int num_suffixes) {
+bool matches_file_suffix(const std::string& file,
+                         const char* const* suffixes,
+                         int num_suffixes) {
     for (int i = 0; i < num_suffixes; i++) {
         size_t suffix_length = strnlen(suffixes[i], 32);
         if (file.substr(file.length() - suffix_length, suffix_length) == suffixes[i]) {
@@ -44,20 +46,21 @@ bool matches_file_suffix(std::string file, char** suffixes, int num_suffixes) {
  * To top it off, we _only_ use this for the `recursive=true` mode on linux.
  * But it _is_ very fast.
  */
+
 #define MAX_PATH              260
 // The maximum number of open file descriptors allowed for `ftw()` is roughly correlated
 // to the expected depth of the file subtree. 15 seems more than enough. If the tree is
 // deeper nothing bad will happen, `ftw()` will just get slower.
 #define FIND_FTW_MAX_OPEN_FDS 15
 typedef struct {
-    char** extensions;
+    const char* const* extensions;
     int num_extensions;
     void (*callback)(const char* file, void* data);
     void* callback_data;
 } ftw_data_t;
 
-/* "thread_local" makes a new instance of this variable for each thread. This should™
- * make this whole construct thread-safe. */
+// "thread_local" makes a new instance of this variable for each thread. This should™
+// make this whole construct thread-safe.
 static thread_local ftw_data_t ftw_data;
 
 int ftw_callback(const char* file_path, const struct stat* file_info, int file_type) {
@@ -71,13 +74,13 @@ int ftw_callback(const char* file_path, const struct stat* file_info, int file_t
 #endif  // __linux__
 
 #ifdef _WIN32
-void _win32_find_files_by_extensions(char* path,
-                                     char* partial_path,
-                                     char** extensions,
-                                     int num_extensions,
-                                     void (*callback)(const char* file, void* data),
-                                     void* callback_data,
-                                     bool recursive) {
+void win32_find_files_by_extensions(const char* path,
+                                    const char* partial_path,
+                                    const char* const* extensions,
+                                    int num_extensions,
+                                    void (*callback)(const char* file, void* data),
+                                    void* callback_data,
+                                    bool recursive) {
     WIN32_FIND_DATA find_info;
     HANDLE find_handle;
     char wildcard_path[MAX_PATH];
@@ -119,13 +122,13 @@ void _win32_find_files_by_extensions(char* path,
                     strcpy(new_partial_path, partial_path);
                     strcat(new_partial_path, find_info.cFileName);
                     strcat(new_partial_path, "/");
-                    _win32_find_files_by_extensions(new_full_path,
-                                                    new_partial_path,
-                                                    extensions,
-                                                    num_extensions,
-                                                    callback,
-                                                    callback_data,
-                                                    recursive);
+                    win32_find_files_by_extensions(new_full_path,
+                                                   new_partial_path,
+                                                   extensions,
+                                                   num_extensions,
+                                                   callback,
+                                                   callback_data,
+                                                   recursive);
                 }
             } while (FindNextFile(find_handle, &find_info));
         }
@@ -133,13 +136,12 @@ void _win32_find_files_by_extensions(char* path,
 }
 #endif  // WIN32
 
-void _find_files_by_extensions(char* path,
-                               char** extensions,
+void find_files_by_extensions_(const char* path,
+                               const char* const* extensions,
                                int num_extensions,
                                void (*callback)(const char* file, void* data),
                                void* callback_data,
-                               bool recursive,
-                               bool background) {
+                               bool recursive) {
 #if defined(__linux__) && !defined(FORCE_CPP_FILESYSTEM_API)
 
     if (recursive) {
@@ -153,7 +155,10 @@ void _find_files_by_extensions(char* path,
             strncpy(wildcard_path, path, MAX_PATH - 1);
             strcat(wildcard_path, "/*");
             strcat(wildcard_path, extensions[ext]);
-            glob(wildcard_path, is_first_glob_call ? 0 : GLOB_APPEND, NULL, &glob_info);
+            glob(wildcard_path,
+                 is_first_glob_call ? 0 : GLOB_APPEND,
+                 nullptr,
+                 &glob_info);
             is_first_glob_call = false;
         }
         for (size_t i = 0; i < glob_info.gl_pathc; i++) {
@@ -167,7 +172,7 @@ void _find_files_by_extensions(char* path,
     char new_path[MAX_PATH];
     strcpy(new_path, path);
     strcat(new_path, "/");
-    _win32_find_files_by_extensions(
+    win32_find_files_by_extensions(
         new_path, "", extensions, num_extensions, callback, callback_data, recursive);
 
 #elif __cplusplus >= 201703L
@@ -196,27 +201,41 @@ void _find_files_by_extensions(char* path,
 #error Need POSIX, Win32 API, or C++17 support for find_files_by_extensions()
 
 #endif
-
-    if (background) {
-        free(callback_data);
-        for (int i = 0; i < num_extensions; i++) {
-            free(extensions[i]);
-        }
-        free(extensions);
-        free(path);
-    }
-    return;
 }
 
-void find_files_by_extensions(char* path,
-                              char** extensions,
+/**
+ * Just calls `find_files_by_extensions_()` but frees `path`, `extensions` &
+ * `callback_data` after the call. Thus, `path` and `extensions` aren't `const` in this
+ * version.
+ */
+void find_files_by_extensions_background(char* path,
+                                         char** extensions,
+                                         int num_extensions,
+                                         void (*callback)(const char* file, void* data),
+                                         void* callback_data,
+                                         bool recursive) {
+    find_files_by_extensions_(
+        path, extensions, num_extensions, callback, callback_data, recursive);
+    free(callback_data);
+    for (int i = 0; i < num_extensions; i++) {
+        free(extensions[i]);
+    }
+    free(extensions);
+    free(path);
+}
+
+void find_files_by_extensions(const char* path,
+                              const char* const* extensions,
                               int num_extensions,
                               void (*callback)(const char* file, void* data),
                               void* callback_data,
                               size_t callback_data_size,
                               bool recursive,
                               bool background) {
-    if (background) {
+    if (!background) {
+        find_files_by_extensions_(
+            path, extensions, num_extensions, callback, callback_data, recursive);
+    } else {
         /* Make copies of the non-scalar parameters, the actual find_files_by_extensions
          * method frees them at the end. */
         size_t path_length = strnlen(path, MAX_PATH - 1);
@@ -230,22 +249,13 @@ void find_files_by_extensions(char* path,
         }
         void* new_callback_data = calloc(callback_data_size, 1);
         memcpy(new_callback_data, callback_data, callback_data_size);
-        std::thread finder(_find_files_by_extensions,
+        std::thread finder(find_files_by_extensions_background,
                            new_path,
                            new_extensions,
                            num_extensions,
                            callback,
                            new_callback_data,
-                           recursive,
-                           background);
+                           recursive);
         finder.detach();
-    } else {
-        _find_files_by_extensions(path,
-                                  extensions,
-                                  num_extensions,
-                                  callback,
-                                  callback_data,
-                                  recursive,
-                                  background);
     }
 }
