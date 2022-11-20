@@ -40,7 +40,9 @@ AVS_Video::AVS_Video(const char* filename,
             this->av->load_error != NULL ? this->av->load_error : "libav not loaded";
         return;
     }
-    this->init(filename);
+    if (!this->init(filename)) {
+        return;
+    }
     this->caching_thread = thread_create(frame_cache_thread_func, this);
 }
 
