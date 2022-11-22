@@ -70,13 +70,13 @@ enum AVS_Parameter_Type {
     AVS_PARAM_SELECT = 7,
     /** A read-only array of integers. The length is provided when calling
         `avs_parameter_get_int_array()`. */
-    AVS_PARAM_INT_ARRAY = 8,
+    AVS_PARAM_INT_ARRAY = 100,
     /** A read-only array of floats. The length is provided when calling
         `avs_parameter_get_float_array()`. */
-    AVS_PARAM_FLOAT_ARRAY = 9,
+    AVS_PARAM_FLOAT_ARRAY = 101,
     /** A read-only array of colors. The length is provided when calling
         `avs_parameter_get_color_array()`. */
-    AVS_PARAM_COLOR_ARRAY = 10,
+    AVS_PARAM_COLOR_ARRAY = 102,
 };
 
 /**
