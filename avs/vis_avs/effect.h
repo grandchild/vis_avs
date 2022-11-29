@@ -158,25 +158,25 @@ class Configurable_Effect : public Effect {
     Configurable_Effect(AVS_Handle avs = 0) {
         this->prune_empty_globals();
         this->init_global_config(avs);
-    };
-    ~Configurable_Effect() { this->remove_from_global_instances(); };
+    }
+    ~Configurable_Effect() { this->remove_from_global_instances(); }
     Effect* clone() {
         auto cloned = new Configurable_Effect(*this);
         cloned->handle = h_components.get();
         return cloned;
-    };
-    bool can_have_child_components() { return this->info.can_have_child_components(); };
-    Effect_Info* get_info() { return &this->info; };
+    }
+    bool can_have_child_components() { return this->info.can_have_child_components(); }
+    Effect_Info* get_info() { return &this->info; }
     static void set_desc(char* desc) {
         Configurable_Effect::_set_desc();
         if (desc) {
             strcpy(desc, Configurable_Effect::desc.c_str());
         }
-    };
+    }
     virtual char* get_desc() {
         Configurable_Effect::_set_desc();
         return (char*)Configurable_Effect::desc.c_str();
-    };
+    }
 
     template <typename T>
     T get(AVS_Parameter_Handle parameter,
@@ -190,7 +190,7 @@ class Configurable_Effect : public Effect {
         }
         auto addr = this->get_config_address(param, parameter_path);
         return parameter_dispatch<T>::get(addr);
-    };
+    }
 
     template <typename T>
     bool set(AVS_Parameter_Handle parameter,
@@ -209,7 +209,7 @@ class Configurable_Effect : public Effect {
             param->on_value_change(this, param, parameter_path);
         }
         return true;
-    };
+    }
 
     template <typename T>
     std::vector<T>& get_array(AVS_Parameter_Handle parameter,
@@ -224,7 +224,7 @@ class Configurable_Effect : public Effect {
         }
         auto addr = this->get_config_address(param, parameter_path);
         return parameter_dispatch<T>::get_array(addr);
-    };
+    }
 
     size_t parameter_list_length(AVS_Parameter_Handle parameter,
                                  const std::vector<int64_t>& parameter_path = {}) {
@@ -237,7 +237,7 @@ class Configurable_Effect : public Effect {
         }
         auto addr = this->get_config_address(param, parameter_path);
         return param->list_length(addr);
-    };
+    }
     bool parameter_list_entry_add(
         AVS_Parameter_Handle parameter,
         int64_t before,
@@ -294,7 +294,7 @@ class Configurable_Effect : public Effect {
             }
         }
         return success;
-    };
+    }
     bool parameter_list_entry_move(AVS_Parameter_Handle parameter,
                                    int64_t from,
                                    int64_t to,
@@ -312,7 +312,7 @@ class Configurable_Effect : public Effect {
             param->on_list_move(this, param, parameter_path, from, to);
         }
         return success;
-    };
+    }
     bool parameter_list_entry_remove(AVS_Parameter_Handle parameter,
                                      int64_t to_remove,
                                      const std::vector<int64_t>& parameter_path = {}) {
@@ -330,7 +330,7 @@ class Configurable_Effect : public Effect {
             param->on_list_remove(this, param, parameter_path, to_remove, 0);
         }
         return success;
-    };
+    }
 
     bool run_action(AVS_Parameter_Handle parameter,
                     const std::vector<int64_t>& parameter_path = {}) {
@@ -343,23 +343,25 @@ class Configurable_Effect : public Effect {
         }
         param->on_value_change(this, param, parameter_path);
         return true;
-    };
+    }
+
+    static size_t instance_count() { return Configurable_Effect::globals.size(); }
 
 #define GET_SET_PARAMETER(AVS_TYPE, TYPE)                                          \
     virtual TYPE get_##AVS_TYPE(AVS_Parameter_Handle parameter,                    \
                                 const std::vector<int64_t>& parameter_path = {}) { \
         return get<TYPE>(parameter, parameter_path);                               \
-    };                                                                             \
+    }                                                                              \
     virtual bool set_##AVS_TYPE(AVS_Parameter_Handle parameter,                    \
                                 TYPE value,                                        \
                                 const std::vector<int64_t>& parameter_path = {}) { \
         return set<TYPE>(parameter, value, parameter_path);                        \
     }
-    GET_SET_PARAMETER(bool, bool);
-    GET_SET_PARAMETER(int, int64_t);
-    GET_SET_PARAMETER(float, double);
-    GET_SET_PARAMETER(color, uint64_t);
-    GET_SET_PARAMETER(string, const char*);
+    GET_SET_PARAMETER(bool, bool)
+    GET_SET_PARAMETER(int, int64_t)
+    GET_SET_PARAMETER(float, double)
+    GET_SET_PARAMETER(color, uint64_t)
+    GET_SET_PARAMETER(string, const char*)
 
 #define GET_ARRAY_PARAMETER(AVS_TYPE, TYPE)                \
     virtual std::vector<TYPE> get_##AVS_TYPE##_array(      \
@@ -367,9 +369,9 @@ class Configurable_Effect : public Effect {
         const std::vector<int64_t>& parameter_path = {}) { \
         return get_array<TYPE>(parameter, parameter_path); \
     }
-    GET_ARRAY_PARAMETER(int, int64_t);
-    GET_ARRAY_PARAMETER(float, double);
-    GET_ARRAY_PARAMETER(color, uint64_t);
+    GET_ARRAY_PARAMETER(int, int64_t)
+    GET_ARRAY_PARAMETER(float, double)
+    GET_ARRAY_PARAMETER(color, uint64_t)
 
    protected:
     static std::string desc;
@@ -381,7 +383,7 @@ class Configurable_Effect : public Effect {
             }
             Configurable_Effect::desc += Configurable_Effect::info.name;
         }
-    };
+    }
 
     struct Global {
         AVS_Handle avs;
@@ -427,12 +429,12 @@ class Configurable_Effect : public Effect {
             this->global = tmp;
             this->global->instances.insert(this);
         }
-    };
+    }
     void remove_from_global_instances() {
         if (this->global.get()) {
             this->global->instances.erase(this);
         }
-    };
+    }
 
     uint8_t* get_config_address(const Parameter* parameter,
                                 const std::vector<int64_t>& parameter_path) {
@@ -445,7 +447,7 @@ class Configurable_Effect : public Effect {
                                              this->info.parameters,
                                              parameter_path,
                                              0);
-    };
+    }
 };
 
 template <class Info_T, class Config_T, class Global_Config_T>
