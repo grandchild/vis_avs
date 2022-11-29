@@ -351,3 +351,4 @@ int E_DynamicShift::save_legacy(unsigned char* data) {
 
 Effect_Info* create_DynamicShift_Info() { return new DynamicShift_Info(); }
 Effect* create_DynamicShift() { return new E_DynamicShift(); }
+void set_DynamicShift_desc(char* desc) { E_DynamicShift::set_desc(desc); }

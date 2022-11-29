@@ -200,3 +200,4 @@ int E_ColorModifier::save_legacy(unsigned char* data) {
 
 Effect_Info* create_ColorModifier_Info() { return new ColorModifier_Info(); }
 Effect* create_ColorModifier() { return new E_ColorModifier(); }
+void set_ColorModifier_desc(char* desc) { E_ColorModifier::set_desc(desc); }

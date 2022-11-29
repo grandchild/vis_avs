@@ -463,3 +463,4 @@ int E_Triangle::save_legacy(unsigned char* data) {
 
 Effect_Info* create_Triangle_Info() { return new Triangle_Info(); }
 Effect* create_Triangle() { return new E_Triangle(); }
+void set_Triangle_desc(char* desc) { E_Triangle::set_desc(desc); }

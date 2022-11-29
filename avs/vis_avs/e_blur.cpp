@@ -1115,3 +1115,4 @@ int E_Blur::save_legacy(unsigned char* data) {
 
 Effect_Info* create_Blur_Info() { return new Blur_Info(); }
 Effect* create_Blur() { return new E_Blur(); }
+void set_Blur_desc(char* desc) { E_Blur::set_desc(desc); }

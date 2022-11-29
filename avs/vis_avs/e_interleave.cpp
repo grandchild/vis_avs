@@ -283,3 +283,4 @@ int E_Interleave::save_legacy(unsigned char* data) {
 
 Effect_Info* create_Interleave_Info() { return new Interleave_Info(); }
 Effect* create_Interleave() { return new E_Interleave(); }
+void set_Interleave_desc(char* desc) { E_Interleave::set_desc(desc); }

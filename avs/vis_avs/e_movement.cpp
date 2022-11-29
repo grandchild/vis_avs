@@ -751,3 +751,4 @@ int E_Movement::save_legacy(unsigned char* data) {
 
 Effect_Info* create_Movement_Info() { return new Movement_Info(); }
 Effect* create_Movement() { return new E_Movement(); }
+void set_Movement_desc(char* desc) { E_Movement::set_desc(desc); }

@@ -149,3 +149,4 @@ int E_Normalise::save_legacy(unsigned char* data) {
 
 Effect_Info* create_Normalise_Info() { return new Normalise_Info(); }
 Effect* create_Normalise() { return new E_Normalise(); }
+void set_Normalise_desc(char* desc) { E_Normalise::set_desc(desc); }

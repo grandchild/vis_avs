@@ -244,3 +244,4 @@ int E_ChannelShift::save_legacy(unsigned char* data) {
 
 Effect_Info* create_ChannelShift_Info() { return new ChannelShift_Info(); }
 Effect* create_ChannelShift() { return new E_ChannelShift(); }
+void set_ChannelShift_desc(char* desc) { E_ChannelShift::set_desc(desc); }

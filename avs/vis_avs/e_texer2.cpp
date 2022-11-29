@@ -1780,3 +1780,4 @@ int E_Texer2::save_legacy(unsigned char* data) {
 
 Effect_Info* create_Texer2_Info() { return new Texer2_Info(); }
 Effect* create_Texer2() { return new E_Texer2(); }
+void set_Texer2_desc(char* desc) { E_Texer2::set_desc(desc); }

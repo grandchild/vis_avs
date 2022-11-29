@@ -45,9 +45,9 @@ class C_RLibrary {
         C_RBASE* (*create_legacy)(char* desc);
         Effect_Info* (*create_info)(void);
         Effect* (*create)(void);
+        void (*set_legacy_desc)(char*);
     } rfStruct;
     rfStruct* RetrFuncs;
-
     int NumRetrFuncs;
 
     typedef struct {
@@ -57,15 +57,16 @@ class C_RLibrary {
         C_RBASE* (*create_legacy)(char* desc);
         Effect_Info* (*create_info)(void);
         Effect* (*create)(void);
+        void (*set_legacy_desc)(char*);
     } DLLInfo;
-
     DLLInfo* DLLFuncs;
     int NumDLLFuncs;
 
     void add_dofx(void* rf,
                   bool can_multithread,
                   Effect_Info* (*create_info)(void),
-                  Effect* (*create)(void));
+                  Effect* (*create)(void),
+                  void (*set_legacy_desc)(char*));
     void initfx(void);
     void initbuiltinape(void);
 
@@ -81,7 +82,8 @@ class C_RLibrary {
                  char* ape_id,
                  bool can_multithread,
                  Effect_Info* (*create_info)(void),
-                 Effect* (*create)(void));
+                 Effect* (*create)(void),
+                 void (*set_legacy_desc)(char*));
 };
 
 #endif  // _RLIB_H_

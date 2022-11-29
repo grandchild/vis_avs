@@ -386,3 +386,4 @@ int E_Multiplier::save_legacy(unsigned char* data) {
 
 Effect_Info* create_Multiplier_Info() { return new Multiplier_Info(); }
 Effect* create_Multiplier() { return new E_Multiplier(); }
+void set_Multiplier_desc(char* desc) { E_Multiplier::set_desc(desc); }

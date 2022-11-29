@@ -331,3 +331,4 @@ int E_Simple::save_legacy(unsigned char* data) {
 
 Effect_Info* create_Simple_Info() { return new Simple_Info(); }
 Effect* create_Simple() { return new E_Simple(); }
+void set_Simple_desc(char* desc) { E_Simple::set_desc(desc); }

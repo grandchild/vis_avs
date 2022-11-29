@@ -193,3 +193,4 @@ int E_EelTrans::save_legacy(unsigned char* data) {
 
 Effect_Info* create_EelTrans_Info() { return new EelTrans_Info(); }
 Effect* create_EelTrans() { return new E_EelTrans(); }
+void set_EelTrans_desc(char* desc) { E_EelTrans::set_desc(desc); }

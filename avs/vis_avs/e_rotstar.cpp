@@ -166,3 +166,4 @@ int E_RotStar::save_legacy(unsigned char* data) {
 
 Effect_Info* create_RotStar_Info() { return new RotStar_Info(); }
 Effect* create_RotStar() { return new E_RotStar(); }
+void set_RotStar_desc(char* desc) { E_RotStar::set_desc(desc); }

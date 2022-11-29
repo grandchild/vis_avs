@@ -395,3 +395,4 @@ int E_Interferences::save_legacy(unsigned char* data) {
 
 Effect_Info* create_Interferences_Info() { return new Interferences_Info(); }
 Effect* create_Interferences() { return new E_Interferences(); }
+void set_Interferences_desc(char* desc) { E_Interferences::set_desc(desc); }

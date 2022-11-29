@@ -617,3 +617,4 @@ int E_Water::save_legacy(unsigned char* data) {
 
 Effect_Info* create_Water_Info() { return new Water_Info(); }
 Effect* create_Water() { return new E_Water(); }
+void set_Water_desc(char* desc) { E_Water::set_desc(desc); }

@@ -293,3 +293,4 @@ int E_AVI::save_legacy(unsigned char* data) {
 
 Effect_Info* create_AVI_Info() { return new AVI_Info(); }
 Effect* create_AVI() { return new E_AVI(); }
+void set_AVI_desc(char* desc) { E_AVI::set_desc(desc); }

@@ -320,3 +320,4 @@ int E_SuperScope::save_legacy(unsigned char* data) {
 
 Effect_Info* create_SuperScope_Info() { return new SuperScope_Info(); }
 Effect* create_SuperScope() { return new E_SuperScope(); }
+void set_SuperScope_desc(char* desc) { E_SuperScope::set_desc(desc); }

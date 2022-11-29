@@ -93,3 +93,4 @@ int E_AddBorders::save_legacy(unsigned char* data) {
 
 Effect_Info* create_AddBorders_Info() { return new AddBorders_Info(); }
 Effect* create_AddBorders() { return new E_AddBorders(); }
+void set_AddBorders_desc(char* desc) { E_AddBorders::set_desc(desc); }

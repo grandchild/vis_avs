@@ -401,3 +401,6 @@ Effect_Info* create_DynamicDistanceModifier_Info() {
     return new DynamicDistanceModifier_Info();
 }
 Effect* create_DynamicDistanceModifier() { return new E_DynamicDistanceModifier(); }
+void set_DynamicDistanceModifier_desc(char* desc) {
+    E_DynamicDistanceModifier::set_desc(desc);
+}

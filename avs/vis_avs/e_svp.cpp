@@ -203,3 +203,4 @@ int E_SVP::save_legacy(unsigned char* data) {
 
 Effect_Info* create_SVP_Info() { return new SVP_Info(); }
 Effect* create_SVP() { return new E_SVP(); }
+void set_SVP_desc(char* desc) { E_SVP::set_desc(desc); }

@@ -69,3 +69,4 @@ int E_FramerateLimiter::save_legacy(unsigned char* data) {
 
 Effect_Info* create_FramerateLimiter_Info() { return new FramerateLimiter_Info(); }
 Effect* create_FramerateLimiter() { return new E_FramerateLimiter(); }
+void set_FramerateLimiter_desc(char* desc) { E_FramerateLimiter::set_desc(desc); }

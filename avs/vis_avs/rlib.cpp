@@ -79,7 +79,8 @@ void C_RBASE::save_string(unsigned char* data, int& pos, std::string& text) {
 void C_RLibrary::add_dofx(void* rf,
                           bool can_multithread,
                           Effect_Info* (*create_info)(void) = NULL,
-                          Effect* (*create)(void) = NULL) {
+                          Effect* (*create)(void) = NULL,
+                          void (*set_legacy_desc)(char*) = NULL) {
     if ((NumRetrFuncs & 7) == 0 || !RetrFuncs) {
         void* newdl = (void*)malloc(sizeof(rfStruct) * (NumRetrFuncs + 8));
         if (!newdl) {
@@ -98,6 +99,7 @@ void C_RLibrary::add_dofx(void* rf,
     *((void**)&RetrFuncs[NumRetrFuncs].create_legacy) = rf;
     RetrFuncs[NumRetrFuncs].create_info = create_info;
     RetrFuncs[NumRetrFuncs].create = create;
+    RetrFuncs[NumRetrFuncs].set_legacy_desc = set_legacy_desc;
     NumRetrFuncs++;
 }
 
@@ -113,7 +115,8 @@ void C_RLibrary::add_dofx(void* rf,
 #define DECLARE_EFFECT_NEW(name)                \
     extern Effect_Info* create_##name##_Info(); \
     extern Effect* create_##name();             \
-    add_dofx(NULL, false, create_##name##_Info, create_##name);
+    extern void set_##name##_desc(char*);       \
+    add_dofx(NULL, false, create_##name##_Info, create_##name, set_##name##_desc);
 
 void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_NEW(Simple);
@@ -186,7 +189,8 @@ void C_RLibrary::add_dll(create_legacy_func create_legacy,
                          char* ape_id,
                          bool can_multithread = false,
                          Effect_Info* (*create_info)(void) = NULL,
-                         Effect* (*create)(void) = NULL) {
+                         Effect* (*create)(void) = NULL,
+                         void (*set_legacy_desc)(char*) = NULL) {
     if ((NumDLLFuncs & 7) == 0 || !DLLFuncs) {
         DLLInfo* newdl = (DLLInfo*)malloc(sizeof(DLLInfo) * (NumDLLFuncs + 8));
         if (!newdl) {
@@ -206,6 +210,7 @@ void C_RLibrary::add_dll(create_legacy_func create_legacy,
     DLLFuncs[NumDLLFuncs].create_legacy = create_legacy;
     DLLFuncs[NumDLLFuncs].create_info = create_info;
     DLLFuncs[NumDLLFuncs].create = create;
+    DLLFuncs[NumDLLFuncs].set_legacy_desc = set_legacy_desc;
     NumDLLFuncs++;
 }
 
@@ -216,7 +221,9 @@ void C_RLibrary::initbuiltinape(void) {
 #define ADD_NEW(name, ape_id)                   \
     extern Effect_Info* create_##name##_Info(); \
     extern Effect* create_##name();             \
-    this->add_dll(NULL, ape_id, false, create_##name##_Info, create_##name)
+    extern void set_##name##_desc(char*);       \
+    this->add_dll(                              \
+        NULL, ape_id, false, create_##name##_Info, create_##name, set_##name##_desc)
 
     ADD_NEW(ChannelShift, "Channel Shift");
     ADD_NEW(ColorReduction, "Color Reduction");
@@ -244,9 +251,7 @@ int C_RLibrary::GetRendererDesc(int which, char* str) {
         if (RetrFuncs[which].create_legacy != NULL) {
             RetrFuncs[which].create_legacy(str);
         } else {
-            Effect* effect = RetrFuncs[which].create();
-            effect->set_desc(str);
-            delete effect;
+            RetrFuncs[which].set_legacy_desc(str);
         }
         return 1;
     }
@@ -256,9 +261,7 @@ int C_RLibrary::GetRendererDesc(int which, char* str) {
             if (DLLFuncs[which].create_legacy != NULL) {
                 DLLFuncs[which].create_legacy(str);
             } else {
-                Effect* effect = DLLFuncs[which].create();
-                effect->set_desc(str);
-                delete effect;
+                DLLFuncs[which].set_legacy_desc(str);
             }
             return (int)DLLFuncs[which].idstring;
         }

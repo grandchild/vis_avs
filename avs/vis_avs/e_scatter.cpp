@@ -98,3 +98,4 @@ int E_Scatter::render(char[2][2][576],
 
 Effect_Info* create_Scatter_Info() { return new Scatter_Info(); }
 Effect* create_Scatter() { return new E_Scatter(); }
+void set_Scatter_desc(char* desc) { E_Scatter::set_desc(desc); }

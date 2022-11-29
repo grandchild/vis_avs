@@ -263,3 +263,4 @@ int E_Fadeout::render(char[2][2][576],
 
 Effect_Info* create_Fadeout_Info() { return new Fadeout_Info(); }
 Effect* create_Fadeout() { return new E_Fadeout(); }
+void set_Fadeout_desc(char* desc) { E_Fadeout::set_desc(desc); }

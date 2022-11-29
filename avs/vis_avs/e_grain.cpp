@@ -286,3 +286,4 @@ int E_Grain::save_legacy(unsigned char* data) {
 
 Effect_Info* create_Grain_Info() { return new Grain_Info(); }
 Effect* create_Grain() { return new E_Grain(); }
+void set_Grain_desc(char* desc) { E_Grain::set_desc(desc); }

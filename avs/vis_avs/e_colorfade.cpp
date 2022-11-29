@@ -349,3 +349,4 @@ int E_Colorfade::save_legacy(unsigned char* data) {
 
 Effect_Info* create_Colorfade_Info() { return new Colorfade_Info(); }
 Effect* create_Colorfade() { return new E_Colorfade(); }
+void set_Colorfade_desc(char* desc) { E_Colorfade::set_desc(desc); }

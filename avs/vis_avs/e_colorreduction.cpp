@@ -109,3 +109,4 @@ int E_ColorReduction::save_legacy(unsigned char* data) {
 
 Effect_Info* create_ColorReduction_Info() { return new ColorReduction_Info(); }
 Effect* create_ColorReduction() { return new E_ColorReduction(); }
+void set_ColorReduction_desc(char* desc) { E_ColorReduction::set_desc(desc); }

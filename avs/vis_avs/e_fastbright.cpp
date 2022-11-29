@@ -317,3 +317,4 @@ int E_FastBright::save_legacy(unsigned char* data) {
 
 Effect_Info* create_FastBright_Info() { return new FastBright_Info(); }
 Effect* create_FastBright() { return new E_FastBright(); }
+void set_FastBright_desc(char* desc) { E_FastBright::set_desc(desc); }

@@ -321,3 +321,4 @@ int E_Brightness::save_legacy(unsigned char* data) {
 
 Effect_Info* create_Brightness_Info() { return new Brightness_Info(); }
 Effect* create_Brightness() { return new E_Brightness(); }
+void set_Brightness_desc(char* desc) { E_Brightness::set_desc(desc); }

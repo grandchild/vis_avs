@@ -801,3 +801,4 @@ Effect* create_ColorMap() {
     srand(time(NULL));
     return new E_ColorMap();
 }
+void set_ColorMap_desc(char* desc) { E_ColorMap::set_desc(desc); }

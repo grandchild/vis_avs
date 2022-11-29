@@ -400,3 +400,4 @@ int E_Bump::save_legacy(unsigned char* data) {
 
 Effect_Info* create_Bump_Info() { return new Bump_Info(); }
 Effect* create_Bump() { return new E_Bump(); }
+void set_Bump_desc(char* desc) { E_Bump::set_desc(desc); }

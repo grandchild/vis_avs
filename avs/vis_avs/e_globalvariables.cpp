@@ -352,3 +352,4 @@ int E_GlobalVariables::save_legacy(unsigned char* data) {
 
 Effect_Info* create_GlobalVariables_Info() { return new GlobalVariables_Info(); }
 Effect* create_GlobalVariables() { return new E_GlobalVariables(); }
+void set_GlobalVariables_desc(char* desc) { E_GlobalVariables::set_desc(desc); }

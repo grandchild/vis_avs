@@ -267,3 +267,4 @@ int E_RotoBlitter::save_legacy(unsigned char* data) {
 
 Effect_Info* create_RotoBlitter_Info() { return new RotoBlitter_Info(); }
 Effect* create_RotoBlitter() { return new E_RotoBlitter(); }
+void set_RotoBlitter_desc(char* desc) { E_RotoBlitter::set_desc(desc); }

@@ -608,3 +608,4 @@ int E_DynamicMovement::save_legacy(unsigned char* data) {
 
 Effect_Info* create_DynamicMovement_Info() { return new DynamicMovement_Info(); }
 Effect* create_DynamicMovement() { return new E_DynamicMovement(); }
+void set_DynamicMovement_desc(char* desc) { E_DynamicMovement::set_desc(desc); }

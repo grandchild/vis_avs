@@ -281,3 +281,4 @@ int E_MultiDelay::save_legacy(unsigned char* data) {
 
 Effect_Info* create_MultiDelay_Info() { return new MultiDelay_Info(); }
 Effect* create_MultiDelay() { return new E_MultiDelay(0); }
+void set_MultiDelay_desc(char* desc) { E_MultiDelay::set_desc(desc); }

@@ -90,7 +90,6 @@ class Effect {
         return 0;  // returns 1 if fbout has dest
     };
     virtual char* get_desc() = 0;
-    virtual void set_desc(char* desc) = 0;
     virtual void load_legacy(unsigned char* data, int len) { (void)data, (void)len; };
     virtual int save_legacy(unsigned char* data) {
         (void)data;
@@ -168,7 +167,7 @@ class Configurable_Effect : public Effect {
     };
     bool can_have_child_components() { return this->info.can_have_child_components(); };
     Effect_Info* get_info() { return &this->info; };
-    virtual void set_desc(char* desc) {
+    static void set_desc(char* desc) {
         Configurable_Effect::_set_desc();
         if (desc) {
             strcpy(desc, Configurable_Effect::desc.c_str());

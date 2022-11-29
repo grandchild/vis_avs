@@ -228,3 +228,4 @@ int E_VideoDelay::save_legacy(unsigned char* data) {
 
 Effect_Info* create_VideoDelay_Info() { return new VideoDelay_Info(); }
 Effect* create_VideoDelay() { return new E_VideoDelay(); }
+void set_VideoDelay_desc(char* desc) { E_VideoDelay::set_desc(desc); }

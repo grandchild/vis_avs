@@ -160,3 +160,4 @@ int E_Invert::save_legacy(unsigned char* data) {
 
 Effect_Info* create_Invert_Info() { return new Invert_Info(); }
 Effect* create_Invert() { return new E_Invert(); }
+void set_Invert_desc(char* desc) { E_Invert::set_desc(desc); }

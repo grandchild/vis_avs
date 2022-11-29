@@ -51,3 +51,4 @@ int E_Comment::save_legacy(unsigned char* data) {
 
 Effect_Info* create_Comment_Info() { return new Comment_Info(); }
 Effect* create_Comment() { return new E_Comment(); }
+void set_Comment_desc(char* desc) { E_Comment::set_desc(desc); }
