@@ -65,11 +65,11 @@ bool lock_try(lock_t* lock_obj);
 void lock_unlock(lock_t* lock_obj);
 void lock_destroy(lock_t* lock_obj);
 
-dlib_t* library_load(char* path);
-void* library_get(dlib_t* library, char* func_name);
+dlib_t* library_load(const char* path);
+void* library_get(dlib_t* library, const char* func_name);
 void library_unload(dlib_t* library);
 
-#define WAIT_INFINITE -1
+#define WAIT_INFINITE (-1)
 signal_t* signal_create_single();
 signal_t* signal_create_broadcast();
 void signal_set(signal_t* signal);

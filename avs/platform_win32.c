@@ -117,9 +117,9 @@ void thread_destroy(thread_t* thread) { CloseHandle(thread); }
 
 /* dynamic library loading */
 
-dlib_t* library_load(char* path) { return (dlib_t*)LoadLibrary(path); }
+dlib_t* library_load(const char* path) { return (dlib_t*)LoadLibrary(path); }
 
-void* library_get(dlib_t* library, char* func_name) {
+void* library_get(dlib_t* library, const char* func_name) {
     return (void*)GetProcAddress((HMODULE)library, func_name);
 }
 
