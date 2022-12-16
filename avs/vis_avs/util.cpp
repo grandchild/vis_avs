@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 #include "r_defs.h"
+#include "g__defs.h"
 
 #include "resource.h"
 
@@ -414,6 +415,65 @@ void init_ranged_slider(const Parameter& param,
     SendDlgItemMessage(hwndDlg, control_handle, TBM_SETRANGEMIN, 0, param.int_min);
     SendDlgItemMessage(hwndDlg, control_handle, TBM_SETRANGEMAX, 0, param.int_max);
     SendDlgItemMessage(hwndDlg, control_handle, TBM_SETPOS, 1, value);
+}
+
+void init_select(const Parameter& param,
+                 int64_t value,
+                 HWND hwndDlg,
+                 uint32_t control_handle) {
+    int64_t options_length;
+    const char* const* options = param.get_options(&options_length);
+    for (int64_t i = 0; i < options_length; ++i) {
+        SendDlgItemMessage(
+            hwndDlg, control_handle, CB_ADDSTRING, 0, (LPARAM)options[i]);
+    }
+    if (value >= 0 && value < options_length) {
+        SendDlgItemMessage(hwndDlg, control_handle, CB_SETCURSEL, value, 0);
+    }
+}
+
+void init_select_radio(const Parameter& param,
+                       int64_t value,
+                       HWND hwndDlg,
+                       uint32_t* control_handles,
+                       size_t num_controls) {
+    int64_t options_length;
+    param.get_options(&options_length);
+    if (num_controls < options_length) {
+        printf(
+            "Warning: %lld less control(s) than options in '%s',"
+            " some options unreachable.\n",
+            options_length - num_controls,
+            param.name);
+    }
+    if (num_controls > options_length) {
+        printf(
+            "Warning: %lld more control(s) than options in '%s',"
+            " some options invalid.\n",
+            options_length - num_controls,
+            param.name);
+    }
+    for (int64_t i = 0; i < options_length; ++i) {
+        CheckDlgButton(hwndDlg, control_handles[i], value == i);
+        return;
+    }
+    printf("Radio option %lld for parameter '%s' not found.?\n", value, param.name);
+}
+
+void init_resource(const Parameter& param,
+                   const char* value,
+                   HWND hwndDlg,
+                   uint32_t control_handle,
+                   size_t max_str_len) {
+    int64_t options_length;
+    const char* const* options = param.get_options(&options_length);
+    for (int64_t i = 0; i < options_length; ++i) {
+        SendDlgItemMessage(
+            hwndDlg, control_handle, CB_ADDSTRING, 0, (LPARAM)options[i]);
+        if (strncmp(value, options[i], max_str_len) == 0) {
+            SendDlgItemMessage(hwndDlg, control_handle, CB_SETCURSEL, i, 0);
+        }
+    }
 }
 
 #if 0  // syntax highlighting
