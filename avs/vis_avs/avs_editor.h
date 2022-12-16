@@ -80,6 +80,18 @@ enum AVS_Parameter_Type {
      */
     AVS_PARAM_SELECT = 7,
     /**
+     * Similar to `AVS_PARAM_SELECT`, but string-valued. `AVS_PARAM_RESOURCE` values
+     * refer to any kind of outside resource (e.g. files or fonts) which may change,
+     * even at runtime.
+     * It's possible the value string is _not_ in the list of available options (e.g. a
+     * missing resource file) or is empty ("no selection") and you should expect and
+     * handle these cases, for example by showing a missing entry in a different
+     * style.
+     * When getting or setting a parameter of this type use the `_string()` getter/
+     * setter flavors.
+     */
+    AVS_PARAM_RESOURCE = 8,
+    /**
      * A read-only array of integers. The length is provided when calling
      * `avs_parameter_get_int_array()`.
      */

@@ -542,6 +542,49 @@ constexpr Parameter P_SELECT_GX(size_t offset,
     return _param;
 }
 
+constexpr Parameter P_RESOURCE(size_t offset,
+                               const char* name,
+                               options_getter get_options,
+                               const char* description = NULL,
+                               value_change_handler on_value_change = NULL,
+                               bool is_saved = true) {
+    Parameter _param =
+        PARAM(offset, AVS_PARAM_RESOURCE, name, description, on_value_change, is_saved);
+    _param.get_options = get_options;
+    return _param;
+}
+constexpr Parameter P_RESOURCE_X(size_t offset,
+                                 const char* name,
+                                 options_getter get_options,
+                                 const char* description = NULL,
+                                 value_change_handler on_value_change = NULL) {
+    Parameter _param =
+        PARAM(offset, AVS_PARAM_RESOURCE, name, description, on_value_change, false);
+    _param.get_options = get_options;
+    return _param;
+}
+constexpr Parameter P_RESOURCE_G(size_t offset,
+                                 const char* name,
+                                 options_getter get_options,
+                                 const char* description = NULL,
+                                 value_change_handler on_value_change = NULL,
+                                 bool is_saved = true) {
+    Parameter _param =
+        P_RESOURCE(offset, name, get_options, description, on_value_change, is_saved);
+    _param.is_global = true;
+    return _param;
+}
+constexpr Parameter P_RESOURCE_GX(size_t offset,
+                                  const char* name,
+                                  options_getter get_options,
+                                  const char* description = NULL,
+                                  value_change_handler on_value_change = NULL) {
+    Parameter _param =
+        P_RESOURCE_X(offset, name, get_options, description, on_value_change);
+    _param.is_global = true;
+    return _param;
+}
+
 template <typename Subtype>
 constexpr Parameter P_LIST(size_t offset,
                            const char* name,
@@ -842,7 +885,33 @@ struct parameter_dispatch<const char*> {
     static const char* get(uint8_t* config_data) {
         return ((std::string*)config_data)->c_str();
     };
-    static void set(const Parameter*, uint8_t* addr, const char* value) {
+    static void set(const Parameter* parameter, uint8_t* addr, const char* value) {
+        if (parameter->type == AVS_PARAM_RESOURCE) {
+            bool value_is_in_options = false;
+            int64_t options_length = -1;
+            const char* const* options = parameter->get_options(&options_length);
+            for (int64_t i = 0; i < options_length; ++i) {
+                // Yes, compare pointers. If the string is directly from the options
+                // list this is a quick check (since the strings are const).
+                if (value == options[i]) {
+                    value_is_in_options = true;
+                    break;
+                }
+            }
+            if (!value_is_in_options) {
+                // If not, we have to try the proper way.
+                std::string str_value = value;
+                for (int64_t i = 0; i < options_length; ++i) {
+                    if (str_value == options[i]) {
+                        value_is_in_options = true;
+                        break;
+                    }
+                }
+            }
+            if (!value_is_in_options) {
+                return;
+            }
+        }
         *(std::string*)addr = value;
     };
 

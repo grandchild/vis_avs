@@ -276,6 +276,7 @@ class Configurable_Effect : public Effect {
                         parameter_dispatch<uint64_t>::set(
                             pv_param, pv_addr, pv.value.c);
                         break;
+                    case AVS_PARAM_RESOURCE:
                     case AVS_PARAM_STRING:
                         parameter_dispatch<const char*>::set(
                             pv_param, pv_addr, pv.value.s);
