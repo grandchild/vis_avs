@@ -38,18 +38,24 @@ typedef uint32_t AVS_Effect_Handle;
 typedef uint32_t AVS_Parameter_Handle;
 
 /**
- * The data types of parameters.
+ * Possible types of a parameter's value.
  */
 enum AVS_Parameter_Type {
-    /** Uninitialized or otherwise invalid parameters may have this type. Indicates an
-        error. */
+    /**
+     * Uninitialized or otherwise invalid parameters may have this type. Indicates an
+     * error.
+     */
     AVS_PARAM_INVALID = -1,
 
-    /** A list of several sets of child parameters. The size/index of the list is a
-        signed(!) 64-bit integer. */
+    /**
+     * A list of several sets of child parameters. The size/index of the list is
+     * signed(!) 64-bit integer.
+     */
     AVS_PARAM_LIST = 0,
-    /** An effect-defined function to run. Has no value and cannot be read from. Use
-        `avs_parameter_run_action()` to trigger the action. */
+    /**
+     * An effect-defined function to run. Has no value and cannot be read from. Use
+     * `avs_parameter_run_action()` to trigger the action.
+     */
     AVS_PARAM_ACTION = 1,
 
     /** =0 false, ≠0 true. */
@@ -60,22 +66,32 @@ enum AVS_Parameter_Type {
     AVS_PARAM_FLOAT = 4,
     /** 64-bit RGBA16 unsigned integer. */
     AVS_PARAM_COLOR = 5,
-    /** Const zero-terminated C string. */
+    /** A const zero-terminated C string. */
     AVS_PARAM_STRING = 6,
-    /** The value of a SELECT parameter is a signed 64-bit integer index into the
-        `options` list of the `AVS_Parameter_Info` struct, a list of zero-terminated
-        strings.
-        Expect and handle out-of-range indices, esp. -1 for "no selection". When getting
-        or setting a parameter of this type use the `_int()` getter/setter flavors. */
+    /**
+     * A value from a list of possible options. Available strings can be listed through
+     * the `options` list of the `AVS_Parameter_Info` struct.
+     * The value of a SELECT parameter is a signed 64-bit integer index into the
+     * `options` list of strings. `AVS_PARAM_SELECT` option lists tends to be static
+     * shorter lists, like blend modes. Expect and handle out-of-range indices, esp. -1
+     * for "no selection".
+     * When getting or setting a parameter of this type use the `_int()` getter/setter
+     * flavors.
+     */
     AVS_PARAM_SELECT = 7,
-    /** A read-only array of integers. The length is provided when calling
-        `avs_parameter_get_int_array()`. */
+    /**
+     * A read-only array of integers. The length is provided when calling
+     * `avs_parameter_get_int_array()`.
+     */
     AVS_PARAM_INT_ARRAY = 100,
-    /** A read-only array of floats. The length is provided when calling
-        `avs_parameter_get_float_array()`. */
+    /**
+     * A read-only array of floats. The length is provided when calling
+     * `avs_parameter_get_float_array()`.
+     */
     AVS_PARAM_FLOAT_ARRAY = 101,
     /** A read-only array of colors. The length is provided when calling
-        `avs_parameter_get_color_array()`. */
+     * `avs_parameter_get_color_array()`.
+     */
     AVS_PARAM_COLOR_ARRAY = 102,
 };
 
@@ -84,17 +100,21 @@ enum AVS_Parameter_Type {
  * reference component, e.g. the currently selected one.
  */
 enum AVS_Component_Position {
-    /** The position in relation to the reference component is not important. Use this
-        to document no-preference in _your_ code. Currently, this has the same behavior
-        as `AVS_COMPONENT_POSITION_AFTER`, but obviously don't depend on this. */
+    /**
+     * The position in relation to the reference component is not important. Use this
+     * to document no-preference in _your_ code. Currently, this has the same behavior
+     * as `AVS_COMPONENT_POSITION_AFTER`, but obviously don't depend on this.
+     */
     AVS_COMPONENT_POSITION_DONTCARE = -1,
     /** A component is created/moved before the reference component. */
     AVS_COMPONENT_POSITION_BEFORE = 0,
     /** A component is created/moved after the reference component. */
     AVS_COMPONENT_POSITION_AFTER = 1,
-    /** A component is created/moved inside the reference component. This is only valid
-        when the reference can have children. If it can, the new/moved component will be
-        placed at the end of the list of children. */
+    /**
+     * A component is created/moved inside the reference component. This is only valid
+     * when the reference can have children. If it can, the new/moved component will be
+     * placed at the end of the list of children.
+     */
     AVS_COMPONENT_POSITION_CHILD = 2,
 };
 
@@ -104,20 +124,26 @@ enum AVS_Component_Position {
  * Populate this struct by calling `avs_effect_info()`.
  */
 typedef struct {
-    /** `group` is one of "Render", "Trans" or "Misc", rarely something else. No group,
-        i.e. "", is possible. */
+    /**
+     * `group` is one of "Render", "Trans" or "Misc", rarely something else. No group,
+     * i.e. "", is possible.
+     */
     const char* group;
     /** `name` is never empty. */
     const char* name;
     /** The help text can be empty, short or several paragraphs long. */
     const char* help;
-    /** The number of (top-level) parameters for the effect. May be 0.
-        Note that due to nested parameter lists, the total number of parameters may be
-        greater than `parameters_length`. If you do need the total number (you usually
-        don't), descend into `AVS_PARAM_LIST`-type parameters recursively. */
+    /**
+     * The number of (top-level) parameters for the effect. May be 0.
+     * Note that due to nested parameter lists, the total number of parameters may be
+     * greater than `parameters_length`. If you do need the total number (you usually
+     * don't), descend into `AVS_PARAM_LIST`-type parameters recursively.
+     */
     uint32_t parameters_length;
-    /** The list of parameters for the effect. If `parameters_length` is 0 `parameters`
-        will be NULL. */
+    /**
+     * The list of parameters for the effect. If `parameters_length` is 0 `parameters`
+     * will be NULL.
+     */
     const AVS_Parameter_Handle* parameters;
 } AVS_Effect_Info;
 
@@ -127,16 +153,20 @@ typedef struct {
  * Populate this struct by calling `avs_parameter_info()`.
  */
 typedef struct {
-    /** The value type of the parameter. If this is AVS_PARAM_INVALID, the rest of the
-        fields will have zero values. */
+    /**
+     * The value type of the parameter. If this is AVS_PARAM_INVALID, the rest of the
+     * fields will have zero values.
+     */
     AVS_Parameter_Type type;
     /** `name` is never empty. */
     const char* name;
     /** `description` may be empty. */
     const char* description;
-    /** If `is_global` is `true` then this parameter is shared across all components of
-        this effect within a preset. Changing the value of this parameter will change it
-        for all components. */
+    /**
+     * If `is_global` is `true` then this parameter is shared across all components of
+     * this effect within a preset. Changing the value of this parameter will change it
+     * for all components.
+     */
     bool is_global;
     /** The minimum value if `type` is `AVS_PARAM_INT`, 0 otherwise. */
     int64_t int_min;
@@ -152,11 +182,15 @@ typedef struct {
     const char* const* options;
     /** The number of child parameters if `type` is `AVS_PARAM_LIST`. 0 otherwise. */
     uint32_t children_length;
-    /** The maximum number of child parameters if `type` is `AVS_PARAM_LIST`. 0
-        otherwise. */
+    /**
+     * The maximum number of child parameters if `type` is `AVS_PARAM_LIST`.
+     * 0 otherwise.
+     */
     uint32_t children_length_min;
-    /** The minimum number of child parameters if `type` is `AVS_PARAM_LIST`. 0
-        otherwise. */
+    /**
+     * The minimum number of child parameters if `type` is `AVS_PARAM_LIST`.
+     * 0 otherwise.
+     */
     uint32_t children_length_max;
     /** The list of child parameters if `type` is `AVS_PARAM_LIST`. 0 otherwise. */
     const AVS_Parameter_Handle* children;
