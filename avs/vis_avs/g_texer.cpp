@@ -16,8 +16,6 @@ int win32_dlgproc_texer(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     const AVS_Parameter_Handle p_colorize = g_this->info.parameters[2].handle;
     const AVS_Parameter_Handle p_num_particles = g_this->info.parameters[3].handle;
 
-    int64_t options_length;
-    const char* const* options;
     char num_particles_label[5];
     switch (uMsg) {
         case WM_INITDIALOG: {
@@ -39,27 +37,25 @@ int win32_dlgproc_texer(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                                                         : IDC_TEXER_OUTPUT_NORMAL,
                            BST_CHECKED);
 
-            options = p_image.get_options(&options_length);
-            for (int i = 0; i < options_length; i++) {
-                SendDlgItemMessage(
-                    hwndDlg, IDC_TEXER_IMAGE, CB_ADDSTRING, 0, (LPARAM)options[i]);
-            }
-            SendDlgItemMessage(hwndDlg,
-                               IDC_TEXER_IMAGE,
-                               CB_SETCURSEL,
-                               g_this->get_int(p_image.handle),
-                               0);
+            auto image = g_this->get_string(p_image.handle);
+            init_resource(p_image, image, hwndDlg, IDC_TEXER_IMAGE, MAX_PATH);
             return 1;
         }
         case WM_COMMAND: {
             int command = HIWORD(wParam);
             int control = LOWORD(wParam);
             if (command == CBN_SELCHANGE && control == IDC_TEXER_IMAGE) {
-                int p = SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0);
-                if (p >= 0) {
-                    g_this->set_int(p_image.handle, p);
+                int sel = SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0);
+                if (sel < 0) {
+                    break;
                 }
-                return 1;
+                size_t filename_length =
+                    SendDlgItemMessage(hwndDlg, control, CB_GETLBTEXTLEN, sel, 0) + 1;
+                char* buf = (char*)calloc(filename_length, sizeof(char));
+                SendDlgItemMessage(hwndDlg, control, CB_GETLBTEXT, sel, (LPARAM)buf);
+                g_this->set_string(p_image.handle, buf);
+                free(buf);
+                break;
             } else if (command == BN_CLICKED) {
                 if (control == IDC_TEXER_INPUT_IGNORE
                     || control == IDC_TEXER_INPUT_REPLACE) {
@@ -72,9 +68,9 @@ int win32_dlgproc_texer(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                         p_colorize,
                         IsDlgButtonChecked(hwndDlg, IDC_TEXER_OUTPUT_MASKED));
                 }
-                return 1;
+                break;
             }
-            break;
+            return 1;
         }
         case WM_HSCROLL: {
             if ((HWND)lParam == GetDlgItem(hwndDlg, IDC_TEXER_NUM_PARTICLES)) {

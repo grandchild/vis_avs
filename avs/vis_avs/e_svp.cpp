@@ -83,7 +83,7 @@ static void add_file_callback(const char* file, void* data) {
 void E_SVP::find_library_files() {
     this->clear_library_files();
     const int num_extensions = 2;
-    char* extensions[num_extensions] = {".SVP", ".UVS"};
+    const char* extensions[num_extensions] = {".SVP", ".UVS"};
     find_files_by_extensions(g_path,
                              extensions,
                              num_extensions,
@@ -105,18 +105,17 @@ void E_SVP::set_library() {
         this->library = NULL;
     }
 
-    if (this->config.library < 0) {
+    if (this->config.library.empty()) {
         lock_unlock(this->library_lock);
         return;
     }
 
-    char buf1[MAX_PATH];
-    strcpy(buf1, g_path);
-    strcat(buf1, "\\");
-    strcat(buf1, this->filenames[this->config.library].c_str());
+    std::string library_path = g_path;
+    library_path += "\\";
+    library_path += this->config.library;
 
     this->vi = NULL;
-    this->library = library_load(buf1);
+    this->library = library_load(library_path.c_str());
     if (this->library) {
         VisInfo* (*qm)(void);
         *(void**)&qm = library_get(this->library, "QueryModule");
@@ -171,33 +170,20 @@ int E_SVP::render(char visdata[2][2][576],
 
 void E_SVP::load_legacy(unsigned char* data, int len) {
     if (len >= LEGACY_SAVE_PATH_LEN) {
-        char* str_data = (char*)data;
-        std::string search_filename;
-        this->string_nt_load_legacy(str_data, search_filename, LEGACY_SAVE_PATH_LEN);
-        bool found = false;
-        for (size_t i = 0; i < this->filenames.size(); i++) {
-            if (this->filenames[i] == search_filename) {
-                found = true;
-                this->config.library = i;
-            }
-        }
-        if (!found) {
-            this->config.library = -1;
-        }
+        string_nt_load_legacy((char*)data, this->config.library, LEGACY_SAVE_PATH_LEN);
         this->set_library();
     }
 }
 
 int E_SVP::save_legacy(unsigned char* data) {
-    char* str_data = (char*)data;
-    if (this->config.library < 0 || this->config.library > this->filenames.size()) {
-        memset(data, '\0', LEGACY_SAVE_PATH_LEN);
-    } else {
-        auto& filename = this->filenames[this->config.library];
-        this->string_nt_save_legacy(filename, str_data, LEGACY_SAVE_PATH_LEN);
-        memset(
-            &data[filename.length()], '\0', LEGACY_SAVE_PATH_LEN - filename.length());
+    char* str = (char*)data;
+    int pos = 0;
+    uint32_t str_len = 0;
+    if (!this->config.library.empty()) {
+        str_len =
+            string_nt_save_legacy(this->config.library, str, LEGACY_SAVE_PATH_LEN);
     }
+    memset(&data[pos + str_len], '\0', LEGACY_SAVE_PATH_LEN - str_len);
     return LEGACY_SAVE_PATH_LEN;
 }
 

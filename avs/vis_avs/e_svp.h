@@ -9,7 +9,7 @@
 #include "../platform.h"
 
 struct SVP_Config : public Effect_Config {
-    int64_t library = -1;
+    std::string library;
 };
 
 void set_library(Effect*, const Parameter*, const std::vector<int64_t>&);
@@ -25,11 +25,11 @@ struct SVP_Info : public Effect_Info {
 
     static constexpr uint32_t num_parameters = 1;
     static constexpr Parameter parameters[num_parameters] = {
-        P_SELECT(offsetof(SVP_Config, library),
-                 "Library",
-                 library_files,
-                 NULL,
-                 set_library),
+        P_RESOURCE(offsetof(SVP_Config, library),
+                   "Library",
+                   library_files,
+                   NULL,
+                   set_library),
     };
 
     EFFECT_INFO_GETTERS;

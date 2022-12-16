@@ -15,9 +15,11 @@
     "Saved version wraps x/y only once. Upgrade to wrap around forever."
 #define TEXER_II_VERSION_CURRENT 1
 
+#define TEXER_II_DEFAULT_IMAGE_STRING "(default image)"
+
 struct Texer2_Config : public Effect_Config {
     int64_t version = TEXER_II_VERSION_CURRENT;
-    int64_t image = 0;
+    std::string image;
     bool resize = false;
     bool wrap = false;
     bool colorize = true;
@@ -216,11 +218,11 @@ struct Texer2_Info : public Effect_Info {
                  "Effect Version",
                  0,
                  TEXER_II_VERSION_CURRENT),
-        P_SELECT(offsetof(Texer2_Config, image),
-                 "Image",
-                 image_files,
-                 NULL,
-                 on_file_change),
+        P_RESOURCE(offsetof(Texer2_Config, image),
+                   "Image",
+                   image_files,
+                   NULL,
+                   on_file_change),
         P_BOOL(offsetof(Texer2_Config, resize), "Resize"),
         P_BOOL(offsetof(Texer2_Config, wrap), "Wrap"),
         P_BOOL(offsetof(Texer2_Config, colorize), "Colorize"),

@@ -10,7 +10,7 @@
 #include <vector>
 
 struct Texer_Config : public Effect_Config {
-    int64_t image = -1;
+    std::string image;
     bool add_to_input = false;
     bool colorize = false;
     int64_t num_particles = 100;
@@ -28,11 +28,11 @@ struct Texer_Info : public Effect_Info {
     static void on_file_change(Effect*, const Parameter*, const std::vector<int64_t>&);
     static constexpr uint32_t num_parameters = 4;
     static constexpr Parameter parameters[num_parameters] = {
-        P_SELECT(offsetof(Texer_Config, image),
-                 "Image",
-                 image_files,
-                 NULL,
-                 on_file_change),
+        P_RESOURCE(offsetof(Texer_Config, image),
+                   "Image",
+                   image_files,
+                   NULL,
+                   on_file_change),
         P_BOOL(offsetof(Texer_Config, add_to_input), "Add to Input"),
         P_BOOL(offsetof(Texer_Config, colorize), "Colorize"),
         P_IRANGE(offsetof(Texer_Config, num_particles), "Particles", 1, 1024),

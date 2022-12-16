@@ -76,7 +76,7 @@ static void add_file_callback(const char* file, void* data) {
 void E_AVI::find_video_files() {
     this->clear_video_files();
     const int num_extensions = 10;
-    char* extensions[num_extensions] = {
+    const char* extensions[num_extensions] = {
         ".avi",
         ".mp4",
         ".mkv",
@@ -108,10 +108,10 @@ void E_AVI::load_file() {
         close_file();
     }
 
-    sprintf(pathfile, "%s\\%s", g_path, this->filenames[this->config.filename].c_str());
+    sprintf(pathfile, "%s\\%s", g_path, this->config.filename.c_str());
 
     this->video = new AVS_Video(pathfile, 32, 0);
-    if (this->video != NULL) {
+    if (this->video != NULL && this->video->error == NULL) {
         this->loaded = true;
     }
     lock_unlock(this->video_file_lock);
@@ -222,18 +222,7 @@ void E_AVI::load_legacy(unsigned char* data, int len) {
         pos += 4;
     }
     char* str_data = (char*)data;
-    std::string search_filename;
-    pos += this->string_nt_load_legacy(&str_data[pos], search_filename, MAX_PATH);
-    bool found = false;
-    for (size_t i = 0; i < this->filenames.size(); i++) {
-        if (this->filenames[i] == search_filename) {
-            found = true;
-            this->config.filename = i;
-        }
-    }
-    if (!found) {
-        this->config.filename = -1;
-    }
+    pos += string_nt_load_legacy(&str_data[pos], this->config.filename, MAX_PATH);
     if (len - pos >= 4) {
         blend_5050_onbeat_add = GET_INT();
         pos += 4;
@@ -256,7 +245,7 @@ void E_AVI::load_legacy(unsigned char* data, int len) {
         pos += 4;
     }
 
-    if (this->config.filename >= 0) {
+    if (!this->config.filename.empty()) {
         this->load_file();
     }
 }
@@ -275,13 +264,7 @@ int E_AVI::save_legacy(unsigned char* data) {
     PUT_INT(this->config.blend_mode == AVI_BLEND_FIFTY_FIFTY ? 1 : 0);
     pos += 4;
     char* str_data = (char*)data;
-    if (this->config.filename >= 0) {
-        pos += this->string_nt_save_legacy(
-            this->filenames[this->config.filename], &str_data[pos], MAX_PATH);
-    } else {
-        data[pos] = '\0';
-        pos++;
-    }
+    pos += this->string_nt_save_legacy(this->config.filename, &str_data[pos], MAX_PATH);
     PUT_INT(this->config.blend_mode == AVI_BLEND_FIFTY_FIFTY_ONBEAT_ADD ? 1 : 0);
     pos += 4;
     PUT_INT(this->config.on_beat_persist);

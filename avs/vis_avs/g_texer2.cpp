@@ -25,9 +25,6 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     const Parameter& p_example = g_this->info.parameters[9];
     const AVS_Parameter_Handle p_load_example = g_this->info.parameters[10].handle;
 
-    int64_t options_length;
-    const char* const* options;
-
     switch (uMsg) {
         case WM_COMMAND: {
             int wNotifyCode = HIWORD(wParam);
@@ -36,15 +33,23 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (wNotifyCode == CBN_SELCHANGE) {
                 switch (LOWORD(wParam)) {
                     case IDC_TEXERII_TEXTURE:
-                        HWND h = (HWND)lParam;
-                        int selection = SendMessage(h, CB_GETCURSEL, 0, 0);
-                        if (selection >= 1) {
-                            g_this->set_int(p_image.handle, selection);
-                            g_this->load_image();
-                        } else {
-                            g_this->set_int(p_image.handle, 0);
-                            g_this->load_image();
+                        int sel = SendDlgItemMessage(
+                            hwndDlg, IDC_TEXERII_TEXTURE, CB_GETCURSEL, 0, 0);
+                        if (sel < 0) {
+                            break;
                         }
+                        size_t filename_length =
+                            SendDlgItemMessage(
+                                hwndDlg, IDC_TEXERII_TEXTURE, CB_GETLBTEXTLEN, sel, 0)
+                            + 1;
+                        char* buf = (char*)calloc(filename_length, sizeof(char));
+                        SendDlgItemMessage(hwndDlg,
+                                           IDC_TEXERII_TEXTURE,
+                                           CB_GETLBTEXT,
+                                           sel,
+                                           (LPARAM)buf);
+                        g_this->set_string(p_image.handle, buf);
+                        free(buf);
                         break;
                 }
             } else if (wNotifyCode == BN_CLICKED) {
@@ -65,6 +70,7 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (m == NULL) {
                         return 1;
                     }
+                    int64_t options_length;
                     const char* const* options = p_example.get_options(&options_length);
                     for (int i = 0; i < options_length; i++) {
                         AppendMenu(
@@ -93,12 +99,9 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         hwndDlg, IDC_TEXERII_MASK, g_this->get_bool(p_colorize));
 
                     // select the default texture image
-                    g_this->set_int(p_image.handle, 0);
-                    SendDlgItemMessage(hwndDlg,
-                                       IDC_TEXERII_TEXTURE,
-                                       CB_SETCURSEL,
-                                       g_this->get_int(p_image.handle),
-                                       0);
+                    g_this->set_string(p_image.handle, TEXER_II_DEFAULT_IMAGE_STRING);
+                    SendDlgItemMessage(
+                        hwndDlg, IDC_TEXERII_TEXTURE, CB_SETCURSEL, 0, 0);
                     DestroyMenu(m);
                 }
             } else if (wNotifyCode == EN_CHANGE) {
@@ -120,18 +123,8 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         }
 
         case WM_INITDIALOG: {
-            options = p_image.get_options(&options_length);
-            for (unsigned int i = 0; i < options_length; i++) {
-                SendDlgItemMessage(
-                    hwndDlg, IDC_TEXERII_TEXTURE, CB_ADDSTRING, 0, (LPARAM)options[i]);
-            }
-            int64_t filename_sel = g_this->get_int(p_image.handle);
-            if (filename_sel >= 0) {
-                SendDlgItemMessage(
-                    hwndDlg, IDC_TEXERII_TEXTURE, CB_SETCURSEL, filename_sel, 0);
-            } else {
-                SendDlgItemMessage(hwndDlg, IDC_TEXERII_TEXTURE, CB_SETCURSEL, 0, 0);
-            }
+            auto image = g_this->get_string(p_image.handle);
+            init_resource(p_image, image, hwndDlg, IDC_TEXERII_TEXTURE, MAX_PATH);
             SetDlgItemText(hwndDlg, IDC_TEXERII_INIT, g_this->get_string(p_init));
             SetDlgItemText(hwndDlg, IDC_TEXERII_FRAME, g_this->get_string(p_frame));
             SetDlgItemText(hwndDlg, IDC_TEXERII_BEAT, g_this->get_string(p_beat));

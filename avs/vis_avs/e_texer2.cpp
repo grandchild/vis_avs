@@ -70,7 +70,7 @@ const char* const* Texer2_Info::image_files(int64_t* length_out) {
 }
 
 Texer2_Config::Texer2_Config()
-    : image(0),
+    : image(TEXER_II_DEFAULT_IMAGE_STRING),
       resize(Texer2_Info::examples[0].resize),
       wrap(Texer2_Info::examples[0].wrap),
       colorize(Texer2_Info::examples[0].colorize),
@@ -111,7 +111,7 @@ static void add_file_callback(const char* file, void* data) {
 
 void E_Texer2::find_image_files() {
     this->clear_image_files();
-    this->filenames.push_back("(default image)");
+    this->filenames.push_back(TEXER_II_DEFAULT_IMAGE_STRING);
     const int num_extensions = 5;
     char* extensions[num_extensions] = {".bmp", ".png", ".jpg", ".jpeg", ".gif"};
     find_files_by_extensions(g_path,
@@ -141,14 +141,14 @@ extern unsigned char rawData[1323];  // example pic
 void E_Texer2::load_image() {
     lock_lock(this->image_lock);
     if (this->image_normal) this->delete_image();
-    if (this->config.image == 0) {
+    if (this->config.image.empty()) {
         this->load_default_image();
         lock_unlock(this->image_lock);
         return;
     }
     char filename[MAX_PATH];
-    int printed = snprintf(
-        filename, MAX_PATH, "%s\\%s", g_path, this->filenames[config.image].c_str());
+    int printed =
+        snprintf(filename, MAX_PATH, "%s\\%s", g_path, this->config.image.c_str());
     if (printed >= MAX_PATH) {
         filename[MAX_PATH - 1] = '\0';
     }
@@ -1722,17 +1722,9 @@ void E_Texer2::load_legacy(unsigned char* data, int len) {
         this->config.version = TEXER_II_VERSION_V2_81D;
     }
     pos += 4;
-    std::string search_filename;
-    this->string_nt_load_legacy(&str_data[pos], search_filename, LEGACY_SAVE_PATH_LEN);
-    bool found = false;
-    for (size_t i = 0; i < this->filenames.size(); i++) {
-        if (this->filenames[i] == search_filename) {
-            found = true;
-            this->config.image = i;
-        }
-    }
-    if (!found) {
-        this->config.image = 0;
+    string_nt_load_legacy(&str_data[pos], this->config.image, LEGACY_SAVE_PATH_LEN);
+    if (this->config.image.empty()) {
+        this->config.image = TEXER_II_DEFAULT_IMAGE_STRING;
     }
     pos += LEGACY_SAVE_PATH_LEN;
     this->config.resize = *(int32_t*)&data[pos];
@@ -1755,8 +1747,11 @@ int E_Texer2::save_legacy(unsigned char* data) {
     int pos = 0;
     *(int32_t*)&data[pos] = this->config.version;
     pos += 4;
-    auto str_len = string_nt_save_legacy(
-        this->filenames[this->config.image], &str_data[pos], LEGACY_SAVE_PATH_LEN);
+    uint32_t str_len = 0;
+    if (this->config.image != TEXER_II_DEFAULT_IMAGE_STRING) {
+        str_len = string_nt_save_legacy(
+            this->config.image, &str_data[pos], LEGACY_SAVE_PATH_LEN);
+    }
     memset(&str_data[pos + str_len], '\0', LEGACY_SAVE_PATH_LEN - str_len);
     pos += LEGACY_SAVE_PATH_LEN;
     *(int32_t*)&data[pos] = this->config.resize;

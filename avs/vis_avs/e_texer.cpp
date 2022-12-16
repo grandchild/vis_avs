@@ -75,15 +75,12 @@ void E_Texer::find_image_files() {
 void E_Texer::clear_image_files() { this->filenames.clear(); }
 
 bool E_Texer::load_image() {
-    if (this->config.image < 0) {
+    if (this->config.image.empty()) {
         return true;
     }
     char filename[MAX_PATH];
-    int printed = snprintf(filename,
-                           MAX_PATH,
-                           "%s\\%s",
-                           g_path,
-                           this->filenames[this->config.image].c_str());
+    int printed =
+        snprintf(filename, MAX_PATH, "%s\\%s", g_path, this->config.image.c_str());
     if (printed >= MAX_PATH) {
         filename[MAX_PATH - 1] = '\0';
     }
@@ -281,20 +278,11 @@ inline void E_Texer::render_particle_sse2(int* framebuffer,
 void E_Texer::load_legacy(unsigned char* data, int len) {
     int pos = sizeof(uint32_t) * 4;
     if (len - pos >= LEGACY_SAVE_PATH_LEN) {
-        std::string search_filename;
         this->string_nt_load_legacy(
-            (char*)&data[16], search_filename, LEGACY_SAVE_PATH_LEN);
-        bool found = false;
-        for (size_t i = 0; i < this->filenames.size(); i++) {
-            if (this->filenames[i] == search_filename) {
-                found = true;
-                this->config.image = i;
-            }
+            (char*)&data[16], this->config.image, LEGACY_SAVE_PATH_LEN);
+        if (!this->config.image.empty()) {
+            this->load_image();
         }
-        if (!found) {
-            this->config.image = -1;
-        }
-        this->load_image();
     }
     pos += LEGACY_SAVE_PATH_LEN;
     if (len - pos >= ssizeof32(uint32_t)) {
@@ -313,10 +301,9 @@ int E_Texer::save_legacy(unsigned char* data) {
     memset(data, pos, 16);  // unused
     pos += 16;
     uint32_t str_len = 0;
-    if (this->config.image >= 0 && this->config.image < this->filenames.size()) {
-        str_len = string_nt_save_legacy(this->filenames[this->config.image],
-                                        (char*)&data[pos],
-                                        LEGACY_SAVE_PATH_LEN);
+    if (!this->config.image.empty()) {
+        str_len = string_nt_save_legacy(
+            this->config.image, (char*)&data[pos], LEGACY_SAVE_PATH_LEN);
     }
     memset(&data[pos + str_len], '\0', LEGACY_SAVE_PATH_LEN - str_len);
     pos += LEGACY_SAVE_PATH_LEN;

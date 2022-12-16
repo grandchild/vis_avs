@@ -14,7 +14,7 @@ enum AVI_Blend_Modes {
 };
 
 struct AVI_Config : public Effect_Config {
-    int64_t filename = -1;
+    std::string filename;
     int64_t blend_mode = AVI_BLEND_FIFTY_FIFTY;
     int64_t on_beat_persist = 6;
     int64_t playback_speed = 0;
@@ -55,11 +55,11 @@ struct AVI_Info : public Effect_Info {
 
     static constexpr uint32_t num_parameters = 5;
     static constexpr Parameter parameters[num_parameters] = {
-        P_SELECT(offsetof(AVI_Config, filename),
-                 "Filename",
-                 video_files,
-                 NULL,
-                 on_file_change),
+        P_RESOURCE(offsetof(AVI_Config, filename),
+                   "Filename",
+                   video_files,
+                   NULL,
+                   on_file_change),
         P_SELECT(offsetof(AVI_Config, blend_mode), "Blend Mode", blend_modes),
         P_IRANGE(offsetof(AVI_Config, on_beat_persist), "On-Beat Persistance", 0, 32),
         P_IRANGE(offsetof(AVI_Config, playback_speed), "Playback Speed", 0, 1000),

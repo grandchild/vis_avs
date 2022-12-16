@@ -17,12 +17,10 @@ static void EnableWindows(HWND hwndDlg, E_AVI* g_this) {
 int win32_dlgproc_avi(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     E_AVI* g_this = (E_AVI*)g_current_render;
     const Parameter& p_filename = g_this->info.parameters[0];
+    const Parameter& p_blend_mode = g_this->info.parameters[1];
     const Parameter& p_on_beat_persist = g_this->info.parameters[2];
     const Parameter& p_playback_speed = g_this->info.parameters[3];
     const Parameter& p_resampling = g_this->info.parameters[4];
-
-    int64_t options_length;
-    const char* const* options;
 
     switch (uMsg) {
         case WM_INITDIALOG: {
@@ -46,39 +44,19 @@ int win32_dlgproc_avi(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
             if (g_this->enabled) {
                 CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
             }
-            switch (g_this->config.blend_mode) {
-                default:
-                case AVI_BLEND_REPLACE:
-                    CheckDlgButton(hwndDlg, IDC_REPLACE, BST_CHECKED);
-                    break;
-                case AVI_BLEND_ADD:
-                    CheckDlgButton(hwndDlg, IDC_ADDITIVE, BST_CHECKED);
-                    break;
-                case AVI_BLEND_FIFTY_FIFTY:
-                    CheckDlgButton(hwndDlg, IDC_5050, BST_CHECKED);
-                    break;
-                case AVI_BLEND_FIFTY_FIFTY_ONBEAT_ADD:
-                    CheckDlgButton(hwndDlg, IDC_ADAPT, BST_CHECKED);
-                    break;
-            }
+
+            auto blend_mode = g_this->get_int(p_blend_mode.handle);
+            static constexpr size_t num_controls = 4;
+            uint32_t controls[num_controls] = {
+                IDC_REPLACE, IDC_ADDITIVE, IDC_5050, IDC_ADAPT};
+            init_select_radio(
+                p_blend_mode, blend_mode, hwndDlg, controls, num_controls);
             EnableWindows(hwndDlg, g_this);
-            options = p_filename.get_options(&options_length);
-            for (unsigned int i = 0; i < options_length; i++) {
-                SendDlgItemMessage(
-                    hwndDlg, OBJ_COMBO, CB_ADDSTRING, 0, (LPARAM)options[i]);
-            }
-            int64_t filename_sel = g_this->get_int(p_filename.handle);
-            if (filename_sel >= 0) {
-                SendDlgItemMessage(hwndDlg, OBJ_COMBO, CB_SETCURSEL, filename_sel, 0);
-            }
-            options = p_resampling.get_options(&options_length);
-            for (unsigned int i = 0; i < options_length; i++) {
-                SendDlgItemMessage(
-                    hwndDlg, IDC_AVI_RESAMPLE, CB_ADDSTRING, 0, (LPARAM)options[i]);
-            }
-            int64_t resampling_sel = g_this->get_int(p_resampling.handle);
-            SendDlgItemMessage(
-                hwndDlg, IDC_AVI_RESAMPLE, CB_SETCURSEL, resampling_sel, 0);
+
+            auto filename = g_this->get_string(p_filename.handle);
+            init_resource(p_filename, filename, hwndDlg, OBJ_COMBO, MAX_PATH);
+            auto resampling = g_this->get_int(p_resampling.handle);
+            init_select(p_resampling, resampling, hwndDlg, IDC_AVI_RESAMPLE);
 
             return 1;
         }
@@ -96,7 +74,7 @@ int win32_dlgproc_avi(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
             if ((LOWORD(wParam) == IDC_CHECK1) || (LOWORD(wParam) == IDC_ADDITIVE)
                 || (LOWORD(wParam) == IDC_REPLACE) || (LOWORD(wParam) == IDC_ADAPT)
                 || (LOWORD(wParam) == IDC_5050)) {
-                g_this->enabled = IsDlgButtonChecked(hwndDlg, IDC_CHECK1) ? 1 : 0;
+                g_this->set_enabled(IsDlgButtonChecked(hwndDlg, IDC_CHECK1));
                 if (IsDlgButtonChecked(hwndDlg, IDC_ADDITIVE)) {
                     g_this->config.blend_mode = AVI_BLEND_ADD;
                 } else if (IsDlgButtonChecked(hwndDlg, IDC_5050)) {
@@ -108,17 +86,22 @@ int win32_dlgproc_avi(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                 }
                 EnableWindows(hwndDlg, g_this);
             }
-            // handle clicks to combo box
             if (HIWORD(wParam) == CBN_SELCHANGE) {
                 auto widget = LOWORD(wParam);
-                int64_t sel = SendDlgItemMessage(hwndDlg, widget, CB_GETCURSEL, 0, 0);
+                int sel = SendDlgItemMessage(hwndDlg, widget, CB_GETCURSEL, 0, 0);
+                if (sel < 0) {
+                    return 0;
+                }
                 switch (widget) {
                     case OBJ_COMBO: {
-                        int64_t old_sel = g_this->get_int(p_filename.handle);
-                        g_this->set_int(p_filename.handle, sel);
-                        if (old_sel != sel) {
-                            g_this->load_file();
-                        }
+                        size_t filename_length =
+                            SendDlgItemMessage(hwndDlg, widget, CB_GETLBTEXTLEN, sel, 0)
+                            + 1;
+                        char* buf = (char*)calloc(filename_length, sizeof(char));
+                        SendDlgItemMessage(
+                            hwndDlg, widget, CB_GETLBTEXT, sel, (LPARAM)buf);
+                        g_this->set_string(p_filename.handle, buf);
+                        free(buf);
                         break;
                     }
                     case IDC_AVI_RESAMPLE:
