@@ -76,6 +76,7 @@ int win32_dlgproc_rotoblitter(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER5)) {
                 g_this->set_int(p_on_beat_reverse_speed.handle, t);
             }
+            return 0;
         }
     }
     return 0;
