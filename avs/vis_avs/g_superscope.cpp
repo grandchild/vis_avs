@@ -79,38 +79,27 @@ int win32_dlgproc_superscope(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
         }
         case WM_COMMAND:
             if (!isstart && HIWORD(wParam) == EN_CHANGE) {
-                int length = 0;
-                char* buf = NULL;
+                int length = GetWindowTextLength((HWND)lParam) + 1;
+                auto buf = new char[length];
                 switch (LOWORD(wParam)) {
                     case IDC_EDIT1:
-                        length = GetWindowTextLength((HWND)lParam) + 1;
-                        buf = new char[length];
                         GetDlgItemText(hwndDlg, IDC_EDIT1, buf, length);
                         g_this->set_string(p_point.handle, buf);
-                        delete[] buf;
                         break;
                     case IDC_EDIT2:
-                        length = GetWindowTextLength((HWND)lParam) + 1;
-                        buf = new char[length];
                         GetDlgItemText(hwndDlg, IDC_EDIT2, buf, length);
                         g_this->set_string(p_frame.handle, buf);
-                        delete[] buf;
                         break;
                     case IDC_EDIT3:
-                        length = GetWindowTextLength((HWND)lParam) + 1;
-                        buf = new char[length];
                         GetDlgItemText(hwndDlg, IDC_EDIT3, buf, length);
                         g_this->set_string(p_beat.handle, buf);
-                        delete[] buf;
                         break;
                     case IDC_EDIT4:
-                        length = GetWindowTextLength((HWND)lParam) + 1;
-                        buf = new char[length];
                         GetDlgItemText(hwndDlg, IDC_EDIT4, buf, length);
                         g_this->set_string(p_init.handle, buf);
-                        delete[] buf;
                         break;
                 }
+                delete[] buf;
             }
             if (LOWORD(wParam) == IDC_DOT || LOWORD(wParam) == IDC_LINES) {
                 g_this->config.draw_mode =
