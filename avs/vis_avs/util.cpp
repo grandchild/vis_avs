@@ -453,11 +453,16 @@ void init_select_radio(const Parameter& param,
             options_length - num_controls,
             param.name);
     }
+    bool found = false;
     for (int64_t i = 0; i < options_length; ++i) {
         CheckDlgButton(hwndDlg, control_handles[i], value == i);
-        return;
+        if (value == i) {
+            found = true;
+        }
     }
-    printf("Radio option %lld for parameter '%s' not found.?\n", value, param.name);
+    if (!found) {
+        printf("Radio option %lld for parameter '%s' not found.?\n", value, param.name);
+    }
 }
 
 void init_resource(const Parameter& param,
