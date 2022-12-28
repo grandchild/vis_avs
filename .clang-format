@@ -11,7 +11,7 @@ ColumnLimit: 88
 IndentWidth: 4
 UseTab: Never
 
-# Pointers are aligned with the type, not the variable/parameter name. 
+# Pointers are aligned with the type, not the variable/parameter name.
 PointerAlignment: Left
 # Clang-format homogenizes alignment to whatever was most used in the file before, but
 # we want to enforce our alignment so we have to turn that off explicitly.
