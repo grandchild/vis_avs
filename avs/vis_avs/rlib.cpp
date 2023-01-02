@@ -146,7 +146,7 @@ void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_NEW(Grain);
     DECLARE_EFFECT_LEGACY(R_Clear);
     DECLARE_EFFECT_LEGACY(R_Mirror);
-    DECLARE_EFFECT_LEGACY(R_StarField);
+    DECLARE_EFFECT_NEW(Starfield);
     DECLARE_EFFECT_LEGACY(R_Text);
     DECLARE_EFFECT_NEW(Bump);
     DECLARE_EFFECT_LEGACY(R_Mosaic);
