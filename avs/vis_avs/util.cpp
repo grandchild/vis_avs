@@ -411,10 +411,14 @@ void compilerfunctionlist(HWND hwndDlg, const char* title, const char* text) {
 void init_ranged_slider(const Parameter& param,
                         int64_t value,
                         HWND hwndDlg,
-                        uint32_t control_handle) {
+                        uint32_t control_handle,
+                        uint32_t tick_freq /*default: 0*/) {
     SendDlgItemMessage(hwndDlg, control_handle, TBM_SETRANGEMIN, 0, param.int_min);
     SendDlgItemMessage(hwndDlg, control_handle, TBM_SETRANGEMAX, 0, param.int_max);
     SendDlgItemMessage(hwndDlg, control_handle, TBM_SETPOS, 1, value);
+    if (tick_freq) {
+        SendDlgItemMessage(hwndDlg, control_handle, TBM_SETTICFREQ, tick_freq, 0);
+    }
 }
 
 void init_ranged_slider_float(const Parameter& param,

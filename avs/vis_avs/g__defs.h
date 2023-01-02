@@ -12,7 +12,8 @@ void compilerfunctionlist(HWND hwndDlg, const char* title, const char* text = NU
 void init_ranged_slider(const Parameter& param,
                         int64_t value,
                         HWND hwndDlg,
-                        uint32_t control_handle);
+                        uint32_t control_handle,
+                        uint32_t tick_freq = 0);
 void init_ranged_slider_float(const Parameter& param,
                               double value,
                               double factor,
