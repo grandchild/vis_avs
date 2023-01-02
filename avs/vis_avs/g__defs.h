@@ -13,6 +13,12 @@ void init_ranged_slider(const Parameter& param,
                         int64_t value,
                         HWND hwndDlg,
                         uint32_t control_handle);
+void init_ranged_slider_float(const Parameter& param,
+                              double value,
+                              double factor,
+                              HWND hwndDlg,
+                              uint32_t control_handle,
+                              double tick_freq = 0);
 void init_select(const Parameter& param,
                  int64_t value,
                  HWND hwndDlg,

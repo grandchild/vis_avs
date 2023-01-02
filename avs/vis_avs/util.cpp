@@ -417,6 +417,24 @@ void init_ranged_slider(const Parameter& param,
     SendDlgItemMessage(hwndDlg, control_handle, TBM_SETPOS, 1, value);
 }
 
+void init_ranged_slider_float(const Parameter& param,
+                              double value,
+                              double factor,
+                              HWND hwndDlg,
+                              uint32_t control_handle,
+                              double tick_freq /*default: 0*/) {
+    int64_t min_val = (int64_t)(param.float_min * factor);
+    int64_t max_val = (int64_t)(param.float_max * factor);
+    int64_t value_i = (int64_t)(value * factor);
+    SendDlgItemMessage(hwndDlg, control_handle, TBM_SETRANGEMIN, 0, min_val);
+    SendDlgItemMessage(hwndDlg, control_handle, TBM_SETRANGEMAX, 0, max_val);
+    SendDlgItemMessage(hwndDlg, control_handle, TBM_SETPOS, 1, value_i);
+    if (tick_freq) {
+        int64_t tick_freq_i = (int64_t)(tick_freq * factor);
+        SendDlgItemMessage(hwndDlg, control_handle, TBM_SETTICFREQ, tick_freq_i, 0);
+    }
+}
+
 void init_select(const Parameter& param,
                  int64_t value,
                  HWND hwndDlg,
