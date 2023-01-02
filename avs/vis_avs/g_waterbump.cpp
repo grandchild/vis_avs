@@ -1,4 +1,4 @@
-#include "c_waterbump.h"
+#include "e_waterbump.h"
 
 #include "g__defs.h"
 #include "g__lib.h"
@@ -9,51 +9,82 @@
 #include <commctrl.h>
 
 int win32_dlgproc_waterbump(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    C_THISCLASS* g_ConfigThis = (C_THISCLASS*)g_current_render;
+    auto g_this = (E_WaterBump*)g_current_render;
+    const Parameter& p_fluidity = WaterBump_Info::parameters[0];
+    const Parameter& p_depth = WaterBump_Info::parameters[1];
+    AVS_Parameter_Handle p_random = WaterBump_Info::parameters[2].handle;
+    const Parameter& p_drop_position_x = WaterBump_Info::parameters[3];
+    const Parameter& p_drop_position_y = WaterBump_Info::parameters[4];
+    const Parameter& p_drop_radius = WaterBump_Info::parameters[5];
+
     switch (uMsg) {
-        case WM_INITDIALOG:
-            if (g_ConfigThis->enabled) CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
-            SendDlgItemMessage(hwndDlg, IDC_DAMP, TBM_SETRANGEMIN, 0, 2);
-            SendDlgItemMessage(hwndDlg, IDC_DAMP, TBM_SETRANGEMAX, 0, 10);
-            SendDlgItemMessage(hwndDlg, IDC_DAMP, TBM_SETPOS, 1, g_ConfigThis->density);
-            SendDlgItemMessage(hwndDlg, IDC_DEPTH, TBM_SETRANGEMIN, 0, 100);
-            SendDlgItemMessage(hwndDlg, IDC_DEPTH, TBM_SETRANGEMAX, 0, 2000);
-            SendDlgItemMessage(hwndDlg, IDC_DEPTH, TBM_SETPOS, 1, g_ConfigThis->depth);
-            SendDlgItemMessage(hwndDlg, IDC_RADIUS, TBM_SETRANGEMIN, 0, 10);
-            SendDlgItemMessage(hwndDlg, IDC_RADIUS, TBM_SETRANGEMAX, 0, 100);
-            SendDlgItemMessage(
-                hwndDlg, IDC_RADIUS, TBM_SETPOS, 1, g_ConfigThis->drop_radius);
-            CheckDlgButton(hwndDlg, IDC_RANDOM_DROP, g_ConfigThis->random_drop);
-            CheckDlgButton(hwndDlg, IDC_DROP_LEFT, g_ConfigThis->drop_position_x == 0);
-            CheckDlgButton(
-                hwndDlg, IDC_DROP_CENTER, g_ConfigThis->drop_position_x == 1);
-            CheckDlgButton(hwndDlg, IDC_DROP_RIGHT, g_ConfigThis->drop_position_x == 2);
-            CheckDlgButton(hwndDlg, IDC_DROP_TOP, g_ConfigThis->drop_position_y == 0);
-            CheckDlgButton(
-                hwndDlg, IDC_DROP_MIDDLE, g_ConfigThis->drop_position_y == 1);
-            CheckDlgButton(
-                hwndDlg, IDC_DROP_BOTTOM, g_ConfigThis->drop_position_y == 2);
+        case WM_INITDIALOG: {
+            CheckDlgButton(hwndDlg, IDC_CHECK1, g_this->enabled);
+
+            auto fluidity = g_this->get_int(p_fluidity.handle);
+            init_ranged_slider(p_fluidity, fluidity, hwndDlg, IDC_DAMP);
+            auto depth = g_this->get_int(p_depth.handle);
+            init_ranged_slider(p_depth, depth, hwndDlg, IDC_DEPTH);
+            auto drop_radius = g_this->get_int(p_drop_radius.handle);
+            init_ranged_slider(p_drop_radius, drop_radius, hwndDlg, IDC_RADIUS);
+
+            CheckDlgButton(hwndDlg, IDC_RANDOM_DROP, g_this->get_bool(p_random));
+
+            auto drop_position_x = g_this->get_int(p_drop_position_x.handle);
+            static constexpr size_t num_x_positions = 3;
+            uint32_t controls_x_position[num_x_positions] = {
+                IDC_DROP_LEFT, IDC_DROP_CENTER, IDC_DROP_RIGHT};
+            init_select_radio(p_drop_position_x,
+                              drop_position_x,
+                              hwndDlg,
+                              controls_x_position,
+                              num_x_positions);
+            auto drop_position_y = g_this->get_int(p_drop_position_y.handle);
+            static constexpr size_t num_y_positions = 3;
+            uint32_t controls_y_position[num_y_positions] = {
+                IDC_DROP_TOP, IDC_DROP_MIDDLE, IDC_DROP_BOTTOM};
+            init_select_radio(p_drop_position_y,
+                              drop_position_y,
+                              hwndDlg,
+                              controls_y_position,
+                              num_y_positions);
             return 1;
-        case WM_DRAWITEM: return 0;
+        }
         case WM_COMMAND:
-            if (LOWORD(wParam) == IDC_CHECK1)
-                g_ConfigThis->enabled = IsDlgButtonChecked(hwndDlg, IDC_CHECK1) ? 1 : 0;
-            if (LOWORD(wParam) == IDC_RANDOM_DROP)
-                g_ConfigThis->random_drop =
-                    IsDlgButtonChecked(hwndDlg, IDC_RANDOM_DROP);
-            if (LOWORD(wParam) == IDC_DROP_LEFT) g_ConfigThis->drop_position_x = 0;
-            if (LOWORD(wParam) == IDC_DROP_CENTER) g_ConfigThis->drop_position_x = 1;
-            if (LOWORD(wParam) == IDC_DROP_RIGHT) g_ConfigThis->drop_position_x = 2;
-            if (LOWORD(wParam) == IDC_DROP_TOP) g_ConfigThis->drop_position_y = 0;
-            if (LOWORD(wParam) == IDC_DROP_MIDDLE) g_ConfigThis->drop_position_y = 1;
-            if (LOWORD(wParam) == IDC_DROP_BOTTOM) g_ConfigThis->drop_position_y = 2;
+            switch (LOWORD(wParam)) {
+                case IDC_CHECK1:
+                    g_this->set_enabled(IsDlgButtonChecked(hwndDlg, IDC_CHECK1));
+                    break;
+                case IDC_RANDOM_DROP:
+                    g_this->set_bool(p_random,
+                                     IsDlgButtonChecked(hwndDlg, IDC_RANDOM_DROP));
+                    break;
+                case IDC_DROP_LEFT: g_this->set_int(p_drop_position_x.handle, 0); break;
+                case IDC_DROP_CENTER:
+                    g_this->set_int(p_drop_position_x.handle, 1);
+                    break;
+                case IDC_DROP_RIGHT:
+                    g_this->set_int(p_drop_position_x.handle, 2);
+                    break;
+                case IDC_DROP_TOP: g_this->set_int(p_drop_position_y.handle, 0); break;
+                case IDC_DROP_MIDDLE:
+                    g_this->set_int(p_drop_position_y.handle, 1);
+                    break;
+                case IDC_DROP_BOTTOM:
+                    g_this->set_int(p_drop_position_y.handle, 2);
+                    break;
+            }
             return 0;
         case WM_HSCROLL: {
-            HWND swnd = (HWND)lParam;
-            int t = (int)SendMessage(swnd, TBM_GETPOS, 0, 0);
-            if (swnd == GetDlgItem(hwndDlg, IDC_DAMP)) g_ConfigThis->density = t;
-            if (swnd == GetDlgItem(hwndDlg, IDC_DEPTH)) g_ConfigThis->depth = t;
-            if (swnd == GetDlgItem(hwndDlg, IDC_RADIUS)) g_ConfigThis->drop_radius = t;
+            HWND control = (HWND)lParam;
+            int value = (int)SendMessage(control, TBM_GETPOS, 0, 0);
+            if (control == GetDlgItem(hwndDlg, IDC_DAMP)) {
+                g_this->set_int(p_fluidity.handle, value);
+            } else if (control == GetDlgItem(hwndDlg, IDC_DEPTH)) {
+                g_this->set_int(p_depth.handle, value);
+            } else if (control == GetDlgItem(hwndDlg, IDC_RADIUS)) {
+                g_this->set_int(p_drop_radius.handle, value);
+            }
         }
             return 0;
     }
