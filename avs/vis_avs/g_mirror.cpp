@@ -1,4 +1,4 @@
-#include "c_mirror.h"
+#include "e_mirror.h"
 
 #include "g__defs.h"
 #include "g__lib.h"
@@ -8,96 +8,95 @@
 #include <windows.h>
 #include <commctrl.h>
 
-int getMode(HWND hwndDlg) {
-    int a;
-    a = IsDlgButtonChecked(hwndDlg, IDC_HORIZONTAL1) ? HORIZONTAL1 : 0;
-    a |= IsDlgButtonChecked(hwndDlg, IDC_HORIZONTAL2) ? HORIZONTAL2 : 0;
-    a |= IsDlgButtonChecked(hwndDlg, IDC_VERTICAL1) ? VERTICAL1 : 0;
-    a |= IsDlgButtonChecked(hwndDlg, IDC_VERTICAL2) ? VERTICAL2 : 0;
-    return a;
-}
+int win32_dlgproc_mirror(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    auto g_this = (E_Mirror*)g_current_render;
+    AVS_Parameter_Handle p_top_to_bottom = Mirror_Info::parameters[0].handle;
+    AVS_Parameter_Handle p_bottom_to_top = Mirror_Info::parameters[1].handle;
+    AVS_Parameter_Handle p_left_to_right = Mirror_Info::parameters[2].handle;
+    AVS_Parameter_Handle p_right_to_left = Mirror_Info::parameters[3].handle;
+    AVS_Parameter_Handle p_on_beat_random = Mirror_Info::parameters[4].handle;
+    const Parameter& p_transition_duration = Mirror_Info::parameters[5];
 
-int win32_dlgproc_mirror(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
-    C_THISCLASS* g_ConfigThis = (C_THISCLASS*)g_current_render;
+    static int64_t transition_duration_save;
     switch (uMsg) {
-        case WM_INITDIALOG:
-            SendDlgItemMessage(hwndDlg, IDC_SLOWER, TBM_SETTICFREQ, 1, 0);
-            SendDlgItemMessage(
-                hwndDlg, IDC_SLOWER, TBM_SETRANGE, TRUE, MAKELONG(1, 16));
-            SendDlgItemMessage(
-                hwndDlg, IDC_SLOWER, TBM_SETPOS, TRUE, g_ConfigThis->slower);
-            if (g_ConfigThis->enabled) CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
-            if (g_ConfigThis->smooth) CheckDlgButton(hwndDlg, IDC_SMOOTH, BST_CHECKED);
-            if (g_ConfigThis->mode & VERTICAL1)
-                CheckDlgButton(hwndDlg, IDC_VERTICAL1, BST_CHECKED);
-            if (g_ConfigThis->mode & VERTICAL2)
-                CheckDlgButton(hwndDlg, IDC_VERTICAL2, BST_CHECKED);
-            if (g_ConfigThis->mode & HORIZONTAL1)
-                CheckDlgButton(hwndDlg, IDC_HORIZONTAL1, BST_CHECKED);
-            if (g_ConfigThis->mode & HORIZONTAL2)
-                CheckDlgButton(hwndDlg, IDC_HORIZONTAL2, BST_CHECKED);
-            if (g_ConfigThis->onbeat)
-                CheckDlgButton(hwndDlg, IDC_ONBEAT, BST_CHECKED);
-            else
-                CheckDlgButton(hwndDlg, IDC_STAT, BST_CHECKED);
+        case WM_INITDIALOG: {
+            CheckDlgButton(hwndDlg, IDC_CHECK1, g_this->enabled);
+            CheckDlgButton(hwndDlg, IDC_HORIZONTAL1, g_this->get_bool(p_top_to_bottom));
+            CheckDlgButton(hwndDlg, IDC_HORIZONTAL2, g_this->get_bool(p_bottom_to_top));
+            CheckDlgButton(hwndDlg, IDC_VERTICAL1, g_this->get_bool(p_left_to_right));
+            CheckDlgButton(hwndDlg, IDC_VERTICAL2, g_this->get_bool(p_right_to_left));
+            auto on_beat = g_this->get_bool(p_on_beat_random);
+            CheckDlgButton(hwndDlg, IDC_STAT, !on_beat);
+            CheckDlgButton(hwndDlg, IDC_ONBEAT, on_beat);
+            auto transition_duration = g_this->get_int(p_transition_duration.handle);
+            transition_duration_save = transition_duration;
+            CheckDlgButton(hwndDlg, IDC_SMOOTH, transition_duration > 0);
+            init_ranged_slider(
+                p_transition_duration, transition_duration, hwndDlg, IDC_SLOWER);
             return 1;
-        case WM_NOTIFY: {
-            if (LOWORD(wParam) == IDC_SLOWER)
-                g_ConfigThis->slower =
-                    SendDlgItemMessage(hwndDlg, IDC_SLOWER, TBM_GETPOS, 0, 0);
+        }
+        case WM_COMMAND: {
+            switch (LOWORD(wParam)) {
+                case IDC_CHECK1:
+                    g_this->set_enabled(IsDlgButtonChecked(hwndDlg, IDC_CHECK1));
+                    break;
+                case IDC_HORIZONTAL1:
+                    g_this->set_bool(p_top_to_bottom,
+                                     IsDlgButtonChecked(hwndDlg, IDC_HORIZONTAL1));
+                    CheckDlgButton(
+                        hwndDlg, IDC_HORIZONTAL2, g_this->get_bool(p_bottom_to_top));
+                    break;
+                case IDC_HORIZONTAL2:
+                    g_this->set_bool(p_bottom_to_top,
+                                     IsDlgButtonChecked(hwndDlg, IDC_HORIZONTAL2));
+                    CheckDlgButton(
+                        hwndDlg, IDC_HORIZONTAL1, g_this->get_bool(p_top_to_bottom));
+                    break;
+                case IDC_VERTICAL1:
+                    g_this->set_bool(p_left_to_right,
+                                     IsDlgButtonChecked(hwndDlg, IDC_VERTICAL1));
+                    CheckDlgButton(
+                        hwndDlg, IDC_VERTICAL2, g_this->get_bool(p_right_to_left));
+                    break;
+                case IDC_VERTICAL2:
+                    g_this->set_bool(p_right_to_left,
+                                     IsDlgButtonChecked(hwndDlg, IDC_VERTICAL2));
+                    CheckDlgButton(
+                        hwndDlg, IDC_VERTICAL1, g_this->get_bool(p_left_to_right));
+                    break;
+                case IDC_ONBEAT:
+                case IDC_STAT:
+                    g_this->set_bool(p_on_beat_random,
+                                     IsDlgButtonChecked(hwndDlg, IDC_ONBEAT));
+                    CheckDlgButton(
+                        hwndDlg, IDC_HORIZONTAL1, g_this->get_bool(p_top_to_bottom));
+                    CheckDlgButton(
+                        hwndDlg, IDC_HORIZONTAL2, g_this->get_bool(p_bottom_to_top));
+                    CheckDlgButton(
+                        hwndDlg, IDC_VERTICAL1, g_this->get_bool(p_left_to_right));
+                    CheckDlgButton(
+                        hwndDlg, IDC_VERTICAL2, g_this->get_bool(p_right_to_left));
+                    break;
+                case IDC_SMOOTH:
+                    bool smooth_on = IsDlgButtonChecked(hwndDlg, IDC_SMOOTH);
+                    int32_t value =
+                        smooth_on ? max((int32_t)transition_duration_save, 1) : 0;
+                    g_this->set_int(p_transition_duration.handle, value);
+                    SendDlgItemMessage(hwndDlg, IDC_SLOWER, TBM_SETPOS, 1, value);
+                    break;
+            }
             return 0;
         }
-        case WM_COMMAND:
-            if (LOWORD(wParam) == IDC_CHECK1) {
-                g_ConfigThis->enabled = IsDlgButtonChecked(hwndDlg, IDC_CHECK1) ? 1 : 0;
+        case WM_HSCROLL: {
+            HWND control = (HWND)lParam;
+            if (control == GetDlgItem(hwndDlg, IDC_SLOWER)) {
+                int value = (int)SendMessage(control, TBM_GETPOS, 0, 0);
+                g_this->set_int(p_transition_duration.handle, value);
+                transition_duration_save = value;
+                CheckDlgButton(hwndDlg, IDC_SMOOTH, value > 0);
             }
-            if (LOWORD(wParam) == IDC_HORIZONTAL1) {
-                g_ConfigThis->mode = getMode(hwndDlg);
-                if ((g_ConfigThis->mode & HORIZONTAL1)
-                    && (g_ConfigThis->mode & HORIZONTAL2) && !(g_ConfigThis->onbeat)) {
-                    CheckDlgButton(hwndDlg, IDC_HORIZONTAL2, BST_UNCHECKED);
-                    g_ConfigThis->mode = getMode(hwndDlg);
-                }
-            }
-            if (LOWORD(wParam) == IDC_HORIZONTAL2) {
-                g_ConfigThis->mode = getMode(hwndDlg);
-                if ((g_ConfigThis->mode & HORIZONTAL1)
-                    && (g_ConfigThis->mode & HORIZONTAL2) && !(g_ConfigThis->onbeat)) {
-                    CheckDlgButton(hwndDlg, IDC_HORIZONTAL1, BST_UNCHECKED);
-                    g_ConfigThis->mode = getMode(hwndDlg);
-                }
-            }
-            if (LOWORD(wParam) == IDC_VERTICAL1) {
-                g_ConfigThis->mode = getMode(hwndDlg);
-                if ((g_ConfigThis->mode & VERTICAL1) && (g_ConfigThis->mode & VERTICAL2)
-                    && !(g_ConfigThis->onbeat)) {
-                    CheckDlgButton(hwndDlg, IDC_VERTICAL2, BST_UNCHECKED);
-                    g_ConfigThis->mode = getMode(hwndDlg);
-                }
-            }
-            if (LOWORD(wParam) == IDC_VERTICAL2) {
-                g_ConfigThis->mode = getMode(hwndDlg);
-                if ((g_ConfigThis->mode & VERTICAL1) && (g_ConfigThis->mode & VERTICAL2)
-                    && !(g_ConfigThis->onbeat)) {
-                    CheckDlgButton(hwndDlg, IDC_VERTICAL1, BST_UNCHECKED);
-                    g_ConfigThis->mode = getMode(hwndDlg);
-                }
-            }
-            if (LOWORD(wParam) == IDC_STAT || LOWORD(wParam) == IDC_ONBEAT) {
-                g_ConfigThis->onbeat = IsDlgButtonChecked(hwndDlg, IDC_ONBEAT) ? 1 : 0;
-                if (!(g_ConfigThis->onbeat)) {
-                    if ((g_ConfigThis->mode & HORIZONTAL1)
-                        && (g_ConfigThis->mode & HORIZONTAL2))
-                        CheckDlgButton(hwndDlg, IDC_HORIZONTAL2, BST_UNCHECKED);
-                    if ((g_ConfigThis->mode & VERTICAL1)
-                        && (g_ConfigThis->mode & VERTICAL2))
-                        CheckDlgButton(hwndDlg, IDC_VERTICAL2, BST_UNCHECKED);
-                    g_ConfigThis->mode = getMode(hwndDlg);
-                }
-            }
-            if (LOWORD(wParam) == IDC_SMOOTH)
-                g_ConfigThis->smooth = IsDlgButtonChecked(hwndDlg, IDC_SMOOTH) ? 1 : 0;
             return 0;
+        }
     }
     return 0;
 }
