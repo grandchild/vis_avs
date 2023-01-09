@@ -28,7 +28,7 @@ jobs:
           find build
           mv build/vis_avs.dll build/vis_avs_281d_mingw_debug.dll
 
-      - uses: actions/upload-artifact@v3.1.1
+      - uses: actions/upload-artifact@v3.1.2
         with:
           name: vis_avs_mingw
           path: build/*.dll
