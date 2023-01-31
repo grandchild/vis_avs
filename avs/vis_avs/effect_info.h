@@ -108,6 +108,12 @@
  *       effects for examples. A smart editor UI may turn a short list into a radio
  *       select, and a longer list into a dropdown select.
  *
+ *     - `P_RESOURCE` is like `P_SELECT` (a list of options to choose from). The
+ *       difference is that the value is the string of the option itself, not its index.
+ *       This is needed for dynamic lists that change often, such as available files on
+ *       disk. The rest works the same as `P_SELECT`, namely setting the available
+ *       options.
+ *
  *     - `P_LIST` is an advanced feature not needed by most effects. It creates a
  *       list of sets of parameters. Declaring parameter lists will be explained in more
  *       detail further down (TODO).
@@ -118,6 +124,11 @@
  *     - Most functions have an `_X`-suffixed version, which excludes them from being
  *       saved in a preset. So if you choose `P_*_X` instead of `P_*` the parameter will
  *       not be saved and not loaded back.
+ *
+ *     - Some functions have a `_G`-suffixed version, which declares them as part of an
+ *       effect's global config, shared by all instances of this effect in one AVS
+ *       instance. Global configurations and parameters will be explained in more detail
+ *       further down (TODO).
  *
  *     - The arguments to the `P_` function (which it shares with the others) are as
  *       follows:
@@ -138,7 +149,7 @@
  *         (or the action triggered) through the editor API. The signature is:
  *
  *            void on_change(Effect* component, const Parameter* parameter,
- *                           std::vector<int64_t> parameter_path)
+ *                           const std::vector<int64_t>& parameter_path)
  *
  *         You could use `parameter->name` to identify a parameter if the function
  *         handles multiple parameter changes.
@@ -175,7 +186,7 @@
  *       list. The signature for all 3 functions is:
  *
  *         void on_list_change(Effect* component, const Parameter* parameter,
- *                             std::vector<int64_t> parameter_path,
+ *                             const std::vector<int64_t>& parameter_path,
  *                             int64_t index1, int64_t index2)
  *
  *       where:
@@ -214,6 +225,7 @@
  *
  * TODO: Explain variable length parameter lists in more detail. For now have a look at
  *       ColorMap for an effect with _all_ the bells and whistles.
+ * TODO: Explain global parameters & config.
  * TODO: Move this into an example effect file.
  *
  * Q: Why are Config and Info `struct`s, but Effect is a `class`?
