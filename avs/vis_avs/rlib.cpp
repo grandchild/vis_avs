@@ -120,7 +120,7 @@ void C_RLibrary::add_dofx(void* rf,
 
 void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_NEW(Simple);
-    DECLARE_EFFECT_LEGACY(R_DotPlane);
+    DECLARE_EFFECT_NEW(DotPlane);
     DECLARE_EFFECT_LEGACY(R_OscStars);
     DECLARE_EFFECT_NEW(Fadeout);
     DECLARE_EFFECT_LEGACY(R_BlitterFB);
