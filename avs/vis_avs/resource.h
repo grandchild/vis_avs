@@ -88,6 +88,7 @@
 #define IDD_CFG_PICTUREII               184
 #define IDD_CFG_FPSLIMITER              185
 #define IDD_CFG_TEXER                   186
+#define IDD_CFG_DOTFOUNTAIN             187
 #define IDC_EFFECTS                     1000
 #define IDC_ENABLED                     1001
 #define IDC_FBCLEAR                     1002
@@ -593,7 +594,7 @@
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE 187
+#define _APS_NEXT_RESOURCE_VALUE 188
 #define _APS_NEXT_COMMAND_VALUE  40015
 #define _APS_NEXT_CONTROL_VALUE  1389
 #define _APS_NEXT_SYMED_VALUE    101
