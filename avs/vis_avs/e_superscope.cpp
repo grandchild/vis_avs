@@ -111,9 +111,19 @@ int E_SuperScope::render(char visdata[2][2][576],
     int sign_invert = this->config.audio_source ? 0 : 128;
 
     if (this->config.audio_channel == 0) {
-        for (x = 0; x < 576; x++)
-            center_channel[x] = visdata[1 - this->config.audio_source][0][x] / 2
-                                + visdata[1 - this->config.audio_source][1][x] / 2;
+        if (this->config.audio_source == 0) {
+            for (x = 0; x < 576; x++) {
+                center_channel[x] =
+                    (signed char)visdata[1 - this->config.audio_source][0][x] / 2
+                    + (signed char)visdata[1 - this->config.audio_source][1][x] / 2;
+            }
+        } else {
+            for (x = 0; x < 576; x++) {
+                center_channel[x] =
+                    (unsigned char)visdata[1 - this->config.audio_source][0][x] / 2
+                    + (unsigned char)visdata[1 - this->config.audio_source][1][x] / 2;
+            }
+        }
         audio_data = (unsigned char*)center_channel;
     } else {
         audio_data = (unsigned char*)&visdata[1 - this->config.audio_source]
