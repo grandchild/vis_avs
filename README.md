@@ -83,21 +83,7 @@ make
 </details>
 
 
-<details><summary><em>Fedora / RedHat</em></summary>
-
-```shell
-sudo dnf install mingw32-gcc-c++ mingw32-gcc
-mkdir -p build
-cd build
-mingw32-cmake ..
-make
-```
-
-</details>
-
-
 <details><summary><em>Debian / Ubuntu (& other distros)</em></summary>
-
 
 ```shell
 sudo apt install gcc-mingw-w64 g++-mingw-w64 cmake
@@ -112,6 +98,20 @@ make
 ```
 
 </details>
+
+
+<details><summary><em>Fedora / RedHat</em></summary>
+
+```shell
+sudo dnf install mingw32-gcc-c++ mingw32-gcc
+mkdir -p build
+cd build
+mingw32-cmake ..
+make
+```
+
+</details>
+
 
 ### Run With Winamp
 
