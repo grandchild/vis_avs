@@ -113,6 +113,23 @@ make
 </details>
 
 
+<details><summary><em>Gentoo</em></summary>
+
+```shell
+sudo emerge -av sys-devel/crossdev
+sudo crossdev --target i686-w64-mingw32 --genv 'EXTRA_ECONF=--enable-threads=posix'
+
+mkdir -p build
+cd build
+
+cmake -D CMAKE_TOOLCHAIN_FILE=../CMake-MingWcross-toolchain.txt ..
+
+make
+```
+
+</details>
+
+
 ### Run With Winamp
 
 Once you've compiled `vis_avs.dll`, copy it (and some stdlib DLLs that got introduced by
