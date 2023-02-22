@@ -139,9 +139,17 @@ int C_THISCLASS::render(char visdata[2][2][576],
     }
 
     if (which_ch >= 2) {
-        for (x = 0; x < 576; x++)
-            center_channel[x] =
-                visdata[source ? 0 : 1][0][x] / 2 + visdata[source ? 0 : 1][1][x] / 2;
+        if (source == 0) {
+            for (x = 0; x < 576; x++) {
+                center_channel[x] = (signed char)visdata[source ? 0 : 1][0][x] / 2
+                                    + (signed char)visdata[source ? 0 : 1][1][x] / 2;
+            }
+        } else {
+            for (x = 0; x < 576; x++) {
+                center_channel[x] = (unsigned char)visdata[source ? 0 : 1][0][x] / 2
+                                    + (unsigned char)visdata[source ? 0 : 1][1][x] / 2;
+            }
+        }
     }
     if (which_ch < 2)
         fa_data = (unsigned char*)&visdata[source ? 0 : 1][which_ch][0];

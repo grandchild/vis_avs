@@ -92,9 +92,16 @@ int E_Simple::render(char visdata[2][2][576],
     current_color = r1 | (r2 << 8) | (r3 << 16);
 
     if (this->config.audio_channel == AUDIO_CENTER) {
-        int w = this->config.audio_source == AUDIO_WAVEFORM;
-        for (x = 0; x < 576; x++) {
-            center_channel[x] = visdata[w][0][x] / 2 + visdata[w][1][x] / 2;
+        if (this->config.audio_source == AUDIO_WAVEFORM) {
+            for (x = 0; x < 576; x++) {
+                center_channel[x] = (signed char)visdata[1][0][x] / 2
+                                    + (signed char)visdata[1][1][x] / 2;
+            }
+        } else {
+            for (x = 0; x < 576; x++) {
+                center_channel[x] = (unsigned char)visdata[0][0][x] / 2
+                                    + (unsigned char)visdata[0][1][x] / 2;
+            }
         }
         fa_data = (unsigned char*)center_channel;
     } else {
