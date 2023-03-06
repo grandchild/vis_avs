@@ -647,6 +647,7 @@ void E_ColorMap::load_map(size_t map_index) {
     fseek(file, 0, SEEK_SET);
     bytes_read = fread(contents, 1, filesize, file);
     if (!bytes_read) {
+        delete[] contents;
         return;
     }
     fclose(file);
