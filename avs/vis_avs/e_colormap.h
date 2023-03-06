@@ -13,8 +13,11 @@
 #define COLORMAP_NUM_MAPS              8
 #define COLORMAP_MAX_COLORS            256
 #define COLORMAP_MAP_FILENAME_MAXLEN   48
-#define COLORMAP_MAP_COLOR_CONFIG_SIZE (3 * 4)          // 3 ints
-#define COLORMAP_BASE_CONFIG_SIZE      (3 * 4 + 1 * 4)  // 3 ints + 4 bytes
+#define COLORMAP_MAP_COLOR_CONFIG_SIZE (3 * sizeof(uint32_t))
+#define COLORMAP_MAP_FILESIZE_MAX                    \
+    (4 /*file-header*/ + sizeof(uint32_t) /*length*/ \
+     + COLORMAP_MAX_COLORS * COLORMAP_MAP_COLOR_CONFIG_SIZE)
+#define COLORMAP_BASE_CONFIG_SIZE (3 * sizeof(uint32_t) + 4 * sizeof(uint8_t))
 #define COLORMAP_SAVE_MAP_HEADER_SIZE \
     (sizeof(uint32_t) * 3 + COLORMAP_MAP_FILENAME_MAXLEN)
 

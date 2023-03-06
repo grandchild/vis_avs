@@ -617,7 +617,7 @@ void E_ColorMap::save_map(size_t map_index) {
     }
     fwrite("CLM1", 4, 1, file);
     uint32_t colors_length =
-        CLAMPU(this->config.maps[map_index].colors.size(), UINT32_MAX);
+        CLAMPU(this->config.maps[map_index].colors.size(), COLORMAP_MAX_COLORS);
     fwrite(&colors_length, sizeof(uint32_t), 1, file);
     for (uint32_t i = 0; i < colors_length; i++) {
         auto const& color = this->config.maps[map_index].colors[i];
@@ -638,14 +638,10 @@ void E_ColorMap::load_map(size_t map_index) {
         return;
     }
     fseek(file, 0, SEEK_END);
-    filesize = ftell(file);
+    filesize = min(ftell(file), COLORMAP_MAP_FILESIZE_MAX);
     contents = new unsigned char[filesize];
     fseek(file, 0, SEEK_SET);
-    bytes_read =
-        fread(contents,
-              1,
-              min(filesize, COLORMAP_MAX_COLORS * COLORMAP_MAP_COLOR_CONFIG_SIZE),
-              file);
+    bytes_read = fread(contents, 1, filesize, file);
     if (!bytes_read) {
         return;
     }
@@ -690,7 +686,7 @@ bool E_ColorMap::load_map_colors(unsigned char* data,
     unsigned int i;
     this->config.maps[map_index].colors.clear();
     for (i = 0; i < map_length; i++) {
-        if ((len - pos) < COLORMAP_MAP_COLOR_CONFIG_SIZE) {
+        if ((len - pos) < (int32_t)COLORMAP_MAP_COLOR_CONFIG_SIZE) {
             return false;
         }
         int64_t position = GET_INT();
@@ -707,7 +703,7 @@ bool E_ColorMap::load_map_colors(unsigned char* data,
 
 void E_ColorMap::load_legacy(unsigned char* data, int len) {
     unsigned int pos = 0;
-    if (len < COLORMAP_BASE_CONFIG_SIZE) {
+    if (len < (int32_t)COLORMAP_BASE_CONFIG_SIZE) {
         return;
     }
     this->config.color_key = GET_INT();
