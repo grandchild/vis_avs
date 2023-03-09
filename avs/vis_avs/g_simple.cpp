@@ -8,19 +8,25 @@
 #include <windows.h>
 
 int win32_dlgproc_simple(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    E_Simple* g_this = (E_Simple*)g_current_render;
-    const AVS_Parameter_Handle p_colors = g_this->info.parameters[4].handle;
+    auto g_this = (E_Simple*)g_current_render;
+    const AVS_Parameter_Handle p_audio_source = Simple_Info::parameters[0].handle;
+    const AVS_Parameter_Handle p_draw_mode = Simple_Info::parameters[1].handle;
+    const AVS_Parameter_Handle p_audio_channel = Simple_Info::parameters[2].handle;
+    const AVS_Parameter_Handle p_position = Simple_Info::parameters[3].handle;
+    const AVS_Parameter_Handle p_colors = Simple_Info::parameters[4].handle;
+    const AVS_Parameter_Handle p_color = Simple_Info::color_params[0].handle;
 
     switch (uMsg) {
         case WM_DRAWITEM: {
             DRAWITEMSTRUCT* di = (DRAWITEMSTRUCT*)lParam;
-            if (di->CtlID == IDC_DEFCOL && g_this->config.colors.size() > 0) {
+            auto num_colors = g_this->parameter_list_length(p_colors);
+            if (di->CtlID == IDC_DEFCOL && num_colors > 0) {
                 size_t x;
                 int w = di->rcItem.right - di->rcItem.left;
                 int l = 0, nl;
-                for (x = 0; x < g_this->config.colors.size(); x++) {
-                    unsigned int color = g_this->config.colors[x].color;
-                    nl = (w * (x + 1)) / g_this->config.colors.size();
+                for (x = 0; x < num_colors; x++) {
+                    uint32_t color = g_this->get_color(p_color, {x});
+                    nl = (w * (x + 1)) / num_colors;
                     color = ((color >> 16) & 0xff) | (color & 0xff00)
                             | ((color << 16) & 0xff0000);
 
@@ -46,53 +52,53 @@ int win32_dlgproc_simple(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         }
         case WM_INITDIALOG:
-            switch (g_this->config.audio_source) {
+            switch (g_this->get_int(p_audio_source)) {
                 default:
                 case AUDIO_WAVEFORM: CheckDlgButton(hwndDlg, IDC_OSC, true); break;
                 case AUDIO_SPECTRUM: CheckDlgButton(hwndDlg, IDC_SPEC, true); break;
             }
-            switch (g_this->config.draw_mode) {
+            switch (g_this->get_int(p_draw_mode)) {
                 default:
                 case DRAW_SOLID: CheckDlgButton(hwndDlg, IDC_SOLID, true); break;
                 case DRAW_LINES: CheckDlgButton(hwndDlg, IDC_LINES, true); break;
                 case DRAW_DOTS: CheckDlgButton(hwndDlg, IDC_DOT, true); break;
             }
-            switch (g_this->config.audio_channel) {
+            switch (g_this->get_int(p_audio_channel)) {
                 case AUDIO_LEFT: CheckDlgButton(hwndDlg, IDC_LEFTCH, true); break;
                 case AUDIO_RIGHT: CheckDlgButton(hwndDlg, IDC_RIGHTCH, true); break;
                 default:
                 case AUDIO_CENTER: CheckDlgButton(hwndDlg, IDC_MIDCH, true); break;
             }
-            switch (g_this->config.position) {
+            switch (g_this->get_int(p_position)) {
                 case VPOS_TOP: CheckDlgButton(hwndDlg, IDC_TOP, true); break;
                 case VPOS_BOTTOM: CheckDlgButton(hwndDlg, IDC_BOTTOM, true); break;
                 default:
                 case VPOS_CENTER: CheckDlgButton(hwndDlg, IDC_CENTER, true); break;
             }
-            SetDlgItemInt(hwndDlg, IDC_NUMCOL, g_this->config.colors.size(), FALSE);
+            SetDlgItemInt(
+                hwndDlg, IDC_NUMCOL, g_this->parameter_list_length(p_colors), false);
             return 1;
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
-                case IDC_SOLID: g_this->config.draw_mode = DRAW_SOLID; break;
-                case IDC_LINES: g_this->config.draw_mode = DRAW_LINES; break;
-                case IDC_DOT: g_this->config.draw_mode = DRAW_DOTS; break;
+                case IDC_SOLID: g_this->set_int(p_draw_mode, DRAW_SOLID); break;
+                case IDC_LINES: g_this->set_int(p_draw_mode, DRAW_LINES); break;
+                case IDC_DOT: g_this->set_int(p_draw_mode, DRAW_DOTS); break;
 
-                case IDC_OSC: g_this->config.audio_source = AUDIO_WAVEFORM; break;
-                case IDC_SPEC: g_this->config.audio_source = AUDIO_SPECTRUM; break;
+                case IDC_OSC: g_this->set_int(p_audio_source, AUDIO_WAVEFORM); break;
+                case IDC_SPEC: g_this->set_int(p_audio_source, AUDIO_SPECTRUM); break;
 
-                case IDC_LEFTCH: g_this->config.audio_channel = AUDIO_LEFT; break;
-                case IDC_RIGHTCH: g_this->config.audio_channel = AUDIO_RIGHT; break;
-                case IDC_MIDCH: g_this->config.audio_channel = AUDIO_CENTER; break;
+                case IDC_LEFTCH: g_this->set_int(p_audio_channel, AUDIO_LEFT); break;
+                case IDC_RIGHTCH: g_this->set_int(p_audio_channel, AUDIO_RIGHT); break;
+                case IDC_MIDCH: g_this->set_int(p_audio_channel, AUDIO_CENTER); break;
 
-                case IDC_TOP: g_this->config.position = VPOS_TOP; break;
-                case IDC_BOTTOM: g_this->config.position = VPOS_BOTTOM; break;
-                case IDC_CENTER: g_this->config.position = VPOS_CENTER; break;
+                case IDC_TOP: g_this->set_int(p_position, VPOS_TOP); break;
+                case IDC_BOTTOM: g_this->set_int(p_position, VPOS_BOTTOM); break;
+                case IDC_CENTER: g_this->set_int(p_position, VPOS_CENTER); break;
 
                 case IDC_NUMCOL: {
-                    int p;
-                    int success = FALSE;
+                    BOOL success = false;
                     bool check_for_negative = false;
-                    p = GetDlgItemInt(
+                    uint32_t p = GetDlgItemInt(
                         hwndDlg, IDC_NUMCOL, &success, check_for_negative);
                     if (success) {
                         int64_t length = g_this->parameter_list_length(p_colors);
@@ -105,7 +111,7 @@ int win32_dlgproc_simple(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                 g_this->parameter_list_entry_remove(p_colors, -1);
                             }
                         }
-                        InvalidateRect(GetDlgItem(hwndDlg, IDC_DEFCOL), NULL, TRUE);
+                        InvalidateRect(GetDlgItem(hwndDlg, IDC_DEFCOL), nullptr, true);
                     }
                     break;
                 }
@@ -120,12 +126,13 @@ int win32_dlgproc_simple(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     w = r.right - r.left;
                     h = r.bottom - r.top;
                     if (p.x >= 0 && p.x < w && p.y >= 0 && p.y < h) {
-                        wc = (p.x * g_this->config.colors.size()) / w;
+                        wc = (p.x * g_this->parameter_list_length(p_colors)) / w;
                     }
                     if (wc >= 0) {
-                        GR_SelectColor(hwndDlg,
-                                       (int*)&(g_this->config.colors[wc].color));
-                        InvalidateRect(GetDlgItem(hwndDlg, IDC_DEFCOL), NULL, TRUE);
+                        int32_t color;
+                        GR_SelectColor(hwndDlg, &color);
+                        g_this->set_color(p_color, (uint64_t)color, {wc});
+                        InvalidateRect(GetDlgItem(hwndDlg, IDC_DEFCOL), nullptr, true);
                     }
                     break;
                 }
