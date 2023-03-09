@@ -844,6 +844,14 @@ struct parameter_dispatch<bool> {
         *(bool*)addr = value;
     }
     static bool zero() { return false; };
+    static void trace(const Parameter*, bool value, uint8_t* config_data) {
+        printf("set to %s", value ? "true" : "false");
+        auto actual_value = get(config_data);
+        if (actual_value != value) {
+            printf(", but corrected to %s", value ? "true" : "false");
+        }
+        printf("\n");
+    }
 };
 
 template <>
@@ -861,6 +869,32 @@ struct parameter_dispatch<int64_t> {
         return *(std::vector<int64_t>*)config_data;
     };
     static int64_t zero() { return 0; };
+    static void trace(const Parameter* parameter, int64_t value, uint8_t* config_data) {
+        const char* option = nullptr;
+        if (parameter->type == AVS_PARAM_SELECT) {
+            int64_t length = -1;
+            auto options = parameter->get_options(&length);
+            if (value > 0 && value < length) {
+                option = options[value];
+            }
+        }
+        if (option) {
+            printf("set to %s", option);
+        } else {
+            printf("set to %lld", value);
+        }
+        auto actual_value = get(config_data);
+        if (actual_value != value) {
+            printf(", but corrected to ");
+            if (parameter->type == AVS_PARAM_SELECT) {
+                auto actual_option = parameter->get_options(nullptr)[actual_value];
+                printf("%s", actual_option);
+            } else {
+                printf("%lld", actual_value);
+            }
+        }
+        printf("\n");
+    }
 };
 
 template <>
@@ -878,6 +912,14 @@ struct parameter_dispatch<double> {
         return *(std::vector<double>*)config_data;
     };
     static double zero() { return 0.0; };
+    static void trace(const Parameter*, double value, uint8_t* config_data) {
+        printf("set to %0.3f", value);
+        auto actual_value = get(config_data);
+        if (actual_value != value) {
+            printf(", but corrected to %0.3f", actual_value);
+        }
+        printf("\n");
+    }
 };
 
 template <>
@@ -890,6 +932,14 @@ struct parameter_dispatch<uint64_t> {
         return *(std::vector<uint64_t>*)config_data;
     };
     static uint64_t zero() { return 0; };
+    static void trace(const Parameter*, uint64_t value, uint8_t* config_data) {
+        printf("set to 0x%08llx", value);
+        auto actual_value = get(config_data);
+        if (actual_value != value) {
+            printf(", but corrected to %08llx", actual_value);
+        }
+        printf("\n");
+    }
 };
 
 template <>
@@ -928,4 +978,23 @@ struct parameter_dispatch<const char*> {
     };
 
     static const char* zero() { return ""; };
+    static void trace(const Parameter*, const char* value, uint8_t* config_data) {
+        const size_t max_len = 20;
+        std::string str_value(value);
+        if (str_value.size() > max_len) {
+            printf("set to %s...", str_value.substr(0, max_len - 3).c_str());
+        } else {
+            printf("set to %s", value);
+        }
+        auto actual_value = (std::string*)config_data;
+        if (*actual_value != value) {
+            printf(", but corrected to ");
+            if (actual_value->size() > max_len) {
+                printf("%s...", actual_value->substr(0, max_len - 3).c_str());
+            } else {
+                printf("%s", actual_value->c_str());
+            }
+        }
+        printf("\n");
+    }
 };

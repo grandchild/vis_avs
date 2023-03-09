@@ -150,6 +150,8 @@ class Effect {
 
 template <class Info_T, class Config_T, class Global_Config_T = Effect_Config>
 class Configurable_Effect : public Effect {
+    bool trace_parameter_changes = false;
+
    public:
     // TODO [clean]: make info & config protected.
     static Info_T info;
@@ -207,6 +209,10 @@ class Configurable_Effect : public Effect {
         parameter_dispatch<T>::set(param, addr, value);
         if (param->on_value_change != NULL) {
             param->on_value_change(this, param, parameter_path);
+        }
+        if (this->trace_parameter_changes) {
+            print_trace_prefix(this->info.name, param->name, parameter_path);
+            parameter_dispatch<T>::trace(param, value, addr);
         }
         return true;
     }
@@ -293,6 +299,10 @@ class Configurable_Effect : public Effect {
             if (param->on_list_add != NULL) {
                 param->on_list_add(this, param, parameter_path, before, 0);
             }
+            if (this->trace_parameter_changes) {
+                print_trace_prefix(this->info.name, param->name, parameter_path);
+                printf("added new entry #%lld\n", before);
+            }
         }
         return success;
     }
@@ -311,6 +321,10 @@ class Configurable_Effect : public Effect {
         bool success = param->list_move(addr, &from, &to);
         if (success && param->on_list_move != NULL) {
             param->on_list_move(this, param, parameter_path, from, to);
+            if (this->trace_parameter_changes) {
+                print_trace_prefix(this->info.name, param->name, parameter_path);
+                printf("moved entry #%lld to #%lld\n", from, to);
+            }
         }
         return success;
     }
@@ -329,6 +343,10 @@ class Configurable_Effect : public Effect {
             param->list_remove(addr, param->num_child_parameters_min, &to_remove);
         if (success && param->on_list_remove != NULL) {
             param->on_list_remove(this, param, parameter_path, to_remove, 0);
+            if (this->trace_parameter_changes) {
+                print_trace_prefix(this->info.name, param->name, parameter_path);
+                printf("removed entry #%lld\n", to_remove);
+            }
         }
         return success;
     }
@@ -343,7 +361,30 @@ class Configurable_Effect : public Effect {
             return false;
         }
         param->on_value_change(this, param, parameter_path);
+        if (this->trace_parameter_changes) {
+            print_trace_prefix(this->info.name, param->name, parameter_path);
+            printf("triggered\n");
+        }
         return true;
+    }
+
+    static void print_trace_prefix(const char* effect_name,
+                                   const char* param_name,
+                                   const std::vector<int64_t>& path) {
+        std::string param_path_str;
+        if (!path.empty()) {
+            param_path_str = "[";
+            for (size_t i = 0; i < path.size(); i++) {
+                char index_buf[10];
+                itoa((int)path[i], index_buf, 10);
+                param_path_str += index_buf;
+                if (i < path.size() - 1) {
+                    param_path_str += ",";
+                }
+            }
+            param_path_str += "]";
+        }
+        printf("%s/%s%s ", effect_name, param_name, param_path_str.c_str());
     }
 
     static size_t instance_count() { return Configurable_Effect::globals.size(); }
