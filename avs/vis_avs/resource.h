@@ -573,6 +573,7 @@
 #define IDC_MULTIDELAY_D_FRAMES         1386
 #define IDC_MULTIDELAY_E_FRAMES         1387
 #define IDC_MULTIDELAY_F_FRAMES         1388
+#define IDC_PICTURE_ERROR               1389
 #define IDM_DISPLAY                     40001
 #define IDM_PRESETS                     40002
 #define IDM_TRANS                       40003
@@ -594,7 +595,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE 188
 #define _APS_NEXT_COMMAND_VALUE  40015
-#define _APS_NEXT_CONTROL_VALUE  1389
+#define _APS_NEXT_CONTROL_VALUE  1390
 #define _APS_NEXT_SYMED_VALUE    101
 #endif
 #endif
