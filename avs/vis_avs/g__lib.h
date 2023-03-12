@@ -21,7 +21,7 @@ DECL_HANDLER(blitterfeedback);
 DECL_HANDLER(onbeatclear);
 DECL_HANDLER(blur);
 DECL_HANDLER(bassspin);
-DECL_HANDLER(movingparticles);
+DECL_HANDLER(movingparticle);
 DECL_HANDLER(rotoblitter);
 DECL_HANDLER(svp);
 DECL_HANDLER(colorfade);

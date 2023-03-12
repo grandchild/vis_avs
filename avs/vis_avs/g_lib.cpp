@@ -42,7 +42,7 @@ C_GLibrary::C_GLibrary() {
     ADD_STANDARD_COMPONENT(5,  NFC,         onbeatclear);
     ADD_STANDARD_COMPONENT(6,  BLUR,        blur);
     ADD_STANDARD_COMPONENT(7,  BSPIN,       bassspin);
-    ADD_STANDARD_COMPONENT(8,  PARTS,       movingparticles);
+    ADD_STANDARD_COMPONENT(8,  PARTS,       movingparticle);
     ADD_STANDARD_COMPONENT(9,  ROTBLT,      rotoblitter);
     ADD_STANDARD_COMPONENT(10, SVP,         svp);
     ADD_STANDARD_COMPONENT(11, COLORFADE,   colorfade);
