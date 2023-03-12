@@ -27,7 +27,7 @@ DECL_HANDLER(svp);
 DECL_HANDLER(colorfade);
 DECL_HANDLER(colorclip);
 DECL_HANDLER(rotstar);
-DECL_HANDLER(oscring);
+DECL_HANDLER(ring);
 DECL_HANDLER(movement);
 DECL_HANDLER(scatter);
 DECL_HANDLER(dotgrid);

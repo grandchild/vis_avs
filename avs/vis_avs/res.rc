@@ -448,31 +448,25 @@ BEGIN
     LTEXT           "colors (max 16)",-1,77,8,48,8
 END
 
-IDD_CFG_OSCRING DIALOG DISCARDABLE  0, 0, 137, 137
+IDD_CFG_RING DIALOG DISCARDABLE  0, 0, 137, 137
 STYLE DS_CONTROL | WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS | 
-                    TBS_TOP | WS_TABSTOP,4,10,128,15
-    CONTROL         "Oscilliscope",IDC_OSC,"Button",BS_AUTORADIOBUTTON | 
-                    WS_GROUP | WS_TABSTOP,8,56,53,10
-    CONTROL         "Spectrum",IDC_SPEC,"Button",BS_AUTORADIOBUTTON,65,56,46,
-                    10
-    CONTROL         "Left Channel",IDC_LEFTCH,"Button",BS_AUTORADIOBUTTON | 
-                    WS_GROUP | WS_TABSTOP,8,68,56,10
-    CONTROL         "Right Channel",IDC_RIGHTCH,"Button",BS_AUTORADIOBUTTON,
-                    8,78,61,10
-    CONTROL         "Center Channel",IDC_MIDCH,"Button",BS_AUTORADIOBUTTON,8,
-                    88,65,10
-    CONTROL         "Left",IDC_TOP,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+    CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS | TBS_TOP |
+                    WS_TABSTOP,4,10,128,15
+    CONTROL         "Oscilliscope",IDC_OSC,"Button",BS_AUTORADIOBUTTON | WS_GROUP |
+                    WS_TABSTOP,8,56,53,10
+    CONTROL         "Spectrum",IDC_SPEC,"Button",BS_AUTORADIOBUTTON,65,56,46,10
+    CONTROL         "Left Channel",IDC_LEFTCH,"Button",BS_AUTORADIOBUTTON | WS_GROUP |
+                    WS_TABSTOP,8,68,56,10
+    CONTROL         "Right Channel",IDC_RIGHTCH,"Button",BS_AUTORADIOBUTTON,8,78,61,10
+    CONTROL         "Center Channel",IDC_MIDCH,"Button",BS_AUTORADIOBUTTON,8,88,65,10
+    CONTROL         "Left",IDC_LEFT,"Button",BS_AUTORADIOBUTTON | WS_GROUP |
                     WS_TABSTOP,86,68,28,10
-    CONTROL         "Right",IDC_BOTTOM,"Button",BS_AUTORADIOBUTTON,86,78,33,
-                    10
-    CONTROL         "Center",IDC_CENTER,"Button",BS_AUTORADIOBUTTON,86,88,37,
-                    10
+    CONTROL         "Right",IDC_RIGHT,"Button",BS_AUTORADIOBUTTON,86,78,33,10
+    CONTROL         "Center",IDC_CENTER,"Button",BS_AUTORADIOBUTTON,86,88,37,10
     EDITTEXT        IDC_NUMCOL,53,107,19,12,ES_AUTOHSCROLL | ES_NUMBER
-    CONTROL         "",IDC_DEFCOL,"Button",BS_OWNERDRAW | WS_TABSTOP,6,122,
-                    127,11
+    CONTROL         "",IDC_DEFCOL,"Button",BS_OWNERDRAW | WS_TABSTOP,6,122,127,11
     GROUPBOX        "Ring size",-1,0,0,137,42
     GROUPBOX        "Ring source and position",-1,0,44,137,57
     GROUPBOX        "Colors",-1,0,101,137,36

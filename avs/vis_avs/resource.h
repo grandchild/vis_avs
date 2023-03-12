@@ -24,7 +24,7 @@
 #define IDD_CFG_COLORFADE               118
 #define IDD_CFG_COLORCLIP               119
 #define IDD_CFG_ROTSTAR                 120
-#define IDD_CFG_OSCRING                 121
+#define IDD_CFG_RING                    121
 #define IDD_CFG_TRANS                   122
 #define IDB_BITMAP1                     122
 #define IDD_GCFG_PRESET                 123

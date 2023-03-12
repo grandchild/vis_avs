@@ -48,7 +48,7 @@ C_GLibrary::C_GLibrary() {
     ADD_STANDARD_COMPONENT(11, COLORFADE,   colorfade);
     ADD_STANDARD_COMPONENT(12, COLORCLIP,   colorclip);
     ADD_STANDARD_COMPONENT(13, ROTSTAR,     rotstar);
-    ADD_STANDARD_COMPONENT(14, OSCRING,     oscring);
+    ADD_STANDARD_COMPONENT(14, RING,        ring);
     ADD_STANDARD_COMPONENT(15, TRANS,       movement);
     ADD_STANDARD_COMPONENT(16, SCAT,        scatter);
     ADD_STANDARD_COMPONENT(17, DOTGRID,     dotgrid);

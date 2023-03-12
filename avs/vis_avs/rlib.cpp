@@ -133,7 +133,7 @@ void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_NEW(Colorfade);
     DECLARE_EFFECT_LEGACY(R_ColorClip);
     DECLARE_EFFECT_NEW(RotStar);
-    DECLARE_EFFECT_LEGACY(R_OscRings);
+    DECLARE_EFFECT_NEW(Ring);
     DECLARE_EFFECT_NEW(Movement);
     DECLARE_EFFECT_NEW(Scatter);
     DECLARE_EFFECT_NEW(DotGrid);
