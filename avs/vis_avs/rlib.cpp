@@ -149,7 +149,7 @@ void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_NEW(Starfield);
     DECLARE_EFFECT_LEGACY(R_Text);
     DECLARE_EFFECT_NEW(Bump);
-    DECLARE_EFFECT_LEGACY(R_Mosaic);
+    DECLARE_EFFECT_NEW(Mosaic);
     DECLARE_EFFECT_NEW(WaterBump);
     DECLARE_EFFECT_NEW(AVI);
     DECLARE_EFFECT_LEGACY(R_Bpm);
