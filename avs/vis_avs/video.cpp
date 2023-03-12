@@ -20,8 +20,9 @@
 
 uint32_t AVS_Video::frame_cache_thread_func(void* this_video) {
     auto thisv = (AVS_Video*)this_video;
-    while (thisv->cache_frames())
+    while (thisv->cache_frames()) {
         ;
+    }
     return 0;
 }
 

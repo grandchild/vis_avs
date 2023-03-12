@@ -83,7 +83,9 @@ int C_THISCLASS::render(char[2][2][576],
                         int*,
                         int w,
                         int h) {
-    if (isBeat & 0x80000000) return 0;
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
 
     if (isBeat) {
         if (nf && ++cf >= nf) {

@@ -93,7 +93,9 @@ void E_Starfield::initialize_stars() {
                              * (uint64_t)this->height)
                             / (512 * 384));
 
-    if (this->abs_stars > 4095) this->abs_stars = 4095;
+    if (this->abs_stars > 4095) {
+        this->abs_stars = 4095;
+    }
     for (int i = 0; i < this->abs_stars; i++) {
         this->stars[i].x = (rand() % this->width) - this->x_off;
         this->stars[i].y = (rand() % this->height) - this->y_off;

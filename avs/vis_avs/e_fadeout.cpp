@@ -52,25 +52,28 @@ void E_Fadeout::maketab(void) {
         int r = x;
         int g = x;
         int b = x;
-        if (r <= rseek - this->config.fadelen)
+        if (r <= rseek - this->config.fadelen) {
             r += this->config.fadelen;
-        else if (r >= rseek + this->config.fadelen)
+        } else if (r >= rseek + this->config.fadelen) {
             r -= this->config.fadelen;
-        else
+        } else {
             r = rseek;
+        }
 
-        if (g <= gseek - this->config.fadelen)
+        if (g <= gseek - this->config.fadelen) {
             g += this->config.fadelen;
-        else if (g >= gseek + this->config.fadelen)
+        } else if (g >= gseek + this->config.fadelen) {
             g -= this->config.fadelen;
-        else
+        } else {
             g = gseek;
-        if (b <= bseek - this->config.fadelen)
+        }
+        if (b <= bseek - this->config.fadelen) {
             b += this->config.fadelen;
-        else if (b >= bseek + this->config.fadelen)
+        } else if (b >= bseek + this->config.fadelen) {
             b -= this->config.fadelen;
-        else
+        } else {
             b = bseek;
+        }
 
         fadtab[0][x] = r;
         fadtab[1][x] = g;
@@ -121,8 +124,12 @@ int E_Fadeout::render(char[2][2][576],
                       int*,
                       int w,
                       int h) {
-    if (isBeat & 0x80000000) return 0;
-    if (!this->config.fadelen) return 0;
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
+    if (!this->config.fadelen) {
+        return 0;
+    }
     timingEnter(1);
     if (
 #ifdef NO_MMX
@@ -146,7 +153,9 @@ int E_Fadeout::render(char[2][2][576],
         char fadj[8];
         int x;
         unsigned char* t = fadtab[0];
-        for (x = 0; x < 8; x++) fadj[x] = this->config.fadelen;
+        for (x = 0; x < 8; x++) {
+            fadj[x] = this->config.fadelen;
+        }
 #ifdef _MSC_VER  // MSVC asm
         __asm {
 			mov edx, l

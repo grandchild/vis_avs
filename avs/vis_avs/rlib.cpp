@@ -281,9 +281,10 @@ Legacy_Effect_Proxy C_RLibrary::CreateRenderer(int* which) {
         }
     }
 
-    if (*which == LIST_ID)
+    if (*which == LIST_ID) {
         return Legacy_Effect_Proxy(
             (C_RBASE*)new C_RenderListClass(), NULL, *which, false);
+    }
 
     if (*which >= DLLRENDERBASE) {
         int x;
@@ -341,7 +342,9 @@ C_RLibrary::C_RLibrary() {
 }
 
 C_RLibrary::~C_RLibrary() {
-    if (RetrFuncs) free(RetrFuncs);
+    if (RetrFuncs) {
+        free(RetrFuncs);
+    }
     RetrFuncs = 0;
     NumRetrFuncs = 0;
 
@@ -356,10 +359,14 @@ void* g_n_buffers[NBUF];
 int g_n_buffers_w[NBUF], g_n_buffers_h[NBUF];
 
 void* getGlobalBuffer(int w, int h, int n, int do_alloc) {
-    if (n < 0 || n >= NBUF) return 0;
+    if (n < 0 || n >= NBUF) {
+        return 0;
+    }
 
     if (!g_n_buffers[n] || g_n_buffers_w[n] != w || g_n_buffers_h[n] != h) {
-        if (g_n_buffers[n]) free(g_n_buffers[n]);
+        if (g_n_buffers[n]) {
+            free(g_n_buffers[n]);
+        }
         if (do_alloc) {
             g_n_buffers_w[n] = w;
             g_n_buffers_h[n] = h;

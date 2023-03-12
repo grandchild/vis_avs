@@ -52,10 +52,11 @@ void line(int* fb,
     int dy = ABS(y2 - y1);
     int dx = ABS(x2 - x1);
 
-    if (lw < 1)
+    if (lw < 1) {
         lw = 1;
-    else if (lw > 255)
+    } else if (lw > 255) {
         lw = 255;
+    }
 
     int lw2 = lw / 2;
     if (!dx)  // optimize vertical draw
@@ -68,10 +69,12 @@ void line(int* fb,
                 lw += x1;
                 x1 = 0;
             }
-            if (x1 + lw >= width) lw = width - x1;
+            if (x1 + lw >= width) {
+                lw = width - x1;
+            }
             fb += d * width + x1;
             width -= lw;
-            if (lw > 0)
+            if (lw > 0) {
                 while (d++ < ye) {
                     int x = lw;
                     while (x--) {
@@ -80,6 +83,7 @@ void line(int* fb,
                     }
                     fb += width;
                 }
+            }
         }
         return;
     }
@@ -94,7 +98,9 @@ void line(int* fb,
 
                 y1 = 0;
             }
-            if (y1 + lw >= height) lw = height - y1;
+            if (y1 + lw >= height) {
+                lw = height - y1;
+            }
             fb += y1 * width + d;
             width -= xe - d;
             int y = lw;
@@ -168,14 +174,18 @@ void line(int* fb,
             if (x1 < 0) {
                 int v;
                 v = yincr * -x1;
-                if (dx) v = (v * dy) / dx;
+                if (dx) {
+                    v = (v * dy) / dx;
+                }
 
                 y1 += v;
                 offs += v * width - x1;
                 x1 = 0;
             }
 
-            if (x2 > width) x2 = width;
+            if (x2 > width) {
+                x2 = width;
+            }
             while (x1 < x2) {
                 int yp = y1;
                 int ype = y1 + lw;
@@ -184,14 +194,16 @@ void line(int* fb,
                     newfb -= yp * width;
                     yp = 0;
                 }
-                if (ype > height) ype = height;
+                if (ype > height) {
+                    ype = height;
+                }
                 while (yp++ < ype) {
                     BLEND_LINE(newfb, color);
                     newfb += width;
                 }
-                if (d < 0)
+                if (d < 0) {
                     d += Eincr;
-                else {
+                } else {
                     d += NEincr;
                     y1 += yincr;
                     offs += offsincr;
@@ -224,13 +236,17 @@ void line(int* fb,
             if (y1 < 0) {
                 int v;
                 v = yincr * -y1;
-                if (dy) v = (v * dx) / dy;
+                if (dy) {
+                    v = (v * dx) / dy;
+                }
 
                 x1 += v;
                 offs += v - y1 * width;
                 y1 = 0;
             }
-            if (y2 > height) y2 = height;
+            if (y2 > height) {
+                y2 = height;
+            }
             while (y1 < y2) {
                 int xp = x1;
                 int xpe = x1 + lw;
@@ -239,15 +255,17 @@ void line(int* fb,
                     newfb -= xp;
                     xp = 0;
                 }
-                if (xpe > width) xpe = width;
+                if (xpe > width) {
+                    xpe = width;
+                }
                 while (xp++ < xpe) {
                     BLEND_LINE(newfb, color);
                     newfb++;
                 }
 
-                if (d < 0)
+                if (d < 0) {
                     d += Eincr;
-                else {
+                } else {
                     d += NEincr;
                     x1 += yincr;
                     offs += yincr;

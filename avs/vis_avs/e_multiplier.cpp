@@ -45,7 +45,9 @@ int E_Multiplier::render(char[2][2][576],
                          int*,
                          int w,
                          int h) {
-    if (isBeat & 0x80000000) return 0;
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
 
     int /*b,*/ c;  // TODO [cleanup]: see below
     __int64 mask;

@@ -87,7 +87,9 @@ int E_ColorModifier::render(char visdata[2][2][576],
                             int w,
                             int h) {
     this->recompile_if_needed();
-    if (is_beat & 0x80000000) return 0;
+    if (is_beat & 0x80000000) {
+        return 0;
+    }
 
     if (this->need_init) {
         this->code_init.exec(visdata);
@@ -108,18 +110,21 @@ int E_ColorModifier::render(char visdata[2][2][576],
             int r = (int)(*this->vars.red * 255.0 + 0.5);
             int g = (int)(*this->vars.green * 255.0 + 0.5);
             int b = (int)(*this->vars.blue * 255.0 + 0.5);
-            if (r < 0)
+            if (r < 0) {
                 r = 0;
-            else if (r > 255)
+            } else if (r > 255) {
                 r = 255;
-            if (g < 0)
+            }
+            if (g < 0) {
                 g = 0;
-            else if (g > 255)
+            } else if (g > 255) {
                 g = 255;
-            if (b < 0)
+            }
+            if (b < 0) {
                 b = 0;
-            else if (b > 255)
+            } else if (b > 255) {
                 b = 255;
+            }
             t[512] = r;
             t[256] = g;
             t[0] = b;

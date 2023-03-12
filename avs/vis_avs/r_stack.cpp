@@ -62,8 +62,12 @@ void C_THISCLASS::load_config(unsigned char* data, int len) {
         pos += 4;
     }
 
-    if (which < 0) which = 0;
-    if (which >= NBUF) which = NBUF - 1;
+    if (which < 0) {
+        which = 0;
+    }
+    if (which >= NBUF) {
+        which = NBUF - 1;
+    }
 }
 int C_THISCLASS::save_config(unsigned char* data) {
     int pos = 0;
@@ -98,7 +102,9 @@ int C_THISCLASS::render(char[2][2][576],
                         int w,
                         int h) {
     void* thisbufptr;
-    if (isBeat & 0x80000000) return 0;
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
     if (!(thisbufptr = getGlobalBuffer(w, h, which, dir != 1))) {
         return 0;
     }
@@ -186,8 +192,9 @@ int C_THISCLASS::render(char[2][2][576],
             mmx_mulblend_block(fbout, fbin, w * h);
         } else if (blend == 11) {
             mmx_adjblend_block(fbout, fbin, fbout, w * h, adjblend_val);
-        } else
+        } else {
             memcpy(fbout, fbin, w * h * sizeof(int));
+        }
         return 0;
     }
 

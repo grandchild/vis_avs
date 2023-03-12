@@ -101,13 +101,17 @@ int E_Bump::render(char visdata[2][2][576],
     bool use_cur_buf;
 
     this->recompile_if_needed();
-    if (is_beat & 0x80000000) return 0;
+    if (is_beat & 0x80000000) {
+        return 0;
+    }
 
     int* src_buffer =
         !this->config.depth_buffer
             ? framebuffer
             : (int*)getGlobalBuffer(w, h, this->config.depth_buffer - 1, 0);
-    if (!src_buffer) return 0;
+    if (!src_buffer) {
+        return 0;
+    }
 
     use_cur_buf = (src_buffer == framebuffer);
 
@@ -352,8 +356,9 @@ void E_Bump::load_legacy(unsigned char* data, int len) {
     if (len - pos >= 4) {
         this->use_old_xy_range = GET_INT();
         pos += 4;
-    } else
+    } else {
         this->use_old_xy_range = 1;
+    }
     if (len - pos >= 4) {
         this->config.depth_buffer = GET_INT();
         pos += 4;

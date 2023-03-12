@@ -140,7 +140,9 @@ void E_Texer2::delete_image() {
 extern unsigned char rawData[1323];  // example pic
 void E_Texer2::load_image() {
     lock_lock(this->image_lock);
-    if (this->image_normal) this->delete_image();
+    if (this->image_normal) {
+        this->delete_image();
+    }
     if (this->config.image.empty()) {
         this->load_default_image();
         lock_unlock(this->image_lock);

@@ -20,14 +20,15 @@ int win32_dlgproc_colorclip(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
         }
             return 0;
         case WM_INITDIALOG:
-            if (g_this->enabled == 0)
+            if (g_this->enabled == 0) {
                 CheckDlgButton(hwndDlg, IDC_OFF, BST_CHECKED);
-            else if (g_this->enabled == 1)
+            } else if (g_this->enabled == 1) {
                 CheckDlgButton(hwndDlg, IDC_BELOW, BST_CHECKED);
-            else if (g_this->enabled == 2)
+            } else if (g_this->enabled == 2) {
                 CheckDlgButton(hwndDlg, IDC_ABOVE, BST_CHECKED);
-            else
+            } else {
                 CheckDlgButton(hwndDlg, IDC_NEAR, BST_CHECKED);
+            }
             SendDlgItemMessage(
                 hwndDlg, IDC_DISTANCE, TBM_SETRANGE, TRUE, MAKELONG(0, 64));
             SendDlgItemMessage(
@@ -35,9 +36,10 @@ int win32_dlgproc_colorclip(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
             SendDlgItemMessage(hwndDlg, IDC_DISTANCE, TBM_SETTICFREQ, 4, 0);
             return 1;
         case WM_NOTIFY:
-            if (LOWORD(wParam) == IDC_DISTANCE)
+            if (LOWORD(wParam) == IDC_DISTANCE) {
                 g_this->color_dist =
                     SendDlgItemMessage(hwndDlg, IDC_DISTANCE, TBM_GETPOS, 0, 0);
+            }
             return 0;
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
@@ -45,14 +47,15 @@ int win32_dlgproc_colorclip(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
                 case IDC_BELOW:
                 case IDC_ABOVE:
                 case IDC_NEAR:
-                    if (IsDlgButtonChecked(hwndDlg, IDC_OFF))
+                    if (IsDlgButtonChecked(hwndDlg, IDC_OFF)) {
                         g_this->enabled = 0;
-                    else if (IsDlgButtonChecked(hwndDlg, IDC_BELOW))
+                    } else if (IsDlgButtonChecked(hwndDlg, IDC_BELOW)) {
                         g_this->enabled = 1;
-                    else if (IsDlgButtonChecked(hwndDlg, IDC_ABOVE))
+                    } else if (IsDlgButtonChecked(hwndDlg, IDC_ABOVE)) {
                         g_this->enabled = 2;
-                    else
+                    } else {
                         g_this->enabled = 3;
+                    }
                     return 0;
                 case IDC_LC:
                     GR_SelectColor(hwndDlg, &g_this->color_clip);

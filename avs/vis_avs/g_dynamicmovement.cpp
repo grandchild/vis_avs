@@ -129,10 +129,11 @@ int win32_dlgproc_dynamicmovement(HWND hwndDlg,
             }
 
             if (!isstart && HIWORD(wParam) == CBN_SELCHANGE
-                && LOWORD(wParam) == IDC_COMBO1)  // handle clicks to combo box
+                && LOWORD(wParam) == IDC_COMBO1) {  // handle clicks to combo box
                 g_this->set_int(
                     p_buffer.handle,
                     SendDlgItemMessage(hwndDlg, IDC_COMBO1, CB_GETCURSEL, 0, 0));
+            }
 
             if (!isstart && HIWORD(wParam) == EN_CHANGE) {
                 int t;

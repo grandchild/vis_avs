@@ -102,7 +102,9 @@ int E_DynamicMovement::render(char visdata[2][2][576],
                               int w,
                               int h) {
     smp_begin(1, visdata, is_beat, framebuffer, fbout, w, h);
-    if (is_beat & 0x80000000) return 0;
+    if (is_beat & 0x80000000) {
+        return 0;
+    }
 
     smp_render(0, 1, visdata, is_beat, framebuffer, fbout, w, h);
     return smp_finish(visdata, is_beat, framebuffer, fbout, w, h);
@@ -155,7 +157,9 @@ int E_DynamicMovement::smp_begin(int max_threads,
     }
 
     this->recompile_if_needed();
-    if (is_beat & 0x80000000) return 0;
+    if (is_beat & 0x80000000) {
+        return 0;
+    }
     int* fbin = this->config.buffer == 0
                     ? framebuffer
                     : (int*)getGlobalBuffer(w, h, this->config.buffer - 1, 0);
@@ -218,18 +222,27 @@ int E_DynamicMovement::smp_begin(int max_threads,
                     tmp2 = (int)((*this->vars.y + 1.0) * dh2);
                 }
                 if (!this->wrap) {
-                    if (tmp1 < 0) tmp1 = 0;
-                    if (tmp1 > this->w_adj) tmp1 = this->w_adj;
-                    if (tmp2 < 0) tmp2 = 0;
-                    if (tmp2 > this->h_adj) tmp2 = this->h_adj;
+                    if (tmp1 < 0) {
+                        tmp1 = 0;
+                    }
+                    if (tmp1 > this->w_adj) {
+                        tmp1 = this->w_adj;
+                    }
+                    if (tmp2 < 0) {
+                        tmp2 = 0;
+                    }
+                    if (tmp2 > this->h_adj) {
+                        tmp2 = this->h_adj;
+                    }
                 }
                 *tabptr++ = tmp1;
                 *tabptr++ = tmp2;
                 double va = *this->vars.alpha;
-                if (va < 0.0)
+                if (va < 0.0) {
                     va = 0.0;
-                else if (va > 1.0)
+                } else if (va > 1.0) {
                     va = 1.0;
+                }
                 int a = (int)(va * 255.0 * 65536.0);
                 *tabptr++ = a;
             }
@@ -248,19 +261,24 @@ void E_DynamicMovement::smp_render(int this_thread,
                                    int* fbout,
                                    int w,
                                    int h) {
-    if (max_threads < 1) max_threads = 1;
+    if (max_threads < 1) {
+        max_threads = 1;
+    }
 
     int start_l = (this_thread * h) / max_threads;
     int end_l;
     int ypos = 0;
 
-    if (this_thread >= max_threads - 1)
+    if (this_thread >= max_threads - 1) {
         end_l = h;
-    else
+    } else {
         end_l = ((this_thread + 1) * h) / max_threads;
+    }
 
     int outh = end_l - start_l;
-    if (outh < 1) return;
+    if (outh < 1) {
+        return;
+    }
 
     int* fbin = this->config.buffer == 0
                     ? framebuffer
@@ -312,10 +330,12 @@ void E_DynamicMovement::smp_render(int this_thread,
                 stab += 6;
             }
 
-            if (yseek > yl) yseek = yl;
+            if (yseek > yl) {
+                yseek = yl;
+            }
             yl -= yseek;
 
-            if (yseek > 0)
+            if (yseek > 0) {
                 while (yseek--) {
                     int d_x;
                     int d_y;
@@ -350,14 +370,17 @@ void E_DynamicMovement::smp_render(int this_thread,
                             seektab[4] += seektab[5];
                             seektab += 6;
 
-                            if (seek > l) seek = l;
+                            if (seek > l) {
+                                seek = l;
+                            }
                             l -= seek;
                             if (seek > 0 && ypos <= start_l) {
                                 blendin += seek;
-                                if (this->alpha_only)
+                                if (this->alpha_only) {
                                     in += seek;
-                                else
+                                } else {
                                     out += seek;
+                                }
 
                                 seek = 0;
                             }
@@ -439,47 +462,56 @@ void E_DynamicMovement::smp_render(int this_thread,
         DO(CHECK* out++ = in[(xp >> 16) + (this->w_mul[yp >> 16])])
 
                                 if (this->alpha_only) {
-                                    if (fbin != framebuffer)
+                                    if (fbin != framebuffer) {
                                         while (seek--) {
                                             *blendin =
                                                 BLEND_ADJ(*in++, *blendin, ap >> 16);
                                             ap += d_a;
                                             blendin++;
                                         }
-                                    else
+                                    } else {
                                         while (seek--) {
                                             *blendin = BLEND_ADJ(0, *blendin, ap >> 16);
                                             ap += d_a;
                                             blendin++;
                                         }
+                                    }
                                 } else if (!this->wrap) {
                                     // this might not really be necessary b/c of the
                                     // clamping in the loop, but I'm sick of crashes
-                                    if (xp < 0)
+                                    if (xp < 0) {
                                         xp = 0;
-                                    else if (xp >= this->w_adj)
+                                    } else if (xp >= this->w_adj) {
                                         xp = this->w_adj - 1;
-                                    if (yp < 0)
+                                    }
+                                    if (yp < 0) {
                                         yp = 0;
-                                    else if (yp >= this->h_adj)
+                                    } else if (yp >= this->h_adj) {
                                         yp = this->h_adj - 1;
+                                    }
 
                                     LOOPS(CLAMPED_LOOPS)
                                 } else {  // this->wrap
                                     xp %= this->w_adj;
                                     yp %= this->h_adj;
-                                    if (xp < 0) xp += this->w_adj;
-                                    if (yp < 0) yp += this->h_adj;
+                                    if (xp < 0) {
+                                        xp += this->w_adj;
+                                    }
+                                    if (yp < 0) {
+                                        yp += this->h_adj;
+                                    }
 
-                                    if (d_x <= -this->w_adj)
+                                    if (d_x <= -this->w_adj) {
                                         d_x = -this->w_adj + 1;
-                                    else if (d_x >= this->w_adj)
+                                    } else if (d_x >= this->w_adj) {
                                         d_x = this->w_adj - 1;
+                                    }
 
-                                    if (d_y <= -this->h_adj)
+                                    if (d_y <= -this->h_adj) {
                                         d_y = -this->h_adj + 1;
-                                    else if (d_y >= this->h_adj)
+                                    } else if (d_y >= this->h_adj) {
                                         d_y = this->h_adj - 1;
+                                    }
 
                                     LOOPS(WRAPPING_LOOPS)
                                 }
@@ -491,6 +523,7 @@ void E_DynamicMovement::smp_render(int this_thread,
                         seektab[4] += seektab[5];
                     }
                 }
+            }
         }
     }
 

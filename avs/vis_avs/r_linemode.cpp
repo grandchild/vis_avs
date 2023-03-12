@@ -63,7 +63,9 @@ C_THISCLASS::C_THISCLASS() { newmode = 0x80010000; }
 C_THISCLASS::~C_THISCLASS() {}
 
 int C_THISCLASS::render(char[2][2][576], int isBeat, int*, int*, int, int) {
-    if (isBeat & 0x80000000) return 0;
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
     if (newmode & 0x80000000) {
         g_line_blend_mode = newmode & 0x7fffffff;
     }

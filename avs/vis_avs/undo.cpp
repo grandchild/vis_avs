@@ -104,8 +104,9 @@ void C_UndoStack::saveundo(int is2) {
             list_pos--;
         }
         list[++list_pos] = item;
-    } else
+    } else {
         delete item;
+    }
 }
 
 void C_UndoStack::cleardirty() {
@@ -116,8 +117,9 @@ void C_UndoStack::cleardirty() {
 }
 
 bool C_UndoStack::isdirty() {
-    if (list_pos < sizeof(list) / sizeof(list[0]) && list[list_pos])
+    if (list_pos < sizeof(list) / sizeof(list[0]) && list[list_pos]) {
         return list[list_pos]->isdirty;
+    }
     return false;
 }
 

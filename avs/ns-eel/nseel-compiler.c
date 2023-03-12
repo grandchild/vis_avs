@@ -171,10 +171,14 @@ static functionType* fnTableUser;
 static int fnTableUser_size;
 
 functionType* nseel_getFunctionFromTable(int idx) {
-    if (idx < 0) return 0;
+    if (idx < 0) {
+        return 0;
+    }
     if ((size_t)idx >= sizeof(fnTable1) / sizeof(fnTable1[0])) {
         idx -= sizeof(fnTable1) / sizeof(fnTable1[0]);
-        if (!fnTableUser || idx >= fnTableUser_size) return 0;
+        if (!fnTableUser || idx >= fnTableUser_size) {
+            return 0;
+        }
         return fnTableUser + idx;
     }
     return fnTable1 + idx;
@@ -234,7 +238,9 @@ static void* __newBlock(llBlock** start, int size) {
     }
 
     alloc_size = sizeof(llBlock);
-    if ((int)size > LLB_DSIZE) alloc_size += size - LLB_DSIZE;
+    if ((int)size > LLB_DSIZE) {
+        alloc_size += size - LLB_DSIZE;
+    }
     // grab bigger block if absolutely necessary (heh)
     llb = (llBlock*)malloc(alloc_size);
     // TODO [bug]: make memory read-write-executable -- apparently not needed atm in
@@ -356,7 +362,9 @@ static void* realAddress(void* fn, void* fn_e, int* size) {
 
 //---------------------------------------------------------------------------------------------------------------
 static int* findFBlock(char* p) {
-    while (*(int*)p != (int)0xFFFFFFFF) p++;
+    while (*(int*)p != (int)0xFFFFFFFF) {
+        p++;
+    }
     return (int*)p;
 }
 
@@ -411,8 +419,9 @@ int nseel_createCompiledValue(compileContext* ctx, double value, double* addrVal
     if (addrValue == NULL) {
         ctx->l_stats[3] += sizeof(double);
         *(dupValue = (double*)newBlock(sizeof(double))) = value;
-    } else
+    } else {
         dupValue = addrValue;
+    }
 
     ((int*)block)[0] = 5;
     block[4] = X86_MOV_EAX_DIRECTVALUE;  // mov eax, <value>
@@ -459,10 +468,14 @@ static int nseel_getFunctionAddress(int fntype,
         case MATH_FN: {
             functionType* p = nseel_getFunctionFromTable(fn);
             if (!p) {
-                if (size) *size = 0;
+                if (size) {
+                    *size = 0;
+                }
                 return 0;
             }
-            if (p->pProc && pProc) *pProc = p->pProc;
+            if (p->pProc && pProc) {
+                *pProc = p->pProc;
+            }
             return (int)realAddress(p->afunc, p->func_e, size);
         }
     }
@@ -547,7 +560,9 @@ int nseel_createCompiledFunction3(compileContext* ctx,
 #ifdef __GNUC__
         write_gcc_naked_function_trap_padding_jmp(outp, size2);
 #endif
-        if (preProc) preProc(outp, size2, ctx->userfunc_data);
+        if (preProc) {
+            preProc(outp, size2, ctx->userfunc_data);
+        }
 
         ctx->computTableTop++;
 
@@ -621,7 +636,9 @@ int nseel_createCompiledFunction2(compileContext* ctx,
 #ifdef __GNUC__
         write_gcc_naked_function_trap_padding_jmp(outp, size2);
 #endif
-        if (preProc) preProc(outp, size2, ctx->userfunc_data);
+        if (preProc) {
+            preProc(outp, size2, ctx->userfunc_data);
+        }
 
         ctx->computTableTop++;
 
@@ -651,7 +668,9 @@ int nseel_createCompiledFunction1(compileContext* ctx, int fntype, int fn, int c
     write_gcc_naked_function_trap_padding_jmp((unsigned char*)(block + size + 4),
                                               size2);
 #endif
-    if (preProc) preProc(block + size + 4, size2, ctx->userfunc_data);
+    if (preProc) {
+        preProc(block + size + 4, size2, ctx->userfunc_data);
+    }
 
     ctx->computTableTop++;
 
@@ -672,18 +691,25 @@ static char* preprocessCode(compileContext* ctx, char* expression) {
         if (expression[0] == '/') {
             if (expression[1] == '/') {
                 expression += 2;
-                while (expression[0] && expression[0] != '\r' && expression[0] != '\n')
+                while (expression[0] && expression[0] != '\r'
+                       && expression[0] != '\n') {
                     expression++;
+                }
             } else if (expression[1] == '*') {
                 expression += 2;
-                while (expression[0] && (expression[0] != '*' || expression[1] != '/'))
+                while (expression[0]
+                       && (expression[0] != '*' || expression[1] != '/')) {
                     expression++;
-                if (expression[0])
+                }
+                if (expression[0]) {
                     expression += 2;  // at this point we KNOW expression[0]=* and
                                       // expression[1]=/
+                }
             } else {
                 char c = buf[len++] = *expression++;
-                if (c != ' ' && c != '\t' && c != '\r' && c != '\n') ctx->l_stats[0]++;
+                if (c != ' ' && c != '\t' && c != '\r' && c != '\n') {
+                    ctx->l_stats[0]++;
+                }
             }
         } else if (expression[0] == '$') {
             if (toupper(expression[1]) == 'P' && toupper(expression[2]) == 'I') {
@@ -708,13 +734,19 @@ static char* preprocessCode(compileContext* ctx, char* expression) {
                 ctx->l_stats[0] += 10;
             } else {
                 char c = buf[len++] = *expression++;
-                if (c != ' ' && c != '\t' && c != '\r' && c != '\n') ctx->l_stats[0]++;
+                if (c != ' ' && c != '\t' && c != '\r' && c != '\n') {
+                    ctx->l_stats[0]++;
+                }
             }
         } else {
             char c = *expression++;
-            if (c == '\r' || c == '\n' || c == '\t') c = ' ';
+            if (c == '\r' || c == '\n' || c == '\t') {
+                c = ' ';
+            }
             buf[len++] = c;
-            if (c != ' ') ctx->l_stats[0]++;
+            if (c != ' ') {
+                ctx->l_stats[0]++;
+            }
         }
     }
     buf[len] = 0;
@@ -744,7 +776,9 @@ NSEEL_CODEHANDLE NSEEL_code_compile(NSEEL_VMCTX _ctx, char* _expression) {
     startPtr* scode = NULL;
     startPtr* startpts = NULL;
 
-    if (!ctx || !_expression || !*_expression) return 0;
+    if (!ctx || !_expression || !*_expression) {
+        return 0;
+    }
 
     if (nseel_precompile_hook != NULL) {
         _expression = nseel_precompile_hook(_ctx, _expression);
@@ -771,15 +805,25 @@ NSEEL_CODEHANDLE NSEEL_code_compile(NSEEL_VMCTX _ctx, char* _expression) {
         ctx->colCount = 0;
 
         // single out segment
-        while (*expression == ';' || *expression == ' ') expression++;
-        if (!*expression) break;
+        while (*expression == ';' || *expression == ' ') {
+            expression++;
+        }
+        if (!*expression) {
+            break;
+        }
         expr = expression;
-        while (*expression && *expression != ';') expression++;
-        if (*expression) *expression++ = 0;
+        while (*expression && *expression != ';') {
+            expression++;
+        }
+        if (*expression) {
+            *expression++ = 0;
+        }
 
         // parse
         tmp = (startPtr*)newTmpBlock(sizeof(startPtr));
-        if (!tmp) break;
+        if (!tmp) {
+            break;
+        }
         ctx->computTableTop = 0;
         tmp->startptr = nseel_compileExpression(ctx, expr);
 
@@ -796,9 +840,9 @@ NSEEL_CODEHANDLE NSEEL_code_compile(NSEEL_VMCTX _ctx, char* _expression) {
         }
 
         tmp->next = NULL;
-        if (!scode)
+        if (!scode) {
             scode = startpts = tmp;
-        else {
+        } else {
             scode->next = tmp;
             scode = tmp;
         }
@@ -872,11 +916,15 @@ void NSEEL_code_execute(NSEEL_CODEHANDLE code) {
     int baseptr = (int)_tab;
 #endif
     codeHandleType* h = (codeHandleType*)code;
-    if (!h || !h->code) return;
+    if (!h || !h->code) {
+        return;
+    }
 #ifdef NSEEL_REENTRANT_EXECUTION
     baseptr = (int)alloca(h->workTablePtr_size
                           + 16 * sizeof(double) /*safety*/ + 32 /*alignment*/);
-    if (!baseptr) return;
+    if (!baseptr) {
+        return;
+    }
 #endif
 
     {
@@ -913,7 +961,9 @@ void NSEEL_code_execute(NSEEL_CODEHANDLE code) {
 
 char* NSEEL_code_getcodeerror(NSEEL_VMCTX ctx) {
     compileContext* c = (compileContext*)ctx;
-    if (ctx && c->last_error_string[0]) return c->last_error_string;
+    if (ctx && c->last_error_string[0]) {
+        return c->last_error_string;
+    }
     return 0;
 }
 
@@ -935,11 +985,16 @@ void NSEEL_VM_resetvars(NSEEL_VMCTX _ctx) {
     if (_ctx) {
         compileContext* ctx = (compileContext*)_ctx;
         int x;
-        if (ctx->varTable_Names || ctx->varTable_Values)
+        if (ctx->varTable_Names || ctx->varTable_Values) {
             for (x = 0; x < ctx->varTable_numBlocks; x++) {
-                if (ctx->varTable_Names) free(ctx->varTable_Names[x]);
-                if (ctx->varTable_Values) free(ctx->varTable_Values[x]);
+                if (ctx->varTable_Names) {
+                    free(ctx->varTable_Names[x]);
+                }
+                if (ctx->varTable_Values) {
+                    free(ctx->varTable_Values[x]);
+                }
             }
+        }
 
         free(ctx->varTable_Values);
         free(ctx->varTable_Names);

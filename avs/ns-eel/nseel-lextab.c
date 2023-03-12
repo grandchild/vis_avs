@@ -42,8 +42,9 @@ static int _lmovb(struct lextab* lp, int c, int st) {
         if (st != lp->llendst) {
             base = lp->lldefault[st] & 0377;
             st = base;
-        } else
+        } else {
             return (-1);
+        }
     }
     return (lp->llnext[base] & 0377);
 }
@@ -55,7 +56,9 @@ static int _lmovb(struct lextab* lp, int c, int st) {
 #define OTHER    5
 
 static int _Alextab(compileContext* ctx, int __na__) {
-    if (__na__ >= 0 && __na__ <= 19) nseel_count(ctx);
+    if (__na__ >= 0 && __na__ <= 19) {
+        nseel_count(ctx);
+    }
     switch (__na__) {
         case 0: ctx->yylval = nseel_translate(ctx, HEXCONST); return VALUE;
         case 1: ctx->yylval = nseel_translate(ctx, INTCONST); return VALUE;

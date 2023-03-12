@@ -24,8 +24,9 @@ int win32_dlgproc_setrendermode(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) 
                                    (LPARAM)g_this->line_blendmodes[x]);
             }
         }
-            if (g_this->newmode & 0x80000000)
+            if (g_this->newmode & 0x80000000) {
                 CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
+            }
             SendDlgItemMessage(
                 hwndDlg, IDC_ALPHASLIDE, TBM_SETRANGE, TRUE, MAKELONG(0, 255));
             SendDlgItemMessage(hwndDlg,

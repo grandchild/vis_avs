@@ -16,12 +16,13 @@ int win32_dlgproc_transition(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
             unsigned int x;
             for (x = 0; x < sizeof(g_render_transition->transitionmodes)
                                 / sizeof(g_render_transition->transitionmodes[0]);
-                 x++)
+                 x++) {
                 SendDlgItemMessage(hwndDlg,
                                    IDC_TRANSITION,
                                    CB_ADDSTRING,
                                    0,
                                    (LPARAM)g_render_transition->transitionmodes[x]);
+            }
             SendDlgItemMessage(hwndDlg,
                                IDC_TRANSITION,
                                CB_SETCURSEL,
@@ -30,17 +31,33 @@ int win32_dlgproc_transition(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
             SendDlgItemMessage(hwndDlg, IDC_SPEED, TBM_SETRANGE, TRUE, MAKELONG(1, 32));
             SendDlgItemMessage(
                 hwndDlg, IDC_SPEED, TBM_SETPOS, TRUE, cfg_transitions_speed);
-            if (cfg_transition_mode & 0x8000)
+            if (cfg_transition_mode & 0x8000) {
                 CheckDlgButton(hwndDlg, IDC_CHECK9, BST_CHECKED);
-            if (cfg_transitions & 1) CheckDlgButton(hwndDlg, IDC_CHECK2, BST_CHECKED);
-            if (cfg_transitions & 2) CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
-            if (cfg_transitions & 4) CheckDlgButton(hwndDlg, IDC_CHECK8, BST_CHECKED);
-            if (cfg_transitions2 & 1) CheckDlgButton(hwndDlg, IDC_CHECK10, BST_CHECKED);
-            if (cfg_transitions2 & 2) CheckDlgButton(hwndDlg, IDC_CHECK11, BST_CHECKED);
-            if (cfg_transitions2 & 4) CheckDlgButton(hwndDlg, IDC_CHECK3, BST_CHECKED);
-            if (cfg_transitions2 & 32) CheckDlgButton(hwndDlg, IDC_CHECK4, BST_CHECKED);
-            if (!(cfg_transitions2 & 128))
+            }
+            if (cfg_transitions & 1) {
+                CheckDlgButton(hwndDlg, IDC_CHECK2, BST_CHECKED);
+            }
+            if (cfg_transitions & 2) {
+                CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
+            }
+            if (cfg_transitions & 4) {
+                CheckDlgButton(hwndDlg, IDC_CHECK8, BST_CHECKED);
+            }
+            if (cfg_transitions2 & 1) {
+                CheckDlgButton(hwndDlg, IDC_CHECK10, BST_CHECKED);
+            }
+            if (cfg_transitions2 & 2) {
+                CheckDlgButton(hwndDlg, IDC_CHECK11, BST_CHECKED);
+            }
+            if (cfg_transitions2 & 4) {
+                CheckDlgButton(hwndDlg, IDC_CHECK3, BST_CHECKED);
+            }
+            if (cfg_transitions2 & 32) {
+                CheckDlgButton(hwndDlg, IDC_CHECK4, BST_CHECKED);
+            }
+            if (!(cfg_transitions2 & 128)) {
                 CheckDlgButton(hwndDlg, IDC_CHECK5, BST_CHECKED);
+            }
         }
             return 1;
         case WM_COMMAND:
@@ -99,9 +116,10 @@ int win32_dlgproc_transition(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
             }
             break;
         case WM_NOTIFY:
-            if (LOWORD(wParam) == IDC_SPEED)
+            if (LOWORD(wParam) == IDC_SPEED) {
                 cfg_transitions_speed =
                     SendDlgItemMessage(hwndDlg, IDC_SPEED, TBM_GETPOS, 0, 0);
+            }
             break;
     }
     return 0;

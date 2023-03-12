@@ -67,8 +67,12 @@ E_SVP::E_SVP() : library(0), library_lock(lock_init()), vi(NULL) {
 }
 
 E_SVP::~E_SVP() {
-    if (this->vi) this->vi->SaveSettings("avs.ini");
-    if (this->library) library_unload(this->library);
+    if (this->vi) {
+        this->vi->SaveSettings("avs.ini");
+    }
+    if (this->library) {
+        library_unload(this->library);
+    }
     lock_destroy(this->library_lock);
 }
 
@@ -99,7 +103,9 @@ void E_SVP::clear_library_files() { this->filenames.clear(); }
 void E_SVP::set_library() {
     lock_lock(this->library_lock);
     if (this->library) {
-        if (this->vi) this->vi->SaveSettings("avs.ini");
+        if (this->vi) {
+            this->vi->SaveSettings("avs.ini");
+        }
         this->vi = NULL;
         library_unload(this->library);
         this->library = NULL;
@@ -119,9 +125,10 @@ void E_SVP::set_library() {
     if (this->library) {
         VisInfo* (*qm)(void);
         *(void**)&qm = library_get(this->library, "QueryModule");
-        if (!qm)
+        if (!qm) {
             *(void**)&qm =
                 library_get(this->library, "?QueryModule@@YAPAUUltraVisInfo@@XZ");
+        }
 
         if (!qm || !(this->vi = qm())) {
             this->vi = NULL;
@@ -142,22 +149,27 @@ int E_SVP::render(char visdata[2][2][576],
                   int*,
                   int w,
                   int h) {
-    if (isBeat & 0x80000000) return 0;
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
     lock_lock(this->library_lock);
     if (this->vi) {
         if (vi->lRequired & VI_WAVEFORM) {
             int ch, p;
             for (ch = 0; ch < 2; ch++) {
                 unsigned char* v = (unsigned char*)visdata[1][ch];
-                for (p = 0; p < 512; p++) this->vd.Waveform[ch][p] = v[p];
+                for (p = 0; p < 512; p++) {
+                    this->vd.Waveform[ch][p] = v[p];
+                }
             }
         }
         if (vi->lRequired & VI_SPECTRUM) {
             int ch, p;
             for (ch = 0; ch < 2; ch++) {
                 unsigned char* v = (unsigned char*)visdata[0][ch];
-                for (p = 0; p < 256; p++)
+                for (p = 0; p < 256; p++) {
                     this->vd.Spectrum[ch][p] = v[p * 2] / 2 + v[p * 2 + 1] / 2;
+                }
             }
         }
 

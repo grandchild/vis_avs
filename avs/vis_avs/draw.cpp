@@ -158,7 +158,9 @@ static void DD_CreateFullscreenOverlayWindow() {
         wc.hbrBackground = NULL;
         wc.lpszClassName = "avsfsoverlaywnd";
         wc.hCursor = NULL;
-        if (!RegisterClass(&wc)) return;
+        if (!RegisterClass(&wc)) {
+            return;
+        }
         inited = 1;
     }
     hwndOverlayWnd = CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
@@ -244,12 +246,20 @@ void DD_CreateSurfaces(int w,
             g_lpPrimSurf->Release();
             g_lpPrimSurfBack = g_lpPrimSurf = NULL;
         }
-        if (g_lpRenderSurf[0]) g_lpRenderSurf[0]->Release();
-        if (g_lpRenderSurf[1]) g_lpRenderSurf[1]->Release();
+        if (g_lpRenderSurf[0]) {
+            g_lpRenderSurf[0]->Release();
+        }
+        if (g_lpRenderSurf[1]) {
+            g_lpRenderSurf[1]->Release();
+        }
         g_lpRenderSurf[0] = 0;
         g_lpRenderSurf[1] = 0;
-        if (g_lpddsOverlay) g_lpddsOverlay->Release();
-        if (g_lpddsPrimary) g_lpddsPrimary->Release();
+        if (g_lpddsOverlay) {
+            g_lpddsOverlay->Release();
+        }
+        if (g_lpddsPrimary) {
+            g_lpddsPrimary->Release();
+        }
         g_lpddsOverlay = g_lpddsPrimary = NULL;
         g_lpDD->Release();
         g_lpDD = NULL;
@@ -300,11 +310,13 @@ void DD_CreateSurfaces(int w,
                             != DD_OK) {
                             g_lpPrimSurf->Release();
                             fs = 0;
-                        } else
+                        } else {
                             g_lpPrimSurfBack->Blt(
                                 NULL, NULL, NULL, DDBLT_WAIT | DDBLT_COLORFILL, &ddbfx);
-                    } else
+                        }
+                    } else {
                         g_lpPrimSurfBack = g_lpPrimSurf;
+                    }
                 }
             }
         }
@@ -395,7 +407,9 @@ void DD_CreateSurfaces(int w,
     g_windowed_dsize = dbl;
 
     g_overlay_init_ok = 0;
-    if (!(cfg_bkgnd_render & 1)) DD_RestoreBkgndSettings();
+    if (!(cfg_bkgnd_render & 1)) {
+        DD_RestoreBkgndSettings();
+    }
     if ((cfg_bkgnd_render & 1) || (g_fs && fsovl)) {
         // init overlay stuff
         DDSURFACEDESC ddsdOverlay;
@@ -503,24 +517,27 @@ void DD_CreateSurfaces(int w,
                         HKEY key;
                         if (RegOpenKey(
                                 HKEY_CURRENT_USER, "Control Panel\\Desktop", &key)
-                            == ERROR_SUCCESS)
+                            == ERROR_SUCCESS) {
                             RegSetValueEx(key,
                                           "Wallpaper",
                                           0,
                                           REG_SZ,
                                           (unsigned char*)g_saved_desktop_wallpaper,
                                           strlen(g_saved_desktop_wallpaper) + 1);
+                        }
                         if (RegOpenKey(HKEY_CURRENT_USER, "Control Panel\\Colors", &key)
-                            == ERROR_SUCCESS)
+                            == ERROR_SUCCESS) {
                             RegSetValueEx(key,
                                           "Background",
                                           0,
                                           REG_SZ,
                                           (unsigned char*)g_saved_reg_bkgnd_color,
                                           strlen(g_saved_reg_bkgnd_color) + 1);
+                        }
                     }
-                } else
+                } else {
                     DD_RestoreBkgndSettings();
+                }
             }
 
             INIT_DIRECTDRAW_STRUCT(ovfx);
@@ -546,20 +563,24 @@ void DD_CreateSurfaces(int w,
             rs.top = 0;
             rs.right = resize_w;
             rs.bottom = resize_h;
-            if (capsDrv.dwCaps & DDCAPS_ALIGNSIZESRC && uSrcSizeAlign)
+            if (capsDrv.dwCaps & DDCAPS_ALIGNSIZESRC && uSrcSizeAlign) {
                 rs.right -= rs.right % uSrcSizeAlign;
+            }
             rd.left = 0;
             rd.top = 0;
             rd.right = GetSystemMetrics(SM_CXSCREEN);
             rd.bottom = GetSystemMetrics(SM_CYSCREEN);
-            if (capsDrv.dwCaps & DDCAPS_ALIGNSIZEDEST && uDestSizeAlign)
+            if (capsDrv.dwCaps & DDCAPS_ALIGNSIZEDEST && uDestSizeAlign) {
                 rd.right = (int)((rd.right + uDestSizeAlign - 1) / uDestSizeAlign)
                            * uDestSizeAlign;
+            }
             // Make the call to UpdateOverlay() which actually displays the overlay on
             // the screen.
             ddrval = g_lpddsOverlay->UpdateOverlay(
                 &rs, g_lpddsPrimary, &rd, dwUpdateFlags, &ovfx);
-            if (!FAILED(ddrval)) g_overlay_init_ok = 1;
+            if (!FAILED(ddrval)) {
+                g_overlay_init_ok = 1;
+            }
         }
     }
 
@@ -575,8 +596,12 @@ void DD_CreateSurfaces(int w,
 bool CopyRGBSurfaceToYUVSurfaceMMX(LPDDSURFACEDESC pddsd1,
                                    LPDDSURFACEDESC pddsd2,
                                    fourcc_enum eOverlayFormat) {
-    if (pddsd1->dwWidth != pddsd2->dwWidth) return false;
-    if (pddsd1->dwHeight != pddsd2->dwHeight) return false;
+    if (pddsd1->dwWidth != pddsd2->dwWidth) {
+        return false;
+    }
+    if (pddsd1->dwHeight != pddsd2->dwHeight) {
+        return false;
+    }
 
     DWORD w = pddsd1->dwWidth;
     DWORD h = pddsd1->dwHeight;
@@ -813,8 +838,12 @@ bool CopyRGBSurfaceToYUVSurfaceMMX(LPDDSURFACEDESC pddsd1,
 bool CopyRGBSurfaceToYUVSurface(LPDDSURFACEDESC pddsd1,
                                 LPDDSURFACEDESC pddsd2,
                                 fourcc_enum eOverlayFormat) {
-    if (pddsd1->dwWidth != pddsd2->dwWidth) return false;
-    if (pddsd1->dwHeight != pddsd2->dwHeight) return false;
+    if (pddsd1->dwWidth != pddsd2->dwWidth) {
+        return false;
+    }
+    if (pddsd1->dwHeight != pddsd2->dwHeight) {
+        return false;
+    }
 
     DWORD w = pddsd1->dwWidth;
     DWORD h = pddsd1->dwHeight;
@@ -879,12 +908,20 @@ void DDraw_Quit(void) {
             g_lpPrimSurf->Release();
             g_lpPrimSurfBack = g_lpPrimSurf = NULL;
         }
-        if (g_lpRenderSurf[0]) g_lpRenderSurf[0]->Release();
-        if (g_lpRenderSurf[1]) g_lpRenderSurf[1]->Release();
+        if (g_lpRenderSurf[0]) {
+            g_lpRenderSurf[0]->Release();
+        }
+        if (g_lpRenderSurf[1]) {
+            g_lpRenderSurf[1]->Release();
+        }
         g_lpRenderSurf[0] = 0;
         g_lpRenderSurf[1] = 0;
-        if (g_lpddsOverlay) g_lpddsOverlay->Release();
-        if (g_lpddsPrimary) g_lpddsPrimary->Release();
+        if (g_lpddsOverlay) {
+            g_lpddsOverlay->Release();
+        }
+        if (g_lpddsPrimary) {
+            g_lpddsPrimary->Release();
+        }
         g_lpddsOverlay = g_lpddsPrimary = NULL;
         g_lpDD->Release();
         g_lpDD = NULL;
@@ -894,10 +931,14 @@ void DDraw_Quit(void) {
 }
 
 void DDraw_BeginResize(void) {
-    if (!g_fs) nodraw = 1;
+    if (!g_fs) {
+        nodraw = 1;
+    }
 }
 void DDraw_Resize(int w, int h, int dsize) {
-    if (!g_fs) DD_CreateSurfaces(w, h, 0, 0, 0, 0, !!dsize, 0);
+    if (!g_fs) {
+        DD_CreateSurfaces(w, h, 0, 0, 0, 0, !!dsize, 0);
+    }
 }
 
 static void* g_lpsurf[2];
@@ -969,27 +1010,35 @@ static void do_gettitle() {
                                     SMTO_BLOCK,
                                     50,
                                     &id)
-                || !id)
+                || !id) {
                 return;
+            }
         }
         p = this_title + strlen(this_title);
         while (p >= this_title) {
             char buf[9];
             memcpy(buf, p, 8);
             buf[8] = 0;
-            if (!lstrcmpi(buf, "- Winamp")) break;
+            if (!lstrcmpi(buf, "- Winamp")) {
+                break;
+            }
             p--;
         }
-        if (p >= this_title) p--;
-        while (p >= this_title && *p == ' ') p--;
+        if (p >= this_title) {
+            p--;
+        }
+        while (p >= this_title && *p == ' ') {
+            p--;
+        }
         *++p = 0;
 #endif
         if (lstrcmpi(this_title, last_title)) {
             strcpy(last_title, this_title);
             draw_title_p = 1;
             draw_title_time = GetTickCount() + 1000;
-        } else
+        } else {
             draw_title_p = 0;
+        }
     }
     if (draw_title_p == 2) {
         draw_title_p = 1;
@@ -1010,8 +1059,12 @@ void DDraw_SetStatusText(const char* text, int life) {
 #ifndef NO_X86ASM
 void homemadeBlitFrom32bpp(DDSURFACEDESC* out, void* in, int w, int h, int sy, int ey) {
     int mh = min(h, (int)out->dwHeight);
-    if (sy < 0) sy = 0;
-    if (ey > mh) ey = mh;
+    if (sy < 0) {
+        sy = 0;
+    }
+    if (ey > mh) {
+        ey = mh;
+    }
     if (out->ddpfPixelFormat.dwRGBBitCount == 15) {
         int y;
         int mw;
@@ -1248,8 +1301,12 @@ void homemadeBlitFrom32bpp(DDSURFACEDESC* out, void* in, int w, int h, int sy, i
 
 static int unlocksurfaces() {
     int a = 0;
-    if (g_lpRenderSurf[0] && g_lpRenderSurf[0]->Unlock(g_lpsurf[0]) != DD_OK) a = 1;
-    if (g_lpRenderSurf[1] && g_lpRenderSurf[1]->Unlock(g_lpsurf[1]) != DD_OK) a = 1;
+    if (g_lpRenderSurf[0] && g_lpRenderSurf[0]->Unlock(g_lpsurf[0]) != DD_OK) {
+        a = 1;
+    }
+    if (g_lpRenderSurf[1] && g_lpRenderSurf[1]->Unlock(g_lpsurf[1]) != DD_OK) {
+        a = 1;
+    }
     return a;
 }
 
@@ -1299,12 +1356,16 @@ void DDraw_Exit(int which) {
                         NULL, NULL, NULL, DDBLT_WAIT | DDBLT_COLORFILL, &ddbfx);
                     han = g_lpPrimSurfBack->Lock(NULL, &d, DDLOCK_WAIT, NULL);
                 }
-                if (han != DD_OK) goto slow_fs_non32bpp;
+                if (han != DD_OK) {
+                    goto slow_fs_non32bpp;
+                }
 
                 homemadeBlitFrom32bpp(&d, g_lpsurf[which], g_w, g_h, fsy, g_h - fsy);
 
                 int a = 0;
-                if (g_lpPrimSurfBack->Unlock(d.lpSurface) != DD_OK) a = 1;
+                if (g_lpPrimSurfBack->Unlock(d.lpSurface) != DD_OK) {
+                    a = 1;
+                }
                 if (unlocksurfaces() || a) {
                     goto endfunc;
                 }
@@ -1320,7 +1381,7 @@ void DDraw_Exit(int which) {
                     g_lpPrimSurfBack->ReleaseDC(out);
                     goto endfunc;
                 }
-                if (g_windowed_dsize)
+                if (g_windowed_dsize) {
                     StretchBlt(out,
                                0,
                                fsy * 2,
@@ -1332,8 +1393,9 @@ void DDraw_Exit(int which) {
                                g_w,
                                g_h - fsy * 2,
                                SRCCOPY);
-                else
+                } else {
                     BitBlt(out, 0, fsy, g_w, g_h - fsy * 2, in, 0, fsy, SRCCOPY);
+                }
                 g_lpRenderSurf[which]->ReleaseDC(in);
                 g_lpPrimSurfBack->ReleaseDC(out);
             }
@@ -1387,14 +1449,16 @@ void DDraw_Exit(int which) {
                         DT_TOP | DT_LEFT | DT_SINGLELINE | DT_NOCLIP | DT_NOPREFIX);
                 }
                 if (statustext_life && !(cfg_fs_fps & 8)) {
-                    if (statustext_life == 1)
+                    if (statustext_life == 1) {
                         statustext_life = GetTickCount() + statustext_len;
+                    }
                     RECT r = {0, 0, g_fs_w, g_fs_h};
                     if (GetTickCount() > statustext_life) {
-                        if (statustext_life == 2)
+                        if (statustext_life == 2) {
                             statustext_life = 0;
-                        else
+                        } else {
                             statustext_life = 2;
+                        }
                     } else {
                         SetTextColor(out, RGB(0, 0, 0));
                         DrawText(out,
@@ -1453,18 +1517,21 @@ void DDraw_Exit(int which) {
                 draw_title_p = 0;
             }
         }
-        if (g_fs_flip & 1)
+        if (g_fs_flip & 1) {
             g_lpPrimSurf->Flip(NULL, DDFLIP_WAIT);
-        else if (!(g_fs_flip & 2))
+        } else if (!(g_fs_flip & 2)) {
             g_lpDD->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
+        }
     } else {
         if (g_overlay_init_ok) {
             LPDDSURFACEDESC pd = (which == 0 ? &d : &d2);
             DDSURFACEDESC dd = {};
             dd.dwSize = sizeof(dd);
-            if (g_fs)
-                if (!(cfg_fs_flip & 2))
+            if (g_fs) {
+                if (!(cfg_fs_flip & 2)) {
                     g_lpDD->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
+                }
+            }
 
             if (g_lpddsOverlay->Lock(NULL, &dd, DDLOCK_WAIT, NULL) != DD_OK) {
                 g_overlay_init_ok = 0;
@@ -1531,9 +1598,12 @@ void DDraw_Exit(int which) {
                          DT_VCENTER | DT_CENTER | DT_SINGLELINE | DT_NOPREFIX);
             }
             if (statustext_life && !(cfg_fs_fps & 2)) {
-                if (statustext_life == 1)
+                if (statustext_life == 1) {
                     statustext_life = GetTickCount() + statustext_len;
-                if (GetTickCount() > statustext_life) statustext_life = 0;
+                }
+                if (GetTickCount() > statustext_life) {
+                    statustext_life = 0;
+                }
                 SetTextColor(in2, RGB(0, 0, 0));
                 DrawText(in2,
                          statustext,
@@ -1551,7 +1621,9 @@ void DDraw_Exit(int which) {
             }
         }
     abort_thingy:
-        if (!(cfg_fs_flip & 4)) g_lpDD->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
+        if (!(cfg_fs_flip & 4)) {
+            g_lpDD->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
+        }
         out = GetDC(g_hwnd);
         if (out) {
             if (!g_windowed_dsize) {
@@ -1598,16 +1670,18 @@ void DDraw_Exit(int which) {
             ReleaseDC(g_hwnd, out);
         }
         g_lpRenderSurf[which]->ReleaseDC(in1);
-        if (in2) g_lpRenderSurf[which ^ 1]->ReleaseDC(in2);
+        if (in2) {
+            g_lpRenderSurf[which ^ 1]->ReleaseDC(in2);
+        }
     }
 endfunc:
     LeaveCriticalSection(&g_cs);
 }
 
 void DDraw_SetFullScreen(int fs, int w, int h, int dbl, int bpp) {
-    if (!fs)
+    if (!fs) {
         DD_CreateSurfaces(w, h, 0, 0, 0, 0, !!dbl, 0);
-    else {
+    } else {
         DD_CreateSurfaces(w,
                           h,
                           (min(max(1, cfg_fs_height), 100) * h) / 100,
@@ -1641,7 +1715,9 @@ HRESULT WINAPI _cb(LPDDSURFACEDESC lpDDSurfaceDesc, LPVOID lpContext) {
 }
 
 void DDraw_EnumDispModes(HWND hwnd) {
-    if (g_lpDD) g_lpDD->EnumDisplayModes(0, NULL, hwnd, _cb);
+    if (g_lpDD) {
+        g_lpDD->EnumDisplayModes(0, NULL, hwnd, _cb);
+    }
 }
 
 static int g_st;
@@ -1659,8 +1735,12 @@ HRESULT WINAPI _cb2(LPDDSURFACEDESC lpDDSurfaceDesc, LPVOID lpContext) {
 
 int DDraw_IsMode(int w, int h, int bpp) {
     int x[3] = {w, h, bpp};
-    if (!x[0] || !x[1] || !x[2]) return 0;
-    if (!g_lpDD) return 0;
+    if (!x[0] || !x[1] || !x[2]) {
+        return 0;
+    }
+    if (!g_lpDD) {
+        return 0;
+    }
     g_st = 0;
     g_lpDD->EnumDisplayModes(0, NULL, (LPVOID)x, _cb2);
     return g_st;
@@ -1702,17 +1782,25 @@ double DDraw_translatePoint(POINT p, int isY) {
         ScreenToClient(hwndOverlayWnd, &p);
         GetClientRect(hwndOverlayWnd, &r);
         if (isY) {
-            if (r.bottom > 0) v = p.y / (double)(r.bottom * 0.5) - 1.0;
+            if (r.bottom > 0) {
+                v = p.y / (double)(r.bottom * 0.5) - 1.0;
+            }
         } else {
-            if (r.right > 0) v = p.x / (double)(r.right * 0.5) - 1.0;
+            if (r.right > 0) {
+                v = p.x / (double)(r.right * 0.5) - 1.0;
+            }
         }
     } else {
         ScreenToClient(g_hwnd, &p);
 
         if (isY) {
-            if (g_dsh > 0) v = p.y / (double)(g_dsh * 0.5) - 1.0;
+            if (g_dsh > 0) {
+                v = p.y / (double)(g_dsh * 0.5) - 1.0;
+            }
         } else {
-            if (g_dsw > 0) v = p.x / (double)(g_dsw * 0.5) - 1.0;
+            if (g_dsw > 0) {
+                v = p.x / (double)(g_dsw * 0.5) - 1.0;
+            }
         }
     }
     // if (v > 1.0) v=1.0;

@@ -167,10 +167,11 @@ class C_RenderListClass : public C_RBASE {
 
     int clearfb() { return mode & 1; }
     void set_clearfb(int v) {
-        if (v)
+        if (v) {
             mode |= 1;
-        else
+        } else {
             mode &= ~1;
+        }
     }
 
     int blendin() { return ((mode >> 8) & 31); }
@@ -191,10 +192,11 @@ class C_RenderListClass : public C_RBASE {
 
     int enabled() { return ((mode & 2) ^ 2) || fake_enabled > 0; }
     void set_enabled(int v) {
-        if (!v)
+        if (!v) {
             mode |= 2;
-        else
+        } else {
             mode &= ~2;
+        }
     }
     int save_config_ex(unsigned char* data, int rootsave);
     void load_config_code(unsigned char* data, int len);

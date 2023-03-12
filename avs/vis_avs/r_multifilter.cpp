@@ -205,9 +205,9 @@ inline void C_MultiFilter::infroot_borderconvo(int* framebuffer, int w, int h) {
 }
 
 void C_MultiFilter::load_config(unsigned char* data, int len) {
-    if (len >= ssizeof32(multifilter_config))
+    if (len >= ssizeof32(multifilter_config)) {
         memcpy(&this->config, data, ssizeof32(multifilter_config));
-    else {
+    } else {
         this->config.enabled = true;
         this->config.effect = MULTIFILTER_CHROME;
         this->config.toggle_on_beat = false;

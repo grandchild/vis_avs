@@ -59,7 +59,9 @@ int E_Water::render(char visdata[2][2][576],
                     int w,
                     int h) {
     smp_begin(1, visdata, isBeat, framebuffer, fbout, w, h);
-    if (isBeat & 0x80000000) return 0;
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
 
     smp_render(0, 1, visdata, isBeat, framebuffer, fbout, w, h);
     return smp_finish(visdata, isBeat, framebuffer, fbout, w, h);
@@ -73,7 +75,9 @@ int E_Water::smp_begin(int max_threads,
                        int w,
                        int h) {
     if (!this->lastframe || w * h != this->lastframe_size) {
-        if (this->lastframe) free(this->lastframe);
+        if (this->lastframe) {
+            free(this->lastframe);
+        }
         this->lastframe_size = w * h;
         this->lastframe = (unsigned int*)calloc(w * h, sizeof(int));
     }
@@ -100,13 +104,16 @@ void E_Water::smp_render(int this_thread,
     int start_l = (this_thread * h) / max_threads;
     int end_l;
 
-    if (this_thread >= max_threads - 1)
+    if (this_thread >= max_threads - 1) {
         end_l = h;
-    else
+    } else {
         end_l = ((this_thread + 1) * h) / max_threads;
+    }
 
     int outh = end_l - start_l;
-    if (outh < 1) return;
+    if (outh < 1) {
+        return;
+    }
 
     int skip_pix = start_l * w;
 
@@ -116,8 +123,12 @@ void E_Water::smp_render(int this_thread,
 
     int at_top = 0, at_bottom = 0;
 
-    if (!this_thread) at_top = 1;
-    if (this_thread >= max_threads - 1) at_bottom = 1;
+    if (!this_thread) {
+        at_top = 1;
+    }
+    if (this_thread >= max_threads - 1) {
+        at_bottom = 1;
+    }
 
     {
         // top line
@@ -139,18 +150,21 @@ void E_Water::smp_render(int this_thread,
                 b -= _B(lfo[0]);
                 lfo++;
 
-                if (r < 0)
+                if (r < 0) {
                     r = 0;
-                else if (r > 255)
+                } else if (r > 255) {
                     r = 255;
-                if (g < 0)
+                }
+                if (g < 0) {
                     g = 0;
-                else if (g > 255 * 256)
+                } else if (g > 255 * 256) {
                     g = 255 * 256;
-                if (b < 0)
+                }
+                if (b < 0) {
                     b = 0;
-                else if (b > 255 * 65536)
+                } else if (b > 255 * 65536) {
                     b = 255 * 65536;
+                }
                 *of++ = _RGB(r, g, b);
             }
 
@@ -177,18 +191,21 @@ void E_Water::smp_render(int this_thread,
                 b -= _B(lfo[0]);
                 lfo++;
 
-                if (r < 0)
+                if (r < 0) {
                     r = 0;
-                else if (r > 255)
+                } else if (r > 255) {
                     r = 255;
-                if (g < 0)
+                }
+                if (g < 0) {
                     g = 0;
-                else if (g > 255 * 256)
+                } else if (g > 255 * 256) {
                     g = 255 * 256;
-                if (b < 0)
+                }
+                if (b < 0) {
                     b = 0;
-                else if (b > 255 * 65536)
+                } else if (b > 255 * 65536) {
                     b = 255 * 65536;
+                }
                 *of++ = _RGB(r, g, b);
             }
 
@@ -207,18 +224,21 @@ void E_Water::smp_render(int this_thread,
                 b -= _B(lfo[0]);
                 lfo++;
 
-                if (r < 0)
+                if (r < 0) {
                     r = 0;
-                else if (r > 255)
+                } else if (r > 255) {
                     r = 255;
-                if (g < 0)
+                }
+                if (g < 0) {
                     g = 0;
-                else if (g > 255 * 256)
+                } else if (g > 255 * 256) {
                     g = 255 * 256;
-                if (b < 0)
+                }
+                if (b < 0) {
                     b = 0;
-                else if (b > 255 * 65536)
+                } else if (b > 255 * 65536) {
                     b = 255 * 65536;
+                }
                 *of++ = _RGB(r, g, b);
             }
         }
@@ -251,18 +271,21 @@ void E_Water::smp_render(int this_thread,
                     b -= _B(lfo[0]);
                     lfo++;
 
-                    if (r < 0)
+                    if (r < 0) {
                         r = 0;
-                    else if (r > 255)
+                    } else if (r > 255) {
                         r = 255;
-                    if (g < 0)
+                    }
+                    if (g < 0) {
                         g = 0;
-                    else if (g > 255 * 256)
+                    } else if (g > 255 * 256) {
                         g = 255 * 256;
-                    if (b < 0)
+                    }
+                    if (b < 0) {
                         b = 0;
-                    else if (b > 255 * 65536)
+                    } else if (b > 255 * 65536) {
                         b = 255 * 65536;
+                    }
                     *of++ = _RGB(r, g, b);
                 }
 
@@ -293,18 +316,21 @@ void E_Water::smp_render(int this_thread,
                     b -= _B(lfo[0]);
                     lfo++;
 
-                    if (r < 0)
+                    if (r < 0) {
                         r = 0;
-                    else if (r > 255)
+                    } else if (r > 255) {
                         r = 255;
-                    if (g < 0)
+                    }
+                    if (g < 0) {
                         g = 0;
-                    else if (g > 255 * 256)
+                    } else if (g > 255 * 256) {
                         g = 255 * 256;
-                    if (b < 0)
+                    }
+                    if (b < 0) {
                         b = 0;
-                    else if (b > 255 * 65536)
+                    } else if (b > 255 * 65536) {
                         b = 255 * 65536;
+                    }
                     *of++ = _RGB(r, g, b);
                 }
 #else
@@ -469,18 +495,21 @@ mmx_water_loop1:
                     b -= _B(lfo[0]);
                     lfo++;
 
-                    if (r < 0)
+                    if (r < 0) {
                         r = 0;
-                    else if (r > 255)
+                    } else if (r > 255) {
                         r = 255;
-                    if (g < 0)
+                    }
+                    if (g < 0) {
                         g = 0;
-                    else if (g > 255 * 256)
+                    } else if (g > 255 * 256) {
                         g = 255 * 256;
-                    if (b < 0)
+                    }
+                    if (b < 0) {
                         b = 0;
-                    else if (b > 255 * 65536)
+                    } else if (b > 255 * 65536) {
                         b = 255 * 65536;
+                    }
                     *of++ = _RGB(r, g, b);
                 }
             }
@@ -504,18 +533,21 @@ mmx_water_loop1:
                 b -= _B(lfo[0]);
                 lfo++;
 
-                if (r < 0)
+                if (r < 0) {
                     r = 0;
-                else if (r > 255)
+                } else if (r > 255) {
                     r = 255;
-                if (g < 0)
+                }
+                if (g < 0) {
                     g = 0;
-                else if (g > 255 * 256)
+                } else if (g > 255 * 256) {
                     g = 255 * 256;
-                if (b < 0)
+                }
+                if (b < 0) {
                     b = 0;
-                else if (b > 255 * 65536)
+                } else if (b > 255 * 65536) {
                     b = 255 * 65536;
+                }
                 *of++ = _RGB(r, g, b);
             }
 
@@ -542,18 +574,21 @@ mmx_water_loop1:
                 b -= _B(lfo[0]);
                 lfo++;
 
-                if (r < 0)
+                if (r < 0) {
                     r = 0;
-                else if (r > 255)
+                } else if (r > 255) {
                     r = 255;
-                if (g < 0)
+                }
+                if (g < 0) {
                     g = 0;
-                else if (g > 255 * 256)
+                } else if (g > 255 * 256) {
                     g = 255 * 256;
-                if (b < 0)
+                }
+                if (b < 0) {
                     b = 0;
-                else if (b > 255 * 65536)
+                } else if (b > 255 * 65536) {
                     b = 255 * 65536;
+                }
                 *of++ = _RGB(r, g, b);
             }
 
@@ -572,18 +607,21 @@ mmx_water_loop1:
                 b -= _B(lfo[0]);
                 lfo++;
 
-                if (r < 0)
+                if (r < 0) {
                     r = 0;
-                else if (r > 255)
+                } else if (r > 255) {
                     r = 255;
-                if (g < 0)
+                }
+                if (g < 0) {
                     g = 0;
-                else if (g > 255 * 256)
+                } else if (g > 255 * 256) {
                     g = 255 * 256;
-                if (b < 0)
+                }
+                if (b < 0) {
                     b = 0;
-                else if (b > 255 * 65536)
+                } else if (b > 255 * 65536) {
                     b = 255 * 65536;
+                }
                 *of++ = _RGB(r, g, b);
             }
         }

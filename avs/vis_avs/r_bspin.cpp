@@ -100,9 +100,13 @@ int C_THISCLASS::render(char visdata[2][2][576],
                         int w,
                         int h) {
     int y, x;
-    if (isBeat & 0x80000000) return 0;
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
     for (y = 0; y < 2; y++) {
-        if (!(enabled & (1 << y))) continue;
+        if (!(enabled & (1 << y))) {
+            continue;
+        }
         unsigned char* fa_data = (unsigned char*)visdata[0][y];
         int xp, yp;
         int ss = min(h / 2, (w * 3) / 8);
@@ -118,7 +122,9 @@ int C_THISCLASS::render(char visdata[2][2][576],
 
         last_a = d;
 
-        if (a > 255) a = 255;
+        if (a > 255) {
+            a = 255;
+        }
         v[y] = 0.7 * (max(a - 104, 12) / 96.0) + 0.3 * v[y];
         r_v[y] += 3.14159 / 6.0 * v[y] * dir[y];
 
@@ -126,7 +132,7 @@ int C_THISCLASS::render(char visdata[2][2][576],
         yp = (int)(sin(r_v[y]) * s);
         xp = (int)(cos(r_v[y]) * s);
         if (mode == 0) {
-            if (lx[0][y] || ly[0][y])
+            if (lx[0][y] || ly[0][y]) {
                 line(framebuffer,
                      lx[0][y],
                      ly[0][y],
@@ -136,6 +142,7 @@ int C_THISCLASS::render(char visdata[2][2][576],
                      h,
                      oc6,
                      (g_line_blend_mode & 0xff0000) >> 16);
+            }
             lx[0][y] = xp + c_x;
             ly[0][y] = yp + h / 2;
             line(framebuffer,
@@ -147,7 +154,7 @@ int C_THISCLASS::render(char visdata[2][2][576],
                  h,
                  oc6,
                  (g_line_blend_mode & 0xff0000) >> 16);
-            if (lx[1][y] || ly[1][y])
+            if (lx[1][y] || ly[1][y]) {
                 line(framebuffer,
                      lx[1][y],
                      ly[1][y],
@@ -157,6 +164,7 @@ int C_THISCLASS::render(char visdata[2][2][576],
                      h,
                      oc6,
                      (g_line_blend_mode & 0xff0000) >> 16);
+            }
             lx[1][y] = c_x - xp;
             ly[1][y] = h / 2 - yp;
             line(framebuffer,
@@ -228,19 +236,23 @@ void C_THISCLASS::my_triangle(int* fb,
     x1 = x2 = F16(points[0]);
     if (points[1] < points[3]) {
         dx1 = F16(points[2] - points[0]) / (points[3] - points[1]);
-    } else
+    } else {
         dx1 = 0;
+    }
 
-    if (points[1] < points[5])
+    if (points[1] < points[5]) {
         dx2 = F16(points[4] - points[0]) / (points[5] - points[1]);
-    else
+    } else {
         dx2 = 0;
+    }
 
     fb += points[1] * width;
     ymax = min(points[5], height);
     for (y = points[1]; y < ymax; y++) {
         if (y == points[3]) {
-            if (y == points[5]) return;
+            if (y == points[5]) {
+                return;
+            }
             x1 = F16(points[2]);
             dx1 = F16(points[4] - points[2]) / (points[5] - points[3]);
         }
@@ -248,17 +260,26 @@ void C_THISCLASS::my_triangle(int* fb,
             int x, xl;
             x = (min(x1, x2) - 32768) >> 16;
             xl = ((max(x1, x2) + 32768) >> 16) - x;
-            if (xl < 0) xl = -xl;
-            if (!xl) xl++;
+            if (xl < 0) {
+                xl = -xl;
+            }
+            if (!xl) {
+                xl++;
+            }
             {
                 int* t = fb + x;
                 if (x < 0) {
                     t -= x;
                     xl -= x;
                 }
-                if (x + xl >= width) xl = width - x;
-                if (xl > 0)
-                    while (xl--) BLEND_LINE(t++, color);
+                if (x + xl >= width) {
+                    xl = width - x;
+                }
+                if (xl > 0) {
+                    while (xl--) {
+                        BLEND_LINE(t++, color);
+                    }
+                }
             }
         }
         fb += width;

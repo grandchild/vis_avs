@@ -107,12 +107,15 @@ int __inline C_THISCLASS::depthof(int c) {
 
 void C_THISCLASS::RebuildTable(void) {
     int i;
-    for (i = 0; i < 256; i++)
+    for (i = 0; i < 256; i++) {
         tableb[i] = (unsigned char)((i / 255.0) * (float)(color & 0xFF));
-    for (i = 0; i < 256; i++)
+    }
+    for (i = 0; i < 256; i++) {
         tableg[i] = (unsigned char)((i / 255.0) * (float)((color & 0xFF00) >> 8));
-    for (i = 0; i < 256; i++)
+    }
+    for (i = 0; i < 256; i++) {
         tabler[i] = (unsigned char)((i / 255.0) * (float)((color & 0xFF0000) >> 16));
+    }
 }
 
 // render function
@@ -132,8 +135,12 @@ int C_THISCLASS::render(char[2][2][576],
     int* p = framebuffer;
     int c, d;
 
-    if (!enabled) return 0;
-    if (isBeat & 0x80000000) return 0;
+    if (!enabled) {
+        return 0;
+    }
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
 
     if (blend) {
         while (i--) {

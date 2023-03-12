@@ -61,7 +61,9 @@ unsigned char inline E_Grain::fastrandbyte(void) {
     if (!(this->randtab_pos & 15)) {
         this->randtab_pos += rand() % 73;
     }
-    if (this->randtab_pos >= 491) this->randtab_pos -= 491;
+    if (this->randtab_pos >= 491) {
+        this->randtab_pos -= 491;
+    }
     return r;
 }
 
@@ -72,12 +74,14 @@ void E_Grain::reinit(int w, int h) {
     free(this->depth_buffer);
     this->depth_buffer = (unsigned char*)malloc(w * h * 2);
     p = this->depth_buffer;
-    if (p)
-        for (y = 0; y < h; y++)
+    if (p) {
+        for (y = 0; y < h; y++) {
             for (x = 0; x < w; x++) {
                 *p++ = (rand() % 255);
                 *p++ = (rand() % 100);
             }
+        }
+    }
 }
 
 int E_Grain::render(char[2][2][576],
@@ -86,7 +90,9 @@ int E_Grain::render(char[2][2][576],
                     int*,
                     int w,
                     int h) {
-    if (is_beat & 0x80000000) return 0;
+    if (is_beat & 0x80000000) {
+        return 0;
+    }
 
     int amount_scaled = (this->config.amount * 255) / 100;
     int* p;
@@ -99,7 +105,9 @@ int E_Grain::render(char[2][2][576],
         this->old_y = h;
     }
     this->randtab_pos += rand() % 300;
-    if (this->randtab_pos >= 491) this->randtab_pos -= 491;
+    if (this->randtab_pos >= 491) {
+        this->randtab_pos -= 491;
+    }
 
     p = framebuffer;
     q = this->depth_buffer;
@@ -111,13 +119,19 @@ int E_Grain::render(char[2][2][576],
                     if (q[1] < amount_scaled) {
                         int s = q[0];
                         int r = (((p[0] & 0xff0000) * s) >> 8);
-                        if (r > 0xff0000) r = 0xff0000;
+                        if (r > 0xff0000) {
+                            r = 0xff0000;
+                        }
                         c |= r & 0xff0000;
                         r = (((p[0] & 0xff00) * s) >> 8);
-                        if (r > 0xff00) r = 0xff00;
+                        if (r > 0xff00) {
+                            r = 0xff00;
+                        }
                         c |= r & 0xff00;
                         r = (((p[0] & 0xff) * s) >> 8);
-                        if (r > 0xff) r = 0xff;
+                        if (r > 0xff) {
+                            r = 0xff;
+                        }
                         c |= r;
                     }
                     *p = BLEND(*p, c);
@@ -132,13 +146,19 @@ int E_Grain::render(char[2][2][576],
                     if (q[1] < amount_scaled) {
                         int s = q[0];
                         int r = (((p[0] & 0xff0000) * s) >> 8);
-                        if (r > 0xff0000) r = 0xff0000;
+                        if (r > 0xff0000) {
+                            r = 0xff0000;
+                        }
                         c |= r & 0xff0000;
                         r = (((p[0] & 0xff00) * s) >> 8);
-                        if (r > 0xff00) r = 0xff00;
+                        if (r > 0xff00) {
+                            r = 0xff00;
+                        }
                         c |= r & 0xff00;
                         r = (((p[0] & 0xff) * s) >> 8);
-                        if (r > 0xff) r = 0xff;
+                        if (r > 0xff) {
+                            r = 0xff;
+                        }
                         c |= r;
                     }
                     *p = BLEND_AVG(*p, c);
@@ -153,13 +173,19 @@ int E_Grain::render(char[2][2][576],
                     if (q[1] < amount_scaled) {
                         int s = q[0];
                         int r = (((p[0] & 0xff0000) * s) >> 8);
-                        if (r > 0xff0000) r = 0xff0000;
+                        if (r > 0xff0000) {
+                            r = 0xff0000;
+                        }
                         c |= r & 0xff0000;
                         r = (((p[0] & 0xff00) * s) >> 8);
-                        if (r > 0xff00) r = 0xff00;
+                        if (r > 0xff00) {
+                            r = 0xff00;
+                        }
                         c |= r & 0xff00;
                         r = (((p[0] & 0xff) * s) >> 8);
-                        if (r > 0xff) r = 0xff;
+                        if (r > 0xff) {
+                            r = 0xff;
+                        }
                         c |= r;
                     }
                     *p = c;
@@ -176,13 +202,19 @@ int E_Grain::render(char[2][2][576],
                     if (fastrandbyte() < amount_scaled) {
                         int s = fastrandbyte();
                         int r = (((p[0] & 0xff0000) * s) >> 8);
-                        if (r > 0xff0000) r = 0xff0000;
+                        if (r > 0xff0000) {
+                            r = 0xff0000;
+                        }
                         c |= r & 0xff0000;
                         r = (((p[0] & 0xff00) * s) >> 8);
-                        if (r > 0xff00) r = 0xff00;
+                        if (r > 0xff00) {
+                            r = 0xff00;
+                        }
                         c |= r & 0xff00;
                         r = (((p[0] & 0xff) * s) >> 8);
-                        if (r > 0xff) r = 0xff;
+                        if (r > 0xff) {
+                            r = 0xff;
+                        }
                         c |= r;
                     }
                     *p = BLEND(*p, c);
@@ -197,13 +229,19 @@ int E_Grain::render(char[2][2][576],
                     if (fastrandbyte() < amount_scaled) {
                         int s = fastrandbyte();
                         int r = (((p[0] & 0xff0000) * s) >> 8);
-                        if (r > 0xff0000) r = 0xff0000;
+                        if (r > 0xff0000) {
+                            r = 0xff0000;
+                        }
                         c |= r & 0xff0000;
                         r = (((p[0] & 0xff00) * s) >> 8);
-                        if (r > 0xff00) r = 0xff00;
+                        if (r > 0xff00) {
+                            r = 0xff00;
+                        }
                         c |= r & 0xff00;
                         r = (((p[0] & 0xff) * s) >> 8);
-                        if (r > 0xff) r = 0xff;
+                        if (r > 0xff) {
+                            r = 0xff;
+                        }
                         c |= r;
                     }
                     *p = BLEND_AVG(*p, c);
@@ -218,13 +256,19 @@ int E_Grain::render(char[2][2][576],
                     if (fastrandbyte() < amount_scaled) {
                         int s = fastrandbyte();
                         int r = (((p[0] & 0xff0000) * s) >> 8);
-                        if (r > 0xff0000) r = 0xff0000;
+                        if (r > 0xff0000) {
+                            r = 0xff0000;
+                        }
                         c |= r & 0xff0000;
                         r = (((p[0] & 0xff00) * s) >> 8);
-                        if (r > 0xff00) r = 0xff00;
+                        if (r > 0xff00) {
+                            r = 0xff00;
+                        }
                         c |= r & 0xff00;
                         r = (((p[0] & 0xff) * s) >> 8);
-                        if (r > 0xff) r = 0xff;
+                        if (r > 0xff) {
+                            r = 0xff;
+                        }
                         c |= r;
                     }
                     *p = c;

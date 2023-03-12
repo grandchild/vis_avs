@@ -47,8 +47,12 @@ int E_Invert::render(char[2][2][576],
     int i = w * h;
     int* p = framebuffer;
 
-    if (isBeat & 0x80000000) return 0;
-    if (!enabled) return 0;
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
+    if (!enabled) {
+        return 0;
+    }
 
 #ifndef NO_MMX
     int a[2] = {0xffffff, 0xffffff};
@@ -131,7 +135,9 @@ _mmx_invert_noendloop:
         : "ecx", "edi");
 #endif  // _MSC_VER
 #else
-    while (i--) *p++ = 0xFFFFFF ^ *p;
+    while (i--) {
+        *p++ = 0xFFFFFF ^ *p;
+    }
 #endif
     return 0;
 }

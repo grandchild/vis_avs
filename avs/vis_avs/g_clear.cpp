@@ -11,18 +11,23 @@ int win32_dlgproc_clear(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     C_THISCLASS* g_ConfigThis = (C_THISCLASS*)g_current_render;
     switch (uMsg) {
         case WM_INITDIALOG:
-            if (g_ConfigThis->enabled) CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
-            if (g_ConfigThis->onlyfirst)
+            if (g_ConfigThis->enabled) {
+                CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
+            }
+            if (g_ConfigThis->onlyfirst) {
                 CheckDlgButton(hwndDlg, IDC_CLEARFIRSTFRAME, BST_CHECKED);
-            if (g_ConfigThis->blend == 1)
+            }
+            if (g_ConfigThis->blend == 1) {
                 CheckDlgButton(hwndDlg, IDC_ADDITIVE, BST_CHECKED);
-            else if (g_ConfigThis->blend == 2)
+            } else if (g_ConfigThis->blend == 2) {
                 CheckDlgButton(hwndDlg, IDC_DEFRENDBLEND, BST_CHECKED);
-            else if (g_ConfigThis->blendavg)
+            } else if (g_ConfigThis->blendavg) {
                 CheckDlgButton(hwndDlg, IDC_5050, BST_CHECKED);
+            }
 
-            if (!g_ConfigThis->blend && !g_ConfigThis->blendavg)
+            if (!g_ConfigThis->blend && !g_ConfigThis->blendavg) {
                 CheckDlgButton(hwndDlg, IDC_REPLACE, BST_CHECKED);
+            }
             return 1;
         case WM_DRAWITEM: {
             DRAWITEMSTRUCT* di = (DRAWITEMSTRUCT*)lParam;
@@ -57,15 +62,18 @@ int win32_dlgproc_clear(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 || (LOWORD(wParam) == IDC_DEFRENDBLEND)) {
                 g_ConfigThis->enabled = IsDlgButtonChecked(hwndDlg, IDC_CHECK1) ? 1 : 0;
                 g_ConfigThis->blend = IsDlgButtonChecked(hwndDlg, IDC_ADDITIVE) ? 1 : 0;
-                if (!g_ConfigThis->blend)
+                if (!g_ConfigThis->blend) {
                     g_ConfigThis->blend =
                         IsDlgButtonChecked(hwndDlg, IDC_DEFRENDBLEND) ? 2 : 0;
+                }
                 g_ConfigThis->blendavg = IsDlgButtonChecked(hwndDlg, IDC_5050) ? 1 : 0;
             }
             if (LOWORD(wParam) == IDC_CLEARFIRSTFRAME) {
                 g_ConfigThis->onlyfirst =
                     IsDlgButtonChecked(hwndDlg, IDC_CLEARFIRSTFRAME) ? 1 : 0;
-                if (g_ConfigThis->onlyfirst) g_ConfigThis->fcounter = 0;
+                if (g_ConfigThis->onlyfirst) {
+                    g_ConfigThis->fcounter = 0;
+                }
             }
 
             if (LOWORD(wParam) == IDC_DEFCOL)  // handle clicks to nifty color button

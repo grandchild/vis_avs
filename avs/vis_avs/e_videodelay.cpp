@@ -99,7 +99,9 @@ int E_VideoDelay::render(char[2][2][576],
     if (this->config.use_beats) {
         if (is_beat) {
             this->frame_delay = this->frames_since_beat * this->config.delay;
-            if (this->frame_delay > 400) this->frame_delay = 400;
+            if (this->frame_delay > 400) {
+                this->frame_delay = 400;
+            }
             this->frames_since_beat = 0;
         }
         this->frames_since_beat++;
@@ -115,8 +117,9 @@ int E_VideoDelay::render(char[2][2][576],
                     free(this->buffer);
                     if (this->config.use_beats) {
                         this->buffersize = 2 * this->virtual_buffersize;
-                        if (this->buffersize > this->frame_mem * 400)
+                        if (this->buffersize > this->frame_mem * 400) {
                             this->buffersize = this->frame_mem * 400;
+                        }
                         this->buffer = calloc(this->buffersize, 1);
                         if (this->buffer == NULL) {
                             this->buffersize = this->virtual_buffersize;
@@ -139,8 +142,9 @@ int E_VideoDelay::render(char[2][2][576],
                     uint32_t l = ((uint32_t)this->buffer) + this->virtual_buffersize;
                     uint32_t d = l - size;
                     memmove((void*)d, this->in_out_pos, size);
-                    for (l = (uint32_t)this->in_out_pos; l < d; l += this->frame_mem)
+                    for (l = (uint32_t)this->in_out_pos; l < d; l += this->frame_mem) {
                         memcpy((void*)l, (void*)d, this->frame_mem);
+                    }
                 }
             } else {  // this->virtual_buffersize < old_virtual_buffersize
                 uint32_t presegsize = ((uint32_t)this->in_out_pos)
@@ -153,12 +157,13 @@ int E_VideoDelay::render(char[2][2][576],
                     this->in_out_pos =
                         (void*)(((uint32_t)this->buffer) + this->virtual_buffersize
                                 - this->frame_mem);
-                } else if (presegsize < this->virtual_buffersize)
+                } else if (presegsize < this->virtual_buffersize) {
                     memmove(
                         (void*)(((uint32_t)this->in_out_pos) + this->frame_mem),
                         (void*)(((uint32_t)this->buffer) + this->old_virtual_buffersize
                                 + presegsize - this->virtual_buffersize),
                         this->virtual_buffersize - presegsize);
+                }
             }
             this->old_virtual_buffersize = this->virtual_buffersize;
         }
@@ -188,8 +193,9 @@ int E_VideoDelay::render(char[2][2][576],
     memcpy(this->in_out_pos, framebuffer, this->frame_mem);
     this->in_out_pos = (void*)(((uint32_t)this->in_out_pos) + this->frame_mem);
     if ((uint32_t)this->in_out_pos
-        >= ((uint32_t)this->buffer) + this->virtual_buffersize)
+        >= ((uint32_t)this->buffer) + this->virtual_buffersize) {
         this->in_out_pos = this->buffer;
+    }
     return 1;
 }
 
@@ -206,9 +212,13 @@ void E_VideoDelay::load_legacy(unsigned char* data, int len) {
     if (len - pos >= 4) {
         this->config.delay = GET_INT();
         if (this->config.use_beats) {
-            if (this->config.delay > 16) this->config.delay = 16;
+            if (this->config.delay > 16) {
+                this->config.delay = 16;
+            }
         } else {
-            if (this->config.delay > 200) this->config.delay = 200;
+            if (this->config.delay > 200) {
+                this->config.delay = 200;
+            }
         }
 
         pos += 4;

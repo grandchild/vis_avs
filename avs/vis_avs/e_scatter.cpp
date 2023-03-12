@@ -75,23 +75,33 @@ int E_Scatter::render(char[2][2][576],
             int xp;
             xp = (x % 8) - 4;
             yp = (x / 8) % 8 - 4;
-            if (xp < 0) xp++;
-            if (yp < 0) yp++;
+            if (xp < 0) {
+                xp++;
+            }
+            if (yp < 0) {
+                yp++;
+            }
             fudgetable[x] = w * yp + xp;
         }
         ftw = w;
     }
-    if (isBeat & 0x80000000) return 0;
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
 
     l = w * 4;
-    while (l-- > 0) *fbout++ = *framebuffer++;
+    while (l-- > 0) {
+        *fbout++ = *framebuffer++;
+    }
     l = w * (h - 8);
     while (l-- > 0) {
         *fbout++ = framebuffer[fudgetable[rand() & 511]];
         framebuffer++;
     }
     l = w * 4;
-    while (l-- > 0) *fbout++ = *framebuffer++;
+    while (l-- > 0) {
+        *fbout++ = *framebuffer++;
+    }
 
     return 1;
 }

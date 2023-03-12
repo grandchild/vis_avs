@@ -168,7 +168,9 @@ void E_Movement::regenerate_transform_table(int effect,
             int lp = w / 64;
             while (x--) {
                 *trans_p++ = p + lp++;
-                if (lp >= w) lp -= w;
+                if (lp >= w) {
+                    lp -= w;
+                }
             }
             p += w;
         }
@@ -214,8 +216,12 @@ void E_Movement::regenerate_transform_table(int effect,
                         if (this->config.wrap) {
                             ow %= (w - 1);
                             oh %= (h - 1);
-                            if (ow < 0) ow += w - 1;
-                            if (oh < 0) oh += h - 1;
+                            if (ow < 0) {
+                                ow += w - 1;
+                            }
+                            if (oh < 0) {
+                                oh += h - 1;
+                            }
                         } else {
                             if (ow < 0) {
                                 xpartial = 0;
@@ -240,13 +246,25 @@ void E_Movement::regenerate_transform_table(int effect,
                         if (this->config.wrap) {
                             ow %= (w);
                             oh %= (h);
-                            if (ow < 0) ow += w;
-                            if (oh < 0) oh += h;
+                            if (ow < 0) {
+                                ow += w;
+                            }
+                            if (oh < 0) {
+                                oh += h;
+                            }
                         } else {
-                            if (ow < 0) ow = 0;
-                            if (ow >= w) ow = w - 1;
-                            if (oh < 0) oh = 0;
-                            if (oh >= h) oh = h - 1;
+                            if (ow < 0) {
+                                ow = 0;
+                            }
+                            if (ow >= w) {
+                                ow = w - 1;
+                            }
+                            if (oh < 0) {
+                                oh = 0;
+                            }
+                            if (oh >= h) {
+                                oh = h - 1;
+                            }
                         }
                         *trans_p++ = ow + oh * w;
                     }
@@ -301,8 +319,12 @@ void E_Movement::regenerate_transform_table(int effect,
                         if (this->config.wrap) {
                             ow %= (w - 1);
                             oh %= (h - 1);
-                            if (ow < 0) ow += w - 1;
-                            if (oh < 0) oh += h - 1;
+                            if (ow < 0) {
+                                ow += w - 1;
+                            }
+                            if (oh < 0) {
+                                oh += h - 1;
+                            }
                         } else {
                             if (ow < 0) {
                                 xpartial = 0;
@@ -331,13 +353,25 @@ void E_Movement::regenerate_transform_table(int effect,
                         if (this->config.wrap) {
                             ow %= (w);
                             oh %= (h);
-                            if (ow < 0) ow += w;
-                            if (oh < 0) oh += h;
+                            if (ow < 0) {
+                                ow += w;
+                            }
+                            if (oh < 0) {
+                                oh += h;
+                            }
                         } else {
-                            if (ow < 0) ow = 0;
-                            if (ow >= w) ow = w - 1;
-                            if (oh < 0) oh = 0;
-                            if (oh >= h) oh = h - 1;
+                            if (ow < 0) {
+                                ow = 0;
+                            }
+                            if (ow >= w) {
+                                ow = w - 1;
+                            }
+                            if (oh < 0) {
+                                oh = 0;
+                            }
+                            if (oh >= h) {
+                                oh = h - 1;
+                            }
                         }
                         *trans_p++ = ow + oh * w;
                     }
@@ -397,18 +431,23 @@ void E_Movement::smp_render(int this_thread,
     int* trans_p;
     int x;
 
-    if (max_threads < 1) max_threads = 1;
+    if (max_threads < 1) {
+        max_threads = 1;
+    }
 
     int start_l = (this_thread * h) / max_threads;
     int end_l;
 
-    if (this_thread >= max_threads - 1)
+    if (this_thread >= max_threads - 1) {
         end_l = h;
-    else
+    } else {
         end_l = ((this_thread + 1) * h) / max_threads;
+    }
 
     int out_h = end_l - start_l;
-    if (out_h < 1) return;
+    if (out_h < 1) {
+        return;
+    }
 
     int skip_pix = start_l * w;
     lock_lock(this->transform.lock);
@@ -433,12 +472,13 @@ void E_Movement::smp_render(int this_thread,
                 trans_p += 4;
             }
             x = (w * out_h) & 3;
-            if (x > 0)
+            if (x > 0) {
                 while (x--) {
                     fbout[trans_p[0] & OFFSET_MASK] =
                         BLEND_MAX(in_p++[0], fbout[trans_p[0] & OFFSET_MASK]);
                     trans_p++;
                 }
+            }
         } else {
             {
                 while (x--) {
@@ -450,11 +490,12 @@ void E_Movement::smp_render(int this_thread,
                     trans_p += 4;
                 }
                 x = (w * out_h) & 3;
-                if (x > 0)
+                if (x > 0) {
                     while (x--) {
                         fbout[trans_p[0]] = BLEND_MAX(in_p++[0], fbout[trans_p[0]]);
                         trans_p++;
                     }
+                }
             }
         }
         if (this->config.blend_mode == BLEND_SIMPLE_5050) {
@@ -572,10 +613,11 @@ void E_Movement::smp_render(int this_thread,
                 trans_p += 4;
             }
             x = (w * out_h) & 3;
-            if (x > 0)
+            if (x > 0) {
                 while (x--) {
                     out_p++[0] = BLEND_AVG(in_p++[0], framebuffer[trans_p++[0]]);
                 }
+            }
         } else {
             while (x--) {
                 out_p[0] = framebuffer[trans_p[0]];
@@ -586,10 +628,11 @@ void E_Movement::smp_render(int this_thread,
                 trans_p += 4;
             }
             x = (w * out_h) & 3;
-            if (x > 0)
+            if (x > 0) {
                 while (x--) {
                     out_p++[0] = framebuffer[trans_p++[0]];
                 }
+            }
         }
     }
     lock_unlock(this->transform.lock);
@@ -606,7 +649,9 @@ int E_Movement::render(char visdata[2][2][576],
                        int w,
                        int h) {
     smp_begin(1, visdata, is_beat, framebuffer, fbout, w, h);
-    if (is_beat & 0x80000000) return 0;
+    if (is_beat & 0x80000000) {
+        return 0;
+    }
 
     smp_render(0, 1, visdata, is_beat, framebuffer, fbout, w, h);
     return smp_finish(visdata, is_beat, framebuffer, fbout, w, h);

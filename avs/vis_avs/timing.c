@@ -60,12 +60,13 @@ void _timingPrint(void) {
     int x;
     FILE* fp = fopen("C:\\timings.txt", "wt");
     for (x = 0; x < sizeof(timingInfo) / sizeof(timingInfo[0]); x++) {
-        if (timingInfo[x].calls)
+        if (timingInfo[x].calls) {
             fprintf(fp,
                     "%d: %d calls, %d clocks/call\n",
                     x,
                     timingInfo[x].calls,
                     timingInfo[x].cycles / timingInfo[x].calls);
+        }
     }
     timingInit();
     fclose(fp);

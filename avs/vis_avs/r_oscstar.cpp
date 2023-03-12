@@ -55,13 +55,14 @@ void C_THISCLASS::load_config(unsigned char* data, int len) {
         num_colors = GET_INT();
         pos += 4;
     }
-    if (num_colors <= 16)
+    if (num_colors <= 16) {
         while (len - pos >= 4 && x < num_colors) {
             colors[x++] = GET_INT();
             pos += 4;
         }
-    else
+    } else {
         num_colors = 1;
+    }
     if (len - pos >= 4) {
         size = GET_INT();
         pos += 4;
@@ -116,11 +117,17 @@ int C_THISCLASS::render(char visdata[2][2][576],
     int which_ch = (effect >> 2) & 3;
     int y_pos = (effect >> 4);
 
-    if (isBeat & 0x80000000) return 0;
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
 
-    if (!num_colors) return 0;
+    if (!num_colors) {
+        return 0;
+    }
     color_pos++;
-    if (color_pos >= num_colors * 64) color_pos = 0;
+    if (color_pos >= num_colors * 64) {
+        color_pos = 0;
+    }
 
     {
         int p = color_pos / 64;
@@ -128,10 +135,11 @@ int C_THISCLASS::render(char visdata[2][2][576],
         int c1, c2;
         int r1, r2, r3;
         c1 = colors[p];
-        if (p + 1 < num_colors)
+        if (p + 1 < num_colors) {
             c2 = colors[p + 1];
-        else
+        } else {
             c2 = colors[0];
+        }
 
         r1 = (((c1 & 255) * (63 - r)) + ((c2 & 255) * r)) / 64;
         r2 = ((((c1 >> 8) & 255) * (63 - r)) + (((c2 >> 8) & 255) * r)) / 64;
@@ -141,24 +149,27 @@ int C_THISCLASS::render(char visdata[2][2][576],
     }
 
     if (which_ch >= 2) {
-        for (x = 0; x < 576; x++)
+        for (x = 0; x < 576; x++) {
             center_channel[x] = visdata[1][0][x] / 2 + visdata[1][1][x] / 2;
+        }
     }
-    if (which_ch < 2)
+    if (which_ch < 2) {
         fa_data = (unsigned char*)&visdata[1][which_ch][0];
-    else
+    } else {
         fa_data = (unsigned char*)center_channel;
+    }
 
     {
         double s = size / 32.0;
         int c_x;
         int is = min((int)(h * s), (int)(w * s));
-        if (y_pos == 2)
+        if (y_pos == 2) {
             c_x = w / 2;
-        else if (y_pos == 0)
+        } else if (y_pos == 0) {
             c_x = (w / 4);
-        else
+        } else {
             c_x = w / 2 + w / 4;
+        }
         {
             int q, ii = 0;
             for (q = 0; q < 5; q++) {
@@ -166,10 +177,11 @@ int C_THISCLASS::render(char visdata[2][2][576],
                 s = sin(m_r + q * (3.14159 * 2.0 / 5.0));
                 c = cos(m_r + q * (3.14159 * 2.0 / 5.0));
                 double p = 0.0;
-                if (y_pos == 2)
+                if (y_pos == 2) {
                     c_x = w / 2;
-                else if (y_pos == 0)
+                } else if (y_pos == 0) {
                     c_x = (w / 4);
+                }
                 int lx = c_x;
                 int ly = h / 2;
                 int t = 64;
@@ -202,7 +214,9 @@ int C_THISCLASS::render(char visdata[2][2][576],
             }
 
             m_r += 0.01 * (double)rot;
-            if (m_r >= 3.14159 * 2) m_r -= 3.14159 * 2;
+            if (m_r >= 3.14159 * 2) {
+                m_r -= 3.14159 * 2;
+            }
         }
     }
     return 0;

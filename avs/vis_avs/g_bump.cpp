@@ -143,10 +143,11 @@ int win32_dlgproc_bump(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                     delete[] buf;
                     break;
             }
-            if (HIWORD(wParam) == CBN_SELCHANGE && element == IDC_COMBO1)
+            if (HIWORD(wParam) == CBN_SELCHANGE && element == IDC_COMBO1) {
                 g_this->set_int(
                     p_depth_buffer.handle,
                     SendDlgItemMessage(hwndDlg, IDC_COMBO1, CB_GETCURSEL, 0, 0));
+            }
             return 0;
         }
     }

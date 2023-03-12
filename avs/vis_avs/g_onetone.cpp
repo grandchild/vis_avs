@@ -11,12 +11,21 @@ int win32_dlgproc_uniquetone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
     C_THISCLASS* g_ConfigThis = (C_THISCLASS*)g_current_render;
     switch (uMsg) {
         case WM_INITDIALOG:
-            if (g_ConfigThis->enabled) CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
-            if (g_ConfigThis->invert) CheckDlgButton(hwndDlg, IDC_INVERT, BST_CHECKED);
-            if (g_ConfigThis->blend) CheckDlgButton(hwndDlg, IDC_ADDITIVE, BST_CHECKED);
-            if (g_ConfigThis->blendavg) CheckDlgButton(hwndDlg, IDC_5050, BST_CHECKED);
-            if (!g_ConfigThis->blend && !g_ConfigThis->blendavg)
+            if (g_ConfigThis->enabled) {
+                CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
+            }
+            if (g_ConfigThis->invert) {
+                CheckDlgButton(hwndDlg, IDC_INVERT, BST_CHECKED);
+            }
+            if (g_ConfigThis->blend) {
+                CheckDlgButton(hwndDlg, IDC_ADDITIVE, BST_CHECKED);
+            }
+            if (g_ConfigThis->blendavg) {
+                CheckDlgButton(hwndDlg, IDC_5050, BST_CHECKED);
+            }
+            if (!g_ConfigThis->blend && !g_ConfigThis->blendavg) {
                 CheckDlgButton(hwndDlg, IDC_REPLACE, BST_CHECKED);
+            }
             return 1;
         case WM_DRAWITEM: {
             DRAWITEMSTRUCT* di = (DRAWITEMSTRUCT*)lParam;

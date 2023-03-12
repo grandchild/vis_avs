@@ -12,14 +12,20 @@ int win32_dlgproc_timescope(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
     C_THISCLASS* g_ConfigThis = (C_THISCLASS*)g_current_render;
     switch (uMsg) {
         case WM_INITDIALOG:
-            if (g_ConfigThis->enabled) CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
-            if (g_ConfigThis->blend == 2)
+            if (g_ConfigThis->enabled) {
+                CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
+            }
+            if (g_ConfigThis->blend == 2) {
                 CheckDlgButton(hwndDlg, IDC_DEFAULTBLEND, BST_CHECKED);
-            else if (g_ConfigThis->blend)
+            } else if (g_ConfigThis->blend) {
                 CheckDlgButton(hwndDlg, IDC_ADDITIVE, BST_CHECKED);
-            if (g_ConfigThis->blendavg) CheckDlgButton(hwndDlg, IDC_5050, BST_CHECKED);
-            if (!g_ConfigThis->blend && !g_ConfigThis->blendavg)
+            }
+            if (g_ConfigThis->blendavg) {
+                CheckDlgButton(hwndDlg, IDC_5050, BST_CHECKED);
+            }
+            if (!g_ConfigThis->blend && !g_ConfigThis->blendavg) {
                 CheckDlgButton(hwndDlg, IDC_REPLACE, BST_CHECKED);
+            }
             SendDlgItemMessage(hwndDlg, IDC_BANDS, TBM_SETTICFREQ, 32, 0);
             SendDlgItemMessage(
                 hwndDlg, IDC_BANDS, TBM_SETRANGE, TRUE, MAKELONG(16, 576));
@@ -30,12 +36,13 @@ int win32_dlgproc_timescope(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
                 wsprintf(txt, "Draw %d bands", g_ConfigThis->nbands);
                 SetDlgItemText(hwndDlg, IDC_BANDTXT, txt);
             }
-            if (g_ConfigThis->which_ch == 0)
+            if (g_ConfigThis->which_ch == 0) {
                 CheckDlgButton(hwndDlg, IDC_LEFT, BST_CHECKED);
-            else if (g_ConfigThis->which_ch == 1)
+            } else if (g_ConfigThis->which_ch == 1) {
                 CheckDlgButton(hwndDlg, IDC_RIGHT, BST_CHECKED);
-            else
+            } else {
                 CheckDlgButton(hwndDlg, IDC_CENTER, BST_CHECKED);
+            }
             return 1;
         case WM_DRAWITEM: {
             DRAWITEMSTRUCT* di = (DRAWITEMSTRUCT*)lParam;
@@ -70,9 +77,10 @@ int win32_dlgproc_timescope(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
                 || (LOWORD(wParam) == IDC_DEFAULTBLEND)) {
                 g_ConfigThis->enabled = IsDlgButtonChecked(hwndDlg, IDC_CHECK1) ? 1 : 0;
                 g_ConfigThis->blend = IsDlgButtonChecked(hwndDlg, IDC_ADDITIVE) ? 1 : 0;
-                if (!g_ConfigThis->blend)
+                if (!g_ConfigThis->blend) {
                     g_ConfigThis->blend =
                         IsDlgButtonChecked(hwndDlg, IDC_DEFAULTBLEND) ? 2 : 0;
+                }
                 g_ConfigThis->blendavg = IsDlgButtonChecked(hwndDlg, IDC_5050) ? 1 : 0;
             }
             if (LOWORD(wParam) == IDC_DEFCOL)  // handle clicks to nifty color button
@@ -96,12 +104,13 @@ int win32_dlgproc_timescope(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
             }
             if (LOWORD(wParam) == IDC_LEFT || LOWORD(wParam) == IDC_RIGHT
                 || LOWORD(wParam) == IDC_CENTER) {
-                if (IsDlgButtonChecked(hwndDlg, IDC_LEFT))
+                if (IsDlgButtonChecked(hwndDlg, IDC_LEFT)) {
                     g_ConfigThis->which_ch = 0;
-                else if (IsDlgButtonChecked(hwndDlg, IDC_RIGHT))
+                } else if (IsDlgButtonChecked(hwndDlg, IDC_RIGHT)) {
                     g_ConfigThis->which_ch = 1;
-                else
+                } else {
                     g_ConfigThis->which_ch = 2;
+                }
             }
             break;
         case WM_NOTIFY:

@@ -81,8 +81,12 @@ E_SuperScope::E_SuperScope() { this->need_full_recompile(); }
 E_SuperScope::~E_SuperScope() {}
 
 static inline int makeint(double t) {
-    if (t <= 0.0) return 0;
-    if (t >= 1.0) return 255;
+    if (t <= 0.0) {
+        return 0;
+    }
+    if (t >= 1.0) {
+        return 255;
+    }
     return (int)(t * 255.0);
 }
 
@@ -155,13 +159,17 @@ int E_SuperScope::render(char visdata[2][2][576],
         this->need_init = false;
     }
     this->code_frame.exec(visdata);
-    if (isBeat) this->code_beat.exec(visdata);
+    if (isBeat) {
+        this->code_beat.exec(visdata);
+    }
     if (this->code_point.is_valid()) {
         bool is_first_point = true;
         int lx = 0;
         int ly = 0;
         int num_lines = *this->vars.n;
-        if (num_lines > 128 * 1024) num_lines = 128 * 1024;
+        if (num_lines > 128 * 1024) {
+            num_lines = 128 * 1024;
+        }
         for (int i = 0; i < num_lines; i++) {
             double audio_index = (i * 576.0) / num_lines;
             double audio_lerp = audio_index - (int)audio_index;

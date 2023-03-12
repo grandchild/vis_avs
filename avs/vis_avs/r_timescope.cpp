@@ -127,8 +127,12 @@ int C_THISCLASS::render(char visdata[2][2][576],
     int i;
     int c;
 
-    if (!enabled) return 0;
-    if (isBeat & 0x80000000) return 0;
+    if (!enabled) {
+        return 0;
+    }
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
 
     x++;
     x %= w;
@@ -140,14 +144,15 @@ int C_THISCLASS::render(char visdata[2][2][576],
     for (i = 0; i < h; i++) {
         c = visdata[0][0][(i * nbands) / h] & 0xFF;
         c = (r * c) / 256 + (((g * c) / 256) << 8) + (((b * c) / 256) << 16);
-        if (blend == 2)
+        if (blend == 2) {
             BLEND_LINE(framebuffer, c);
-        else if (blend == 1)
+        } else if (blend == 1) {
             framebuffer[0] = BLEND(framebuffer[0], c);
-        else if (blendavg)
+        } else if (blendavg) {
             framebuffer[0] = BLEND_AVG(framebuffer[0], c);
-        else
+        } else {
             framebuffer[0] = c;
+        }
         framebuffer += w;
     }
 

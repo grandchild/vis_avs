@@ -63,8 +63,12 @@ void E_WaterBump::SineBlob(int x, int y, int radius, int height, int page) {
     int radsquare = radius * radius;
     double length = (1024.0 / (float)radius) * (1024.0 / (float)radius);
 
-    if (x < 0) x = 1 + radius + rand() % (this->buffer_w - 2 * radius - 1);
-    if (y < 0) y = 1 + radius + rand() % (this->buffer_h - 2 * radius - 1);
+    if (x < 0) {
+        x = 1 + radius + rand() % (this->buffer_w - 2 * radius - 1);
+    }
+    if (y < 0) {
+        y = 1 + radius + rand() % (this->buffer_h - 2 * radius - 1);
+    }
 
     radsquare = (radius * radius);
 
@@ -74,10 +78,18 @@ void E_WaterBump::SineBlob(int x, int y, int radius, int height, int page) {
     bottom = radius;
 
     // Perform edge clipping...
-    if (x - radius < 1) left -= (x - radius - 1);
-    if (y - radius < 1) top -= (y - radius - 1);
-    if (x + radius > this->buffer_w - 1) right -= (x + radius - this->buffer_w + 1);
-    if (y + radius > this->buffer_h - 1) bottom -= (y + radius - this->buffer_h + 1);
+    if (x - radius < 1) {
+        left -= (x - radius - 1);
+    }
+    if (y - radius < 1) {
+        top -= (y - radius - 1);
+    }
+    if (x + radius > this->buffer_w - 1) {
+        right -= (x + radius - this->buffer_w + 1);
+    }
+    if (y + radius > this->buffer_h - 1) {
+        bottom -= (y + radius - this->buffer_h + 1);
+    }
 
     for (cy = top; cy < bottom; cy++) {
         for (cx = left; cx < right; cx++) {
@@ -201,12 +213,16 @@ int E_WaterBump::render(char[2][2][576],
         this->buffer_w = w;
         this->buffer_h = h;
     }
-    if (is_beat & 0x80000000) return 0;
+    if (is_beat & 0x80000000) {
+        return 0;
+    }
 
     if (is_beat) {
         if (this->config.random) {
             int max = w;
-            if (h > w) max = h;
+            if (h > w) {
+                max = h;
+            }
             SineBlob(-1,
                      -1,
                      this->config.drop_radius * max / 100,
@@ -244,19 +260,21 @@ int E_WaterBump::render(char[2][2][576],
             dx = ptr[offset] - ptr[offset + 1];
             dy = ptr[offset] - ptr[offset + this->buffer_w];
             ofs = offset + this->buffer_w * (dy >> 3) + (dx >> 3);
-            if ((ofs < len) && (ofs > -1))
+            if ((ofs < len) && (ofs > -1)) {
                 fbout[offset] = framebuffer[ofs];
-            else
+            } else {
                 fbout[offset] = framebuffer[offset];
+            }
 
             offset++;
             dx = ptr[offset] - ptr[offset + 1];
             dy = ptr[offset] - ptr[offset + this->buffer_w];
             ofs = offset + this->buffer_w * (dy >> 3) + (dx >> 3);
-            if ((ofs < len) && (ofs > -1))
+            if ((ofs < len) && (ofs > -1)) {
                 fbout[offset] = framebuffer[ofs];
-            else
+            } else {
                 fbout[offset] = framebuffer[offset];
+            }
         }
     }
 

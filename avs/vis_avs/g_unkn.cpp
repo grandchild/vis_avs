@@ -12,10 +12,11 @@ int win32_dlgproc_unknown(HWND hwndDlg, UINT uMsg, WPARAM, LPARAM) {
     switch (uMsg) {
         case WM_INITDIALOG: {
             char s[512] = "";
-            if (g_this->idString[0])
+            if (g_this->idString[0]) {
                 wsprintf(s, "APE: %s\r\n", g_this->idString);
-            else
+            } else {
                 wsprintf(s, "Built-in ID: %d\r\n", g_this->id);
+            }
             wsprintf(s + strlen(s), "Config size: %d\r\n", g_this->configdata_len);
             SetDlgItemText(hwndDlg, IDC_EDIT1, s);
         }

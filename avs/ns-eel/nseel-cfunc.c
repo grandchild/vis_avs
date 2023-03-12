@@ -51,7 +51,9 @@ static float onepointfive = 1.5f;
 
 //---------------------------------------------------------------------------------------------------------------
 static double nseel_rand(double x) {
-    if (x < 1.0) x = 1.0;
+    if (x < 1.0) {
+        x = 1.0;
+    }
     return (double)(rand() % (int)max(x, 1.0));
 }
 

@@ -149,7 +149,9 @@ int E_DotPlane::render(char visdata[2][2][576],
 
     float zoom = (float)w * 440.0f / 640.0f;
     float zoom2 = (float)h * 440.0f / 480.0f;
-    if (zoom2 < zoom) zoom = zoom2;
+    if (zoom2 < zoom) {
+        zoom = zoom2;
+    }
     for (y_pos = 0; y_pos < GRID_WIDTH; y_pos++) {
         int grid_start_pos =
             (this->config.rotation < 90.0 || this->config.rotation > 270.0)

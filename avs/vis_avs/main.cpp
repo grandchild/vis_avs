@@ -108,7 +108,9 @@ static winampVisModule* getModule(int which) {
                                   render,
                                   quit,
                                   NULL};
-    if (which == 0) return &mod;
+    if (which == 0) {
+        return &mod;
+    }
     return 0;
 }
 #endif
@@ -177,7 +179,9 @@ static int init(struct winampVisModule* this_mod) {
     GetModuleFileName(g_hInstance, g_path, MAX_PATH);
 #endif
     char* p = g_path + strlen(g_path);
-    while (p > g_path && *p != '\\') p--;
+    while (p > g_path && *p != '\\') {
+        p--;
+    }
     *p = 0;
 
 #ifdef WA2_EMBED
@@ -217,15 +221,21 @@ static int init(struct winampVisModule* this_mod) {
 
     AVS_EEL_IF_init();
 
-    if (Wnd_Init(this_mod)) return 1;
+    if (Wnd_Init(this_mod)) {
+        return 1;
+    }
 
     {
         int x;
         for (x = 0; x < 256; x++) {
             double a = log(x * 60.0 / 255.0 + 1.0) / log(60.0);
             int t = (int)(a * 255.0);
-            if (t < 0) t = 0;
-            if (t > 255) t = 255;
+            if (t < 0) {
+                t = 0;
+            }
+            if (t > 255) {
+                t = 255;
+            }
             g_logtab[x] = (unsigned char)t;
         }
     }
@@ -247,24 +257,29 @@ static int init(struct winampVisModule* this_mod) {
 static int render(struct winampVisModule* this_mod) {
 #ifndef WA3_COMPONENT
     int x, avs_beat = 0, b;
-    if (g_ThreadQuit) return 1;
+    if (g_ThreadQuit) {
+        return 1;
+    }
     lock_lock(g_cs);
     if (g_ThreadQuit) {
         lock_unlock(g_cs);
         return 1;
     }
-    if (g_visdata_pstat)
+    if (g_visdata_pstat) {
         // TODO [bugfix][cleanup]:
         //    The loop conditions are x<576*2, but spectrumData has size [2][576], so
         //    the code probably relied on the two channel arrays lying consecutively in
         //    memory. Make it explicit (fixes a warning), but investigate more later.
-        for (x = 0; x < 576 * 2; x++)
+        for (x = 0; x < 576 * 2; x++) {
             g_visdata[0][x / 576][x % 576] =
                 g_logtab[(unsigned char)this_mod->spectrumData[x / 576][x % 576]];
-    else {
+        }
+    } else {
         for (x = 0; x < 576 * 2; x++) {
             int t = g_logtab[(unsigned char)this_mod->spectrumData[x / 576][x % 576]];
-            if (g_visdata[0][x / 576][x % 576] < t) g_visdata[0][x / 576][x % 576] = t;
+            if (g_visdata[0][x / 576][x % 576] < t) {
+                g_visdata[0][x / 576][x % 576] = t;
+            }
         }
     }
     memcpy(&g_visdata[1][0][0], this_mod->waveformData, 576 * 2);
@@ -277,7 +292,9 @@ static int render(struct winampVisModule* this_mod) {
             for (x = 0; x < 576; x++) {
                 int r = *f++ ^ 128;
                 r -= 128;
-                if (r < 0) r = -r;
+                if (r < 0) {
+                    r = -r;
+                }
                 lt[ch] += r;
             }
         }
@@ -296,11 +313,14 @@ static int render(struct winampVisModule* this_mod) {
             beat_peak1_peak = lt[0];
         } else if (lt[0] > beat_peak2) {
             beat_peak2 = lt[0];
-        } else
+        } else {
             beat_peak2 = (beat_peak2 * 14) / 16;
+        }
     }
     b = refineBeat(avs_beat);
-    if (b) g_is_beat = 1;
+    if (b) {
+        g_is_beat = 1;
+    }
     g_visdata_pstat = 0;
     lock_unlock(g_cs);
 #endif
@@ -393,8 +413,12 @@ static unsigned int WINAPI RenderThread(LPVOID) {
         } else {
             int x;
             unsigned char* v = (unsigned char*)visdata;
-            for (x = 0; x < 576 * 2; x++) vis_data[0][0][x] = g_logtab[*v++];
-            for (x = 0; x < 576 * 2; x++) ((unsigned char*)vis_data[1][0])[x] = *v++;
+            for (x = 0; x < 576 * 2; x++) {
+                vis_data[0][0][x] = g_logtab[*v++];
+            }
+            for (x = 0; x < 576 * 2; x++) {
+                ((unsigned char*)vis_data[1][0])[x] = *v++;
+            }
 
             v = (unsigned char*)visdata + 1152;
             {
@@ -404,7 +428,9 @@ static unsigned int WINAPI RenderThread(LPVOID) {
                     for (x = 0; x < 576; x++) {
                         int r = *v++ ^ 128;
                         r -= 128;
-                        if (r < 0) r = -r;
+                        if (r < 0) {
+                            r = -r;
+                        }
                         lt[ch] += r;
                     }
                 }
@@ -422,8 +448,9 @@ static unsigned int WINAPI RenderThread(LPVOID) {
                     beat_peak1_peak = lt[0];
                 } else if (lt[0] > beat_peak2) {
                     beat_peak2 = lt[0];
-                } else
+                } else {
                     beat_peak2 = (beat_peak2 * 14) / 16;
+                }
             }
             //     lock_lock(g_title_cs);
             beat = refineBeat(beat);
@@ -440,10 +467,11 @@ static unsigned int WINAPI RenderThread(LPVOID) {
 #endif
 
         if (!g_ThreadQuit) {
-            if (IsWindow(g_hwnd) && !g_in_destroy)
+            if (IsWindow(g_hwnd) && !g_in_destroy) {
                 DDraw_Enter(&w, &h, &fb, &fb2);
-            else
+            } else {
                 break;
+            }
             if (fb && fb2) {
                 extern int g_dlg_w, g_dlg_h, g_dlg_fps;
 
@@ -451,9 +479,13 @@ static unsigned int WINAPI RenderThread(LPVOID) {
                 int t = g_render_transition->render(
                     vis_data, beat, s ? fb2 : fb, s ? fb : fb2, w, h);
                 lock_unlock(g_render_cs);
-                if (t & 1) s ^= 1;
+                if (t & 1) {
+                    s ^= 1;
+                }
 
-                if (IsWindow(g_hwnd)) DDraw_Exit(s);
+                if (IsWindow(g_hwnd)) {
+                    DDraw_Exit(s);
+                }
 
                 int lastt = framedata[framedata_pos];
                 int thist = GetTickCount();
@@ -465,8 +497,9 @@ static unsigned int WINAPI RenderThread(LPVOID) {
                         sizeof(framedata) / sizeof(framedata[0]), 10000, thist - lastt);
                 }
                 framedata_pos++;
-                if (framedata_pos >= sizeof(framedata) / sizeof(framedata[0]))
+                if (framedata_pos >= sizeof(framedata) / sizeof(framedata[0])) {
                     framedata_pos = 0;
+                }
             }
             int fs = DDraw_IsFullScreen();
             int sv = (fs ? (cfg_speed >> 8) : cfg_speed) & 0xff;

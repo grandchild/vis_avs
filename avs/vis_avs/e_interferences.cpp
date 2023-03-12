@@ -88,9 +88,13 @@ int E_Interferences::render(char[2][2][576],
     int i;
     float s;
 
-    if (is_beat & 0x80000000) return 0;
+    if (is_beat & 0x80000000) {
+        return 0;
+    }
     auto num_render_layers = this->config.num_layers;
-    if (num_render_layers == 0) return 0;
+    if (num_render_layers == 0) {
+        return 0;
+    }
 
     if (this->config.on_beat && is_beat && this->on_beat_fadeout >= M_PI) {
         this->on_beat_fadeout = 0;
@@ -115,10 +119,18 @@ int E_Interferences::render(char[2][2][576],
     for (i = 0; i < num_render_layers; i++) {
         xpoints[i] = (int)(cos(angle) * distance);
         ypoints[i] = (int)(sin(angle) * distance);
-        if (ypoints[i] > min_y) min_y = ypoints[i];
-        if (-ypoints[i] > max_y) max_y = -ypoints[i];
-        if (xpoints[i] > min_x) min_x = xpoints[i];
-        if (-xpoints[i] > max_x) max_x = -xpoints[i];
+        if (ypoints[i] > min_y) {
+            min_y = ypoints[i];
+        }
+        if (-ypoints[i] > max_y) {
+            max_y = -ypoints[i];
+        }
+        if (xpoints[i] > min_x) {
+            min_x = xpoints[i];
+        }
+        if (-xpoints[i] > max_x) {
+            max_x = -xpoints[i];
+        }
         angle += angle_step;
     }
 
@@ -128,10 +140,11 @@ int E_Interferences::render(char[2][2][576],
     for (y = 0; y < h; y++) {
         int yoffs[INTERFERENCES_MAX_POINTS];
         for (i = 0; i < num_render_layers; i++) {
-            if (y >= ypoints[i] && y - ypoints[i] < h)
+            if (y >= ypoints[i] && y - ypoints[i] < h) {
                 yoffs[i] = (y - ypoints[i]) * w;
-            else
+            } else {
                 yoffs[i] = -1;
+            }
         }
         if (this->config.separate_rgb && (num_render_layers % 3 == 0)) {
             if (num_render_layers == 3) {
@@ -189,9 +202,15 @@ int E_Interferences::render(char[2][2][576],
                         int pix = framebuffer[xp + yoffs[5]];
                         b += bt[(pix >> 16) & 0xff];
                     }
-                    if (r > 255) r = 255;
-                    if (g > 255) g = 255;
-                    if (b > 255) b = 255;
+                    if (r > 255) {
+                        r = 255;
+                    }
+                    if (g > 255) {
+                        g = 255;
+                    }
+                    if (b > 255) {
+                        b = 255;
+                    }
                     *outp++ = r | (g << 8) | (b << 16);
                 }
             }
@@ -207,9 +226,15 @@ int E_Interferences::render(char[2][2][576],
                         b += bt[(pix >> 16) & 0xff];
                     }
                 }
-                if (r > 255) r = 255;
-                if (g > 255) g = 255;
-                if (b > 255) b = 255;
+                if (r > 255) {
+                    r = 255;
+                }
+                if (g > 255) {
+                    g = 255;
+                }
+                if (b > 255) {
+                    b = 255;
+                }
                 *outp++ = r | (g << 8) | (b << 16);
             }
             int* lfb = framebuffer + x;
@@ -221,9 +246,15 @@ int E_Interferences::render(char[2][2][576],
                     g += bt[(pix >> 8) & 0xff];
                     b += bt[(pix >> 16) & 0xff];
                 }
-                if (r > 255) r = 255;
-                if (g > 255) g = 255;
-                if (b > 255) b = 255;
+                if (r > 255) {
+                    r = 255;
+                }
+                if (g > 255) {
+                    g = 255;
+                }
+                if (b > 255) {
+                    b = 255;
+                }
                 lfb++;
                 *outp++ = r | (g << 8) | (b << 16);
             }
@@ -238,12 +269,18 @@ int E_Interferences::render(char[2][2][576],
                         b += bt[(pix >> 16) & 0xff];
                     }
                 }
-                if (r > 255) r = 255;
-                if (g > 255) g = 255;
-                if (b > 255) b = 255;
+                if (r > 255) {
+                    r = 255;
+                }
+                if (g > 255) {
+                    g = 255;
+                }
+                if (b > 255) {
+                    b = 255;
+                }
                 *outp++ = r | (g << 8) | (b << 16);
             }
-        } else
+        } else {
             for (x = 0; x < w; x++) {
                 int r = 0, g = 0, b = 0;
                 for (i = 0; i < num_render_layers; i++) {
@@ -255,11 +292,18 @@ int E_Interferences::render(char[2][2][576],
                         b += bt[(pix >> 16) & 0xff];
                     }
                 }
-                if (r > 255) r = 255;
-                if (g > 255) g = 255;
-                if (b > 255) b = 255;
+                if (r > 255) {
+                    r = 255;
+                }
+                if (g > 255) {
+                    g = 255;
+                }
+                if (b > 255) {
+                    b = 255;
+                }
                 *outp++ = r | (g << 8) | (b << 16);
             }
+        }
     }
 
     this->cur_rotation += rotation_step;
@@ -270,7 +314,9 @@ int E_Interferences::render(char[2][2][576],
 
     this->on_beat_fadeout += this->config.on_beat_speed;
     this->on_beat_fadeout = this->on_beat_fadeout > M_PI ? M_PI : this->on_beat_fadeout;
-    if (this->on_beat_fadeout < -M_PI) this->on_beat_fadeout = M_PI;
+    if (this->on_beat_fadeout < -M_PI) {
+        this->on_beat_fadeout = M_PI;
+    }
 
     int* p = framebuffer;
     int* d = fbout;

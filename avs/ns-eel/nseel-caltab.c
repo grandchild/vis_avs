@@ -129,7 +129,7 @@ static const short yycheck[] = {
    in available built-in functions on various systems.  */
 #define __yy_bcopy(from, to, count) memcpy(to, from, (count) > 0 ? (count) : 0)
 
-//#ln 131 "bison.simple"
+// #ln 131 "bison.simple"
 int nseel_yyparse(compileContext* ctx, char* exp) {
     register int yystate;
     register int yyn;
@@ -191,7 +191,9 @@ yynewstate:
         yyssp = yyss + size - 1;
         yyvsp = yyvs + size - 1;
 
-        if (yyssp >= yyss + yystacksize - 1) YYABORT;
+        if (yyssp >= yyss + yystacksize - 1) {
+            YYABORT;
+        }
     }
 
     // yybackup:
@@ -203,7 +205,9 @@ yynewstate:
     /* First try to decide what to do without reference to lookahead token.  */
 
     yyn = yypact[yystate];
-    if (yyn == YYFLAG) goto yydefault;
+    if (yyn == YYFLAG) {
+        goto yydefault;
+    }
 
     /* Not known => get a lookahead token if don't already have one.  */
 
@@ -227,7 +231,9 @@ yynewstate:
     }
 
     yyn += yychar1;
-    if (yyn < 0 || yyn > YYLAST || yycheck[yyn] != yychar1) goto yydefault;
+    if (yyn < 0 || yyn > YYLAST || yycheck[yyn] != yychar1) {
+        goto yydefault;
+    }
 
     yyn = yytable[yyn];
 
@@ -239,23 +245,32 @@ yynewstate:
        0, or most negative number => error.  */
 
     if (yyn < 0) {
-        if (yyn == YYFLAG) goto yyerrlab;
+        if (yyn == YYFLAG) {
+            goto yyerrlab;
+        }
         yyn = -yyn;
         goto yyreduce;
-    } else if (yyn == 0)
+    } else if (yyn == 0) {
         goto yyerrlab;
+    }
 
-    if (yyn == YYFINAL) YYACCEPT;
+    if (yyn == YYFINAL) {
+        YYACCEPT;
+    }
 
     /* Shift the lookahead token.  */
 
     /* Discard the token being shifted unless it is eof.  */
-    if (ctx->yychar != YYEOF) ctx->yychar = YYEMPTY;
+    if (ctx->yychar != YYEOF) {
+        ctx->yychar = YYEMPTY;
+    }
 
     *++yyvsp = ctx->yylval;
 
     /* count tokens shifted since error; after three, turn off error status.  */
-    if (yyerrstatus) yyerrstatus--;
+    if (yyerrstatus) {
+        yyerrstatus--;
+    }
 
     yystate = yyn;
     goto yynewstate;
@@ -264,7 +279,9 @@ yynewstate:
 yydefault:
 
     yyn = yydefact[yystate];
-    if (yyn == 0) goto yyerrlab;
+    if (yyn == 0) {
+        goto yyerrlab;
+    }
 
 /* Do a reduction.  yyn is the number of a rule to reduce with.  */
 yyreduce:
@@ -273,7 +290,7 @@ yyreduce:
 
     switch (yyn) {
         case 1:
-            //#ln 32 "cal.y"
+            // #ln 32 "cal.y"
             {
                 yyval = yyvsp[0];
                 ctx->result = yyvsp[0];
@@ -281,7 +298,7 @@ yyreduce:
                 break;
             }
         case 2:
-            //#ln 34 "cal.y"
+            // #ln 34 "cal.y"
             {
                 {
                     int i = (int)nseel_setVar(ctx, (int)yyvsp[-2]);
@@ -294,124 +311,124 @@ yyreduce:
                 break;
             }
         case 3:
-            //#ln 50 "cal.y"
+            // #ln 50 "cal.y"
             {
                 yyval = yyvsp[0];
                 break;
             }
         case 4:
-            //#ln 55 "cal.y"
+            // #ln 55 "cal.y"
             {
                 yyval = nseel_getVar(ctx, (int)yyvsp[0]);
                 ;
                 break;
             }
         case 5:
-            //#ln 57 "cal.y"
+            // #ln 57 "cal.y"
             {
                 yyval = yyvsp[0];
                 ;
                 break;
             }
         case 6:
-            //#ln 59 "cal.y"
+            // #ln 59 "cal.y"
             {
                 yyval = yyvsp[-1];
                 ;
                 break;
             }
         case 7:
-            //#ln 64 "cal.y"
+            // #ln 64 "cal.y"
             {
                 yyval = yyvsp[0];
                 ;
                 break;
             }
         case 8:
-            //#ln 66 "cal.y"
+            // #ln 66 "cal.y"
             {
                 yyval = nseel_createCompiledFunction2(
                     ctx, MATH_SIMPLE, FN_MULTIPLY, yyvsp[-2], yyvsp[0]);
                 break;
             }
         case 9:
-            //#ln 72 "cal.y"
+            // #ln 72 "cal.y"
             {
                 yyval = nseel_createCompiledFunction2(
                     ctx, MATH_SIMPLE, FN_DIVIDE, yyvsp[-2], yyvsp[0]);
                 break;
             }
         case 10:
-            //#ln 78 "cal.y"
+            // #ln 78 "cal.y"
             {
                 yyval = nseel_createCompiledFunction2(
                     ctx, MATH_SIMPLE, FN_MODULO, yyvsp[-2], yyvsp[0]);
                 break;
             }
         case 11:
-            //#ln 84 "cal.y"
+            // #ln 84 "cal.y"
             {
                 yyval = nseel_createCompiledFunction2(
                     ctx, MATH_SIMPLE, FN_ADD, yyvsp[-2], yyvsp[0]);
                 break;
             }
         case 12:
-            //#ln 90 "cal.y"
+            // #ln 90 "cal.y"
             {
                 yyval = nseel_createCompiledFunction2(
                     ctx, MATH_SIMPLE, FN_SUB, yyvsp[-2], yyvsp[0]);
                 break;
             }
         case 13:
-            //#ln 96 "cal.y"
+            // #ln 96 "cal.y"
             {
                 yyval = nseel_createCompiledFunction2(
                     ctx, MATH_SIMPLE, FN_AND, yyvsp[-2], yyvsp[0]);
                 break;
             }
         case 14:
-            //#ln 102 "cal.y"
+            // #ln 102 "cal.y"
             {
                 yyval = nseel_createCompiledFunction2(
                     ctx, MATH_SIMPLE, FN_OR, yyvsp[-2], yyvsp[0]);
                 break;
             }
         case 15:
-            //#ln 108 "cal.y"
+            // #ln 108 "cal.y"
             {
                 yyval = nseel_createCompiledFunction1(
                     ctx, MATH_SIMPLE, FN_UMINUS, yyvsp[0]);
                 break;
             }
         case 16:
-            //#ln 114 "cal.y"
+            // #ln 114 "cal.y"
             {
                 yyval =
                     nseel_createCompiledFunction1(ctx, MATH_SIMPLE, FN_UPLUS, yyvsp[0]);
                 break;
             }
         case 17:
-            //#ln 120 "cal.y"
+            // #ln 120 "cal.y"
             {
                 yyval = yyvsp[0];
                 break;
             }
         case 18:
-            //#ln 125 "cal.y"
+            // #ln 125 "cal.y"
             {
                 yyval = nseel_createCompiledFunction1(
                     ctx, MATH_FN, (int)yyvsp[-3], yyvsp[-1]);
                 break;
             }
         case 19:
-            //#ln 131 "cal.y"
+            // #ln 131 "cal.y"
             {
                 yyval = nseel_createCompiledFunction2(
                     ctx, MATH_FN, (int)yyvsp[-5], yyvsp[-3], yyvsp[-1]);
                 break;
             }
         case 20:
-            //#ln 137 "cal.y"
+            // #ln 137 "cal.y"
             {
                 yyval = nseel_createCompiledFunction3(
                     ctx, MATH_FN, (int)yyvsp[-7], yyvsp[-5], yyvsp[-3], yyvsp[-1]);
@@ -419,7 +436,7 @@ yyreduce:
             }
     }
     /* the action file gets copied in in place of this dollarsign */
-    //#ln 362 "bison.simple"
+    // #ln 362 "bison.simple"
 
     yyvsp -= yylen;
     yyssp -= yylen;
@@ -434,10 +451,11 @@ yyreduce:
     yyn = yyr1[yyn];
 
     yystate = yypgoto[yyn - YYNTBASE] + *yyssp;
-    if (yystate >= 0 && yystate <= YYLAST && yycheck[yystate] == *yyssp)
+    if (yystate >= 0 && yystate <= YYLAST && yycheck[yystate] == *yyssp) {
         yystate = yytable[yystate];
-    else
+    } else {
         yystate = yydefgoto[yyn - YYNTBASE];
+    }
 
     goto yynewstate;
 
@@ -457,21 +475,25 @@ yyerrlab: /* here on detecting error */
             int x, count;
 
             count = 0;
-            for (x = 0; x < (sizeof(yytname) / sizeof(char*)); x++)
-                if (yycheck[x + yyn] == x) size += strlen(yytname[x]) + 15, count++;
+            for (x = 0; x < (sizeof(yytname) / sizeof(char*)); x++) {
+                if (yycheck[x + yyn] == x) {
+                    size += strlen(yytname[x]) + 15, count++;
+                }
+            }
 #error this should not compile
             msg = (char*)xmalloc(size + 15);
             strcpy(msg, "syntax error");
 
             if (count < 5) {
                 count = 0;
-                for (x = 0; x < (sizeof(yytname) / sizeof(char*)); x++)
+                for (x = 0; x < (sizeof(yytname) / sizeof(char*)); x++) {
                     if (yycheck[x + yyn] == x) {
                         strcat(msg, count == 0 ? ", expecting `" : " or `");
                         strcat(msg, yytname[x]);
                         strcat(msg, "'");
                         count++;
                     }
+                }
             }
             YYERROR(msg);
             free(msg);
@@ -487,7 +509,9 @@ yyerrlab: /* here on detecting error */
          */
 
         /* return failure if at end of input */
-        if (ctx->yychar == YYEOF) YYABORT;
+        if (ctx->yychar == YYEOF) {
+            YYABORT;
+        }
 
         ctx->yychar = YYEMPTY;
     }
@@ -510,27 +534,38 @@ yyerrdefault: /* current state does not do anything special for the error token.
 
 yyerrpop: /* pop the current state because it cannot handle the error token */
 
-    if (yyssp == yyss) YYABORT;
+    if (yyssp == yyss) {
+        YYABORT;
+    }
     yyvsp--;
     yystate = *--yyssp;
 
 yyerrhandle:
 
     yyn = yypact[yystate];
-    if (yyn == YYFLAG) goto yyerrdefault;
+    if (yyn == YYFLAG) {
+        goto yyerrdefault;
+    }
 
     yyn += YYTERROR;
-    if (yyn < 0 || yyn > YYLAST || yycheck[yyn] != YYTERROR) goto yyerrdefault;
+    if (yyn < 0 || yyn > YYLAST || yycheck[yyn] != YYTERROR) {
+        goto yyerrdefault;
+    }
 
     yyn = yytable[yyn];
     if (yyn < 0) {
-        if (yyn == YYFLAG) goto yyerrpop;
+        if (yyn == YYFLAG) {
+            goto yyerrpop;
+        }
         yyn = -yyn;
         goto yyreduce;
-    } else if (yyn == 0)
+    } else if (yyn == 0) {
         goto yyerrpop;
+    }
 
-    if (yyn == YYFINAL) YYACCEPT;
+    if (yyn == YYFINAL) {
+        YYACCEPT;
+    }
 
     *++yyvsp = ctx->yylval;
 

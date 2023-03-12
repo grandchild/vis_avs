@@ -41,7 +41,9 @@ static int llset(compileContext* ctx);
 static int llinp(compileContext* ctx, char** exp);
 static int lexgetc(char** exp) {
     char c = **exp;
-    if (c) (*exp)++;
+    if (c) {
+        (*exp)++;
+    }
     return (c != 0 ? c : -1);
 }
 static int tst__b(int c, char tab[]) { return (tab[(c >> 3) & 037] & (1 << (c & 07))); }
@@ -51,7 +53,9 @@ int nseel_gettoken(compileContext* ctx, char* lltb, int lltbsiz) {
 
     tp = lltb;
     ep = tp + lltbsiz - 1;
-    for (lp = ctx->llbuf; lp < ctx->llend && tp < ep;) *tp++ = *lp++;
+    for (lp = ctx->llbuf; lp < ctx->llend && tp < ep;) {
+        *tp++ = *lp++;
+    }
     *tp = 0;
     return (tp - lltb);
 }
@@ -64,39 +68,54 @@ int nseel_yylex(compileContext* ctx, char** exp) {
 
     while (1) {
         llk = 0;
-        if (llset(ctx)) return (0);
+        if (llset(ctx)) {
+            return (0);
+        }
         st = 0;
         final = -1;
         lp = &nseel_lextab;
 
         do {
             if (lp->lllook && (l = lp->lllook[st])) {
-                for (c = 0; c < NBPW; c++)
-                    if (l & (1 << c)) ctx->llsave[c] = ctx->llp1;
+                for (c = 0; c < NBPW; c++) {
+                    if (l & (1 << c)) {
+                        ctx->llsave[c] = ctx->llp1;
+                    }
+                }
                 llk++;
             }
             if ((i = lp->llfinal[st]) != -1) {
                 final = i;
                 ctx->llend = ctx->llp1;
             }
-            if ((c = llinp(ctx, exp)) < 0) break;
+            if ((c = llinp(ctx, exp)) < 0) {
+                break;
+            }
             if ((cp = lp->llbrk) && llk == 0 && tst__b(c, cp)) {
                 ctx->llp1--;
                 break;
             }
         } while ((st = (*lp->llmove)(lp, c, st)) != -1);
 
-        if (ctx->llp2 < ctx->llp1) ctx->llp2 = ctx->llp1;
+        if (ctx->llp2 < ctx->llp1) {
+            ctx->llp2 = ctx->llp1;
+        }
         if (final == -1) {
             ctx->llend = ctx->llp1;
-            if (st == 0 && c < 0) return (0);
+            if (st == 0 && c < 0) {
+                return (0);
+            }
             if ((cp = lp->llill) && tst__b(c, cp)) {
                 continue;
             }
             return (ERROR);
         }
-        if ((c = (final >> 11) & 037)) ctx->llend = ctx->llsave[c - 1];
-        if ((c = (*lp->llactr)(ctx, final & 03777)) >= 0) return (c);
+        if ((c = (final >> 11) & 037)) {
+            ctx->llend = ctx->llsave[c - 1];
+        }
+        if ((c = (*lp->llactr)(ctx, final & 03777)) >= 0) {
+            return (c);
+        }
     }
 }
 
@@ -123,14 +142,17 @@ static int llinp(compileContext* ctx, char** exp) {
         c = (ctx->llp1 < ctx->llp2) ? *ctx->llp1 & 0377
             : (ctx->lleof)          ? EOF
                                     : lexgetc(exp);
-        if (c >= 0) {                          /* Got a character?     */
-            if (cp && tst__b(c, cp)) continue; /* Ignore it            */
-            if (ctx->llp1 >= ctx->llebuf) {    /* No, is there room?   */
+        if (c >= 0) { /* Got a character?     */
+            if (cp && tst__b(c, cp)) {
+                continue; /* Ignore it            */
+            }
+            if (ctx->llp1 >= ctx->llebuf) { /* No, is there room?   */
                 return -1;
             }
             *ctx->llp1++ = c; /* Store in token buff  */
-        } else
+        } else {
             ctx->lleof = 1; /* Set EOF signal       */
+        }
         return (c);
     }
 }
@@ -142,7 +164,9 @@ static int llset(compileContext* ctx)
 {
     char *lp1, *lp2;
 
-    for (lp1 = ctx->llbuf, lp2 = ctx->llend; lp2 < ctx->llp2;) *lp1++ = *lp2++;
+    for (lp1 = ctx->llbuf, lp2 = ctx->llend; lp2 < ctx->llp2;) {
+        *lp1++ = *lp2++;
+    }
     ctx->llend = ctx->llp1 = ctx->llbuf;
     ctx->llp2 = lp1;
     return (ctx->lleof && lp1 == ctx->llbuf);

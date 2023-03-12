@@ -54,7 +54,9 @@ class Translator {
 };
 
 static void strtolower(std::string& input) {
-    for (unsigned int i = 0; i < input.size(); ++i) input[i] = tolower(input[i]);
+    for (unsigned int i = 0; i < input.size(); ++i) {
+        input[i] = tolower(input[i]);
+    }
 }
 
 static void join(std::string& output,
@@ -102,7 +104,9 @@ static void spec_trim(std::string& s) {
     if (r != std::string::npos) {
         s.erase(0, r);
         r = s.find_last_not_of(" \x0D\x0A" NEWLINE);
-        if (r != std::string::npos) s.erase(r + 1);
+        if (r != std::string::npos) {
+            s.erase(r + 1);
+        }
     } else {
         s = "";
     }
@@ -139,7 +143,9 @@ static unsigned int parse_bracket(const std::string& input) {
             case '(': brackets++; break;
             case ')':
                 brackets--;
-                if (brackets == 0) return i;
+                if (brackets == 0) {
+                    return i;
+                }
                 break;
         }
     }
@@ -480,19 +486,21 @@ void Translator::handle_comment(std::string const& comment) {
         strtolower(left);
 
         if (left == "avstrans_mode") {
-            if (right == "linear")
+            if (right == "linear") {
                 this->mode = MODE_LINEAR;
-            else if (right == "assign")
+            } else if (right == "assign") {
                 this->mode = MODE_ASSIGN;
-            else if (right == "exec")
+            } else if (right == "exec") {
                 this->mode = MODE_EXEC;
-            else if (right == "plus")
+            } else if (right == "plus") {
                 this->mode = MODE_PLUS;
+            }
         } else if (left == "avstrans_transfirst") {
-            if ((right == "0") || (right == "no") || (right == "off"))
+            if ((right == "0") || (right == "no") || (right == "off")) {
                 this->trans_first = false;
-            else if ((right == "1") || (right == "on") || (right == "yes"))
+            } else if ((right == "1") || (right == "on") || (right == "yes")) {
                 this->trans_first = true;
+            }
         } else if (left == "avstrans_replacement") {
             r = right.find("->");
             tmp = right.substr(r + 2, right.size());

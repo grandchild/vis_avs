@@ -71,7 +71,9 @@ int E_MultiDelay::render(char[2][2][576],
                          int*,
                          int w,
                          int h) {
-    if (is_beat & 0x80000000) return 0;
+    if (is_beat & 0x80000000) {
+        return 0;
+    }
 
     auto& g = this->global->config;
     if (g.render_id == this->global->instances.size()) {
@@ -110,9 +112,11 @@ inline void E_MultiDelay::manage_buffers(bool is_beat, int64_t frame_size) {
     g.frame_mem_size = frame_size * 4;
     if (is_beat) {
         g.frames_per_beat = g.frames_since_beat;
-        for (int i = 0; i < MULTIDELAY_NUM_BUFFERS; i++)
-            if (g.buffers[i].use_beats)
+        for (int i = 0; i < MULTIDELAY_NUM_BUFFERS; i++) {
+            if (g.buffers[i].use_beats) {
                 g.buffers[i].frame_delay = g.frames_per_beat + 1;
+            }
+        }
         g.frames_since_beat = 0;
     }
     g.frames_since_beat++;
@@ -177,11 +181,12 @@ inline void E_MultiDelay::manage_buffers(bool is_beat, int64_t frame_size) {
                             b.in_pos = (void*)(((uint32_t)b.buffer) + b.virtual_size
                                                - g.frame_mem_size);
                             b.out_pos = b.buffer;
-                        } else if (pre_seg_size < b.virtual_size)
+                        } else if (pre_seg_size < b.virtual_size) {
                             memmove(b.out_pos,
                                     (void*)(((uint32_t)b.buffer) + b.old_virtual_size
                                             + pre_seg_size - b.virtual_size),
                                     b.virtual_size - pre_seg_size);
+                        }
                     }
                     b.old_virtual_size = b.virtual_size;
                 }

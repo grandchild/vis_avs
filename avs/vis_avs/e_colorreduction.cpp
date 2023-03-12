@@ -46,12 +46,16 @@ int E_ColorReduction::render(char[2][2][576],
                              int*,
                              int w,
                              int h) {
-    if (isBeat & 0x80000000) return 0;
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
 
     int a, b, c;
     a = 8 - config.levels;
     b = 0xFF;
-    while (a--) b = (b << 1) & 0xFF;
+    while (a--) {
+        b = (b << 1) & 0xFF;
+    }
     b |= (b << 16) | (b << 8);
     c = w * h;
 #ifdef _MSC_VER

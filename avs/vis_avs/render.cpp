@@ -67,7 +67,9 @@ int is_mmx(void) {
     } catch (...) {
         retval1 = retval2 = 0;
     }
-    if (!retval1) return 0;
+    if (!retval1) {
+        return 0;
+    }
     return (retval2 & 0x800000) ? 1 : 0;
 }
 
@@ -85,9 +87,11 @@ void Render_Init() {
     timingInit();
     {
         int i, j;
-        for (j = 0; j < 256; j++)
-            for (i = 0; i < 256; i++)
+        for (j = 0; j < 256; j++) {
+            for (i = 0; i < 256; i++) {
                 g_blendtable[i][j] = (unsigned char)((i / 255.0) * (float)j);
+            }
+        }
     }
 
     g_render_library = new C_RLibrary();
@@ -102,7 +106,9 @@ void Render_Init() {
             MAX_PATH - 1);
     INI_FILE[MAX_PATH - 1] = '\0';
     p += strlen(INI_FILE) - 1;
-    while (p >= INI_FILE && *p != '\\') p--;
+    while (p >= INI_FILE && *p != '\\') {
+        p--;
+    }
     strcpy(p, "\\plugins\\vis_avs.dat");
     extern int g_saved_preset_dirty;
     // clear the undo stack before loading a file.
@@ -116,7 +122,9 @@ void Render_Init() {
 }
 
 void Render_Quit() {
-    if (g_render_transition) delete g_render_transition;
+    if (g_render_transition) {
+        delete g_render_transition;
+    }
     g_render_transition = NULL;
     if (g_render_effects) {
         char INI_FILE[MAX_PATH];
@@ -126,17 +134,25 @@ void Render_Quit() {
                 MAX_PATH - 1);
         INI_FILE[MAX_PATH - 1] = '\0';
         p += strlen(INI_FILE) - 1;
-        while (p >= INI_FILE && *p != '\\') p--;
+        while (p >= INI_FILE && *p != '\\') {
+            p--;
+        }
         strcpy(p, "\\plugins\\vis_avs.dat");
         g_render_effects->__SavePreset(INI_FILE);
     }
 
-    if (g_render_effects) delete g_render_effects;
+    if (g_render_effects) {
+        delete g_render_effects;
+    }
     g_render_effects = NULL;
-    if (g_render_effects2) delete g_render_effects2;
+    if (g_render_effects2) {
+        delete g_render_effects2;
+    }
     g_render_effects2 = NULL;
 
-    if (g_render_library) delete g_render_library;
+    if (g_render_library) {
+        delete g_render_library;
+    }
     g_render_library = NULL;
 
     timingPrint();

@@ -20,10 +20,18 @@ int win32_dlgproc_bassspin(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
         }
             return 0;
         case WM_INITDIALOG:
-            if (g_this->enabled & 1) CheckDlgButton(hwndDlg, IDC_LEFT, BST_CHECKED);
-            if (g_this->enabled & 2) CheckDlgButton(hwndDlg, IDC_RIGHT, BST_CHECKED);
-            if (g_this->mode == 0) CheckDlgButton(hwndDlg, IDC_LINES, BST_CHECKED);
-            if (g_this->mode == 1) CheckDlgButton(hwndDlg, IDC_TRI, BST_CHECKED);
+            if (g_this->enabled & 1) {
+                CheckDlgButton(hwndDlg, IDC_LEFT, BST_CHECKED);
+            }
+            if (g_this->enabled & 2) {
+                CheckDlgButton(hwndDlg, IDC_RIGHT, BST_CHECKED);
+            }
+            if (g_this->mode == 0) {
+                CheckDlgButton(hwndDlg, IDC_LINES, BST_CHECKED);
+            }
+            if (g_this->mode == 1) {
+                CheckDlgButton(hwndDlg, IDC_TRI, BST_CHECKED);
+            }
 
             return 1;
         case WM_COMMAND:

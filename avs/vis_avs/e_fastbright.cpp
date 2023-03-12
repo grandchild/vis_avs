@@ -69,7 +69,9 @@ int E_FastBright::render(char[2][2][576],
                          int*,
                          int w,
                          int h) {
-    if (is_beat & 0x80000000) return 0;
+    if (is_beat & 0x80000000) {
+        return 0;
+    }
 #ifdef NO_MMX
     // the non mmx x2 version really isn't in any terms faster than normal brightness
     // with no exclusions turned on
@@ -79,7 +81,7 @@ int E_FastBright::render(char[2][2][576],
         unsigned int mask = 0x7F7F7F7F;
 
         x = w * h / 2;
-        if (this->config.multiply == FASTBRIGHT_MULTIPLY_DOUBLE)
+        if (this->config.multiply == FASTBRIGHT_MULTIPLY_DOUBLE) {
             while (x--) {
                 unsigned int v1 = t[0];
                 unsigned int v2 = t[1];
@@ -91,7 +93,7 @@ int E_FastBright::render(char[2][2][576],
                 t[1] = v2;
                 t += 2;
             }
-        else if (this->config.multiply == FASTBRIGHT_MULTIPLY_HALF)
+        } else if (this->config.multiply == FASTBRIGHT_MULTIPLY_HALF) {
             while (x--) {
                 unsigned int v1 = t[0] >> 1;
                 unsigned int v2 = t[1] >> 1;
@@ -99,6 +101,7 @@ int E_FastBright::render(char[2][2][576],
                 t[1] = v2 & mask;
                 t += 2;
             }
+        }
     }
 #else
     int mask[2] = {

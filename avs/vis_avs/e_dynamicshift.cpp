@@ -92,8 +92,12 @@ int E_DynamicShift::render(char visdata[2][2][576],
     int ialpha = 127;
     if (doblend) {
         ialpha = (int)(*this->vars.alpha * 255.0);
-        if (ialpha <= 0) return 0;
-        if (ialpha >= 255) doblend = 0;
+        if (ialpha <= 0) {
+            return 0;
+        }
+        if (ialpha >= 255) {
+            doblend = 0;
+        }
     }
     int* inptr = framebuffer;
     int* blendptr = framebuffer;
@@ -105,11 +109,21 @@ int E_DynamicShift::render(char visdata[2][2][576],
         int endy = h + ya;
         int endx = w + xa;
         int x, y;
-        if (endx > w) endx = w;
-        if (endy > h) endy = h;
-        if (ya < 0) inptr += -ya * w;
-        if (ya > h) ya = h;
-        if (xa > w) xa = w;
+        if (endx > w) {
+            endx = w;
+        }
+        if (endy > h) {
+            endy = h;
+        }
+        if (ya < 0) {
+            inptr += -ya * w;
+        }
+        if (ya > h) {
+            ya = h;
+        }
+        if (xa > w) {
+            xa = w;
+        }
         for (y = 0; y < ya; y++) {
             x = w;
             if (!doblend) {
@@ -124,7 +138,9 @@ int E_DynamicShift::render(char visdata[2][2][576],
         }
         for (; y < endy; y++) {
             int* ip = inptr;
-            if (xa < 0) inptr += -xa;
+            if (xa < 0) {
+                inptr += -xa;
+            }
             if (!doblend) {
                 for (x = 0; x < xa; x++) {
                     *outptr++ = 0;
@@ -151,9 +167,13 @@ int E_DynamicShift::render(char visdata[2][2][576],
         for (; y < h; y++) {
             x = w;
             if (!doblend) {
-                while (x--) *outptr++ = 0;
+                while (x--) {
+                    *outptr++ = 0;
+                }
             } else {
-                while (x--) *outptr++ = BLEND_ADJ(0, *blendptr++, ialpha);
+                while (x--) {
+                    *outptr++ = BLEND_ADJ(0, *blendptr++, ialpha);
+                }
             }
         }
     } else {  // bilinear filtering version
@@ -222,9 +242,13 @@ int E_DynamicShift::render(char visdata[2][2][576],
         for (y = 0; y < ya; y++) {
             x = w;
             if (!doblend) {
-                while (x--) *outptr++ = 0;
+                while (x--) {
+                    *outptr++ = 0;
+                }
             } else {
-                while (x--) *outptr++ = BLEND_ADJ(0, *blendptr++, ialpha);
+                while (x--) {
+                    *outptr++ = BLEND_ADJ(0, *blendptr++, ialpha);
+                }
             }
         }
         for (; y < endy; y++) {

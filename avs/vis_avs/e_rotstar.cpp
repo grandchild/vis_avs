@@ -59,8 +59,12 @@ int E_RotStar::render(char visdata[2][2][576],
     int x, y, c;
     int current_color;
 
-    if (isBeat & 0x80000000) return 0;
-    if (this->config.colors.empty()) return 0;
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
+    if (this->config.colors.empty()) {
+        return 0;
+    }
 
     color_pos++;
     if (color_pos >= this->config.colors.size() * 64) {
@@ -93,10 +97,12 @@ int E_RotStar::render(char visdata[2][2][576],
         a = x;
         b = y;
 
-        for (l = 3; l < 14; l++)
+        for (l = 3; l < 14; l++) {
             if (visdata[0][c][l] > s && visdata[0][c][l] > visdata[0][c][l + 1] + 4
-                && visdata[0][c][l] > visdata[0][c][l - 1] + 4)
+                && visdata[0][c][l] > visdata[0][c][l - 1] + 4) {
                 s = visdata[0][c][l];
+            }
+        }
 
         if (c == 1) {
             a = -a;

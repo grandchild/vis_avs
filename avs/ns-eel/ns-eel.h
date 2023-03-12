@@ -78,19 +78,19 @@ void NSEEL_unset_compile_hooks();
 
 // configuration:
 
-//#define NSEEL_REENTRANT_EXECUTION
+// #define NSEEL_REENTRANT_EXECUTION
 // defining this allows code to run in different threads at the same time
 // this can be slower at times.
 
-//#define NSEEL_MAX_VARIABLE_NAMELEN 8
+// #define NSEEL_MAX_VARIABLE_NAMELEN 8
 // define this to override the max variable length (default is 8 bytes)
 
-//#define NSEEL_MAX_TEMPSPACE_ENTRIES 2048
+// #define NSEEL_MAX_TEMPSPACE_ENTRIES 2048
 // define this to override the maximum working space in 8 byte units.
 // 2048 is the default, and is way more than enough for most applications
 
-//#define NSEEL_LOOPFUNC_SUPPORT
-//#define NSEEL_LOOPFUNC_SUPPORT_MAXLEN (4096)
+// #define NSEEL_LOOPFUNC_SUPPORT
+// #define NSEEL_LOOPFUNC_SUPPORT_MAXLEN (4096)
 // define this for loop() support
 // and define maxlen if you wish to override the maximum loop length (default is 4096
 // times)

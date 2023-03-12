@@ -78,9 +78,15 @@ E_Brightness::E_Brightness() : need_tab_init(true) {}
 static inline int iabs(int v) { return (v < 0) ? -v : v; }
 
 static inline int in_range(int color, int ref, int distance) {
-    if (iabs((color & 0xFF) - (ref & 0xFF)) > distance) return 0;
-    if (iabs(((color)&0xFF00) - ((ref)&0xFF00)) > (distance << 8)) return 0;
-    if (iabs(((color)&0xFF0000) - ((ref)&0xFF0000)) > (distance << 16)) return 0;
+    if (iabs((color & 0xFF) - (ref & 0xFF)) > distance) {
+        return 0;
+    }
+    if (iabs(((color)&0xFF00) - ((ref)&0xFF00)) > (distance << 8)) {
+        return 0;
+    }
+    if (iabs(((color)&0xFF0000) - ((ref)&0xFF0000)) > (distance << 16)) {
+        return 0;
+    }
     return 1;
 }
 
@@ -91,7 +97,9 @@ int E_Brightness::render(char visdata[2][2][576],
                          int w,
                          int h) {
     smp_begin(1, visdata, is_beat, framebuffer, fbout, w, h);
-    if (is_beat & 0x80000000) return 0;
+    if (is_beat & 0x80000000) {
+        return 0;
+    }
 
     smp_render(0, 1, visdata, is_beat, framebuffer, fbout, w, h);
     return smp_finish(visdata, is_beat, framebuffer, fbout, w, h);
@@ -119,18 +127,32 @@ int E_Brightness::smp_begin(int max_threads,
                              * 65536.0);
         for (int n = 0; n < 256; n++) {
             this->red_tab[n] = (n * tab_red) & 0xffff0000;
-            if (this->red_tab[n] > 0xff0000) this->red_tab[n] = 0xff0000;
-            if (this->red_tab[n] < 0) this->red_tab[n] = 0;
+            if (this->red_tab[n] > 0xff0000) {
+                this->red_tab[n] = 0xff0000;
+            }
+            if (this->red_tab[n] < 0) {
+                this->red_tab[n] = 0;
+            }
             this->green_tab[n] = ((n * tab_green) >> 8) & 0xffff00;
-            if (this->green_tab[n] > 0xff00) this->green_tab[n] = 0xff00;
-            if (this->green_tab[n] < 0) this->green_tab[n] = 0;
+            if (this->green_tab[n] > 0xff00) {
+                this->green_tab[n] = 0xff00;
+            }
+            if (this->green_tab[n] < 0) {
+                this->green_tab[n] = 0;
+            }
             this->blue_tab[n] = ((n * tab_blue) >> 16) & 0xffff;
-            if (this->blue_tab[n] > 0xff) this->blue_tab[n] = 0xff;
-            if (this->blue_tab[n] < 0) this->blue_tab[n] = 0;
+            if (this->blue_tab[n] > 0xff) {
+                this->blue_tab[n] = 0xff;
+            }
+            if (this->blue_tab[n] < 0) {
+                this->blue_tab[n] = 0;
+            }
         }
         this->need_tab_init = false;
     }
-    if (is_beat & 0x80000000) return 0;
+    if (is_beat & 0x80000000) {
+        return 0;
+    }
 
     return max_threads;
 }

@@ -25,7 +25,9 @@ int win32_dlgproc_colorreduction(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
                 int a, b;
                 a = 8 - g_this->config.levels;
                 b = 0x100;
-                while (a--) b >>= 1;
+                while (a--) {
+                    b >>= 1;
+                }
                 wsprintf(buf, "%d", b);
                 SetDlgItemText(hwndDlg, IDC_LEVELTEXT, buf);
             }
@@ -44,7 +46,9 @@ int win32_dlgproc_colorreduction(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
             int a, b;
             a = 8 - levels;
             b = 0x100;
-            while (a--) b >>= 1;
+            while (a--) {
+                b >>= 1;
+            }
             wsprintf(buf, "%d", b);
             SetDlgItemText(hwndDlg, IDC_LEVELTEXT, buf);
             return 1;

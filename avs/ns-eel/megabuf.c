@@ -60,7 +60,9 @@ void megabuf_cleanup(NSEEL_VMCTX ctx) {
             double** blocks = (double**)c->userfunc_data[0];
             int x;
             for (x = 0; x < MEGABUF_BLOCKS; x++) {
-                if (blocks[x]) free(blocks[x]);
+                if (blocks[x]) {
+                    free(blocks[x]);
+                }
                 blocks[x] = 0;
             }
             free(blocks);
@@ -78,7 +80,9 @@ static double* megabuf(double*** blocks, double which) {
     if (!*blocks) {
         *blocks = (double**)calloc(MEGABUF_BLOCKS, sizeof(double*));
     }
-    if (!*blocks) return &error;
+    if (!*blocks) {
+        return &error;
+    }
 
     if (w >= 0 && whichblock >= 0 && whichblock < MEGABUF_BLOCKS) {
         int whichentry = w % MEGABUF_ITEMSPERBLOCK;
@@ -86,7 +90,9 @@ static double* megabuf(double*** blocks, double which) {
             (*blocks)[whichblock] =
                 (double*)calloc(MEGABUF_ITEMSPERBLOCK, sizeof(double));
         }
-        if ((*blocks)[whichblock]) return &(*blocks)[whichblock][whichentry];
+        if ((*blocks)[whichblock]) {
+            return &(*blocks)[whichblock][whichentry];
+        }
     }
 
     return &error;

@@ -56,8 +56,9 @@ void C_THISCLASS::load_config(unsigned char* data, int len) {
     if (len - pos >= 4) {
         color_clip_out = GET_INT();
         pos += 4;
-    } else
+    } else {
         color_clip_out = color_clip;
+    }
     if (len - pos >= 4) {
         color_dist = GET_INT();
         pos += 4;
@@ -91,8 +92,12 @@ int C_THISCLASS::render(char[2][2][576],
                         int*,
                         int w,
                         int h) {
-    if (!enabled) return 0;
-    if (isBeat & 0x80000000) return 0;
+    if (!enabled) {
+        return 0;
+    }
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
 
     int* f = framebuffer;
     int fs_r, fs_g, fs_b;
@@ -105,21 +110,23 @@ int C_THISCLASS::render(char[2][2][576],
     fs_g = (color_clip & 0xff00);
     fs_r = (color_clip & 0xff);
 
-    if (enabled == 1)
+    if (enabled == 1) {
         while (x--) {
             int a = f[0];
-            if ((a & 0xff) <= fs_r && (a & 0xff00) <= fs_g && (a & 0xff0000) <= fs_b)
+            if ((a & 0xff) <= fs_r && (a & 0xff00) <= fs_g && (a & 0xff0000) <= fs_b) {
                 f[0] = (a & 0xff000000) | color_clip_out;
+            }
             f++;
         }
-    else if (enabled == 2)
+    } else if (enabled == 2) {
         while (x--) {
             int a = f[0];
-            if ((a & 0xff) >= fs_r && (a & 0xff00) >= fs_g && (a & 0xff0000) >= fs_b)
+            if ((a & 0xff) >= fs_r && (a & 0xff00) >= fs_g && (a & 0xff0000) >= fs_b) {
                 f[0] = (a & 0xff000000) | color_clip_out;
+            }
             f++;
         }
-    else {
+    } else {
         fs_b >>= 16;
         fs_g >>= 8;
         while (x--) {
@@ -130,7 +137,9 @@ int C_THISCLASS::render(char[2][2][576],
             r -= fs_r;
             g -= fs_g;
             b -= fs_b;
-            if (r * r + g * g + b * b <= l) f[0] = (a & 0xff000000) | color_clip_out;
+            if (r * r + g * g + b * b <= l) {
+                f[0] = (a & 0xff000000) | color_clip_out;
+            }
             f++;
         }
     }

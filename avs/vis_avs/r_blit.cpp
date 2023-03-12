@@ -74,8 +74,9 @@ void C_THISCLASS::load_config(unsigned char* data, int len) {
     if (len - pos >= 4) {
         subpixel = GET_INT();
         pos += 4;
-    } else
+    } else {
         subpixel = 0;
+    }
 
     fpos = scale;
 }
@@ -111,7 +112,9 @@ int C_THISCLASS::blitter_out(int* framebuffer, int* fbout, int w, int h, int f_v
     int x_len = ((w << 16) / ds_x) & ~3;
     int y_len = (h << 16) / ds_x;
 
-    if (x_len >= w || y_len >= h) return 0;
+    if (x_len >= w || y_len >= h) {
+        return 0;
+    }
 
     int start_x = (w - x_len) / 2;
     int start_y = (h - y_len) / 2;
@@ -527,7 +530,9 @@ int C_THISCLASS::render(char[2][2][576],
                         int* fbout,
                         int w,
                         int h) {
-    if (isBeat & 0x80000000) return 0;
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
     int f_val;
 
     if (isBeat && beatch) {
@@ -542,10 +547,16 @@ int C_THISCLASS::render(char[2][2][576],
         fpos += 3;
     }
 
-    if (f_val < 0) f_val = 0;
+    if (f_val < 0) {
+        f_val = 0;
+    }
 
-    if (f_val < 32) return blitter_normal(framebuffer, fbout, w, h, f_val);
-    if (f_val > 32) return blitter_out(framebuffer, fbout, w, h, f_val);
+    if (f_val < 32) {
+        return blitter_normal(framebuffer, fbout, w, h, f_val);
+    }
+    if (f_val > 32) {
+        return blitter_out(framebuffer, fbout, w, h, f_val);
+    }
     return 0;
 }
 

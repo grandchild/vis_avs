@@ -17,11 +17,18 @@ int win32_dlgproc_custombpm(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
             g_ConfigThis->outInc = 1;
             g_ConfigThis->inSlide = 0;
             g_ConfigThis->outSlide = 0;
-            if (g_ConfigThis->enabled) CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
-            if (g_ConfigThis->arbitrary)
+            if (g_ConfigThis->enabled) {
+                CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
+            }
+            if (g_ConfigThis->arbitrary) {
                 CheckDlgButton(hwndDlg, IDC_ARBITRARY, BST_CHECKED);
-            if (g_ConfigThis->skip) CheckDlgButton(hwndDlg, IDC_SKIP, BST_CHECKED);
-            if (g_ConfigThis->invert) CheckDlgButton(hwndDlg, IDC_INVERT, BST_CHECKED);
+            }
+            if (g_ConfigThis->skip) {
+                CheckDlgButton(hwndDlg, IDC_SKIP, BST_CHECKED);
+            }
+            if (g_ConfigThis->invert) {
+                CheckDlgButton(hwndDlg, IDC_INVERT, BST_CHECKED);
+            }
             SendDlgItemMessage(hwndDlg, IDC_ARBVAL, TBM_SETTICFREQ, 100, 0);
             SendDlgItemMessage(hwndDlg, IDC_SKIPVAL, TBM_SETTICFREQ, 1, 0);
             SendDlgItemMessage(
@@ -71,15 +78,18 @@ int win32_dlgproc_custombpm(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
             return 0;
         case WM_NOTIFY: {
             char txt[40];
-            if (LOWORD(wParam) == IDC_ARBVAL)
+            if (LOWORD(wParam) == IDC_ARBVAL) {
                 g_ConfigThis->arbVal =
                     SendDlgItemMessage(hwndDlg, IDC_ARBVAL, TBM_GETPOS, 0, 0);
-            if (LOWORD(wParam) == IDC_SKIPVAL)
+            }
+            if (LOWORD(wParam) == IDC_SKIPVAL) {
                 g_ConfigThis->skipVal =
                     SendDlgItemMessage(hwndDlg, IDC_SKIPVAL, TBM_GETPOS, 0, 0);
-            if (LOWORD(wParam) == IDC_SKIPFIRST)
+            }
+            if (LOWORD(wParam) == IDC_SKIPFIRST) {
                 g_ConfigThis->skipfirst =
                     SendDlgItemMessage(hwndDlg, IDC_SKIPFIRST, TBM_GETPOS, 0, 0);
+            }
             wsprintf(txt, "%d bpm", 60000 / g_ConfigThis->arbVal);
             SetDlgItemText(hwndDlg, IDC_ARBTXT, txt);
             wsprintf(txt,

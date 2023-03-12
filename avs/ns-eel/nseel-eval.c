@@ -81,7 +81,9 @@ static int register_var(compileContext* ctx, char* name, double** ptr) {
             namepos += NSEEL_MAX_VARIABLE_NAMELEN;
             i++;
         }
-        if (ti < NSEEL_VARS_PER_BLOCK) break;
+        if (ti < NSEEL_VARS_PER_BLOCK) {
+            break;
+        }
     }
     if (wb == ctx->varTable_numBlocks) {
         ti = 0;
@@ -109,7 +111,9 @@ static int register_var(compileContext* ctx, char* name, double** ptr) {
     if (!nameptr[0]) {
         strncpy(nameptr, name, NSEEL_MAX_VARIABLE_NAMELEN);
     }
-    if (ptr) *ptr = ctx->varTable_Values[wb] + ti;
+    if (ptr) {
+        *ptr = ctx->varTable_Values[wb] + ti;
+    }
     return i;
 }
 
@@ -121,7 +125,9 @@ int nseel_setVar(compileContext* ctx, int varNum) {
         if (!strnicmp(var, "reg", 3) && strlen(var) == 5 && isdigit(var[3])
             && isdigit(var[4])) {
             int i, x = atoi(var + 3);
-            if (x < 0 || x > 99) x = 0;
+            if (x < 0 || x > 99) {
+                x = 0;
+            }
             i = NSEEL_GLOBALVAR_BASE + x;
             return i;
         }
@@ -138,8 +144,9 @@ int nseel_setVar(compileContext* ctx, int varNum) {
     {
         int wb, ti;
         char* nameptr;
-        if (varNum < 0 || varNum >= ctx->varTable_numBlocks * NSEEL_VARS_PER_BLOCK)
+        if (varNum < 0 || varNum >= ctx->varTable_numBlocks * NSEEL_VARS_PER_BLOCK) {
             return -1;
+        }
 
         wb = varNum / NSEEL_VARS_PER_BLOCK;
         ti = (varNum % NSEEL_VARS_PER_BLOCK);
@@ -153,14 +160,16 @@ int nseel_setVar(compileContext* ctx, int varNum) {
 
 //------------------------------------------------------------------------------
 int nseel_getVar(compileContext* ctx, int i) {
-    if (i >= 0 && i < (NSEEL_VARS_PER_BLOCK * ctx->varTable_numBlocks))
+    if (i >= 0 && i < (NSEEL_VARS_PER_BLOCK * ctx->varTable_numBlocks)) {
         return nseel_createCompiledValue(
             ctx,
             0,
             ctx->varTable_Values[i / NSEEL_VARS_PER_BLOCK] + i % NSEEL_VARS_PER_BLOCK);
-    if (i >= NSEEL_GLOBALVAR_BASE && i < NSEEL_GLOBALVAR_BASE + 100)
+    }
+    if (i >= NSEEL_GLOBALVAR_BASE && i < NSEEL_GLOBALVAR_BASE + 100) {
         return nseel_createCompiledValue(
             ctx, 0, nseel_globalregs + i - NSEEL_GLOBALVAR_BASE);
+    }
 
     return nseel_createCompiledValue(ctx, 0, NULL);
 }
@@ -169,12 +178,16 @@ int nseel_getVar(compileContext* ctx, int i) {
 double* NSEEL_VM_regvar(NSEEL_VMCTX _ctx, char* var) {
     compileContext* ctx = (compileContext*)_ctx;
     double* r;
-    if (!ctx) return 0;
+    if (!ctx) {
+        return 0;
+    }
 
     if (!strnicmp(var, "reg", 3) && strlen(var) == 5 && isdigit(var[3])
         && isdigit(var[4])) {
         int x = atoi(var + 3);
-        if (x < 0 || x > 99) x = 0;
+        if (x < 0 || x > 99) {
+            x = 0;
+        }
         return nseel_globalregs + x;
     }
 
@@ -200,14 +213,15 @@ int nseel_translate(compileContext* ctx, int type) {
             n = 0;
             while (1) {
                 int a = ctx->yytext[n++];
-                if (a >= '0' && a <= '9')
+                if (a >= '0' && a <= '9') {
                     v += a - '0';
-                else if (a >= 'A' && a <= 'F')
+                } else if (a >= 'A' && a <= 'F') {
                     v += 10 + a - 'A';
-                else if (a >= 'a' && a <= 'f')
+                } else if (a >= 'a' && a <= 'f') {
                     v += 10 + a - 'a';
-                else
+                } else {
                     break;
+                }
                 v <<= 4;
             }
             return nseel_createCompiledValue(ctx, (double)v, NULL);
@@ -234,7 +248,9 @@ int nseel_lookup(compileContext* ctx, int* typeOfObject) {
         for (wb = 0; wb < ctx->varTable_numBlocks; wb++) {
             int namepos = 0;
             for (ti = 0; ti < NSEEL_VARS_PER_BLOCK; ti++) {
-                if (!ctx->varTable_Names[wb][namepos]) break;
+                if (!ctx->varTable_Names[wb][namepos]) {
+                    break;
+                }
 
                 if (!strnicmp(ctx->varTable_Names[wb] + namepos,
                               ctx->yytext,
@@ -246,7 +262,9 @@ int nseel_lookup(compileContext* ctx, int* typeOfObject) {
                 namepos += NSEEL_MAX_VARIABLE_NAMELEN;
                 i++;
             }
-            if (ti < NSEEL_VARS_PER_BLOCK) break;
+            if (ti < NSEEL_VARS_PER_BLOCK) {
+                break;
+            }
         }
     }
 

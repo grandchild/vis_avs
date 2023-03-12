@@ -54,8 +54,12 @@ int E_Simple::render(char visdata[2][2][576],
                      int*,
                      int w,
                      int h) {
-    if (isBeat & 0x80000000) return 0;
-    if (this->config.colors.empty()) return 0;
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
+    if (this->config.colors.empty()) {
+        return 0;
+    }
     int x;
     float yscale = (float)h / 2.0f / 256.0f;
     float xscale = 288.0f / w;
@@ -112,14 +116,18 @@ int E_Simple::render(char visdata[2][2][576],
     if (this->config.draw_mode == DRAW_DOTS) {
         if (this->config.audio_source == AUDIO_WAVEFORM) {
             int yh = y_pos * h / 2;
-            if (y_pos == 2) yh = h / 4;
+            if (y_pos == 2) {
+                yh = h / 4;
+            }
             for (x = 0; x < w; x++) {
                 float r = x * xscale;
                 float s1 = r - (int)r;
                 float yr = (fa_data[(int)r] ^ 128) * (1.0f - s1)
                            + (fa_data[(int)r + 1] ^ 128) * (s1);
                 int y = yh + (int)(yr * yscale);
-                if (y >= 0 && y < h) framebuffer[x + y * w] = current_color;
+                if (y >= 0 && y < h) {
+                    framebuffer[x + y * w] = current_color;
+                }
             }
         } else { /*dot analyzer*/
             int h2 = h / 2;
@@ -138,7 +146,9 @@ int E_Simple::render(char visdata[2][2][576],
                 float s1 = r - (int)r;
                 float yr = fa_data[(int)r] * (1.0f - s1) + fa_data[(int)r + 1] * (s1);
                 int y = h2 + adj + (int)(yr * ys - 1.0f);
-                if (y >= 0 && y < h) framebuffer[x + w * y] = current_color;
+                if (y >= 0 && y < h) {
+                    framebuffer[x + w * y] = current_color;
+                }
             }
         }
     } else if (this->config.draw_mode == DRAW_LINES) {
@@ -146,10 +156,11 @@ int E_Simple::render(char visdata[2][2][576],
             float xs = 1.0f / xscale;
             int lx, ly, ox, oy;
             int yh;
-            if (y_pos == 2)
+            if (y_pos == 2) {
                 yh = h / 4;
-            else
+            } else {
                 yh = y_pos * h / 2;
+            }
             lx = 0;
             ly = yh + (int)((int)(fa_data[0] ^ 128) * yscale);
             ;
@@ -176,7 +187,9 @@ int E_Simple::render(char visdata[2][2][576],
             if (y_pos != 1) {
                 ys = -ys;
             }
-            if (y_pos == 2) h2 -= (int)(ys * 256 / 2);
+            if (y_pos == 2) {
+                h2 -= (int)(ys * 256 / 2);
+            }
             ly = h2 + (int)((fa_data[0]) * ys);
             lx = 0;
             for (x = 1; x < 200; x++) {
@@ -198,7 +211,9 @@ int E_Simple::render(char visdata[2][2][576],
     } else { /*solid*/
         if (this->config.audio_source == AUDIO_WAVEFORM) {
             int yh = y_pos * h / 2;
-            if (y_pos == 2) yh = h / 4;
+            if (y_pos == 2) {
+                yh = h / 4;
+            }
             int ys = yh + (int)(yscale * 128.0f);
             for (x = 0; x < w; x++) {
                 float r = x * xscale;

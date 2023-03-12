@@ -51,7 +51,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
 
 char* C_RenderListClass::get_desc() {
-    if (isroot) return "Main";
+    if (isroot) {
+        return "Main";
+    }
     return "Effect list";
 }
 
@@ -125,16 +127,22 @@ void C_RenderListClass::load_config(unsigned char* data, int len) {
         int effect_index = GET_INT();
         pos += 4;
         if (effect_index >= DLLRENDERBASE) {
-            if (pos + 32 > len) break;
+            if (pos + 32 > len) {
+                break;
+            }
             memcpy(s, data + pos, 32);
             s[32] = 0;
             effect_index = (int)s;
             pos += 32;
         }
-        if (pos + 4 > len) break;
+        if (pos + 4 > len) {
+            break;
+        }
         l_len = GET_INT();
         pos += 4;
-        if (pos + l_len > len || l_len < 0) break;
+        if (pos + l_len > len || l_len < 0) {
+            break;
+        }
 
         // special case for new 2.81+ codable effect list. saved as an effect, but
         // loaded into this very EL right here.
@@ -191,8 +199,9 @@ int C_RenderListClass::save_config_ex(unsigned char* data, int rootsave) {
         PUT_INT(beat_render_frames);
         pos += 4;
         // end extended data
-    } else
+    } else {
         data[pos++] = mode;
+    }
 
     if (!rootsave) {
         // write in our ext field
@@ -282,8 +291,12 @@ extern int g_n_buffers_w[NBUF], g_n_buffers_h[NBUF];
 extern void* g_n_buffers[NBUF];
 
 void C_RenderListClass::set_n_Context() {
-    if (!isroot) return;
-    if (nsaved) return;
+    if (!isroot) {
+        return;
+    }
+    if (nsaved) {
+        return;
+    }
     nsaved = 1;
     memcpy(nbw_save2, g_n_buffers_w, sizeof(nbw_save2));
     memcpy(nbh_save2, g_n_buffers_h, sizeof(nbh_save2));
@@ -295,8 +308,12 @@ void C_RenderListClass::set_n_Context() {
 }
 
 void C_RenderListClass::unset_n_Context() {
-    if (!isroot) return;
-    if (!nsaved) return;
+    if (!isroot) {
+        return;
+    }
+    if (!nsaved) {
+        return;
+    }
     nsaved = 0;
 
     memcpy(nbw_save, g_n_buffers_w, sizeof(nbw_save));
@@ -310,7 +327,9 @@ void C_RenderListClass::unset_n_Context() {
 
 void C_RenderListClass::smp_cleanupthreads() {
     if (smp_parms.threadTop > 0) {
-        if (smp_parms.hQuitHandle) signal_set(smp_parms.hQuitHandle);
+        if (smp_parms.hQuitHandle) {
+            signal_set(smp_parms.hQuitHandle);
+        }
 
         thread_join_all(smp_parms.hThreads, smp_parms.threadTop, WAIT_INFINITE);
         int x;
@@ -321,7 +340,9 @@ void C_RenderListClass::smp_cleanupthreads() {
         }
     }
 
-    if (smp_parms.hQuitHandle) signal_destroy(smp_parms.hQuitHandle);
+    if (smp_parms.hQuitHandle) {
+        signal_destroy(smp_parms.hQuitHandle);
+    }
 
     memset(&smp_parms, 0, sizeof(smp_parms));
 }
@@ -330,7 +351,9 @@ void C_RenderListClass::freeBuffers() {
     if (isroot) {
         int x;
         for (x = 0; x < NBUF; x++) {
-            if (nb_save[x]) free(nb_save[x]);
+            if (nb_save[x]) {
+                free(nb_save[x]);
+            }
             nb_save[x] = NULL;
             nbw_save[x] = nbh_save[x] = 0;
         }
@@ -365,7 +388,9 @@ int C_RenderListClass::render(char visdata[2][2][576],
                               int h) {
     int is_preinit = (isBeat & 0x80000000);
 
-    if (isBeat && beat_render) fake_enabled = beat_render_frames;
+    if (isBeat && beat_render) {
+        fake_enabled = beat_render_frames;
+    }
 
     int use_enabled = enabled();
     int use_inblendval = inblendval;
@@ -415,15 +440,17 @@ int C_RenderListClass::render(char visdata[2][2][576],
             isBeat = *var_beat > 0.1 || *var_beat < -0.1;
         }
         use_inblendval = (int)(*var_alphain * 255.0);
-        if (use_inblendval < 0)
+        if (use_inblendval < 0) {
             use_inblendval = 0;
-        else if (use_inblendval > 255)
+        } else if (use_inblendval > 255) {
             use_inblendval = 255;
+        }
         use_outblendval = (int)(*var_alphaout * 255.0);
-        if (use_outblendval < 0)
+        if (use_outblendval < 0) {
             use_outblendval = 0;
-        else if (use_outblendval > 255)
+        } else if (use_outblendval > 255) {
             use_outblendval = 255;
+        }
 
         use_enabled = *var_enabled > 0.1 || *var_enabled < -0.1;
         use_clear = *var_clear > 0.1 || *var_clear < -0.1;
@@ -435,10 +462,13 @@ int C_RenderListClass::render(char visdata[2][2][576],
     if (isroot || (use_enabled && blendin() == 1 && blendout() == 1)) {
         int s = 0, x;
         int line_blend_mode_save = g_line_blend_mode;
-        if (thisfb) free(thisfb);
+        if (thisfb) {
+            free(thisfb);
+        }
         thisfb = NULL;
-        if (use_clear && (isroot || blendin() != 1))
+        if (use_clear && (isroot || blendin() != 1)) {
             memset(framebuffer, 0, w * h * sizeof(int));
+        }
         if (!is_preinit) {
             g_line_blend_mode = 0;
             set_n_Context();
@@ -451,8 +481,9 @@ int C_RenderListClass::render(char visdata[2][2][576],
             if (g_config_smp && render.can_multithread() && g_config_smp_mt > 1) {
                 smp_max_threads = g_config_smp;
                 render = renders[x].effect;
-                if (smp_max_threads > MAX_SMP_THREADS)
+                if (smp_max_threads > MAX_SMP_THREADS) {
                     smp_max_threads = MAX_SMP_THREADS;
+                }
 
                 int nt = smp_max_threads;
                 nt = render.smp_begin(nt,
@@ -463,7 +494,9 @@ int C_RenderListClass::render(char visdata[2][2][576],
                                       w,
                                       h);
                 if (!is_preinit && nt > 0) {
-                    if (nt > smp_max_threads) nt = smp_max_threads;
+                    if (nt > smp_max_threads) {
+                        nt = smp_max_threads;
+                    }
 
                     // launch threads
                     smp_Render(nt,
@@ -505,10 +538,16 @@ int C_RenderListClass::render(char visdata[2][2][576],
                 }
             }
 
-            if (t & 1) s ^= 1;
+            if (t & 1) {
+                s ^= 1;
+            }
             if (!is_preinit) {
-                if (t & 0x10000000) isBeat = 1;
-                if (t & 0x20000000) isBeat = 0;
+                if (t & 0x10000000) {
+                    isBeat = 1;
+                }
+                if (t & 0x20000000) {
+                    isBeat = 0;
+                }
             }
         }
         if (!is_preinit) {
@@ -521,7 +560,9 @@ int C_RenderListClass::render(char visdata[2][2][576],
 
     // check to see if we're enabled
     if (!use_enabled) {
-        if (thisfb) free(thisfb);
+        if (thisfb) {
+            free(thisfb);
+        }
         thisfb = NULL;
         return 0;
     }
@@ -558,11 +599,15 @@ int C_RenderListClass::render(char visdata[2][2][576],
         // TODO [bug]: What happens here if newfb alloc failed?
         l_w = w;
         l_h = h;
-        if (thisfb) free(thisfb);
+        if (thisfb) {
+            free(thisfb);
+        }
         thisfb = newfb;
     }
     // handle clear mode
-    if (use_clear) memset(thisfb, 0, w * h * sizeof(int));
+    if (use_clear) {
+        memset(thisfb, 0, w * h * sizeof(int));
+    }
 
     // blend parent framebuffer into current, if necessary
 
@@ -572,7 +617,9 @@ int C_RenderListClass::render(char visdata[2][2][576],
         int* o = thisfb;
         set_n_Context();
         int use_blendin = blendin();
-        if (use_blendin == 10 && use_inblendval >= 255) use_blendin = 1;
+        if (use_blendin == 10 && use_inblendval >= 255) {
+            use_blendin = 1;
+        }
 
         switch (use_blendin) {
             case 1: memcpy(o, tfb, w * h * sizeof(int)); break;
@@ -638,7 +685,9 @@ int C_RenderListClass::render(char visdata[2][2][576],
                 break;
             case 12: {
                 int* buf = (int*)getGlobalBuffer(w, h, bufferin, 0);
-                if (!buf) break;
+                if (!buf) {
+                    break;
+                }
                 while (x--) {
                     *o = BLEND_ADJ(*tfb++, *o, depthof(*buf, ininvert));
                     o++;
@@ -661,7 +710,9 @@ int C_RenderListClass::render(char visdata[2][2][576],
     int s = 0;
     int x;
     int line_blend_mode_save = g_line_blend_mode;
-    if (!is_preinit) g_line_blend_mode = 0;
+    if (!is_preinit) {
+        g_line_blend_mode = 0;
+    }
 
     for (x = 0; x < num_renders; x++) {
         int t = 0;
@@ -671,7 +722,9 @@ int C_RenderListClass::render(char visdata[2][2][576],
 
         if (g_config_smp && render.can_multithread() && g_config_smp_mt > 1) {
             smp_max_threads = g_config_smp_mt;
-            if (smp_max_threads > MAX_SMP_THREADS) smp_max_threads = MAX_SMP_THREADS;
+            if (smp_max_threads > MAX_SMP_THREADS) {
+                smp_max_threads = MAX_SMP_THREADS;
+            }
 
             int nt = smp_max_threads;
             nt = render.smp_begin(nt,
@@ -682,7 +735,9 @@ int C_RenderListClass::render(char visdata[2][2][576],
                                   w,
                                   h);
             if (!is_preinit && nt > 0) {
-                if (nt > smp_max_threads) nt = smp_max_threads;
+                if (nt > smp_max_threads) {
+                    nt = smp_max_threads;
+                }
 
                 // launch threads
                 smp_Render(nt,
@@ -714,18 +769,28 @@ int C_RenderListClass::render(char visdata[2][2][576],
                 visdata, isBeat, s ? fbout : thisfb, s ? thisfb : fbout, w, h);
         }
 
-        if (t & 1) s ^= 1;
+        if (t & 1) {
+            s ^= 1;
+        }
         if (!is_preinit) {
-            if (t & 0x10000000) isBeat = 1;
-            if (t & 0x20000000) isBeat = 0;
+            if (t & 0x10000000) {
+                isBeat = 1;
+            }
+            if (t & 0x20000000) {
+                isBeat = 0;
+            }
         }
     }
-    if (!is_preinit) g_line_blend_mode = line_blend_mode_save;
+    if (!is_preinit) {
+        g_line_blend_mode = line_blend_mode_save;
+    }
 
     // if s==1 at this point, data we want is in fbout.
 
     if (!is_preinit) {
-        if (s) memcpy(thisfb, fbout, w * h * sizeof(int));
+        if (s) {
+            memcpy(thisfb, fbout, w * h * sizeof(int));
+        }
 
         int* tfb = s ? fbout : thisfb;
         int* o = framebuffer;
@@ -733,7 +798,9 @@ int C_RenderListClass::render(char visdata[2][2][576],
         set_n_Context();
 
         int use_blendout = blendout();
-        if (use_blendout == 10 && use_outblendval >= 255) use_blendout = 1;
+        if (use_blendout == 10 && use_outblendval >= 255) {
+            use_blendout = 1;
+        }
         switch (use_blendout) {
             case 1:
                 if (s) {
@@ -804,7 +871,9 @@ int C_RenderListClass::render(char visdata[2][2][576],
                 break;
             case 12: {
                 int* buf = (int*)getGlobalBuffer(w, h, bufferout, 0);
-                if (!buf) break;
+                if (!buf) {
+                    break;
+                }
                 while (x--) {
                     *o = BLEND_ADJ(*tfb++, *o, depthof(*buf, outinvert));
                     o++;
@@ -828,24 +897,34 @@ int C_RenderListClass::render(char visdata[2][2][576],
 int C_RenderListClass::getNumRenders(void) { return num_renders; }
 
 C_RenderListClass::T_RenderListType* C_RenderListClass::getRender(int index) {
-    if (index >= 0 && index < num_renders) return &renders[index];
+    if (index >= 0 && index < num_renders) {
+        return &renders[index];
+    }
     return NULL;
 }
 
 int C_RenderListClass::findRender(T_RenderListType* r) {
     int idx;
-    if (!r) return -1;
-    for (idx = 0; idx < num_renders && renders[idx].effect != r->effect; idx++)
+    if (!r) {
+        return -1;
+    }
+    for (idx = 0; idx < num_renders && renders[idx].effect != r->effect; idx++) {
         ;
-    if (idx < num_renders) return idx;
+    }
+    if (idx < num_renders) {
+        return idx;
+    }
     return -1;
 }
 
 int C_RenderListClass::removeRenderFrom(T_RenderListType* r, int del) {
     int idx;
-    if (!r) return 1;
-    for (idx = 0; idx < num_renders && renders[idx].effect != r->effect; idx++)
+    if (!r) {
+        return 1;
+    }
+    for (idx = 0; idx < num_renders && renders[idx].effect != r->effect; idx++) {
         ;
+    }
     return removeRender(idx, del);
 }
 
@@ -862,7 +941,9 @@ int C_RenderListClass::removeRender(int index, int del) {
         }
         if (!num_renders) {
             num_renders_alloc = 0;
-            if (renders) free(renders);
+            if (renders) {
+                free(renders);
+            }
             renders = NULL;
         }
         return 0;
@@ -881,18 +962,23 @@ void C_RenderListClass::clearRenders(void) {
     num_renders = 0;
     num_renders_alloc = 0;
     renders = NULL;
-    if (thisfb) free(thisfb);
+    if (thisfb) {
+        free(thisfb);
+    }
     thisfb = 0;
 }
 
 int C_RenderListClass::insertRenderBefore(T_RenderListType* r,
                                           T_RenderListType* before) {
     int idx;
-    if (!before)
+    if (!before) {
         idx = num_renders;
-    else
-        for (idx = 0; idx < num_renders && renders[idx].effect != before->effect; idx++)
+    } else {
+        for (idx = 0; idx < num_renders && renders[idx].effect != before->effect;
+             idx++) {
             ;
+        }
+    }
     return insertRender(r, idx);
 }
 
@@ -902,7 +988,9 @@ int C_RenderListClass::insertRender(T_RenderListType* r, int index)  // index=-1
         num_renders_alloc = num_renders + 16;
         T_RenderListType* newr =
             (T_RenderListType*)calloc(num_renders_alloc, sizeof(T_RenderListType));
-        if (!newr) return -1;
+        if (!newr) {
+            return -1;
+        }
         if (num_renders && renders) {
             memcpy(newr, renders, num_renders * sizeof(T_RenderListType));
         }
@@ -942,10 +1030,12 @@ int C_RenderListClass::__SavePreset(char* filename) {
                 success = 0;
                 fwrite(data, 1, pos, fp);
                 fclose(fp);
-            } else
+            } else {
                 success = 2;
-        } else
+            }
+        } else {
             success = 1;
+        }
         free(data);
     }
     lock_unlock(g_render_cs);
@@ -956,7 +1046,9 @@ int C_RenderListClass::__LoadPreset(char* filename, int clear) {
     lock_lock(g_render_cs);
     unsigned char* data = (unsigned char*)calloc(1024 * 1024, 1);
     int success = 1;
-    if (clear) clearRenders();
+    if (clear) {
+        clearRenders();
+    }
     if (data) {
         FILE* fp = fopen(filename, "rb");
         if (fp != NULL) {
@@ -996,8 +1088,9 @@ int C_RenderListClass::__SavePresetToUndo(C_UndoItem& item) {
             item.set(data, pos, true);  // all undo items start dirty.
         }
 
-        else
+        else {
             success = 1;
+        }
         free(data);
     }
     lock_unlock(g_render_cs);
@@ -1008,12 +1101,16 @@ int C_RenderListClass::__LoadPresetFromUndo(C_UndoItem& item, int clear) {
     lock_lock(g_render_cs);
     unsigned char* data = (unsigned char*)calloc(1024 * 1024, 1);
     int success = 1;
-    if (clear) clearRenders();
+    if (clear) {
+        clearRenders();
+    }
     if (data) {
         if (item.size() < 1024 * 1024) {
             // Get the data from the undo object.
             unsigned int len = item.size();
-            if (len == 0xffffffff) len = 0;
+            if (len == 0xffffffff) {
+                len = 0;
+            }
             memcpy(data, item.get(), item.size());
 
             // And then do whatever the file loading stuff did.
@@ -1042,7 +1139,9 @@ void C_RenderListClass::smp_Render(int minthreads,
                                    int h) {
     int x;
     smp_parms.nthreads = minthreads;
-    if (!smp_parms.hQuitHandle) smp_parms.hQuitHandle = signal_create_broadcast();
+    if (!smp_parms.hQuitHandle) {
+        smp_parms.hQuitHandle = signal_create_broadcast();
+    }
 
     smp_parms.vis_data_ptr = visdata;
     smp_parms.isBeat = isBeat;
@@ -1060,8 +1159,9 @@ void C_RenderListClass::smp_Render(int minthreads,
 
             smp_parms.hThreads[x] = thread_create(smp_threadProc, (void*)(x));
             smp_parms.threadTop = x + 1;
-        } else
+        } else {
             signal_set(smp_parms.hThreadSignalsStart[x]);
+        }
     }
     signal_wait_all(smp_parms.hThreadSignalsDone, smp_parms.nthreads, WAIT_INFINITE);
 }

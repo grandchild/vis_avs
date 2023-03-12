@@ -62,7 +62,9 @@ C_RenderTransitionClass::~C_RenderTransitionClass() {
         initThread = 0;
     }
     for (x = 0; x < 4; x++) {
-        if (fbs[x]) free(fbs[x]);
+        if (fbs[x]) {
+            free(fbs[x]);
+        }
         fbs[x] = NULL;
     }
 }
@@ -75,18 +77,19 @@ unsigned int WINAPI C_RenderTransitionClass::m_initThread(LPVOID p) {
     if (cfg_transitions2 & 32) {
         extern HANDLE g_hThread;
         int d = GetThreadPriority(g_hThread);
-        if (d == THREAD_PRIORITY_TIME_CRITICAL)
+        if (d == THREAD_PRIORITY_TIME_CRITICAL) {
             d = THREAD_PRIORITY_HIGHEST;
-        else if (d == THREAD_PRIORITY_HIGHEST)
+        } else if (d == THREAD_PRIORITY_HIGHEST) {
             d = THREAD_PRIORITY_ABOVE_NORMAL;
-        else if (d == THREAD_PRIORITY_ABOVE_NORMAL)
+        } else if (d == THREAD_PRIORITY_ABOVE_NORMAL) {
             d = THREAD_PRIORITY_NORMAL;
-        else if (d == THREAD_PRIORITY_NORMAL)
+        } else if (d == THREAD_PRIORITY_NORMAL) {
             d = THREAD_PRIORITY_BELOW_NORMAL;
-        else if (d == THREAD_PRIORITY_BELOW_NORMAL)
+        } else if (d == THREAD_PRIORITY_BELOW_NORMAL) {
             d = THREAD_PRIORITY_LOWEST;
-        else if (d == THREAD_PRIORITY_LOWEST)
+        } else if (d == THREAD_PRIORITY_LOWEST) {
             d = THREAD_PRIORITY_IDLE;
+        }
         SetThreadPriority(GetCurrentThread(), d);
     }
     int* fb = (int*)calloc(_this->l_w * _this->l_h, sizeof(int));
@@ -125,9 +128,9 @@ int C_RenderTransitionClass::LoadPreset(char* file, int which, C_UndoItem* item)
         _dotransitionflag = 2;
     } else {
         lstrcpyn(last_file, file, sizeof(last_file));
-        if (file[0])
+        if (file[0]) {
             r = g_render_effects2->__LoadPreset(file, 1);
-        else {
+        } else {
             g_render_effects2->clearRenders();
         }
         if (!r && l_w && l_h && (cfg_transitions2 & which)
@@ -179,7 +182,9 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
                                     int* fbout,
                                     int w,
                                     int h) {
-    if (_dotransitionflag || enabled) g_rnd_cnt = 0;
+    if (_dotransitionflag || enabled) {
+        g_rnd_cnt = 0;
+    }
     if (_dotransitionflag == 2 || _dotransitionflag == 3) {
         int notext = _dotransitionflag == 3;
         _dotransitionflag = 0;
@@ -190,7 +195,9 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
                     : (rand()
                        % ((sizeof(transitionmodes) / sizeof(transitionmodes[0])) - 1))
                           + 1;
-            if (cfg_transition_mode & 0x8000) curtrans |= 0x8000;
+            if (cfg_transition_mode & 0x8000) {
+                curtrans |= 0x8000;
+            }
             ep[0] = 0;
             ep[1] = 2;
             mask = 0;
@@ -218,13 +225,14 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
         int x;
         l_w = w;
         l_h = h;
-        if (fbs[0])
+        if (fbs[0]) {
             for (x = 0; x < 4; x++) {
                 if (fbs[x]) {
                     free(fbs[x]);
                     fbs[x] = NULL;
                 }
             }
+        }
         if (!initThread && g_render_effects2->getNumRenders()) {
             this->prev_renders_need_cleanup = true;
         }
@@ -237,7 +245,9 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
         l_h = h;
         int x;
         for (x = 0; x < 4; x++) {
-            if (fbs[x]) free(fbs[x]);
+            if (fbs[x]) {
+                free(fbs[x]);
+            }
             fbs[x] = (int*)calloc(l_w * l_h, sizeof(int));
         }
     }
@@ -249,10 +259,11 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
 
     // maybe there's a faster way than using 3 more buffers without screwing
     // any effect... justin ?
-    if (curtrans & 0x8000)
+    if (curtrans & 0x8000) {
         ep[1] ^=
             g_render_effects2->render(visdata, isBeat, fbs[ep[1]], fbs[ep[1] ^ 1], w, h)
             & 1;
+    }
     ep[0] ^=
         g_render_effects->render(visdata, isBeat, fbs[ep[0]], fbs[ep[0] ^ 1], w, h) & 1;
 
@@ -262,16 +273,21 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
     int x = w * h;
 
     int ttime = 250 * cfg_transitions_speed;
-    if (ttime < 100) ttime = 100;
+    if (ttime < 100) {
+        ttime = 100;
+    }
 
     int n;
     if (!start_time) {
         n = 0;
         start_time = timer_ms();
-    } else
+    } else {
         n = (timer_ms() - start_time) * 256 / ttime;
+    }
 
-    if (n >= 255) n = 255;
+    if (n >= 255) {
+        n = 255;
+    }
 
     float sintrans =
         (float)(sin(((float)n / 255) * PI - PI / 2) / 2 + 0.5);  // used for smoothing
@@ -332,11 +348,14 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
             for (i = 0; i < 9; i++) {
                 if (mask & (1 << i)) {
                     int end = i / 3 * th + th;
-                    if (i > 5) end = h;
-                    for (j = i / 3 * th; j < end; j++)
+                    if (i > 5) {
+                        end = h;
+                    }
+                    for (j = i / 3 * th; j < end; j++) {
                         memcpy(framebuffer + (j * w) + (i % 3) * tw,
                                d + (j * w) + (i % 3) * tw,
                                (i % 3 == 2) ? twr * 4 : tw * 4);
+                    }
                 }
             }
         } break;
@@ -459,14 +478,16 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
                         if (t2++ == i) {
                             of[0] = p2[0];
                             t2 = 0;
-                        } else
+                        } else {
                             of[0] = d2[0];
+                        }
                         p2++;
                         d2++;
                         of++;
                     }
-                } else
+                } else {
                     memcpy(framebuffer + j * w, (dir ? d : p) + j * w, w * sizeof(int));
+                }
             }
         } break;
         default: break;
@@ -477,7 +498,9 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
         enabled = 0;
         start_time = 0;
         for (x = 0; x < 4; x++) {
-            if (fbs[x]) free(fbs[x]);
+            if (fbs[x]) {
+                free(fbs[x]);
+            }
             fbs[x] = NULL;
         }
         g_render_effects2->clearRenders();

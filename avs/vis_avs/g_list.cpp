@@ -23,7 +23,9 @@ int win32_dlgproc_root_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
     C_RenderListClass* g_this = (C_RenderListClass*)g_current_render;
     switch (uMsg) {
         case WM_INITDIALOG: {
-            if (g_this->clearfb()) CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
+            if (g_this->clearfb()) {
+                CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
+            }
         }
             return 1;
         case WM_COMMAND:
@@ -90,23 +92,32 @@ int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                     hwndDlg, IDC_CBBUF1, CB_SETCURSEL, (WPARAM)g_this->bufferin, 0);
                 SendDlgItemMessage(
                     hwndDlg, IDC_CBBUF2, CB_SETCURSEL, (WPARAM)g_this->bufferout, 0);
-                if (g_this->ininvert) CheckDlgButton(hwndDlg, IDC_INVERT1, BST_CHECKED);
-                if (g_this->outinvert)
+                if (g_this->ininvert) {
+                    CheckDlgButton(hwndDlg, IDC_INVERT1, BST_CHECKED);
+                }
+                if (g_this->outinvert) {
                     CheckDlgButton(hwndDlg, IDC_INVERT2, BST_CHECKED);
+                }
             }
-            if (g_this->clearfb()) CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
+            if (g_this->clearfb()) {
+                CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
+            }
             g_this->isstart = 1;
             SetDlgItemText(hwndDlg, IDC_EDIT4, (char*)g_this->effect_exp[0].c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT5, (char*)g_this->effect_exp[1].c_str());
             g_this->isstart = 0;
 
-            if (((g_this->mode & 2) ^ 2))
+            if (((g_this->mode & 2) ^ 2)) {
                 CheckDlgButton(hwndDlg, IDC_CHECK2, BST_CHECKED);
-            if (g_this->beat_render)
+            }
+            if (g_this->beat_render) {
                 CheckDlgButton(hwndDlg, IDC_CHECK3, BST_CHECKED);
-            else
+            } else {
                 EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT1), FALSE);
-            if (g_this->use_code) CheckDlgButton(hwndDlg, IDC_CHECK4, BST_CHECKED);
+            }
+            if (g_this->use_code) {
+                CheckDlgButton(hwndDlg, IDC_CHECK4, BST_CHECKED);
+            }
             char buf[999];
             wsprintf(buf, "%d", g_this->beat_render_frames);
             SetDlgItemText(hwndDlg, IDC_EDIT1, buf);
@@ -121,7 +132,9 @@ int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                         g_this->effect_exp[0] = string_from_dlgitem(hwndDlg, IDC_EDIT4);
                         g_this->effect_exp[1] = string_from_dlgitem(hwndDlg, IDC_EDIT5);
                         g_this->need_recompile = 1;
-                        if (LOWORD(wParam) == IDC_EDIT4) g_this->inited = 0;
+                        if (LOWORD(wParam) == IDC_EDIT4) {
+                            g_this->inited = 0;
+                        }
                         lock_unlock(g_this->code_lock);
                     }
                     break;
@@ -158,14 +171,16 @@ int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                     }
                     break;
                 case IDC_CBBUF1:
-                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    if (HIWORD(wParam) == CBN_SELCHANGE) {
                         g_this->bufferin =
                             SendDlgItemMessage(hwndDlg, IDC_CBBUF1, CB_GETCURSEL, 0, 0);
+                    }
                     break;
                 case IDC_CBBUF2:
-                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    if (HIWORD(wParam) == CBN_SELCHANGE) {
                         g_this->bufferout =
                             SendDlgItemMessage(hwndDlg, IDC_CBBUF2, CB_GETCURSEL, 0, 0);
+                    }
                     break;
                 case IDC_CHECK1:
                     g_this->set_clearfb(IsDlgButtonChecked(hwndDlg, IDC_CHECK1));
@@ -213,12 +228,14 @@ int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
             }
             break;
         case WM_NOTIFY:
-            if (LOWORD(wParam) == IDC_INSLIDE)
+            if (LOWORD(wParam) == IDC_INSLIDE) {
                 g_this->inblendval =
                     SendDlgItemMessage(hwndDlg, IDC_INSLIDE, TBM_GETPOS, 0, 0);
-            if (LOWORD(wParam) == IDC_OUTSLIDE)
+            }
+            if (LOWORD(wParam) == IDC_OUTSLIDE) {
                 g_this->outblendval =
                     SendDlgItemMessage(hwndDlg, IDC_OUTSLIDE, TBM_GETPOS, 0, 0);
+            }
             break;
     }
     return 0;

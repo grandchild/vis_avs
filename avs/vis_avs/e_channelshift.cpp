@@ -183,7 +183,9 @@ int E_ChannelShift::render(char[2][2][576],
                            int*,
                            int w,
                            int h) {
-    if (is_beat & 0x80000000) return 0;
+    if (is_beat & 0x80000000) {
+        return 0;
+    }
 
     if (is_beat && this->config.on_beat_random) {
         this->config.mode = rand() % 6;

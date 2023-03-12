@@ -100,7 +100,9 @@ int win32_dlgproc_oscstar(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     BOOL tr = FALSE;
                     p = GetDlgItemInt(hwndDlg, IDC_NUMCOL, &tr, FALSE);
                     if (tr) {
-                        if (p > 16) p = 16;
+                        if (p > 16) {
+                            p = 16;
+                        }
                         g_this->num_colors = p;
                         InvalidateRect(GetDlgItem(hwndDlg, IDC_DEFCOL), NULL, TRUE);
                     }

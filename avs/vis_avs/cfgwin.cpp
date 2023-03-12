@@ -129,7 +129,9 @@ void CfgWnd_Destroy(void) {
         DestroyWindow(g_hwndDlg);
     }
     g_hwndDlg = 0;
-    if (g_debugwnd) DestroyWindow(g_debugwnd);
+    if (g_debugwnd) {
+        DestroyWindow(g_debugwnd);
+    }
     /*
     if (hcfgThread)
     {
@@ -196,13 +198,15 @@ static BOOL CALLBACK DlgProc_Preset(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             CheckDlgButton(
                 hwndDlg, IDC_CHECK3, cfg_fs_rnd ? BST_CHECKED : BST_UNCHECKED);
             SetDlgItemInt(hwndDlg, IDC_EDIT1, cfg_fs_rnd_time, FALSE);
-            if (config_prompt_save_preset)
+            if (config_prompt_save_preset) {
                 CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
+            }
 
-            if (config_pres_subdir[0])
+            if (config_pres_subdir[0]) {
                 SetDlgItemText(hwndDlg, IDC_BUTTON3, config_pres_subdir);
-            else
+            } else {
                 SetDlgItemText(hwndDlg, IDC_BUTTON3, "All");
+            }
         }
             return 1;
         case WM_COMMAND:
@@ -327,7 +331,9 @@ static BOOL CALLBACK DlgProc_Disp(HWND hwndDlg,
 #ifdef WA2_EMBED
             {
                 HWND w = myWindowState.me;
-                while (GetWindowLong(w, GWL_STYLE) & WS_CHILD) w = GetParent(w);
+                while (GetWindowLong(w, GWL_STYLE) & WS_CHILD) {
+                    w = GetParent(w);
+                }
                 char classname[256];
                 GetClassName(w, classname, 255);
                 classname[255] = 0;
@@ -503,15 +509,27 @@ static BOOL CALLBACK DlgProc_FS(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
                     SendDlgItemMessage(hwndDlg, IDC_COMBO1, CB_GETLBTEXT, x, (long)b);
                     int w, h, bpp;
                     w = atoi(p);
-                    while (*p >= '0' && *p <= '9') p++;
-                    if (!*p) continue;
+                    while (*p >= '0' && *p <= '9') {
+                        p++;
+                    }
+                    if (!*p) {
+                        continue;
+                    }
                     h = atoi(++p);
-                    while (*p >= '0' && *p <= '9') p++;
-                    if (!*p) continue;
+                    while (*p >= '0' && *p <= '9') {
+                        p++;
+                    }
+                    if (!*p) {
+                        continue;
+                    }
                     bpp = atoi(++p);
-                    if (w == cfg_fs_w && h == cfg_fs_h && bpp == cfg_fs_bpp) break;
+                    if (w == cfg_fs_w && h == cfg_fs_h && bpp == cfg_fs_bpp) {
+                        break;
+                    }
                 }
-                if (x != l) SendDlgItemMessage(hwndDlg, IDC_COMBO1, CB_SETCURSEL, x, 0);
+                if (x != l) {
+                    SendDlgItemMessage(hwndDlg, IDC_COMBO1, CB_SETCURSEL, x, 0);
+                }
             }
             CheckDlgButton(hwndDlg,
                            IDC_USE_OVERLAY,
@@ -560,8 +578,9 @@ static BOOL CALLBACK DlgProc_FS(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
                         || DDraw_IsMode(cfg_fs_w, cfg_fs_h, cfg_fs_bpp)) {
                         SetForegroundWindow(g_hwnd);
                         PostMessage(g_hwnd, WM_USER + 32, 0, 0);
-                    } else
+                    } else {
                         MessageBox(hwndDlg, "Choose a video mode", "Fullscreen", MB_OK);
+                    }
                     return 0;
                 case IDC_BPP_CONV:
                     cfg_fs_flip &= ~8;
@@ -602,7 +621,9 @@ static BOOL CALLBACK DlgProc_FS(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
                     if (HIWORD(wParam) == EN_CHANGE) {
                         BOOL t;
                         int r = GetDlgItemInt(hwndDlg, IDC_EDIT1, &t, FALSE);
-                        if (r > 0 && r <= 100 && t) cfg_fs_height = r;
+                        if (r > 0 && r <= 100 && t) {
+                            cfg_fs_height = r;
+                        }
                     }
                     return 0;
                 case IDC_COMBO1:
@@ -611,21 +632,35 @@ static BOOL CALLBACK DlgProc_FS(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
                         char b[256], *p = b;
                         int l =
                             SendDlgItemMessage(hwndDlg, IDC_COMBO1, CB_GETCURSEL, 0, 0);
-                        if (l == CB_ERR) return 0;
+                        if (l == CB_ERR) {
+                            return 0;
+                        }
                         SendDlgItemMessage(
                             hwndDlg, IDC_COMBO1, CB_GETLBTEXT, l, (long)b);
                         int w, h;
-                        while (*p >= '0' && *p <= '9') p++;
-                        if (!*p) return 0;
+                        while (*p >= '0' && *p <= '9') {
+                            p++;
+                        }
+                        if (!*p) {
+                            return 0;
+                        }
                         *p++ = 0;
                         w = atoi(b);
-                        while (*p < '0' && *p > '9' && *p) p++;
+                        while (*p < '0' && *p > '9' && *p) {
+                            p++;
+                        }
                         h = atoi(p);
-                        while (*p >= '0' && *p <= '9') p++;
-                        if (!*p) return 0;
+                        while (*p >= '0' && *p <= '9') {
+                            p++;
+                        }
+                        if (!*p) {
+                            return 0;
+                        }
                         p++;
                         bps = atoi(p);
-                        if (w < 1 || h < 1 || bps < 1) return 0;
+                        if (w < 1 || h < 1 || bps < 1) {
+                            return 0;
+                        }
                         cfg_fs_h = h;
                         cfg_fs_w = w;
                         cfg_fs_bpp = bps;
@@ -653,8 +688,12 @@ static void _insertintomenu2(HMENU hMenu, int wid, int id, char* str) {
         char c[512];
         mi.dwTypeData = c;
         mi.cch = 512;
-        if (!GetMenuItemInfo(hMenu, x, TRUE, &mi)) break;
-        if (strcmp(str, c) < 0 && !mi.hSubMenu) break;
+        if (!GetMenuItemInfo(hMenu, x, TRUE, &mi)) {
+            break;
+        }
+        if (strcmp(str, c) < 0 && !mi.hSubMenu) {
+            break;
+        }
     }
 
     MENUITEMINFO i = {};
@@ -678,8 +717,12 @@ static HMENU _findsubmenu(HMENU hmenu, char* str) {
         char c[512];
         mi.dwTypeData = c;
         mi.cch = 512;
-        if (!GetMenuItemInfo(hmenu, x, TRUE, &mi)) break;
-        if (!strcmp(str, c) && mi.hSubMenu) return mi.hSubMenu;
+        if (!GetMenuItemInfo(hmenu, x, TRUE, &mi)) {
+            break;
+        }
+        if (!strcmp(str, c) && mi.hSubMenu) {
+            return mi.hSubMenu;
+        }
     }
     return 0;
 }
@@ -689,10 +732,16 @@ static void _insertintomenu(HMENU hMenu, int wid, int id, char* str) {
     strncpy(ostr, str, 1023);
     char* first = str;
     char* second = str;
-    while (*second && *second != '/') second++;
-    if (*second) *second++ = 0;
+    while (*second && *second != '/') {
+        second++;
+    }
     if (*second) {
-        while (*second == ' ' || *second == '/') second++;
+        *second++ = 0;
+    }
+    if (*second) {
+        while (*second == ' ' || *second == '/') {
+            second++;
+        }
         if (*second) {
             HMENU hs;
 
@@ -730,8 +779,9 @@ static BOOL CALLBACK sniffConfigWindow_newProc(HWND hwndDlg,
             || HIWORD(wParam) == BN_CLICKED || HIWORD(wParam) == LBN_SELCHANGE
             || HIWORD(wParam) == CBN_SELCHANGE
 
-        )
+        ) {
             dirty = true;
+        }
     }
 
     BOOL retval =
@@ -769,13 +819,13 @@ int dosavePreset(HWND hwndDlg) {
     if (GetSaveFileName(&l)) {
         strcpy(last_preset, temp);
         r = g_render_effects->__SavePreset(temp);
-        if (r == 1)
+        if (r == 1) {
             MessageBox(hwndDlg, "Error saving preset", "Save Preset", MB_OK);
-        else if (r == 2)
+        } else if (r == 2) {
             MessageBox(hwndDlg, "Preset too large", "Save Preset", MB_OK);
-        else if (r == -1)
+        } else if (r == -1) {
             MessageBox(hwndDlg, "Out of memory", "Save Preset", MB_OK);
-        else {
+        } else {
             C_UndoStack::cleardirty();
             // g_preset_dirty=0;
         }
@@ -796,10 +846,15 @@ static BOOL CALLBACK debugProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
             }
             SetTimer(hwndDlg, 1, 250, NULL);
         }
-            if (g_log_errors) CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
-            if (g_reset_vars_on_recompile)
+            if (g_log_errors) {
+                CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
+            }
+            if (g_reset_vars_on_recompile) {
                 CheckDlgButton(hwndDlg, IDC_CHECK2, BST_CHECKED);
-            if (!g_config_seh) CheckDlgButton(hwndDlg, IDC_CHECK3, BST_CHECKED);
+            }
+            if (!g_config_seh) {
+                CheckDlgButton(hwndDlg, IDC_CHECK3, BST_CHECKED);
+            }
 
             return 0;
         case WM_TIMER:
@@ -808,10 +863,11 @@ static BOOL CALLBACK debugProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                 for (x = 0; x < 8; x++) {
                     char buf[128];
                     int v = debug_reg[x];
-                    if (v >= 0 && v < 100)
+                    if (v >= 0 && v < 100) {
                         sprintf(buf, "%.14f", NSEEL_getglobalregs()[v]);
-                    else
+                    } else {
                         strcpy(buf, "?");
+                    }
                     SetDlgItemText(hwndDlg, IDC_DEBUGREG_1 + x * 2 + 1, buf);
                 }
 
@@ -821,8 +877,9 @@ static BOOL CALLBACK debugProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                     char buf[1025];
                     GetDlgItemText(hwndDlg, IDC_EDIT1, buf, sizeof(buf) - 1);
                     buf[sizeof(buf) - 1] = 0;
-                    if (strcmp(buf, last_error_string))
+                    if (strcmp(buf, last_error_string)) {
                         SetDlgItemText(hwndDlg, IDC_EDIT1, last_error_string);
+                    }
                     lock_unlock(g_eval_cs);
                 }
 
@@ -867,11 +924,15 @@ static BOOL CALLBACK debugProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                         int x = LOWORD(wParam) - IDC_DEBUGREG_1;
                         if (!(x & 1)) {
                             x /= 2;
-                            if (x > 7) x = 7;
+                            if (x > 7) {
+                                x = 7;
+                            }
                             BOOL t;
                             int v = GetDlgItemInt(
                                 hwndDlg, IDC_DEBUGREG_1 + x * 2, &t, FALSE);
-                            if (t) debug_reg[x] = v;
+                            if (t) {
+                                debug_reg[x] = v;
+                            }
                         }
                     }
                     break;
@@ -973,7 +1034,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
         }
             TreeView_SetIndent(GetDlgItem(hwndDlg, IDC_TREE1), 8);
             SetTimer(hwndDlg, 1, 250, NULL);
-            if (cfg_cfgwnd_open) ShowWindow(hwndDlg, SW_SHOWNA);
+            if (cfg_cfgwnd_open) {
+                ShowWindow(hwndDlg, SW_SHOWNA);
+            }
             CfgWnd_Populate();
             SetWindowPos(hwndDlg,
                          NULL,
@@ -1004,8 +1067,12 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             if (wParam == 1) {
                 char s[1024];
                 char* tp = last_preset;
-                while (*tp) tp++;
-                while (tp >= last_preset && *tp != '\\') tp--;
+                while (*tp) {
+                    tp++;
+                }
+                while (tp >= last_preset && *tp != '\\') {
+                    tp--;
+                }
                 tp++;
                 wsprintf(s,
                          "%d.%d FPS @ %dx%d%s%s",
@@ -1016,9 +1083,15 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                          *tp ? " - " : ".",
                          tp);
                 tp = s;
-                while (*tp) tp++;
-                while (tp > s && *tp != '.' && *tp != '-') tp--;
-                if (*tp == '.') *tp = 0;
+                while (*tp) {
+                    tp++;
+                }
+                while (tp > s && *tp != '.' && *tp != '-') {
+                    tp--;
+                }
+                if (*tp == '.') {
+                    *tp = 0;
+                }
                 SetDlgItemText(hwndDlg, IDC_FPS, s);
             }
             if (wParam == 69) {
@@ -1058,7 +1131,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     }
                     if (h == g_dragsource_item) {
                         SetCursor(LoadCursor(NULL, IDC_NO));
-                        if (g_dragplace) TreeView_DeleteItem(hwnd, g_dragplace);
+                        if (g_dragplace) {
+                            TreeView_DeleteItem(hwnd, g_dragplace);
+                        }
                         g_dragplace = 0;
                     } else {
                         SetCursor(LoadCursor(NULL, IDC_ARROW));
@@ -1068,10 +1143,11 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         if (i.lParam) {
                             RECT r;
                             TreeView_GetItemRect(hwnd, h, &r, FALSE);
-                            if (hti.pt.y > r.bottom - (r.bottom - r.top) / 2)
+                            if (hti.pt.y > r.bottom - (r.bottom - r.top) / 2) {
                                 g_dragplaceisbelow = 1;
-                            else
+                            } else {
                                 g_dragplaceisbelow = 0;
+                            }
                             HTREEITEM parenth;
                             g_draglastdest = h;
                             C_RenderListClass::T_RenderListType* it =
@@ -1104,7 +1180,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 }
                                 if (!g_dragplaceisbelow) {
                                     h = TreeView_GetPrevSibling(hwnd, h);
-                                    if (!h) h = TVI_FIRST;
+                                    if (!h) {
+                                        h = TVI_FIRST;
+                                    }
                                 }
                             }
                             if (!g_dragplace) {
@@ -1114,9 +1192,10 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 is.item.mask = TVIF_PARAM | TVIF_TEXT | TVIF_CHILDREN;
                                 is.item.pszText = "<move here>";
                                 g_dragplace = TreeView_InsertItem(hwnd, &is);
-                                if (g_dragplaceisbelow == 2)
+                                if (g_dragplaceisbelow == 2) {
                                     SendMessage(
                                         hwnd, TVM_EXPAND, TVE_EXPAND, (long)parenth);
+                                }
                             }
 
                             //            TreeView_Select(hwnd,g_dragplace,TVGN_DROPHILITE);
@@ -1217,7 +1296,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     {
                         HTREEITEM temp = dest_parent_handle;
                         while (temp && temp != TVI_ROOT) {
-                            if (temp == g_dragsource_item) recurse_okay = 0;
+                            if (temp == g_dragsource_item) {
+                                recurse_okay = 0;
+                            }
                             temp = TreeView_GetParent(hwnd, temp);
                         }
                     }
@@ -1256,23 +1337,27 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         is.item.lParam = (int)source;
 
                         if (dest_handle) {
-                            if (g_dragplaceisbelow & 1)
+                            if (g_dragplaceisbelow & 1) {
                                 is.hInsertAfter = dest_handle;
-                            else {
+                            } else {
                                 is.hInsertAfter =
                                     TreeView_GetPrevSibling(hwnd, dest_handle);
-                                if (!is.hInsertAfter) is.hInsertAfter = TVI_FIRST;
+                                if (!is.hInsertAfter) {
+                                    is.hInsertAfter = TVI_FIRST;
+                                }
                             }
-                        } else
+                        } else {
                             is.hInsertAfter = TVI_LAST;
+                        }
 
                         HTREEITEM newi = TreeView_InsertItem(hwnd, &is);
                         if (source->effect_index == LIST_ID) {
                             _do_add(hwnd,
                                     newi,
                                     (C_RenderListClass*)source->effect.legacy_effect);
-                            if (expand)
+                            if (expand) {
                                 SendMessage(hwnd, TVM_EXPAND, TVE_EXPAND, (long)newi);
+                            }
                         }
                         TreeView_Select(hwnd, newi, TVGN_CARET);
                         treeview_hack = 0;
@@ -1307,10 +1392,12 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                             TreeView_Select(
                                 p->hdr.hwndFrom, g_dragsource_item, TVGN_CARET);
                             SetCursor(LoadCursor(NULL, IDC_APPSTARTING));
-                        } else
+                        } else {
                             g_dragsource_item = NULL;
-                    } else
+                        }
+                    } else {
                         g_dragsource_item = NULL;
+                    }
                 }
                 if (p->hdr.code == TVN_SELCHANGED && !treeview_hack) {
                     HTREEITEM hTreeItem = TreeView_GetSelection(p->hdr.hwndFrom);
@@ -1332,7 +1419,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         is_aux_wnd = 0;
                         if (tp && tp->effect.valid()) {
                             SetDlgItemText(hwndDlg, IDC_EFNAME, tp->effect.get_desc());
-                            if (cur_hwnd) DestroyWindow(cur_hwnd);
+                            if (cur_hwnd) {
+                                DestroyWindow(cur_hwnd);
+                            }
                             g_current_render = tp->effect.void_ref();
                             C_Win32GuiComponent* ui_component =
                                 g_ui_library->get(tp->effect_index, g_current_render);
@@ -1346,11 +1435,12 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                     hwndDlg,
                                     ui_component->ui_handler);
                             }
-                            if (cur_hwnd)
+                            if (cur_hwnd) {
                                 sniffConfigWindow_oldProc = (WNDPROC)SetWindowLong(
                                     cur_hwnd,
                                     GWL_WNDPROC,
                                     (LONG)sniffConfigWindow_newProc);
+                            }
                         }
                         if (cur_hwnd) {
                             RECT r;
@@ -1364,8 +1454,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                          0,
                                          SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOZORDER);
                             ShowWindow(cur_hwnd, SW_SHOWNA);
-                        } else
+                        } else {
                             SetDlgItemText(hwndDlg, IDC_EFNAME, g_noeffectstr);
+                        }
                     }
                 }
             }
@@ -1378,9 +1469,10 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     }
                     return 0;
                 case IDM_HELP_DEBUGWND:
-                    if (!g_debugwnd)
+                    if (!g_debugwnd) {
                         g_debugwnd = CreateDialog(
                             g_hInstance, MAKEINTRESOURCE(IDD_DEBUG), g_hwnd, debugProc);
+                    }
                     ShowWindow(g_debugwnd, SW_SHOW);
                     return 0;
                 case IDM_ABOUT:
@@ -1398,43 +1490,60 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                       "Beat Detection",
                                       "Transitions"};
                     int x = 0;
-                    if (LOWORD(wParam) == IDM_DISPLAY) x = 1;
-                    if (LOWORD(wParam) == IDM_FULLSCREEN) x = 2;
-                    if (LOWORD(wParam) == IDM_PRESETS) x = 3;
-                    if (LOWORD(wParam) == IDM_BPM) x = 4;
-                    if (LOWORD(wParam) == IDM_TRANSITIONS) x = 5;
+                    if (LOWORD(wParam) == IDM_DISPLAY) {
+                        x = 1;
+                    }
+                    if (LOWORD(wParam) == IDM_FULLSCREEN) {
+                        x = 2;
+                    }
+                    if (LOWORD(wParam) == IDM_PRESETS) {
+                        x = 3;
+                    }
+                    if (LOWORD(wParam) == IDM_BPM) {
+                        x = 4;
+                    }
+                    if (LOWORD(wParam) == IDM_TRANSITIONS) {
+                        x = 5;
+                    }
 
                     if (x >= 1 && x <= 5) {
                         SetDlgItemText(hwndDlg, IDC_EFNAME, names[x - 1]);
                         TreeView_Select(
                             GetDlgItem(hwndDlg, IDC_TREE1), NULL, TVGN_CARET);
-                        if (cur_hwnd) DestroyWindow(cur_hwnd);
-                        if (x == 1)
+                        if (cur_hwnd) {
+                            DestroyWindow(cur_hwnd);
+                        }
+                        if (x == 1) {
                             cur_hwnd = CreateDialog(g_hInstance,
                                                     MAKEINTRESOURCE(IDD_GCFG_DISP),
                                                     hwndDlg,
                                                     DlgProc_Disp);
-                        if (x == 2)
+                        }
+                        if (x == 2) {
                             cur_hwnd = CreateDialog(g_hInstance,
                                                     MAKEINTRESOURCE(IDD_GCFG_FS),
                                                     hwndDlg,
                                                     DlgProc_FS);
-                        if (x == 3)
+                        }
+                        if (x == 3) {
                             cur_hwnd = CreateDialog(g_hInstance,
                                                     MAKEINTRESOURCE(IDD_GCFG_PRESET),
                                                     hwndDlg,
                                                     DlgProc_Preset);
-                        if (x == 4)
+                        }
+                        if (x == 4) {
                             cur_hwnd = CreateDialog(g_hInstance,
                                                     MAKEINTRESOURCE(IDD_GCFG_BPM),
                                                     hwndDlg,
                                                     DlgProc_Bpm);
-                        if (x == 5)
+                        }
+                        if (x == 5) {
                             cur_hwnd =
                                 CreateDialog(g_hInstance,
                                              MAKEINTRESOURCE(IDD_GCFG_TRANSITIONS),
                                              hwndDlg,
                                              (DLGPROC)win32_dlgproc_transition);
+                        }
                         if (cur_hwnd) {
                             RECT r;
                             is_aux_wnd = 1;
@@ -1448,8 +1557,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                          0,
                                          SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOZORDER);
                             ShowWindow(cur_hwnd, SW_SHOWNA);
-                        } else
+                        } else {
                             SetDlgItemText(hwndDlg, IDC_EFNAME, g_noeffectstr);
+                        }
                     }
                 }
                     return 0;
@@ -1466,9 +1576,13 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     while (1) {
                         char str[1024];
 
-                        if (!g_render_library->GetRendererDesc(x, str)) break;
+                        if (!g_render_library->GetRendererDesc(x, str)) {
+                            break;
+                        }
 
-                        if (str[0]) _insertintomenu(hAddMenu, p++, x, str);
+                        if (str[0]) {
+                            _insertintomenu(hAddMenu, p++, x, str);
+                        }
 
                         x++;
                     }
@@ -1476,8 +1590,12 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     while (1) {
                         char str[1024];
                         int id = g_render_library->GetRendererDesc(x++, str);
-                        if (!id) break;
-                        if (str[0]) _insertintomenu(hAddMenu, p++, id, str);
+                        if (!id) {
+                            break;
+                        }
+                        if (str[0]) {
+                            _insertintomenu(hAddMenu, p++, id, str);
+                        }
                     }
                     _insertintomenu(hAddMenu, p++, LIST_ID, "Effect list");
 
@@ -1633,8 +1751,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                          insert_pos < parentrender->getNumRenders()
                                          && parentrender->getRender(insert_pos)->effect
                                                 != tp->effect;
-                                         insert_pos++)
+                                         insert_pos++) {
                                         ;
+                                    }
                                 }
                             }
 
@@ -1651,21 +1770,24 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                             is.item.pszText = ren.effect.get_desc();
                             is.item.cChildren = newt->effect_index == LIST_ID ? 1 : 0;
                             is.item.lParam = (int)newt;
-                            if (!hTreeItem || parenthandle == hTreeItem)
+                            if (!hTreeItem || parenthandle == hTreeItem) {
                                 is.hInsertAfter = TVI_FIRST;
-                            else {
+                            } else {
                                 is.hInsertAfter = TreeView_GetPrevSibling(
                                     GetDlgItem(hwndDlg, IDC_TREE1), hTreeItem);
-                                if (!is.hInsertAfter) is.hInsertAfter = TVI_FIRST;
+                                if (!is.hInsertAfter) {
+                                    is.hInsertAfter = TVI_FIRST;
+                                }
                             }
                             HTREEITEM newh = TreeView_InsertItem(
                                 GetDlgItem(hwndDlg, IDC_TREE1), &is);
                             TreeView_Select(
                                 GetDlgItem(hwndDlg, IDC_TREE1), newh, TVGN_CARET);
-                            if (ren.effect_index == LIST_ID)
+                            if (ren.effect_index == LIST_ID) {
                                 _do_add(GetDlgItem(hwndDlg, IDC_TREE1),
                                         newh,
                                         (C_RenderListClass*)ren.effect.legacy_effect);
+                            }
 
                             // Always do undo last.
                             KillTimer(hwndDlg, 69);
@@ -1679,8 +1801,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     return 0;
                 case IDC_CLEAR:
                     if (readyToLoadPreset(hwndDlg, 1)) {
-                        if (g_render_transition->LoadPreset("", 0) != 2)
+                        if (g_render_transition->LoadPreset("", 0) != 2) {
                             last_preset[0] = 0;
+                        }
                     }
                     return 0;
                 case IDC_REMSEL: {
@@ -1715,7 +1838,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 if (!parentrender->removeRenderFrom(tp, 1)) {
                                     TreeView_DeleteItem(GetDlgItem(hwndDlg, IDC_TREE1),
                                                         hTreeItem);
-                                    if (tp) free(tp);
+                                    if (tp) {
+                                        free(tp);
+                                    }
                                 }
                                 lock_unlock(g_render_cs);
                             }
@@ -1760,8 +1885,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                      insert_pos < parentrender->getNumRenders()
                                      && parentrender->getRender(insert_pos)->effect
                                             != tp->effect;
-                                     insert_pos++)
+                                     insert_pos++) {
                                     ;
+                                }
                                 insert_pos++;
                                 unsigned char* buf = (unsigned char*)calloc(
                                     1024 * 1024, sizeof(unsigned char));
@@ -1789,11 +1915,12 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                     GetDlgItem(hwndDlg, IDC_TREE1), &is);
                                 TreeView_Select(
                                     GetDlgItem(hwndDlg, IDC_TREE1), newh, TVGN_CARET);
-                                if (ren.effect_index == LIST_ID)
+                                if (ren.effect_index == LIST_ID) {
                                     _do_add(
                                         GetDlgItem(hwndDlg, IDC_TREE1),
                                         newh,
                                         (C_RenderListClass*)ren.effect.legacy_effect);
+                                }
                             }
                         }
                         // Always save undo last.
@@ -1821,13 +1948,14 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     l.Flags = OFN_HIDEREADONLY | OFN_EXPLORER;
                     if (readyToLoadPreset(hwndDlg, 0) && GetOpenFileName(&l)) {
                         int x = g_render_transition->LoadPreset(temp, 0);
-                        if (x == 2)
+                        if (x == 2) {
                             MessageBox(hwndDlg,
                                        "Still initializing previous preset",
                                        "Load Preset",
                                        MB_OK);
-                        else
+                        } else {
                             lstrcpyn(last_preset, temp, sizeof(last_preset));
+                        }
                     }
                     SetCurrentDirectory(buf2);
                 }
@@ -1876,9 +2004,13 @@ static void _do_free(HWND hwnd, HTREEITEM h) {
         i.mask = TVIF_HANDLE | TVIF_PARAM;
         i.hItem = h;
         TreeView_GetItem(hwnd, &i);
-        if (i.lParam) free((void*)i.lParam);
+        if (i.lParam) {
+            free((void*)i.lParam);
+        }
         HTREEITEM h2 = TreeView_GetChild(hwnd, h);
-        if (h2) _do_free(hwnd, h2);
+        if (h2) {
+            _do_free(hwnd, h2);
+        }
         h = TreeView_GetNextSibling(hwnd, h);
     }
 }
@@ -1897,7 +2029,9 @@ void CfgWnd_Unpopulate(int force) {
     if (force || (IsWindowVisible(g_hwndDlg) && !DDraw_IsFullScreen())) {
         HWND hwnd = GetDlgItem(g_hwndDlg, IDC_TREE1);
         if (!is_aux_wnd) {
-            if (cur_hwnd) DestroyWindow(cur_hwnd);
+            if (cur_hwnd) {
+                DestroyWindow(cur_hwnd);
+            }
             cur_hwnd = 0;
             SetDlgItemText(g_hwndDlg, IDC_EFNAME, g_noeffectstr);
         }
@@ -1905,8 +2039,9 @@ void CfgWnd_Unpopulate(int force) {
         _do_free(hwnd, TreeView_GetChild(hwnd, TVI_ROOT));
         TreeView_DeleteAllItems(hwnd);
         treeview_hack = 0;
-    } else
+    } else {
         need_repop = 1;
+    }
 }
 
 void CfgWnd_Populate(int force) {
@@ -1932,6 +2067,7 @@ void CfgWnd_Populate(int force) {
             SendMessage(hwnd, TVM_EXPAND, TVE_EXPAND, (long)g_hroot);
         }
         treeview_hack = 0;
-    } else
+    } else {
         need_repop = 1;
+    }
 }

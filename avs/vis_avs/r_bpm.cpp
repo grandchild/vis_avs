@@ -125,7 +125,9 @@ int C_THISCLASS::save_config(unsigned char* data)  // write configuration to dat
 
 void C_THISCLASS::SliderStep(int Ctl, int* slide) {
     *slide += Ctl == SLIDER_CTRL_IN ? inInc : outInc;
-    if (!*slide || *slide == 8) (Ctl == SLIDER_CTRL_IN ? inInc : outInc) *= -1;
+    if (!*slide || *slide == 8) {
+        (Ctl == SLIDER_CTRL_IN ? inInc : outInc) *= -1;
+    }
 }
 
 // render function
@@ -136,8 +138,12 @@ void C_THISCLASS::SliderStep(int Ctl, int* slide) {
 // visdata is in the format of [spectrum:0,wave:1][channel][band].
 
 int C_THISCLASS::render(char[2][2][576], int isBeat, int*, int*, int, int) {
-    if (!enabled) return 0;
-    if (isBeat & 0x80000000) return 0;
+    if (!enabled) {
+        return 0;
+    }
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
 
     if (isBeat)  // Show the beat received from AVS
     {
@@ -145,7 +151,9 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int*, int*, int, int) {
         count++;
     }
 
-    if (skipfirst != 0 && count <= skipfirst) return isBeat ? CLR_BEAT : 0;
+    if (skipfirst != 0 && count <= skipfirst) {
+        return isBeat ? CLR_BEAT : 0;
+    }
 
     if (arbitrary) {
         uint64_t TCNow = timer_ms();
@@ -167,9 +175,9 @@ int C_THISCLASS::render(char[2][2][576], int isBeat, int*, int*, int, int) {
     }
 
     if (invert) {
-        if (isBeat)
+        if (isBeat) {
             return CLR_BEAT;
-        else {
+        } else {
             SliderStep(SLIDER_CTRL_OUT, &outSlide);
             return SET_BEAT;
         }

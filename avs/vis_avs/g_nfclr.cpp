@@ -24,7 +24,9 @@ int win32_dlgproc_onbeatclear(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
             SendDlgItemMessage(hwndDlg, IDC_SLIDER1, TBM_SETRANGEMAX, 0, 100);
             SendDlgItemMessage(hwndDlg, IDC_SLIDER1, TBM_SETPOS, 1, g_this->nf);
 
-            if (g_this->blend) CheckDlgButton(hwndDlg, IDC_BLEND, BST_CHECKED);
+            if (g_this->blend) {
+                CheckDlgButton(hwndDlg, IDC_BLEND, BST_CHECKED);
+            }
             return 1;
 
         case WM_HSCROLL: {
@@ -41,10 +43,11 @@ int win32_dlgproc_onbeatclear(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                 InvalidateRect(GetDlgItem(hwndDlg, LOWORD(wParam)), NULL, FALSE);
             }
             if (LOWORD(wParam) == IDC_BLEND) {
-                if (IsDlgButtonChecked(hwndDlg, IDC_BLEND))
+                if (IsDlgButtonChecked(hwndDlg, IDC_BLEND)) {
                     g_this->blend = 1;
-                else
+                } else {
                     g_this->blend = 0;
+                }
             }
     }
     return 0;

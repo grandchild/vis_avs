@@ -31,32 +31,49 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 hwndDlg, IDC_HSHIFT, TBM_SETRANGE, TRUE, MAKELONG(0, 200));
             SendDlgItemMessage(
                 hwndDlg, IDC_HSHIFT, TBM_SETPOS, TRUE, g_ConfigThis->xshift + 100);
-            if (g_ConfigThis->onbeat)
+            if (g_ConfigThis->onbeat) {
                 SendDlgItemMessage(hwndDlg,
                                    IDC_SPEED,
                                    TBM_SETPOS,
                                    TRUE,
                                    (int)(g_ConfigThis->onbeatSpeed));
-            else
+            } else {
                 SendDlgItemMessage(hwndDlg,
                                    IDC_SPEED,
                                    TBM_SETPOS,
                                    TRUE,
                                    (int)(g_ConfigThis->normSpeed));
-            if (g_ConfigThis->enabled) CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
-            if (g_ConfigThis->onbeat) CheckDlgButton(hwndDlg, IDC_ONBEAT, BST_CHECKED);
-            if (g_ConfigThis->blend) CheckDlgButton(hwndDlg, IDC_ADDITIVE, BST_CHECKED);
-            if (g_ConfigThis->blendavg) CheckDlgButton(hwndDlg, IDC_5050, BST_CHECKED);
-            if (!g_ConfigThis->blend && !g_ConfigThis->blendavg)
+            }
+            if (g_ConfigThis->enabled) {
+                CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
+            }
+            if (g_ConfigThis->onbeat) {
+                CheckDlgButton(hwndDlg, IDC_ONBEAT, BST_CHECKED);
+            }
+            if (g_ConfigThis->blend) {
+                CheckDlgButton(hwndDlg, IDC_ADDITIVE, BST_CHECKED);
+            }
+            if (g_ConfigThis->blendavg) {
+                CheckDlgButton(hwndDlg, IDC_5050, BST_CHECKED);
+            }
+            if (!g_ConfigThis->blend && !g_ConfigThis->blendavg) {
                 CheckDlgButton(hwndDlg, IDC_REPLACE, BST_CHECKED);
-            if (g_ConfigThis->enabled) CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
-            if (g_ConfigThis->outline)
+            }
+            if (g_ConfigThis->enabled) {
+                CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
+            }
+            if (g_ConfigThis->outline) {
                 CheckDlgButton(hwndDlg, IDC_OUTLINE, BST_CHECKED);
-            if (g_ConfigThis->shadow) CheckDlgButton(hwndDlg, IDC_SHADOW, BST_CHECKED);
-            if (!g_ConfigThis->outline && !g_ConfigThis->shadow)
+            }
+            if (g_ConfigThis->shadow) {
+                CheckDlgButton(hwndDlg, IDC_SHADOW, BST_CHECKED);
+            }
+            if (!g_ConfigThis->outline && !g_ConfigThis->shadow) {
                 CheckDlgButton(hwndDlg, IDC_PLAIN, BST_CHECKED);
-            if (g_ConfigThis->randomword)
+            }
+            if (g_ConfigThis->randomword) {
                 CheckDlgButton(hwndDlg, IDC_RANDWORD, BST_CHECKED);
+            }
             switch (g_ConfigThis->valign) {
                 case DT_TOP: CheckDlgButton(hwndDlg, IDC_VTOP, BST_CHECKED); break;
                 case DT_BOTTOM:
@@ -73,8 +90,9 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                     CheckDlgButton(hwndDlg, IDC_HCENTER, BST_CHECKED);
                     break;
             }
-            if (g_ConfigThis->insertBlank)
+            if (g_ConfigThis->insertBlank) {
                 CheckDlgButton(hwndDlg, IDC_BLANKS, BST_CHECKED);
+            }
             if (g_ConfigThis->randomPos) {
                 CheckDlgButton(hwndDlg, IDC_RANDOMPOS, BST_CHECKED);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_VTOP), FALSE);
@@ -106,11 +124,13 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 if (g_ConfigThis->onbeat) {
                     g_ConfigThis->onbeatSpeed =
                         SendDlgItemMessage(hwndDlg, IDC_SPEED, TBM_GETPOS, 0, 0);
-                    if (g_ConfigThis->nb > g_ConfigThis->onbeatSpeed)
+                    if (g_ConfigThis->nb > g_ConfigThis->onbeatSpeed) {
                         g_ConfigThis->nb = g_ConfigThis->onbeatSpeed;
-                } else
+                    }
+                } else {
                     g_ConfigThis->normSpeed =
                         SendDlgItemMessage(hwndDlg, IDC_SPEED, TBM_GETPOS, 0, 0);
+                }
             }
             return 0;
         }
@@ -141,32 +161,37 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 g_ConfigThis->forceredraw = 1;
                 g_ConfigThis->shiftinit = 1;
             }
-            if (LOWORD(wParam) == IDC_EDIT)
+            if (LOWORD(wParam) == IDC_EDIT) {
                 if (HIWORD(wParam) == EN_CHANGE) {
                     int l;
-                    if (g_ConfigThis->text) GlobalFree(g_ConfigThis->text);
+                    if (g_ConfigThis->text) {
+                        GlobalFree(g_ConfigThis->text);
+                    }
                     l = SendDlgItemMessage(hwndDlg, IDC_EDIT, WM_GETTEXTLENGTH, 0, 0);
-                    if (!l)
+                    if (!l) {
                         g_ConfigThis->text = NULL;
-                    else {
+                    } else {
                         g_ConfigThis->text = (char*)GlobalAlloc(GMEM_FIXED, l + 2);
                         GetDlgItemText(hwndDlg, IDC_EDIT, g_ConfigThis->text, l + 1);
                     }
                     g_ConfigThis->forceredraw = 1;
                 }
+            }
             if (LOWORD(wParam) == IDC_CHOOSEFONT) {
                 g_ConfigThis->cf.hwndOwner = hwndDlg;
                 ChooseFont(&(g_ConfigThis->cf));
                 g_ConfigThis->updating = true;
                 g_ConfigThis->myFont = CreateFontIndirect(&(g_ConfigThis->lf));
                 g_ConfigThis->forceredraw = 1;
-                if (g_ConfigThis->hOldFont)
+                if (g_ConfigThis->hOldFont) {
                     SelectObject(g_ConfigThis->hBitmapDC, g_ConfigThis->hOldFont);
-                if (g_ConfigThis->myFont)
+                }
+                if (g_ConfigThis->myFont) {
                     g_ConfigThis->hOldFont = (HFONT)SelectObject(
                         g_ConfigThis->hBitmapDC, g_ConfigThis->myFont);
-                else
+                } else {
                     g_ConfigThis->hOldFont = NULL;
+                }
                 g_ConfigThis->updating = false;
             }
             if ((LOWORD(wParam) == IDC_CHECK1) || (LOWORD(wParam) == IDC_ONBEAT)
@@ -188,18 +213,19 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 g_ConfigThis->onbeat = IsDlgButtonChecked(hwndDlg, IDC_ONBEAT) ? 1 : 0;
                 g_ConfigThis->blend = IsDlgButtonChecked(hwndDlg, IDC_ADDITIVE) ? 1 : 0;
                 g_ConfigThis->blendavg = IsDlgButtonChecked(hwndDlg, IDC_5050) ? 1 : 0;
-                if (g_ConfigThis->onbeat)
+                if (g_ConfigThis->onbeat) {
                     SendDlgItemMessage(hwndDlg,
                                        IDC_SPEED,
                                        TBM_SETPOS,
                                        TRUE,
                                        (int)(g_ConfigThis->onbeatSpeed));
-                else
+                } else {
                     SendDlgItemMessage(hwndDlg,
                                        IDC_SPEED,
                                        TBM_SETPOS,
                                        TRUE,
                                        (int)(g_ConfigThis->normSpeed));
+                }
                 g_ConfigThis->insertBlank =
                     IsDlgButtonChecked(hwndDlg, IDC_BLANKS) ? 1 : 0;
                 g_ConfigThis->randomPos =
@@ -238,10 +264,12 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                              g_ConfigThis->randomPos ? FALSE : TRUE);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_VSHIFT),
                              g_ConfigThis->randomPos ? FALSE : TRUE);
-                if ((LOWORD(wParam) == IDC_ONBEAT) && g_ConfigThis->onbeat)
+                if ((LOWORD(wParam) == IDC_ONBEAT) && g_ConfigThis->onbeat) {
                     g_ConfigThis->nb = g_ConfigThis->onbeatSpeed;
-                if ((LOWORD(wParam) == IDC_RANDOMPOS) && g_ConfigThis->randomPos)
+                }
+                if ((LOWORD(wParam) == IDC_RANDOMPOS) && g_ConfigThis->randomPos) {
                     g_ConfigThis->forcealign = 1;
+                }
             }
             if (LOWORD(wParam) == IDC_DEFCOL
                 || LOWORD(wParam) == IDC_DEFOUTCOL)  // handle clicks to nifty color
@@ -261,10 +289,11 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 if (ChooseColor(&cs)) {
                     *a = ((cs.rgbResult >> 16) & 0xff) | (cs.rgbResult & 0xff00)
                          | ((cs.rgbResult << 16) & 0xff0000);
-                    if (LOWORD(wParam) == IDC_DEFCOL)
+                    if (LOWORD(wParam) == IDC_DEFCOL) {
                         g_ConfigThis->color = *a;
-                    else
+                    } else {
                         g_ConfigThis->outlinecolor = *a;
+                    }
                 }
                 InvalidateRect(GetDlgItem(hwndDlg, LOWORD(wParam)), NULL, TRUE);
                 g_ConfigThis->updating = true;

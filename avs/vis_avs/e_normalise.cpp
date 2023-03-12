@@ -83,7 +83,9 @@ int E_Normalise::scan_min_max_sse2(int* framebuffer,
     for (int i = 0; i < 16; i++) {
         *max_out = four_px_max[i] > *max_out ? four_px_max[i] : *max_out;
         *min_out = four_px_min[i] < *min_out ? four_px_min[i] : *min_out;
-        if (i % 4 == 2) i++;
+        if (i % 4 == 2) {
+            i++;
+        }
     }
     return 0;
 }
@@ -117,9 +119,13 @@ int E_Normalise::render(char[2][2][576], int, int* framebuffer, int*, int w, int
     unsigned int scale_table[NUM_COLOR_VALUES];
     bool no_scaling_needed;
 
-    if (!this->enabled) return 0;
+    if (!this->enabled) {
+        return 0;
+    }
     no_scaling_needed = this->scan_min_max_sse2(framebuffer, w * h, &max, &min);
-    if (no_scaling_needed) return 0;
+    if (no_scaling_needed) {
+        return 0;
+    }
     this->make_scale_table(max, min, scale_table);
     this->apply(framebuffer, w * h, scale_table);
     return 0;

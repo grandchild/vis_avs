@@ -50,7 +50,9 @@ void loadComboBox(HWND dlg, char* ext, char* selectedName) {
     wsprintf(path, "%s\\%s", g_path, ext);
 
     ff = FindFirstFile(path, &fd);
-    if (ff == INVALID_HANDLE_VALUE) return;
+    if (ff == INVALID_HANDLE_VALUE) {
+        return;
+    }
 
     do {
         SendMessage(dlg, CB_ADDSTRING, 0, (LPARAM)(fd.cFileName));
@@ -58,7 +60,9 @@ void loadComboBox(HWND dlg, char* ext, char* selectedName) {
     FindClose(ff);
 
     a = SendMessage(dlg, CB_FINDSTRINGEXACT, 0, (LPARAM)(selectedName));
-    if (a != CB_ERR) SendMessage(dlg, CB_SETCURSEL, (WPARAM)a, 0);
+    if (a != CB_ERR) {
+        SendMessage(dlg, CB_SETCURSEL, (WPARAM)a, 0);
+    }
 }
 
 void GR_SelectColor(HWND hwnd, int* a) {
@@ -110,7 +114,7 @@ static void _dosetsel(HWND hwndDlg) {
 
     m_help_lastpage = sel;
 
-    if (sel == 0)
+    if (sel == 0) {
         text =
             "Many AVS effects allow you to write simple expressions to control\r\n"
             "visualization. Here is a brief summary of how to write AVS code.\r\n"
@@ -144,7 +148,7 @@ static void _dosetsel(HWND hwndDlg) {
             "\r\n"
             "It is worth noting that extra whitespace (spaces, newlines) is\r\n"
             "ignored, so if you need to space things out for clarity, you can.\r\n";
-    else if (sel == 1)
+    } else if (sel == 1) {
         text =
             "The following operators are available:\r\n"
             "=\r\n"
@@ -179,7 +183,7 @@ static void _dosetsel(HWND hwndDlg) {
             "  converts two values to integer, returns bitwise AND of both values\r\n"
             "  example:  var=var2&31;\r\n"
             "\r\n";
-    else if (sel == 2)
+    } else if (sel == 2) {
         text =
             "Functions available from code:\r\n"
             "abs(value)\r\n"
@@ -337,7 +341,7 @@ static void _dosetsel(HWND hwndDlg) {
             "\r\n"
 #endif
             ;
-    else if (sel == 3)
+    } else if (sel == 3) {
         text =
             "Constants\r\n"
             "   '$PI' can be used in place of '3.14159'\r\n"
@@ -347,8 +351,9 @@ static void _dosetsel(HWND hwndDlg) {
             "     (i.e. '5' or '5.0' or '5.00001')\r\n"
 
             ;
-    else if (sel == 4 && m_localtext)
+    } else if (sel == 4 && m_localtext) {
         text = m_localtext;
+    }
 
     SetDlgItemText(hwndDlg, IDC_EDIT1, text);
 }
@@ -376,20 +381,24 @@ static BOOL CALLBACK evalHelpDlgProc(HWND hwndDlg,
                 item.pszText = (char*)lParam;
                 m_localtext = item.pszText + strlen(item.pszText) + 1;
                 TabCtrl_InsertItem(tabwnd, 4, &item);
-            } else if (m_help_lastpage > 3)
+            } else if (m_help_lastpage > 3) {
                 m_help_lastpage = 0;
+            }
 
             TabCtrl_SetCurSel(tabwnd, m_help_lastpage);
             _dosetsel(hwndDlg);
         }
             return 0;
         case WM_COMMAND:
-            if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+            if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL) {
                 EndDialog(hwndDlg, 1);
+            }
             return 0;
         case WM_NOTIFY: {
             LPNMHDR p = (LPNMHDR)lParam;
-            if (p->idFrom == IDC_TAB1 && p->code == TCN_SELCHANGE) _dosetsel(hwndDlg);
+            if (p->idFrom == IDC_TAB1 && p->code == TCN_SELCHANGE) {
+                _dosetsel(hwndDlg);
+            }
         }
             return 0;
     }

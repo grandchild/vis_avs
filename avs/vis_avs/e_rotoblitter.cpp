@@ -92,7 +92,9 @@ int E_RotoBlitter::render(char[2][2][576],
         }
     }
 
-    if (is_beat & 0x80000000) return 0;
+    if (is_beat & 0x80000000) {
+        return 0;
+    }
 
     auto dest = (unsigned int*)fbout;
     auto src = (unsigned int*)framebuffer;
@@ -122,10 +124,14 @@ int E_RotoBlitter::render(char[2][2][576],
     int64_t zoom;
     if (this->config.zoom < this->config.on_beat_zoom) {
         zoom = max(this->current_zoom, this->config.zoom);
-        if (this->current_zoom > this->config.zoom) this->current_zoom -= 3;
+        if (this->current_zoom > this->config.zoom) {
+            this->current_zoom -= 3;
+        }
     } else {
         zoom = min(this->current_zoom, this->config.zoom);
-        if (this->current_zoom < this->config.zoom) this->current_zoom += 3;
+        if (this->current_zoom < this->config.zoom) {
+            this->current_zoom += 3;
+        }
     }
 
     double f_zoom = 1.0 + (double)zoom / -RotoBlitter_Info::parameters[0].int_min;
@@ -152,10 +158,18 @@ int E_RotoBlitter::render(char[2][2][576],
     int y = h;
     if (ds_dx > -ds && ds_dx < ds && dt_dx > -dt && dt_dx < dt) {
         while (y--) {
-            if (ds) s %= ds;
-            if (dt) t %= dt;
-            if (s < 0) s += ds;
-            if (t < 0) t += dt;
+            if (ds) {
+                s %= ds;
+            }
+            if (dt) {
+                t %= dt;
+            }
+            if (s < 0) {
+                s += ds;
+            }
+            if (t < 0) {
+                t += dt;
+            }
             x = w;
 
 #define DO_LOOP(Z)  \
@@ -234,8 +248,9 @@ void E_RotoBlitter::load_legacy(unsigned char* data, int len) {
     if (len - pos >= 4) {
         this->config.bilinear = GET_INT();
         pos += 4;
-    } else
+    } else {
         this->config.bilinear = 0;
+    }
 
     this->current_zoom = this->config.zoom;
 }

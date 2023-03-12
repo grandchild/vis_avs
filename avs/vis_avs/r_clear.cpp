@@ -115,26 +115,37 @@ int C_THISCLASS::render(char[2][2][576],
     int i = w * h;
     int* p = framebuffer;
 
-    if (!enabled) return 0;
-    if (onlyfirst && fcounter) return 0;
-    if (isBeat & 0x80000000) return 0;
+    if (!enabled) {
+        return 0;
+    }
+    if (onlyfirst && fcounter) {
+        return 0;
+    }
+    if (isBeat & 0x80000000) {
+        return 0;
+    }
 
     fcounter++;
 
-    if (blend == 2)
-        while (i--) BLEND_LINE(p++, color);
-    else if (blend)
+    if (blend == 2) {
+        while (i--) {
+            BLEND_LINE(p++, color);
+        }
+    } else if (blend) {
         while (i--) {
             *p = BLEND(*p, color);
             p++;
         }
-    else if (blendavg)
+    } else if (blendavg) {
         while (i--) {
             *p = BLEND_AVG(*p, color);
             p++;
         }
-    else
-        while (i--) *p++ = color;
+    } else {
+        while (i--) {
+            *p++ = color;
+        }
+    }
     return 0;
 }
 

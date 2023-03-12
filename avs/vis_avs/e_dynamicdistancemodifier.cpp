@@ -64,46 +64,55 @@ static unsigned const char sq_table[] = {
     247, 248, 248, 249, 249, 250, 250, 251, 251, 252, 252, 253, 253, 254, 254, 255};
 
 static inline unsigned long isqrt(unsigned long n) {
-    if (n >= 0x10000)
-        if (n >= 0x1000000)
-            if (n >= 0x10000000)
-                if (n >= 0x40000000)
+    if (n >= 0x10000) {
+        if (n >= 0x1000000) {
+            if (n >= 0x10000000) {
+                if (n >= 0x40000000) {
                     return (sq_table[n >> 24] << 8);
-                else
+                } else {
                     return (sq_table[n >> 22] << 7);
-            else if (n >= 0x4000000)
+                }
+            } else if (n >= 0x4000000) {
                 return (sq_table[n >> 20] << 6);
-            else
+            } else {
                 return (sq_table[n >> 18] << 5);
-        else if (n >= 0x100000)
-            if (n >= 0x400000)
+            }
+        } else if (n >= 0x100000) {
+            if (n >= 0x400000) {
                 return (sq_table[n >> 16] << 4);
-            else
+            } else {
                 return (sq_table[n >> 14] << 3);
-        else if (n >= 0x40000)
+            }
+        } else if (n >= 0x40000) {
             return (sq_table[n >> 12] << 2);
-        else
+        } else {
             return (sq_table[n >> 10] << 1);
+        }
+    }
 
-    else if (n >= 0x100)
-        if (n >= 0x1000)
-            if (n >= 0x4000)
+    else if (n >= 0x100) {
+        if (n >= 0x1000) {
+            if (n >= 0x4000) {
                 return (sq_table[n >> 8]);
-            else
+            } else {
                 return (sq_table[n >> 6] >> 1);
-        else if (n >= 0x400)
+            }
+        } else if (n >= 0x400) {
             return (sq_table[n >> 4] >> 2);
-        else
+        } else {
             return (sq_table[n >> 2] >> 3);
-    else if (n >= 0x10)
-        if (n >= 0x40)
+        }
+    } else if (n >= 0x10) {
+        if (n >= 0x40) {
             return (sq_table[n] >> 4);
-        else
+        } else {
             return (sq_table[n << 2] << 5);
-    else if (n >= 0x4)
+        }
+    } else if (n >= 0x4) {
         return (sq_table[n >> 4] << 6);
-    else
+    } else {
         return (sq_table[n >> 6] << 7);
+    }
 }
 
 #define PUT_INT(y)                   \
@@ -160,7 +169,9 @@ int E_DynamicDistanceModifier::render(char visdata[2][2][576],
         this->max_d = sqrt((w * w + h * h) / 4.0);
         free(this->m_wmul);
         this->m_wmul = (int*)malloc(sizeof(int) * h);
-        for (y = 0; y < h; y++) this->m_wmul[y] = y * w;
+        for (y = 0; y < h; y++) {
+            this->m_wmul[y] = y * w;
+        }
         free(this->m_tab);
         this->m_tab = NULL;
     }
@@ -197,7 +208,9 @@ int E_DynamicDistanceModifier::render(char visdata[2][2][576],
             this->m_tab[x] = this->m_tab[x - 1];
         }
     } else {
-        for (x = 0; x < imax_d; x++) this->m_tab[x] = 0;
+        for (x = 0; x < imax_d; x++) {
+            this->m_tab[x] = 0;
+        }
     }
 
     {
@@ -227,14 +240,16 @@ int E_DynamicDistanceModifier::render(char visdata[2][2][576],
                         ypart &= 0xff;
                         xxsc++;
 
-                        if (ow < 0)
+                        if (ow < 0) {
                             ow = 0;
-                        else if (ow >= w - 1)
+                        } else if (ow >= w - 1) {
                             ow = w - 2;
-                        if (oh < 0)
+                        }
+                        if (oh < 0) {
                             oh = 0;
-                        else if (oh >= h - 1)
+                        } else if (oh >= h - 1) {
                             oh = h - 2;
+                        }
 
                         *fbout++ = BLEND_AVG(
                             BLEND4((unsigned int*)framebuffer + ow + this->m_wmul[oh],
@@ -258,14 +273,16 @@ int E_DynamicDistanceModifier::render(char visdata[2][2][576],
                         ypart &= 0xff;
                         xxsc++;
 
-                        if (ow < 0)
+                        if (ow < 0) {
                             ow = 0;
-                        else if (ow >= w - 1)
+                        } else if (ow >= w - 1) {
                             ow = w - 2;
-                        if (oh < 0)
+                        }
+                        if (oh < 0) {
                             oh = 0;
-                        else if (oh >= h - 1)
+                        } else if (oh >= h - 1) {
                             oh = h - 2;
+                        }
 
                         *fbout++ =
                             BLEND4((unsigned int*)framebuffer + ow + this->m_wmul[oh],
@@ -285,14 +302,16 @@ int E_DynamicDistanceModifier::render(char visdata[2][2][576],
                         xxsc++;
                         oh = h2 + ((qd * yysc + 128) >> 8);
 
-                        if (ow < 0)
+                        if (ow < 0) {
                             ow = 0;
-                        else if (ow >= w)
+                        } else if (ow >= w) {
                             ow = w - 1;
-                        if (oh < 0)
+                        }
+                        if (oh < 0) {
                             oh = 0;
-                        else if (oh >= h)
+                        } else if (oh >= h) {
                             oh = h - 1;
+                        }
 
                         *fbout++ =
                             BLEND_AVG(framebuffer[ow + this->m_wmul[oh]], *fbin++);
@@ -307,14 +326,16 @@ int E_DynamicDistanceModifier::render(char visdata[2][2][576],
                         xxsc++;
                         oh = h2 + ((qd * yysc + 128) >> 8);
 
-                        if (ow < 0)
+                        if (ow < 0) {
                             ow = 0;
-                        else if (ow >= w)
+                        } else if (ow >= w) {
                             ow = w - 1;
-                        if (oh < 0)
+                        }
+                        if (oh < 0) {
                             oh = 0;
-                        else if (oh >= h)
+                        } else if (oh >= h) {
                             oh = h - 1;
+                        }
 
                         *fbout++ = framebuffer[ow + this->m_wmul[oh]];
                     }

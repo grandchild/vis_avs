@@ -73,18 +73,23 @@ void E_Blur::smp_render(int this_thread,
     unsigned int* f = (unsigned int*)framebuffer;
     unsigned int* of = (unsigned int*)fbout;
 
-    if (max_threads < 1) max_threads = 1;
+    if (max_threads < 1) {
+        max_threads = 1;
+    }
 
     int start_l = (this_thread * h) / max_threads;
     int end_l;
 
-    if (this_thread >= max_threads - 1)
+    if (this_thread >= max_threads - 1) {
         end_l = h;
-    else
+    } else {
         end_l = ((this_thread + 1) * h) / max_threads;
+    }
 
     int outh = end_l - start_l;
-    if (outh < 1) return;
+    if (outh < 1) {
+        return;
+    }
 
     int skip_pix = start_l * w;
 
@@ -93,8 +98,12 @@ void E_Blur::smp_render(int this_thread,
 
     int at_top = 0, at_bottom = 0;
 
-    if (!this_thread) at_top = 1;
-    if (this_thread >= max_threads - 1) at_bottom = 1;
+    if (!this_thread) {
+        at_top = 1;
+    }
+    if (this_thread >= max_threads - 1) {
+        at_bottom = 1;
+    }
 
     if (this->config.level == BLUR_LIGHT) {
         // top line
@@ -1062,7 +1071,9 @@ int E_Blur::render(char visdata[2][2][576],
                    int w,
                    int h) {
     this->smp_begin(1, visdata, is_beat, framebuffer, fbout, w, h);
-    if (is_beat & 0x80000000) return 0;
+    if (is_beat & 0x80000000) {
+        return 0;
+    }
 
     this->smp_render(0, 1, visdata, is_beat, framebuffer, fbout, w, h);
     return this->smp_finish(visdata, is_beat, framebuffer, fbout, w, h);

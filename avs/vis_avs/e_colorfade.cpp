@@ -138,7 +138,9 @@ int E_Colorfade::render(char visdata[2][2][576],
                         int w,
                         int h) {
     smp_begin(1, visdata, is_beat, framebuffer, fbout, w, h);
-    if (is_beat & 0x80000000) return 0;
+    if (is_beat & 0x80000000) {
+        return 0;
+    }
 
     smp_render(0, 1, visdata, is_beat, framebuffer, fbout, w, h);
     return smp_finish(visdata, is_beat, framebuffer, fbout, w, h);
@@ -151,10 +153,16 @@ int E_Colorfade::smp_begin(int max_threads,
                            int*,
                            int,
                            int) {
-    if (is_beat & 0x80000000) return 0;
+    if (is_beat & 0x80000000) {
+        return 0;
+    }
 
-    if (this->cur_2nd < this->config.fader_2nd) this->cur_2nd++;
-    if (this->cur_2nd > this->config.fader_2nd) this->cur_2nd--;
+    if (this->cur_2nd < this->config.fader_2nd) {
+        this->cur_2nd++;
+    }
+    if (this->cur_2nd > this->config.fader_2nd) {
+        this->cur_2nd--;
+    }
     if (this->config.version == COLORFADE_VERSION_V2_81D) {
         // This bug is a mixup in the 2nd and 3rd slider in normal operation:
         // The 3rd fader approaches the configured value for the 2nd and vice-versa.
@@ -164,15 +172,31 @@ int E_Colorfade::smp_begin(int max_threads,
         //   - The 2nd on-beat fader changes the 3rd normal fader value (and vice-versa)
         //   - Saving and loading the preset will result in a switched setting, but only
         //     for the first few seconds while the switched approach below is happening.
-        if (this->cur_max < this->config.fader_3rd_gray) this->cur_max++;
-        if (this->cur_max > this->config.fader_3rd_gray) this->cur_max--;
-        if (this->cur_3rd_gray < this->config.fader_max) this->cur_3rd_gray++;
-        if (this->cur_3rd_gray > this->config.fader_max) this->cur_3rd_gray--;
+        if (this->cur_max < this->config.fader_3rd_gray) {
+            this->cur_max++;
+        }
+        if (this->cur_max > this->config.fader_3rd_gray) {
+            this->cur_max--;
+        }
+        if (this->cur_3rd_gray < this->config.fader_max) {
+            this->cur_3rd_gray++;
+        }
+        if (this->cur_3rd_gray > this->config.fader_max) {
+            this->cur_3rd_gray--;
+        }
     } else {
-        if (this->cur_max < this->config.fader_max) this->cur_max++;
-        if (this->cur_max > this->config.fader_max) this->cur_max--;
-        if (this->cur_3rd_gray < this->config.fader_3rd_gray) this->cur_3rd_gray++;
-        if (this->cur_3rd_gray > this->config.fader_3rd_gray) this->cur_3rd_gray--;
+        if (this->cur_max < this->config.fader_max) {
+            this->cur_max++;
+        }
+        if (this->cur_max > this->config.fader_max) {
+            this->cur_max--;
+        }
+        if (this->cur_3rd_gray < this->config.fader_3rd_gray) {
+            this->cur_3rd_gray++;
+        }
+        if (this->cur_3rd_gray > this->config.fader_3rd_gray) {
+            this->cur_3rd_gray--;
+        }
     }
     if (!this->config.on_beat) {
         this->cur_2nd = this->config.fader_2nd;
@@ -181,8 +205,12 @@ int E_Colorfade::smp_begin(int max_threads,
     } else if (is_beat && this->config.on_beat_random) {
         this->cur_2nd = (rand() % 32) - 6;
         this->cur_max = (rand() % 64) - 32;
-        if (this->cur_max < 0 && this->cur_max > -16) this->cur_max = -32;
-        if (this->cur_max >= 0 && this->cur_max < 16) this->cur_max = 32;
+        if (this->cur_max < 0 && this->cur_max > -16) {
+            this->cur_max = -32;
+        }
+        if (this->cur_max >= 0 && this->cur_max < 16) {
+            this->cur_max = 32;
+        }
         this->cur_3rd_gray = (rand() % 32) - 6;
     } else if (is_beat) {
         this->cur_2nd = this->config.on_beat_2nd;
