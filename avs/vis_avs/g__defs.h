@@ -1,5 +1,6 @@
 #pragma once
 
+#include "effect_info.h"
 #include "windows.h"
 
 #include "../platform.h"
@@ -32,5 +33,5 @@ void init_select_radio(const Parameter& param,
 void init_resource(const Parameter& param,
                    const char* value,
                    HWND hwndDlg,
-                   uint32_t control_handle,
+                   int32_t control_handle,
                    size_t max_str_len);

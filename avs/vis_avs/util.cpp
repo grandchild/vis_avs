@@ -490,15 +490,29 @@ void init_select_radio(const Parameter& param,
 void init_resource(const Parameter& param,
                    const char* value,
                    HWND hwndDlg,
-                   uint32_t control_handle,
+                   int32_t control_handle,
                    size_t max_str_len) {
     int64_t options_length;
     const char* const* options = param.get_options(&options_length);
+    bool resource_available = false;
     for (int64_t i = 0; i < options_length; ++i) {
         SendDlgItemMessage(
             hwndDlg, control_handle, CB_ADDSTRING, 0, (LPARAM)options[i]);
         if (strncmp(value, options[i], max_str_len) == 0) {
+            resource_available = true;
             SendDlgItemMessage(hwndDlg, control_handle, CB_SETCURSEL, i, 0);
+        }
+    }
+    if (!resource_available && strnlen(value, max_str_len) > 0) {
+        std::string value_plus_missing(value);
+        value_plus_missing += "  [missing!]";
+        auto position = SendDlgItemMessage(hwndDlg,
+                                           control_handle,
+                                           CB_ADDSTRING,
+                                           0,
+                                           (LPARAM)value_plus_missing.c_str());
+        if (position != CB_ERR && position != CB_ERRSPACE) {
+            SendDlgItemMessage(hwndDlg, control_handle, CB_SETCURSEL, position, 0);
         }
     }
 }
