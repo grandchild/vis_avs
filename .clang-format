@@ -97,6 +97,25 @@ BinPackParameters: false
 #
 InsertTrailingCommas: Wrapped
 
+# Insert braces around control flow statements. Single-line if/for/while-bodies are
+# often prone to become multiline statements later. This prevents the common error of
+# not adding the braces when this happens.
+#
+# So this:
+#
+#     for(int i=0; i < length; i++)
+#         foo(i);
+#
+# becomes:
+#
+#     for(int i=0; i < length; i++) {
+#         foo(i);
+#     }
+#
+# The documentation warns about possibly invalid code resulting from this option, but so
+# far, no issues were found.
+InsertBraces: true
+
 # For an AVS effect in r_foo.cpp the main #includes are c_foo.h and (sometimes) r_foo.h.
 # Make clang-format aware of these, so that it sorts them at the top. But clang-format
 # only supports suffixes so this a bit hacky: Sort _any_ c_*.h or r_*.h header to the
