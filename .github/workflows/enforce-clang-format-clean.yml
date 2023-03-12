@@ -13,7 +13,7 @@ jobs:
 
       - name: Install clang-format
         run: |-
-          clang_major_version=14
+          clang_major_version=15
           set -x -u -o pipefail
           source /etc/os-release
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
