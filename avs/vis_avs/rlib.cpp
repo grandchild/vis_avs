@@ -136,7 +136,7 @@ void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_LEGACY(R_OscRings);
     DECLARE_EFFECT_NEW(Movement);
     DECLARE_EFFECT_NEW(Scatter);
-    DECLARE_EFFECT_LEGACY(R_DotGrid);
+    DECLARE_EFFECT_NEW(DotGrid);
     DECLARE_EFFECT_LEGACY(R_Stack);
     DECLARE_EFFECT_NEW(DotFountain);
     DECLARE_EFFECT_NEW(Water);
