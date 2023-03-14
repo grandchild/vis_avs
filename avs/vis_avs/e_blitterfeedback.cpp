@@ -32,106 +32,71 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // alphachannel safe 11/21/99
 // highly optimized on 10/10/00 JF. MMX.
 
-#include "c_blit.h"
+#include "e_blitterfeedback.h"
 
 #include "r_defs.h"
 
 // TODO: doesn't complain if not included. -> research.
 #include "timing.h"
 
-static const unsigned int revn[2] = {0xff00ff, 0xff00ff};  //{0x1000100,0x1000100}; <<-
-                                                           // this is actually more
-                                                           // correct, but we're going
-                                                           // for consistency vs. the
-                                                           // non-mmx ver-jf
-static const int zero = 0;
-
 #define PUT_INT(y)                   \
     data[pos] = (y)&255;             \
     data[pos + 1] = (y >> 8) & 255;  \
     data[pos + 2] = (y >> 16) & 255; \
     data[pos + 3] = (y >> 24) & 255
+
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
-void C_THISCLASS::load_config(unsigned char* data, int len) {
-    int pos = 0;
-    if (len - pos >= 4) {
-        scale = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        scale2 = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        blend = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        beatch = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        subpixel = GET_INT();
-        pos += 4;
-    } else {
-        subpixel = 0;
-    }
 
-    fpos = scale;
-}
-int C_THISCLASS::save_config(unsigned char* data) {
-    int pos = 0;
-    PUT_INT(scale);
-    pos += 4;
-    PUT_INT(scale2);
-    pos += 4;
-    PUT_INT(blend);
-    pos += 4;
-    PUT_INT(beatch);
-    pos += 4;
-    PUT_INT(subpixel);
-    pos += 4;
-    return pos;
+constexpr Parameter BlitterFeedback_Info::parameters[];
+
+void BlitterFeedback_Info::on_zoom_change(Effect* component,
+                                          const Parameter* parameter,
+                                          const std::vector<int64_t>&) {
+    auto blitter = (E_BlitterFeedback*)component;
+    blitter->set_current_zoom((int32_t)blitter->get_int(parameter->handle));
 }
 
-C_THISCLASS::C_THISCLASS() {
-    scale = 30;
-    scale2 = 30;
-    blend = 0;
-    fpos = scale;
-    beatch = 0;
-    subpixel = 1;
-}
+// {0x1000100,0x1000100}; <<- this is actually more correct, but we're going for
+// consistency vs. the non-mmx ver
+// -jf
+static const uint32_t revn[2] = {0xff00ff, 0xff00ff};
+static const int zero = 0;
 
-C_THISCLASS::~C_THISCLASS() {}
+E_BlitterFeedback::E_BlitterFeedback() : current_zoom(this->config.zoom) {}
 
-int C_THISCLASS::blitter_out(int* framebuffer, int* fbout, int w, int h, int f_val) {
-    const int adj = 7;
-    int ds_x = ((f_val + (1 << adj) - 32) << (16 - adj));
-    int x_len = ((w << 16) / ds_x) & ~3;
-    int y_len = (h << 16) / ds_x;
+void E_BlitterFeedback::set_current_zoom(int32_t zoom) { this->current_zoom = zoom; }
+
+int E_BlitterFeedback::blitter_out(int* framebuffer,
+                                   int* fbout,
+                                   int w,
+                                   int h,
+                                   int32_t zoom) {
+    const int32_t adj = 7;
+    int32_t ds_x = ((zoom + (1 << adj) - 32) << (16 - adj));
+    int32_t x_len = ((w << 16) / ds_x) & ~3;
+    int32_t y_len = (h << 16) / ds_x;
 
     if (x_len >= w || y_len >= h) {
         return 0;
     }
 
-    int start_x = (w - x_len) / 2;
-    int start_y = (h - y_len) / 2;
-    int s_y = 32768;
+    int32_t start_x = (w - x_len) / 2;
+    int32_t start_y = (h - y_len) / 2;
+    int32_t s_y = 32768;
 
-    int* dest = (int*)framebuffer + start_y * w + start_x;
-    int* src = (int*)fbout + start_y * w + start_x;
-    int y;
+    int32_t* dest = (int32_t*)framebuffer + start_y * w + start_x;
+    int32_t* src = (int32_t*)fbout + start_y * w + start_x;
+    int32_t y;
 
     fbout += start_y * w;
     for (y = 0; y < y_len; y++) {
-        int s_x = 32768;
-        unsigned int* src = ((unsigned int*)framebuffer) + (s_y >> 16) * w;
-        unsigned int* old_dest = ((unsigned int*)fbout) + start_x;
+        int32_t s_x = 32768;
+        uint32_t* src = ((uint32_t*)framebuffer) + (s_y >> 16) * w;
+        uint32_t* old_dest = ((uint32_t*)fbout) + start_x;
         s_y += ds_x;
-        if (!blend) {
-            int x = x_len / 4;
+        if (this->config.blend_mode == BLITTER_BLEND_REPLACE) {
+            int32_t x = x_len / 4;
             while (x--) {
                 old_dest[0] = src[s_x >> 16];
                 s_x += ds_x;
@@ -143,10 +108,9 @@ int C_THISCLASS::blitter_out(int* framebuffer, int* fbout, int w, int h, int f_v
                 s_x += ds_x;
                 old_dest += 4;
             }
-        } else {
-            unsigned int* s2 =
-                (unsigned int*)framebuffer + ((y + start_y) * w) + start_x;
-            int x = x_len / 4;
+        } else {  // BLITTER_BLEND_5050
+            uint32_t* s2 = (uint32_t*)framebuffer + ((y + start_y) * w) + start_x;
+            int32_t x = x_len / 4;
             while (x--) {
                 old_dest[0] = BLEND_AVG(s2[0], src[s_x >> 16]);
                 s_x += ds_x;
@@ -163,7 +127,7 @@ int C_THISCLASS::blitter_out(int* framebuffer, int* fbout, int w, int h, int f_v
         fbout += w;
     }
     for (y = 0; y < y_len; y++) {
-        memcpy(dest, src, x_len * sizeof(int));
+        memcpy(dest, src, x_len * sizeof(int32_t));
         dest += w;
         src += w;
     }
@@ -171,22 +135,26 @@ int C_THISCLASS::blitter_out(int* framebuffer, int* fbout, int w, int h, int f_v
     return 0;
 }
 
-int C_THISCLASS::blitter_normal(int* framebuffer, int* fbout, int w, int h, int f_val) {
-    int ds_x = ((f_val + 32) << 16) / 64;
-    int isx = (((w << 16) - ((ds_x * w))) / 2);
-    int s_y = (((h << 16) - ((ds_x * h))) / 2);
+int E_BlitterFeedback::blitter_normal(int* framebuffer,
+                                      int* fbout,
+                                      int w,
+                                      int h,
+                                      int32_t zoom) {
+    int32_t ds_x = ((zoom + 32) << 16) / 64;
+    int32_t isx = (((w << 16) - ((ds_x * w))) / 2);
+    int32_t s_y = (((h << 16) - ((ds_x * h))) / 2);
 
-    if (subpixel) {
-        int y;
+    if (this->config.bilinear) {
+        int32_t y;
         for (y = 0; y < h; y++) {
-            int s_x = isx;
-            unsigned int* src = ((unsigned int*)framebuffer) + (s_y >> 16) * w;
-            int ypart = (s_y >> 8) & 0xff;
+            int32_t s_x = isx;
+            uint32_t* src = ((uint32_t*)framebuffer) + (s_y >> 16) * w;
+            int32_t ypart = (s_y >> 8) & 0xff;
             s_y += ds_x;
 #ifdef NO_MMX
             {
                 ypart = (ypart * 255) >> 8;
-                int x = w / 4;
+                int32_t x = w / 4;
                 while (x--) {
                     fbout[0] = BLEND4(src + (s_x >> 16), w, (s_x >> 8) & 0xff, ypart);
                     s_x += ds_x;
@@ -204,7 +172,7 @@ int C_THISCLASS::blitter_normal(int* framebuffer, int* fbout, int w, int h, int 
                 __int64 mem5, mem7;
 #ifdef _MSC_VER  // MSVC asm
                 __asm {
-            mov edi, fbout         
+            mov edi, fbout
             mov esi, w
 
             movd mm7, ypart
@@ -213,7 +181,7 @@ int C_THISCLASS::blitter_normal(int* framebuffer, int* fbout, int w, int h, int 
             movq mm5, revn
             punpckldq mm7,mm7
 
-            psubw mm5, mm7         
+            psubw mm5, mm7
             mov ecx, esi
 
             movq mem5,mm5
@@ -233,12 +201,11 @@ int C_THISCLASS::blitter_normal(int* framebuffer, int* fbout, int w, int h, int 
 
             shr ebx, 8
             and eax, ~3
-            
+
             add eax, src
             and ebx, 0xff
 
             movd mm6, ebx
-                        //
 
             movq mm4, revn
             punpcklwd mm6,mm6
@@ -274,27 +241,25 @@ int C_THISCLASS::blitter_normal(int* framebuffer, int* fbout, int w, int h, int 
             shr ebx, 8
 
             psrlw mm0, 8
-            add eax, src            
+            add eax, src
 
             paddw mm2, mm3
             and ebx, 0xff
 
             pmullw mm0, mem5
             psrlw mm2, 8
-                        
+
             pmullw mm2, mem7
             add edx, ds_x
 
 
             movd mm6, ebx
-                         // 
 
             movq mm4, revn
             punpcklwd mm6,mm6
 
 
             movd mm1, [eax+4]
-                         //
 
             movd mm7, [eax+esi*4]
             paddw mm0, mm2
@@ -323,10 +288,8 @@ int C_THISCLASS::blitter_normal(int* framebuffer, int* fbout, int w, int h, int 
             pmullw mm7, mm4
 
                         // cycle
-                        // cycle
-            
+
             paddw mm5, mm1
-                        //
 
             pmullw mm3, mm6
             psrlw mm5, 8
@@ -335,19 +298,14 @@ int C_THISCLASS::blitter_normal(int* framebuffer, int* fbout, int w, int h, int 
             add edi, 8
 
                     // cycle
-                    // cycle
 
             paddw mm7, mm3
-                        //
-            
+
             psrlw mm7, 8
-                    //
 
             pmullw mm7, mem7
             dec ecx
 
-                        // cycle
-                        // cycle
                         // cycle
 
             paddw mm5, mm7
@@ -358,7 +316,6 @@ int C_THISCLASS::blitter_normal(int* framebuffer, int* fbout, int w, int h, int 
 
             movd [edi-4], mm5
 
-            
             jnz mmx_scale_loop1
             mov fbout, edi
             emms
@@ -468,11 +425,11 @@ int C_THISCLASS::blitter_normal(int* framebuffer, int* fbout, int w, int h, int 
 #endif           // _MSC_VER
             }  // end mmx
 #endif
-            if (blend)  // reblend this scanline with the original
-            {
+            if (this->config.blend_mode == BLITTER_BLEND_5050) {
+                // reblend this scanline with the original
                 fbout -= w;
-                int x = w / 4;
-                unsigned int* s2 = (unsigned int*)framebuffer + y * w;
+                int32_t x = w / 4;
+                uint32_t* s2 = (uint32_t*)framebuffer + y * w;
                 while (x--) {
                     fbout[0] = BLEND_AVG(fbout[0], s2[0]);
                     fbout[1] = BLEND_AVG(fbout[1], s2[1]);
@@ -482,16 +439,15 @@ int C_THISCLASS::blitter_normal(int* framebuffer, int* fbout, int w, int h, int 
                     s2 += 4;
                 }
             }
-        }   // end subpixel y loop
-    } else  // !subpixel
-    {
-        int y;
+        }     // end subpixel y loop
+    } else {  // !this->config.bilinear
+        int32_t y;
         for (y = 0; y < h; y++) {
-            int s_x = isx;
-            unsigned int* src = ((unsigned int*)framebuffer) + (s_y >> 16) * w;
+            int32_t s_x = isx;
+            uint32_t* src = ((uint32_t*)framebuffer) + (s_y >> 16) * w;
             s_y += ds_x;
-            if (!blend) {
-                int x = w / 4;
+            if (this->config.blend_mode == BLITTER_BLEND_REPLACE) {
+                int32_t x = w / 4;
                 while (x--) {
                     fbout[0] = src[s_x >> 16];
                     s_x += ds_x;
@@ -504,8 +460,8 @@ int C_THISCLASS::blitter_normal(int* framebuffer, int* fbout, int w, int h, int 
                     fbout += 4;
                 }
             } else {
-                unsigned int* s2 = (unsigned int*)framebuffer + (y * w);
-                int x = w / 4;
+                uint32_t* s2 = (uint32_t*)framebuffer + (y * w);
+                int32_t x = w / 4;
                 while (x--) {
                     fbout[0] = BLEND_AVG(s2[0], src[s_x >> 16]);
                     s_x += ds_x;
@@ -524,46 +480,83 @@ int C_THISCLASS::blitter_normal(int* framebuffer, int* fbout, int w, int h, int 
     return 1;
 }
 
-int C_THISCLASS::render(char[2][2][576],
-                        int isBeat,
-                        int* framebuffer,
-                        int* fbout,
-                        int w,
-                        int h) {
-    if (isBeat & 0x80000000) {
+int E_BlitterFeedback::render(char[2][2][576],
+                              int is_beat,
+                              int* framebuffer,
+                              int* fbout,
+                              int w,
+                              int h) {
+    if (is_beat & 0x80000000) {
         return 0;
     }
-    int f_val;
 
-    if (isBeat && beatch) {
-        fpos = scale2;
+    if (is_beat && this->config.on_beat) {
+        this->current_zoom = this->config.on_beat_zoom;
     }
 
-    if (scale < scale2) {
-        f_val = (fpos > scale ? fpos : scale);
-        fpos -= 3;
+    int32_t target_zoom;
+    if (this->config.zoom < this->config.on_beat_zoom) {
+        target_zoom = max(this->current_zoom, (int32_t)this->config.zoom);
+        this->current_zoom -= 3;
     } else {
-        f_val = (fpos < scale ? fpos : scale);
-        fpos += 3;
+        target_zoom = min(this->current_zoom, (int32_t)this->config.zoom);
+        this->current_zoom += 3;
     }
 
-    if (f_val < 0) {
-        f_val = 0;
+    if (target_zoom < 0) {
+        target_zoom = 0;
     }
 
-    if (f_val < 32) {
-        return blitter_normal(framebuffer, fbout, w, h, f_val);
+    if (target_zoom < 32) {
+        return blitter_normal(framebuffer, fbout, w, h, target_zoom);
     }
-    if (f_val > 32) {
-        return blitter_out(framebuffer, fbout, w, h, f_val);
+    if (target_zoom > 32) {
+        return blitter_out(framebuffer, fbout, w, h, target_zoom);
     }
     return 0;
 }
 
-C_RBASE* R_BlitterFB(char* desc) {
-    if (desc) {
-        strcpy(desc, MOD_NAME);
-        return NULL;
+void E_BlitterFeedback::load_legacy(unsigned char* data, int len) {
+    int pos = 0;
+    if (len - pos >= 4) {
+        this->config.zoom = GET_INT();
+        pos += 4;
     }
-    return (C_RBASE*)new C_THISCLASS();
+    if (len - pos >= 4) {
+        this->config.on_beat_zoom = GET_INT();
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        this->config.blend_mode = GET_INT();
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        this->config.on_beat_zoom = GET_INT();
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        this->config.bilinear = GET_INT();
+        pos += 4;
+    }
+
+    this->current_zoom = (int32_t)this->config.zoom;
 }
+
+int E_BlitterFeedback::save_legacy(unsigned char* data) {
+    int pos = 0;
+    PUT_INT(this->config.zoom);
+    pos += 4;
+    PUT_INT(this->config.on_beat_zoom);
+    pos += 4;
+    PUT_INT(this->config.blend_mode);
+    pos += 4;
+    PUT_INT(this->config.on_beat_zoom);
+    pos += 4;
+    PUT_INT(this->config.bilinear);
+    pos += 4;
+    return pos;
+}
+
+Effect_Info* create_BlitterFeedback_Info() { return new BlitterFeedback_Info(); }
+Effect* create_BlitterFeedback() { return new E_BlitterFeedback(); }
+void set_BlitterFeedback_desc(char* desc) { E_BlitterFeedback::set_desc(desc); }
