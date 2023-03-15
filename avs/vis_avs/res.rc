@@ -209,9 +209,9 @@ BEGIN
                     8,78,61,10
     CONTROL         "Center Channel",IDC_MIDCH,"Button",BS_AUTORADIOBUTTON,8,
                     88,65,10
-    CONTROL         "Left",IDC_TOP,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+    CONTROL         "Left",IDC_LEFT,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
                     WS_TABSTOP,86,68,28,10
-    CONTROL         "Right",IDC_BOTTOM,"Button",BS_AUTORADIOBUTTON,86,78,33,
+    CONTROL         "Right",IDC_RIGHT,"Button",BS_AUTORADIOBUTTON,86,78,33,
                     10
     CONTROL         "Center",IDC_CENTER,"Button",BS_AUTORADIOBUTTON,86,88,37,
                     10
