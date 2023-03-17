@@ -158,7 +158,7 @@ void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_NEW(SuperScope);
     DECLARE_EFFECT_NEW(Invert);
     DECLARE_EFFECT_LEGACY(R_Onetone);
-    DECLARE_EFFECT_LEGACY(R_Timescope);
+    DECLARE_EFFECT_NEW(Timescope);
     DECLARE_EFFECT_LEGACY(R_LineMode);
     DECLARE_EFFECT_NEW(Interferences);
     DECLARE_EFFECT_NEW(DynamicShift);
