@@ -117,6 +117,8 @@ void thread_destroy(thread_t* thread) { CloseHandle(thread); }
 
 /* dynamic library loading */
 
+// TODO [security]: Disallow loading DLLs from CWD with LOAD_LIBRARY_SAFE_CURRENT_DIRS
+//                  or similar.
 dlib_t* library_load(const char* path) { return (dlib_t*)LoadLibrary(path); }
 
 void* library_get(dlib_t* library, const char* func_name) {
