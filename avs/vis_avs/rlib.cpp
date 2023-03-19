@@ -152,7 +152,7 @@ void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_NEW(Mosaic);
     DECLARE_EFFECT_NEW(WaterBump);
     DECLARE_EFFECT_NEW(AVI);
-    DECLARE_EFFECT_LEGACY(R_Bpm);
+    DECLARE_EFFECT_NEW(CustomBPM);
     DECLARE_EFFECT_NEW(Picture);
     DECLARE_EFFECT_NEW(DynamicDistanceModifier);
     DECLARE_EFFECT_NEW(SuperScope);
