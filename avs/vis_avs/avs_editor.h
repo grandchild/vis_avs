@@ -359,7 +359,6 @@ bool avs_parameter_info(AVS_Handle avs,
  * empty string `""` if the last call to a `get` method succeeded, or an error message
  * otherwise.
  */
-#define NOT_IN_A_LIST 0
 bool avs_parameter_get_bool(AVS_Handle avs,
                             AVS_Component_Handle component,
                             AVS_Parameter_Handle parameter,
