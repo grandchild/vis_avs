@@ -874,7 +874,7 @@ struct parameter_dispatch<int64_t> {
         if (parameter->type == AVS_PARAM_SELECT) {
             int64_t length = -1;
             auto options = parameter->get_options(&length);
-            if (value > 0 && value < length) {
+            if (value >= 0 && value < length) {
                 option = options[value];
             }
         }
