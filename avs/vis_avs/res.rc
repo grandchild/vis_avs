@@ -551,7 +551,7 @@ BEGIN
                     BS_AUTORADIOBUTTON,5,17,78,10
     CONTROL         "Alternate Save/Restore",IDC_RADIO1,"Button",
                     BS_AUTORADIOBUTTON,5,28,91,10
-    CONTROL         "Alternate Restore/Save",IDC_RADIO7,"Button",
+    CONTROL         "Alternate Restore/Save",IDC_RADIO2,"Button",
                     BS_AUTORADIOBUTTON,5,38,91,10
     PUSHBUTTON      "Nudge parity",IDC_BUTTON2,100,31,50,14
     COMBOBOX        IDC_COMBO1,32,53,74,90,CBS_DROPDOWNLIST | WS_VSCROLL | 
