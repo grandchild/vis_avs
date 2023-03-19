@@ -29,10 +29,10 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#ifndef _RLIB_H_
-#define _RLIB_H_
+#pragma once
 
 #include "ape.h"
+#include "c__base.h"
 #include "effect.h"
 
 #define DLLRENDERBASE 16384
