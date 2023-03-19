@@ -77,7 +77,6 @@ void C_RBASE::save_string(unsigned char* data, int& pos, std::string& text) {
 }
 
 void C_RLibrary::add_dofx(void* rf,
-                          bool can_multithread,
                           Effect_Info* (*create_info)(void) = NULL,
                           Effect* (*create)(void) = NULL,
                           void (*set_legacy_desc)(char*) = NULL) {
@@ -95,7 +94,6 @@ void C_RLibrary::add_dofx(void* rf,
         RetrFuncs = (rfStruct*)newdl;
     }
     RetrFuncs[NumRetrFuncs].is_legacy = rf != NULL;
-    RetrFuncs[NumRetrFuncs].can_multithread = can_multithread;
     *((void**)&RetrFuncs[NumRetrFuncs].create_legacy) = rf;
     RetrFuncs[NumRetrFuncs].create_info = create_info;
     RetrFuncs[NumRetrFuncs].create = create;
@@ -106,17 +104,13 @@ void C_RLibrary::add_dofx(void* rf,
 // declarations for built-in effects
 #define DECLARE_EFFECT_LEGACY(name)    \
     extern C_RBASE*(name)(char* desc); \
-    add_dofx((void*)name, false);
-// multithreaded effects
-#define DECLARE_EFFECT_LEGACY_MT(name) \
-    extern C_RBASE*(name)(char* desc); \
-    add_dofx((void*)name, true);
+    add_dofx((void*)name);
 // effect-api-capable effects
 #define DECLARE_EFFECT_NEW(name)                \
     extern Effect_Info* create_##name##_Info(); \
     extern Effect* create_##name();             \
     extern void set_##name##_desc(char*);       \
-    add_dofx(NULL, false, create_##name##_Info, create_##name, set_##name##_desc);
+    add_dofx(NULL, create_##name##_Info, create_##name, set_##name##_desc);
 
 void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_NEW(Simple);
@@ -187,7 +181,6 @@ typedef C_RBASE* (*create_legacy_func)(char*);
 
 void C_RLibrary::add_dll(create_legacy_func create_legacy,
                          char* ape_id,
-                         bool can_multithread = false,
                          Effect_Info* (*create_info)(void) = NULL,
                          Effect* (*create)(void) = NULL,
                          void (*set_legacy_desc)(char*) = NULL) {
@@ -205,7 +198,6 @@ void C_RLibrary::add_dll(create_legacy_func create_legacy,
         DLLFuncs = newdl;
     }
     DLLFuncs[NumDLLFuncs].is_legacy = create_legacy != NULL;
-    DLLFuncs[NumDLLFuncs].can_multithread = can_multithread;
     DLLFuncs[NumDLLFuncs].idstring = ape_id;
     DLLFuncs[NumDLLFuncs].create_legacy = create_legacy;
     DLLFuncs[NumDLLFuncs].create_info = create_info;
@@ -222,8 +214,7 @@ void C_RLibrary::initbuiltinape(void) {
     extern Effect_Info* create_##name##_Info(); \
     extern Effect* create_##name();             \
     extern void set_##name##_desc(char*);       \
-    this->add_dll(                              \
-        NULL, ape_id, false, create_##name##_Info, create_##name, set_##name##_desc)
+    this->add_dll(NULL, ape_id, create_##name##_Info, create_##name, set_##name##_desc)
 
     ADD_NEW(ChannelShift, "Channel Shift");
     ADD_NEW(ColorReduction, "Color Reduction");
@@ -272,18 +263,15 @@ int C_RLibrary::GetRendererDesc(int which, char* str) {
 Legacy_Effect_Proxy C_RLibrary::CreateRenderer(int* which) {
     if (*which >= 0 && *which < NumRetrFuncs) {
         if (RetrFuncs[*which].is_legacy) {
-            return Legacy_Effect_Proxy(RetrFuncs[*which].create_legacy(NULL),
-                                       NULL,
-                                       *which,
-                                       RetrFuncs[*which].can_multithread);
+            return Legacy_Effect_Proxy(
+                RetrFuncs[*which].create_legacy(NULL), NULL, *which);
         } else {
             return Legacy_Effect_Proxy(NULL, RetrFuncs[*which].create(), *which);
         }
     }
 
     if (*which == LIST_ID) {
-        return Legacy_Effect_Proxy(
-            (C_RBASE*)new C_RenderListClass(), NULL, *which, false);
+        return Legacy_Effect_Proxy((C_RBASE*)new C_RenderListClass(), NULL, *which);
     }
 
     if (*which >= DLLRENDERBASE) {
@@ -297,10 +285,8 @@ Legacy_Effect_Proxy C_RLibrary::CreateRenderer(int* which) {
                 if (!strncmp(p, DLLFuncs[x].idstring, 32)) {
                     *which = (int)DLLFuncs[x].idstring;
                     if (DLLFuncs[x].is_legacy) {
-                        return Legacy_Effect_Proxy(DLLFuncs[x].create_legacy(NULL),
-                                                   NULL,
-                                                   *which,
-                                                   DLLFuncs[x].can_multithread);
+                        return Legacy_Effect_Proxy(
+                            DLLFuncs[x].create_legacy(NULL), NULL, *which);
                     } else {
                         return Legacy_Effect_Proxy(NULL, DLLFuncs[x].create(), *which);
                     }
@@ -313,10 +299,8 @@ Legacy_Effect_Proxy C_RLibrary::CreateRenderer(int* which) {
             if (!strncmp(p, NamedApeToBuiltinTrans[x].id, 32)) {
                 *which = NamedApeToBuiltinTrans[x].newidx;
                 if (RetrFuncs[*which].is_legacy) {
-                    return Legacy_Effect_Proxy(RetrFuncs[*which].create_legacy(NULL),
-                                               NULL,
-                                               *which,
-                                               RetrFuncs[*which].can_multithread);
+                    return Legacy_Effect_Proxy(
+                        RetrFuncs[*which].create_legacy(NULL), NULL, *which);
                 } else {
                     return Legacy_Effect_Proxy(
                         NULL, RetrFuncs[*which].create(), *which);

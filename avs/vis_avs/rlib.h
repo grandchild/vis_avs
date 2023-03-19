@@ -41,7 +41,6 @@ class C_RLibrary {
    protected:
     typedef struct {
         bool is_legacy;
-        bool can_multithread;
         C_RBASE* (*create_legacy)(char* desc);
         Effect_Info* (*create_info)(void);
         Effect* (*create)(void);
@@ -52,7 +51,6 @@ class C_RLibrary {
 
     typedef struct {
         bool is_legacy;
-        bool can_multithread;
         char* idstring;
         C_RBASE* (*create_legacy)(char* desc);
         Effect_Info* (*create_info)(void);
@@ -63,7 +61,6 @@ class C_RLibrary {
     int NumDLLFuncs;
 
     void add_dofx(void* rf,
-                  bool can_multithread,
                   Effect_Info* (*create_info)(void),
                   Effect* (*create)(void),
                   void (*set_legacy_desc)(char*));
@@ -80,10 +77,7 @@ class C_RLibrary {
     int GetRendererDesc(int which, char* str);
     void add_dll(C_RBASE* (*create_legacy)(char*),
                  char* ape_id,
-                 bool can_multithread,
                  Effect_Info* (*create_info)(void),
                  Effect* (*create)(void),
                  void (*set_legacy_desc)(char*));
 };
-
-#endif  // _RLIB_H_

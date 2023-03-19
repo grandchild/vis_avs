@@ -78,24 +78,20 @@ class Legacy_Effect_Proxy {
     Effect* effect;
     int32_t legacy_effect_index;
     const char* legacy_ape_id;
-    bool is_multithread;
 
-    Legacy_Effect_Proxy() : legacy_effect(NULL), effect(NULL), is_multithread(false){};
+    Legacy_Effect_Proxy() : legacy_effect(NULL), effect(NULL){};
     Legacy_Effect_Proxy(C_RBASE* legacy_effect,
                         Effect* effect,
-                        int legacy_effect_index = -3,
-                        bool is_multithread = false)
+                        int legacy_effect_index = -3)
         : legacy_effect(legacy_effect),
           effect(effect),
-          legacy_effect_index(legacy_effect_index),
-          is_multithread(is_multithread){};
+          legacy_effect_index(legacy_effect_index){};
     Legacy_Effect_Proxy& operator=(Effect* other) {
         if (this->effect == other) {
             return *this;
         };
         this->legacy_effect = NULL;
         this->effect = other;
-        this->is_multithread = false;
         return *this;
     };
     Legacy_Effect_Proxy& operator=(C_RBASE* other) {
@@ -117,14 +113,10 @@ class Legacy_Effect_Proxy {
 
     enum Type {
         NEW_EFFECT = 0,
-        LEGACY_SINGLETHREAD = 1,
-        LEGACY_MULTITHREAD = 2,
+        LEGACY_EFFECT = 1,
     };
     Type type() {
-        return this->legacy_effect != NULL
-                   ? (this->is_multithread ? Type::LEGACY_MULTITHREAD
-                                           : Type::LEGACY_SINGLETHREAD)
-                   : Type::NEW_EFFECT;
+        return this->legacy_effect != NULL ? Type::LEGACY_EFFECT : Type::NEW_EFFECT;
     };
     bool is_list() {
         return this->type() != NEW_EFFECT && this->legacy_effect_index == LIST_ID;
@@ -133,7 +125,6 @@ class Legacy_Effect_Proxy {
     void invalidate() {
         this->effect = NULL;
         this->legacy_effect = NULL;
-        this->is_multithread = false;
     };
     void* void_ref() {
         switch (this->type()) {
@@ -181,10 +172,8 @@ class Legacy_Effect_Proxy {
     bool can_multithread() {
         switch (this->type()) {
             case NEW_EFFECT: return this->effect->can_multithread();
-            case LEGACY_MULTITHREAD:
-                return ((C_RBASE2*)(this->legacy_effect))->smp_getflags() & 1;
             default:
-            case LEGACY_SINGLETHREAD: return false;
+            case LEGACY_EFFECT: return false;
         }
     };
     int smp_begin(int max_threads,
@@ -201,11 +190,8 @@ class Legacy_Effect_Proxy {
                 }
                 return this->effect->smp_begin(
                     max_threads, visdata, isBeat, framebuffer, fbout, w, h);
-            case LEGACY_MULTITHREAD:
-                return ((C_RBASE2*)(this->legacy_effect))
-                    ->smp_begin(max_threads, visdata, isBeat, framebuffer, fbout, w, h);
             default:
-            case LEGACY_SINGLETHREAD: return 0;
+            case LEGACY_EFFECT: return 0;
         }
     };
     void smp_render(int this_thread,
@@ -229,18 +215,8 @@ class Legacy_Effect_Proxy {
                                                 fbout,
                                                 w,
                                                 h);
-            case LEGACY_MULTITHREAD:
-                return ((C_RBASE2*)(this->legacy_effect))
-                    ->smp_render(this_thread,
-                                 max_threads,
-                                 visdata,
-                                 isBeat,
-                                 framebuffer,
-                                 fbout,
-                                 w,
-                                 h);
             default:
-            case LEGACY_SINGLETHREAD: return;
+            case LEGACY_EFFECT: return;
         }
     };
     int smp_finish(char visdata[2][2][576],
@@ -256,11 +232,8 @@ class Legacy_Effect_Proxy {
                 }
                 return this->effect->smp_finish(
                     visdata, isBeat, framebuffer, fbout, w, h);
-            case LEGACY_MULTITHREAD:
-                return ((C_RBASE2*)(this->legacy_effect))
-                    ->smp_finish(visdata, isBeat, framebuffer, fbout, w, h);
             default:
-            case LEGACY_SINGLETHREAD: return 0;
+            case LEGACY_EFFECT: return 0;
         }
     };
 };
