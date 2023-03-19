@@ -1,0 +1,91 @@
+name: Build on Ubuntu with MinGW GCC
+
+on:
+- pull_request
+- push
+
+jobs:
+  check:
+    name: Enforce clean clang-format
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install clang-format
+        run: |-
+          clang_major_version=15
+          set -x -u -o pipefail
+          source /etc/os-release
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo add-apt-repository "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${clang_major_version} main"
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends -V clang-format-${clang_major_version}
+          echo "/usr/lib/llvm-${clang_major_version}/bin" >> "${GITHUB_PATH}"
+
+      - name: Enforce clang-format clean
+        run: |-
+          clang_format_args=(
+              -i
+              -style=file
+              -verbose
+          )
+          set -x -u -o pipefail
+          clang-format --version
+          git ls-files '*.c' '*.cpp' '*.h' \
+              | xargs clang-format "${clang_format_args[@]}"
+          git diff --exit-code  # i.e. fail CI on non-empty diff
+
+  build-linux:
+    name: Build on Ubuntu with MinGW GCC
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install build dependencies
+        run: |-
+          sudo apt update && sudo apt install --yes mingw-w64 libavformat-dev libavcodec-dev libswscale-dev
+
+      - name: Configure
+        run: |-
+          set -e
+          mkdir build
+          cd build
+          cmake -DCMAKE_TOOLCHAIN_FILE=CMake-MingWcross-toolchain.txt ..
+
+      - name: Make
+        run: |-
+          make -C build VERBOSE=1
+          find build
+          mv build/vis_avs.dll build/vis_avs_281d_mingw_debug.dll
+
+      - uses: actions/upload-artifact@v3.1.1
+        with:
+          name: vis_avs_mingw
+          path: build/*.dll
+
+  build-windows:
+    name: Build on Windows with MSVC
+    runs-on: windows-latest
+    steps:
+      - uses: microsoft/setup-msbuild@v1.1.3
+
+      - uses: actions/checkout@v3
+
+      - name: Configure
+        shell: cmd
+        run: |-
+          md build
+          cd build
+          cmake -G"Visual Studio 17 2022" -A Win32 ..
+
+      - name: Make
+        run: msbuild "$env:GITHUB_WORKSPACE/build/vis_avs.sln" -m
+
+      - name: Copy DLL
+        shell: cmd
+        run: copy build/Debug/vis_avs.dll vis_avs_281d_msvc_debug.dll
+
+      - uses: actions/upload-artifact@v3.1.1
+        with:
+          name: vis_avs_msvc
+          path: vis_avs_281d_msvc_debug.dll
