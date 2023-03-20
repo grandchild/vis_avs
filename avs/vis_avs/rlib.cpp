@@ -151,7 +151,7 @@ void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_NEW(DynamicDistanceModifier);
     DECLARE_EFFECT_NEW(SuperScope);
     DECLARE_EFFECT_NEW(Invert);
-    DECLARE_EFFECT_LEGACY(R_Onetone);
+    DECLARE_EFFECT_NEW(UniqueTone);
     DECLARE_EFFECT_NEW(Timescope);
     DECLARE_EFFECT_NEW(SetRenderMode);
     DECLARE_EFFECT_NEW(Interferences);
