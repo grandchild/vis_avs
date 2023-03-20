@@ -125,7 +125,7 @@ void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_NEW(RotoBlitter);
     DECLARE_EFFECT_NEW(SVP);
     DECLARE_EFFECT_NEW(Colorfade);
-    DECLARE_EFFECT_LEGACY(R_ColorClip);
+    DECLARE_EFFECT_NEW(ColorClip);
     DECLARE_EFFECT_NEW(RotStar);
     DECLARE_EFFECT_NEW(Ring);
     DECLARE_EFFECT_NEW(Movement);
