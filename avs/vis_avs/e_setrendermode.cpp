@@ -29,7 +29,7 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "c_linemode.h"
+#include "e_setrendermode.h"
 
 #include "r_defs.h"
 
@@ -42,40 +42,47 @@ int g_line_blend_mode;
     data[pos + 1] = (y >> 8) & 255;  \
     data[pos + 2] = (y >> 16) & 255; \
     data[pos + 3] = (y >> 24) & 255
+
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
-void C_THISCLASS::load_config(unsigned char* data, int len) {
-    int pos = 0;
-    if (len - pos >= 4) {
-        newmode = GET_INT();
-        pos += 4;
-    }
-}
-int C_THISCLASS::save_config(unsigned char* data) {
-    int pos = 0;
-    PUT_INT(newmode);
-    pos += 4;
-    return pos;
+
+constexpr Parameter SetRenderMode_Info::parameters[];
+
+uint32_t E_SetRenderMode::pack_mode() {
+    return (this->enabled ? 0x80000000 : 0) | uint32_t(this->config.blend & 0xff)
+           | uint32_t(max(0, min(255, this->config.adjustable_blend)) << 8)
+           | uint32_t(max(0, min(255, this->config.line_size)) << 16);
 }
 
-C_THISCLASS::C_THISCLASS() { newmode = 0x80010000; }
-
-C_THISCLASS::~C_THISCLASS() {}
-
-int C_THISCLASS::render(char[2][2][576], int isBeat, int*, int*, int, int) {
-    if (isBeat & 0x80000000) {
+int E_SetRenderMode::render(char[2][2][576], int is_beat, int*, int*, int, int) {
+    if (is_beat & 0x80000000) {
         return 0;
     }
-    if (newmode & 0x80000000) {
-        g_line_blend_mode = newmode & 0x7fffffff;
+    if (this->enabled) {
+        g_line_blend_mode = int32_t(this->pack_mode() & 0x7fffffff);
     }
     return 0;
 }
 
-C_RBASE* R_LineMode(char* desc) {
-    if (desc) {
-        strcpy(desc, MOD_NAME);
-        return NULL;
+void E_SetRenderMode::load_legacy(unsigned char* data, int len) {
+    int pos = 0;
+    if (len - pos >= 4) {
+        uint32_t mode = GET_INT();
+        this->enabled = mode >> 31;
+        this->config.blend = mode & 0xff;
+        this->config.adjustable_blend = (mode >> 8) & 0xff;
+        this->config.line_size = (mode >> 16) & 0xff;
+        pos += 4;
     }
-    return (C_RBASE*)new C_THISCLASS();
 }
+int E_SetRenderMode::save_legacy(unsigned char* data) {
+    int pos = 0;
+    uint32_t mode = this->pack_mode();
+    PUT_INT(mode);
+    pos += 4;
+    return pos;
+}
+
+Effect_Info* create_SetRenderMode_Info() { return new SetRenderMode_Info(); }
+Effect* create_SetRenderMode() { return new E_SetRenderMode(); }
+void set_SetRenderMode_desc(char* desc) { E_SetRenderMode::set_desc(desc); }
