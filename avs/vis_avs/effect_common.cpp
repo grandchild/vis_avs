@@ -67,7 +67,7 @@ const char* const* blend_modes(int64_t* length_out) {
         "Replace",
         "Additive",
         "Maximum",
-        "5050",
+        "50/50",
         "Subtractive 1",
         "Subtractive 2",
         "Multiply",
