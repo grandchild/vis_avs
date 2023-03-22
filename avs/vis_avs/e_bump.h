@@ -50,16 +50,6 @@ struct Bump_Info : public Effect_Info {
     static constexpr int32_t legacy_id = 29;
     static constexpr char* legacy_ape_id = NULL;
 
-    static const char* const* blend_modes(int64_t* length_out) {
-        *length_out = 3;
-        static const char* const options[3] = {
-            "Replace",
-            "Fifty Fifty",
-            "Additive",
-        };
-        return options;
-    };
-
     static void recompile(Effect*, const Parameter*, const std::vector<int64_t>&);
     static constexpr uint32_t num_parameters = 11;
     static constexpr Parameter parameters[num_parameters] = {
@@ -70,7 +60,7 @@ struct Bump_Info : public Effect_Info {
         P_BOOL(offsetof(Bump_Config, on_beat), "On Beat"),
         P_IRANGE(offsetof(Bump_Config, on_beat_duration), "On Beat Duration", 0, 100),
         P_IRANGE(offsetof(Bump_Config, on_beat_depth), "On Beat Depth", 1, 100),
-        P_SELECT(offsetof(Bump_Config, blend_mode), "Blend Mode", blend_modes),
+        P_SELECT(offsetof(Bump_Config, blend_mode), "Blend Mode", blend_modes_simple),
         P_BOOL(offsetof(Bump_Config, show_light_pos), "Show Light Position"),
         P_BOOL(offsetof(Bump_Config, invert_depth), "Invert Depth"),
         P_IRANGE(offsetof(Bump_Config, depth_buffer), "Depth Buffer", 0, 8),

@@ -21,16 +21,6 @@ struct Starfield_Info : public Effect_Info {
     static constexpr int32_t legacy_id = 27;
     static constexpr char const* legacy_ape_id = nullptr;
 
-    static const char* const* blend_modes(int64_t* length_out) {
-        *length_out = 3;
-        static const char* const options[3] = {
-            "Replace",
-            "Additive",
-            "Fifty Fifty",
-        };
-        return options;
-    };
-
     static void initialize(Effect*, const Parameter*, const std::vector<int64_t>&);
     static void set_cur_speed(Effect*, const Parameter*, const std::vector<int64_t>&);
 
