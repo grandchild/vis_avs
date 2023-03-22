@@ -38,7 +38,7 @@ DECL_HANDLER(comment);
 DECL_HANDLER(brightness);
 DECL_HANDLER(interleave);
 DECL_HANDLER(grain);
-DECL_HANDLER(clear);
+DECL_HANDLER(clearscreen);
 DECL_HANDLER(mirror);
 DECL_HANDLER(starfield);
 DECL_HANDLER(text);

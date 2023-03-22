@@ -59,7 +59,7 @@ C_GLibrary::C_GLibrary() {
     ADD_STANDARD_COMPONENT(22, BRIGHTNESS,  brightness);
     ADD_STANDARD_COMPONENT(23, INTERLEAVE,  interleave);
     ADD_STANDARD_COMPONENT(24, GRAIN,       grain);
-    ADD_STANDARD_COMPONENT(25, CLEAR,       clear);
+    ADD_STANDARD_COMPONENT(25, CLEAR,       clearscreen);
     ADD_STANDARD_COMPONENT(26, MIRROR,      mirror);
     ADD_STANDARD_COMPONENT(27, STARFIELD,   starfield);
     ADD_STANDARD_COMPONENT(28, TEXT,        text);
