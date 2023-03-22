@@ -118,7 +118,7 @@ void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_NEW(OscilloscopeStar);
     DECLARE_EFFECT_NEW(Fadeout);
     DECLARE_EFFECT_NEW(BlitterFeedback);
-    DECLARE_EFFECT_LEGACY(R_NFClear);
+    DECLARE_EFFECT_NEW(OnBeatClear);
     DECLARE_EFFECT_NEW(Blur);
     DECLARE_EFFECT_NEW(BassSpin);
     DECLARE_EFFECT_NEW(MovingParticle);
