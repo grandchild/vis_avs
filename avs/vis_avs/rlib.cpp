@@ -229,7 +229,7 @@ void C_RLibrary::initbuiltinape(void) {
     ADD_NEW(Triangle, "Render: Triangle");
     ADD_NEW(EelTrans, "Misc: AVSTrans Automation");
     ADD_NEW(GlobalVariables, "Jheriko: Global");
-    ADD(R_MultiFilter, "Jheriko : MULTIFILTER");
+    ADD_NEW(MultiFilter, "Jheriko : MULTIFILTER");
     ADD_NEW(Picture2, "Picture II");
     ADD_NEW(FramerateLimiter, "VFX FRAMERATE LIMITER");
     ADD_NEW(Texer, "Texer");

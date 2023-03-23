@@ -1,4 +1,4 @@
-#include "c_multifilter.h"
+#include "e_multifilter.h"
 
 #include "pixel_format.h"  // AVS_PIXEL_COLOR_MASK_RGB0_8
 
@@ -7,21 +7,17 @@
 #include <emmintrin.h>  // SSE2 SIMD intrinsics
 #include <string.h>
 
-C_MultiFilter::C_MultiFilter()
-    : config({true, MULTIFILTER_CHROME, false}), toggle_state(false) {}
+constexpr Parameter MultiFilter_Info::parameters[];
 
-C_MultiFilter::~C_MultiFilter() {}
+E_MultiFilter::E_MultiFilter() : toggle_state(false) {}
 
-int C_MultiFilter::render(char[2][2][576],
+int E_MultiFilter::render(char[2][2][576],
                           int is_beat,
                           int* framebuffer,
                           int*,
                           int w,
                           int h) {
-    if (!this->config.enabled) {
-        return 0;
-    }
-    if (this->config.enabled && this->config.toggle_on_beat) {
+    if (this->config.toggle_on_beat) {
         if (is_beat) {
             this->toggle_state = !this->toggle_state;
         }
@@ -29,15 +25,18 @@ int C_MultiFilter::render(char[2][2][576],
             return 0;
         }
     }
-    if (this->config.effect <= MULTIFILTER_TRIPLE_CHROME) {
-        this->chrome_sse2(framebuffer, w * h);
-    } else if (this->config.effect == MULTIFILTER_INFROOT_BORDERCONVO) {
-        this->infroot_borderconvo(framebuffer, w, h);
+    switch (this->config.effect) {
+        case MULTIFILTER_CHROME:
+        case MULTIFILTER_DOUBLE_CHROME:
+        case MULTIFILTER_TRIPLE_CHROME: this->chrome_sse2(framebuffer, w * h); break;
+        case MULTIFILTER_INFROOT_BORDERCONVO:
+            E_MultiFilter::infroot_borderconvo(framebuffer, w, h);
+            break;
     }
     return 0;
 }
 
-inline void C_MultiFilter::chrome(int* framebuffer, unsigned int fb_length) {
+inline void E_MultiFilter::chrome(int* framebuffer, uint32_t fb_length) {
     /*
     The "chrome" effect transforms the color values of each channel so that middle
     values are the brightest, and both dark and bright values become darker. If a row of
@@ -55,8 +54,8 @@ inline void C_MultiFilter::chrome(int* framebuffer, unsigned int fb_length) {
 
     and so on for "triple chrome" as well.
     */
-    for (unsigned int i = 0; i < fb_length; i++) {
-        unsigned char* chan = (unsigned char*)&framebuffer[i];
+    for (uint32_t i = 0; i < fb_length; i++) {
+        auto chan = (unsigned char*)&framebuffer[i];
         switch (this->config.effect) {
             case MULTIFILTER_CHROME:
                 chan[0] = chan[0] < 128 ? chan[0] * 2 : 510 - (chan[0] * 2);
@@ -87,7 +86,7 @@ inline void C_MultiFilter::chrome(int* framebuffer, unsigned int fb_length) {
     }
 }
 
-inline void C_MultiFilter::chrome_sse2(int* framebuffer, unsigned int fb_length) {
+inline void E_MultiFilter::chrome_sse2(int* framebuffer, uint32_t fb_length) {
     /*
     (See chrome() for description of how the "chrome" effect works.)
 
@@ -123,7 +122,7 @@ inline void C_MultiFilter::chrome_sse2(int* framebuffer, unsigned int fb_length)
     __m128i four_px_out;
     switch (this->config.effect) {
         case MULTIFILTER_CHROME:
-            for (unsigned int i = 0; i < fb_length; i += 4) {
+            for (uint32_t i = 0; i < fb_length; i += 4) {
                 four_px_in = _mm_loadu_si128((__m128i*)&framebuffer[i]);
                 four_px_out = _mm_adds_epu8(four_px_in, four_px_in);
                 four_px_out = _mm_subs_epu8(four_px_out, four_px_in);
@@ -132,7 +131,7 @@ inline void C_MultiFilter::chrome_sse2(int* framebuffer, unsigned int fb_length)
             }
             break;
         case MULTIFILTER_DOUBLE_CHROME:
-            for (unsigned int i = 0; i < fb_length; i += 4) {
+            for (uint32_t i = 0; i < fb_length; i += 4) {
                 four_px_in = _mm_loadu_si128((__m128i*)&framebuffer[i]);
                 four_px_1 = _mm_adds_epu8(four_px_in, four_px_in);
                 four_px_1 = _mm_subs_epu8(four_px_1, four_px_in);
@@ -144,7 +143,7 @@ inline void C_MultiFilter::chrome_sse2(int* framebuffer, unsigned int fb_length)
             }
             break;
         case MULTIFILTER_TRIPLE_CHROME:
-            for (unsigned int i = 0; i < fb_length; i += 4) {
+            for (uint32_t i = 0; i < fb_length; i += 4) {
                 four_px_in = _mm_loadu_si128((__m128i*)&framebuffer[i]);
                 four_px_1 = _mm_adds_epu8(four_px_in, four_px_in);
                 four_px_1 = _mm_subs_epu8(four_px_1, four_px_in);
@@ -161,7 +160,7 @@ inline void C_MultiFilter::chrome_sse2(int* framebuffer, unsigned int fb_length)
     }
 }
 
-inline void C_MultiFilter::infroot_borderconvo(int* framebuffer, int w, int h) {
+inline void E_MultiFilter::infroot_borderconvo(int* framebuffer, int w, int h) {
     /*
     "Infinite root" basically means that the output of a pixel will be white for all
     pixel values except when it's completely black. This is useful for masking.
@@ -188,7 +187,7 @@ inline void C_MultiFilter::infroot_borderconvo(int* framebuffer, int w, int h) {
     */
     for (int y = 0; y < h; y++) {
         for (int x = 0; x < w; x++) {
-            unsigned int p = x + y * w;
+            uint32_t p = x + y * w;
             if (framebuffer[p] & AVS_PIXEL_COLOR_MASK_RGB0_8) {
                 framebuffer[p] = 0xffffff;
                 if (y > 0) {
@@ -204,28 +203,48 @@ inline void C_MultiFilter::infroot_borderconvo(int* framebuffer, int w, int h) {
     }
 }
 
-void C_MultiFilter::load_config(unsigned char* data, int len) {
-    if (len >= ssizeof32(multifilter_config)) {
-        memcpy(&this->config, data, ssizeof32(multifilter_config));
-    } else {
-        this->config.enabled = true;
-        this->config.effect = MULTIFILTER_CHROME;
-        this->config.toggle_on_beat = false;
+void E_MultiFilter::load_legacy(unsigned char* data, int len) {
+    int pos = 0;
+    if (len - pos >= 4) {
+        this->enabled = *(uint32_t*)(&data[pos]);
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        auto effect = *(uint32_t*)(&data[pos]);
+        switch (effect) {
+            default:
+            case 0: this->config.effect = MULTIFILTER_CHROME; break;
+            case 1: this->config.effect = MULTIFILTER_DOUBLE_CHROME; break;
+            case 2: this->config.effect = MULTIFILTER_TRIPLE_CHROME; break;
+            case 3: this->config.effect = MULTIFILTER_INFROOT_BORDERCONVO; break;
+        }
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        this->config.toggle_on_beat = *(uint32_t*)(&data[pos]);
+        pos += 4;
     }
 }
 
-int C_MultiFilter::save_config(unsigned char* data) {
-    memcpy(data, &this->config, sizeof(multifilter_config));
-    memset(data + sizeof(multifilter_config), 0, sizeof(uint32_t));
-    return sizeof(multifilter_config) + sizeof(uint32_t);
-}
-
-char* C_MultiFilter::get_desc() { return MOD_NAME; }
-
-C_RBASE* R_MultiFilter(char* desc) {
-    if (desc) {
-        strcpy(desc, MOD_NAME);
-        return NULL;
+int E_MultiFilter::save_legacy(unsigned char* data) {
+    int pos = 0;
+    *(uint32_t*)&data[pos] = this->enabled;
+    pos += 4;
+    int32_t effect = 0;
+    switch (this->config.effect) {
+        default:
+        case MULTIFILTER_CHROME: effect = 0; break;
+        case MULTIFILTER_DOUBLE_CHROME: effect = 1; break;
+        case MULTIFILTER_TRIPLE_CHROME: effect = 2; break;
+        case MULTIFILTER_INFROOT_BORDERCONVO: effect = 3; break;
     }
-    return (C_RBASE*)new C_MultiFilter();
+    *(uint32_t*)&data[pos] = effect;
+    pos += 4;
+    *(uint32_t*)&data[pos] = this->config.toggle_on_beat;
+    pos += 4;
+    return pos;
 }
+
+Effect_Info* create_MultiFilter_Info() { return new MultiFilter_Info(); }
+Effect* create_MultiFilter() { return new E_MultiFilter(); }
+void set_MultiFilter_desc(char* desc) { E_MultiFilter::set_desc(desc); }
