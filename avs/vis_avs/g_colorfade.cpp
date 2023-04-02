@@ -10,14 +10,14 @@
 
 int win32_dlgproc_colorfade(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto g_this = (E_Colorfade*)g_current_render;
-    const Parameter& p_fader_max = Colorfade_Info::parameters[0];
-    const Parameter& p_fader_2nd = Colorfade_Info::parameters[1];
-    const Parameter& p_fader_3rd_gray = Colorfade_Info::parameters[2];
-    AVS_Parameter_Handle p_on_beat = Colorfade_Info::parameters[3].handle;
-    AVS_Parameter_Handle p_on_beat_random = Colorfade_Info::parameters[4].handle;
-    const Parameter& p_on_beat_max = Colorfade_Info::parameters[5];
-    const Parameter& p_on_beat_2nd = Colorfade_Info::parameters[6];
-    const Parameter& p_on_beat_3rd_gray = Colorfade_Info::parameters[7];
+    const Parameter& p_fader_max = Colorfade_Info::parameters[1];
+    const Parameter& p_fader_2nd = Colorfade_Info::parameters[2];
+    const Parameter& p_fader_3rd_gray = Colorfade_Info::parameters[3];
+    AVS_Parameter_Handle p_on_beat = Colorfade_Info::parameters[4].handle;
+    AVS_Parameter_Handle p_on_beat_random = Colorfade_Info::parameters[5].handle;
+    const Parameter& p_on_beat_max = Colorfade_Info::parameters[6];
+    const Parameter& p_on_beat_2nd = Colorfade_Info::parameters[7];
+    const Parameter& p_on_beat_3rd_gray = Colorfade_Info::parameters[8];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
