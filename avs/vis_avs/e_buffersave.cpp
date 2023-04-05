@@ -78,7 +78,7 @@ int E_BufferSave::render(char[2][2][576],
 
     void* buffer_ref = getGlobalBuffer(w,
                                        h,
-                                       (int32_t)this->config.buffer,
+                                       (int32_t)this->config.buffer - 1,
                                        this->config.action != BUFFER_ACTION_RESTORE);
     if (!buffer_ref) {
         return 0;
