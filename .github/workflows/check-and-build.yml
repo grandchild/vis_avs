@@ -9,7 +9,7 @@ jobs:
     name: Enforce clean clang-format
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab  # v3.5.2
 
       - name: Install clang-format
         run: |-
@@ -39,7 +39,7 @@ jobs:
     name: Build on Ubuntu with MinGW GCC
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab  # v3.5.2
 
       - name: Install build dependencies
         run: |-
@@ -58,7 +58,7 @@ jobs:
           find build
           mv build/vis_avs.dll build/vis_avs_281d_mingw_debug.dll
 
-      - uses: actions/upload-artifact@v3.1.1
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce  # v3.1.2
         with:
           name: vis_avs_mingw
           path: build/*.dll
@@ -67,9 +67,9 @@ jobs:
     name: Build on Windows with MSVC
     runs-on: windows-latest
     steps:
-      - uses: microsoft/setup-msbuild@v1.1.3
+      - uses: microsoft/setup-msbuild@1ff57057b5cfdc39105cd07a01d78e9b0ea0c14c  # v1.3.1
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab  # v3.5.2
 
       - name: Configure
         shell: cmd
@@ -85,7 +85,7 @@ jobs:
         shell: cmd
         run: copy build/Debug/vis_avs.dll vis_avs_281d_msvc_debug.dll
 
-      - uses: actions/upload-artifact@v3.1.1
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce  # v3.1.2
         with:
           name: vis_avs_msvc
           path: vis_avs_281d_msvc_debug.dll
