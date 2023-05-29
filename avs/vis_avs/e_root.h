@@ -23,7 +23,9 @@ struct Root_Info : public Effect_Info {
                "Clear",
                "Clear the screen for every new frame"),
     };
-    EFFECT_INFO_GETTERS_WITH_CHILDREN;
+
+    bool can_have_child_components() const { return true; };
+    EFFECT_INFO_GETTERS;
 };
 
 class E_Root : public Configurable_Effect<Root_Info, Root_Config> {};

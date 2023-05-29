@@ -794,14 +794,6 @@ struct Effect_Info {
             this->parameters);                                                        \
         return parameter_handles_for_api.handles;                                     \
     }
-/**
- * This one is only useful for Root and Effect List. All other effects automatically
- * inherit the default `can_have_child_components()` method (which always returns
- * `false`) from the `Effect_Info` base.
- */
-#define EFFECT_INFO_GETTERS_WITH_CHILDREN \
-    EFFECT_INFO_GETTERS;                  \
-    virtual bool can_have_child_components() const { return true; }
 
 /**
  * Another glorious C++ trick: A constexpr-(a.k.a. compile-time-)array, initialized not
