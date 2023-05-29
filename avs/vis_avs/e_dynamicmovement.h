@@ -174,7 +174,7 @@ struct DynamicMovement_Info : public Effect_Info {
         P_IRANGE(offsetof(DynamicMovement_Config, grid_h), "Grid Height", 1, INT64_MAX),
         P_BOOL(offsetof(DynamicMovement_Config, blend), "Blend"),
         P_BOOL(offsetof(DynamicMovement_Config, wrap), "Wrap"),
-        P_IRANGE(offsetof(DynamicMovement_Config, buffer), "Buffer", 1, 8),
+        P_IRANGE(offsetof(DynamicMovement_Config, buffer), "Buffer", 0, 8),
         P_BOOL(offsetof(DynamicMovement_Config, alpha_only), "Alpha Only"),
         P_SELECT_X(offsetof(DynamicMovement_Config, example), "Example", example_names),
         P_ACTION("Load Example", load_example, "Load the selected example code"),
