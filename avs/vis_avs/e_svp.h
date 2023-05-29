@@ -15,9 +15,9 @@ struct SVP_Config : public Effect_Config {
 void set_library(Effect*, const Parameter*, const std::vector<int64_t>&);
 
 struct SVP_Info : public Effect_Info {
-    static constexpr char* group = "Render";
-    static constexpr char* name = "SVP";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Render";
+    static constexpr char const* name = "SVP";
+    static constexpr char const* help = "";
     static constexpr int32_t legacy_id = 10;
     static constexpr char* legacy_ape_id = NULL;
 

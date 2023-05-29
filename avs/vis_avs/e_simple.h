@@ -20,9 +20,9 @@ struct Simple_Config : public Effect_Config {
 };
 
 struct Simple_Info : public Effect_Info {
-    static constexpr char* group = "Render";
-    static constexpr char* name = "Simple";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Render";
+    static constexpr char const* name = "Simple";
+    static constexpr char const* help = "";
     static constexpr int32_t legacy_id = 0;
     static constexpr char* legacy_ape_id = NULL;
 

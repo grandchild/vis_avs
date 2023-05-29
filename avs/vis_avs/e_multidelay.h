@@ -44,9 +44,9 @@ struct MultiDelay_Global_Config : public Effect_Config {
 };
 
 struct MultiDelay_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Multi Delay";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Multi Delay";
+    static constexpr char const* help = "";
     static constexpr int32_t legacy_id = -1;
     static constexpr char* legacy_ape_id = "Holden05: Multi Delay";
 

@@ -25,9 +25,9 @@ struct ColorModifier_Preset {
 };
 
 struct ColorModifier_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Color Modifier";
-    static constexpr char* help =
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Color Modifier";
+    static constexpr char const* help =
         "The color modifier allows you to modify the intensity of each color\r\n"
         "channel with respect to itself. For example, you could reverse the red\r\n"
         "channel, double the green channel, or half the blue channel.\r\n"

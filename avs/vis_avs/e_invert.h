@@ -6,9 +6,9 @@
 struct Invert_Config : public Effect_Config {};
 
 struct Invert_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Invert";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Invert";
+    static constexpr char const* help = "";
     static constexpr int32_t legacy_id = 37;
     static constexpr char* legacy_ape_id = NULL;
 

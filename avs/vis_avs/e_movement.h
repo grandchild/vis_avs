@@ -34,9 +34,9 @@ struct Movement_Effect {
 };
 
 struct Movement_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Movement";
-    static constexpr char* help =
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Movement";
+    static constexpr char const* help =
         "Movement help goes here (send me some :)\r\n"
         "To use the custom table, modify r,d,x or y.\r\n"
         "Rect coords: x,y are in (-1..1). Otherwise: d is (0..1) and r is (0..2PI).\r\n"

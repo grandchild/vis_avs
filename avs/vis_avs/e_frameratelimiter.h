@@ -10,9 +10,9 @@ struct FramerateLimiter_Config : public Effect_Config {
 void update_time_diff(Effect*, const Parameter*, const std::vector<int64_t>&);
 
 struct FramerateLimiter_Info : public Effect_Info {
-    static constexpr char* group = "Misc";
-    static constexpr char* name = "Framerate Limiter";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Misc";
+    static constexpr char const* name = "Framerate Limiter";
+    static constexpr char const* help = "";
     static constexpr int32_t legacy_id = -1;
     static constexpr char* legacy_ape_id = "VFX FRAMERATE LIMITER";
 

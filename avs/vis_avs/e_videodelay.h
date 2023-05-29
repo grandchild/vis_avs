@@ -9,9 +9,9 @@ struct VideoDelay_Config : public Effect_Config {
 };
 
 struct VideoDelay_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Video Delay";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Video Delay";
+    static constexpr char const* help = "";
     static constexpr int32_t legacy_id = -1;
     static constexpr char* legacy_ape_id = "Holden04: Video Delay";
 

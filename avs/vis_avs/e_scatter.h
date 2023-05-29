@@ -6,9 +6,9 @@
 struct Scatter_Config : public Effect_Config {};
 
 struct Scatter_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Scatter";
-    static constexpr char* help = "A constantly changing fuzzy effect";
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Scatter";
+    static constexpr char const* help = "A constantly changing fuzzy effect";
     static constexpr int32_t legacy_id = 16;
     static constexpr char* legacy_ape_id = NULL;
 

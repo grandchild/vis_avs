@@ -11,9 +11,9 @@ struct Root_Config : public Effect_Config {
 };
 
 struct Root_Info : public Effect_Info {
-    static constexpr char* group = "";
-    static constexpr char* name = "Root";
-    static constexpr char* help =
+    static constexpr char const* group = "";
+    static constexpr char const* name = "Root";
+    static constexpr char const* help =
         "The main component of the preset\n"
         "Define basic settings for the preset here\n";
 

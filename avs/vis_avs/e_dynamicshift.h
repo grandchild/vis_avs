@@ -17,9 +17,9 @@ struct DynamicShift_Config : public Effect_Config {
 };
 
 struct DynamicShift_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Dynamic Shift";
-    static constexpr char* help =
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Dynamic Shift";
+    static constexpr char const* help =
         "better Dynamic shift help goes here (send me some :)\r\n"
         "Variables:\r\n"
         "x,y = amount to shift (in pixels - set these)\r\n"

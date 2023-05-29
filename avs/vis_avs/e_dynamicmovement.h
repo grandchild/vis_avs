@@ -34,9 +34,10 @@ struct DynamicMovement_Example {
 };
 
 struct DynamicMovement_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Dynamic Movement";
-    static constexpr char* help = "Dynamic movement help goes here (send me some :)";
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Dynamic Movement";
+    static constexpr char const* help =
+        "Dynamic movement help goes here (send me some :)";
     static constexpr int32_t legacy_id = 43;
     static constexpr char* legacy_ape_id = NULL;
 

@@ -20,9 +20,9 @@ struct DynamicDistanceModifier_Config : public Effect_Config {
 };
 
 struct DynamicDistanceModifier_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Dynamic Distance Modifier";
-    static constexpr char* help =
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Dynamic Distance Modifier";
+    static constexpr char const* help =
         "The dynamic distance modifier allows you to dynamically (once per frame)\r\n"
         "change the source pixels for each ring of pixels out from the center.\r\n"
         "In the 'pixel' code section, 'd' represents the distance in pixels\r\n"

@@ -9,9 +9,9 @@ struct AddBorders_Config : public Effect_Config {
 };
 
 struct AddBorders_Info : public Effect_Info {
-    static constexpr char* group = "Render";
-    static constexpr char* name = "Add Borders";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Render";
+    static constexpr char const* name = "Add Borders";
+    static constexpr char const* help = "";
     static constexpr int32_t legacy_id = -1;
     static constexpr char* legacy_ape_id = "Virtual Effect: Addborders";
 

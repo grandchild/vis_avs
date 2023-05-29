@@ -16,9 +16,9 @@ struct Brightness_Config : public Effect_Config {
 };
 
 struct Brightness_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Brightness";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Brightness";
+    static constexpr char const* help = "";
     static constexpr int32_t legacy_id = 22;
     static constexpr char* legacy_ape_id = NULL;
 

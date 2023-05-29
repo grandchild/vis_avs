@@ -8,9 +8,9 @@ struct Comment_Config : public Effect_Config {
 };
 
 struct Comment_Info : public Effect_Info {
-    static constexpr char* group = "Misc";
-    static constexpr char* name = "Comment";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Misc";
+    static constexpr char const* name = "Comment";
+    static constexpr char const* help = "";
     static constexpr int32_t legacy_id = 21;
     static constexpr char* legacy_ape_id = NULL;
 

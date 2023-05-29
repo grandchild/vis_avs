@@ -21,9 +21,9 @@ struct Bump_Config : public Effect_Config {
 };
 
 struct Bump_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Bump";
-    static constexpr char* help =
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Bump";
+    static constexpr char const* help =
         "How to use the custom light position evaluator:\r\n"
         " * Init code will be executed each time the window size is changed or when "
         "the effect loads\r\n"

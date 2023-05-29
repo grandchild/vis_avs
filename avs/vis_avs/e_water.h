@@ -6,9 +6,9 @@
 struct Water_Config : public Effect_Config {};
 
 struct Water_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Water";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Water";
+    static constexpr char const* help = "";
     static constexpr int32_t legacy_id = 20;
     static constexpr char* legacy_ape_id = NULL;
 

@@ -18,9 +18,9 @@ struct EelTrans_Global_Config : public Effect_Config {
 };
 
 struct EelTrans_Info : public Effect_Info {
-    static constexpr char* group = "Misc";
-    static constexpr char* name = "AVS Trans Automation";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Misc";
+    static constexpr char const* name = "AVS Trans Automation";
+    static constexpr char const* help = "";
     static constexpr int32_t legacy_id = -1;
     static constexpr char* legacy_ape_id = "Misc: AVSTrans Automation";
 

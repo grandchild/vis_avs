@@ -36,9 +36,9 @@ struct SuperScope_Example {
 };
 
 struct SuperScope_Info : public Effect_Info {
-    static constexpr char* group = "Render";
-    static constexpr char* name = "SuperScope";
-    static constexpr char* help =
+    static constexpr char const* group = "Render";
+    static constexpr char const* name = "SuperScope";
+    static constexpr char const* help =
         "Superscope tutorial goes here\r\n"
         "But for now, here is the old text:\r\n"
         "You can specify expressions that run on Init, Frame, and on Beat.\r\n"

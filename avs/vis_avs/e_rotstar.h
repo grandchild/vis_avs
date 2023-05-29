@@ -15,9 +15,9 @@ struct RotStar_Config : public Effect_Config {
 };
 
 struct RotStar_Info : public Effect_Info {
-    static constexpr char* group = "Render";
-    static constexpr char* name = "Rotating Stars";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Render";
+    static constexpr char const* name = "Rotating Stars";
+    static constexpr char const* help = "";
 
     static constexpr uint32_t num_color_params = 1;
     static constexpr Parameter color_params[num_color_params] = {

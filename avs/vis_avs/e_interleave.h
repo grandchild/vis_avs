@@ -16,9 +16,9 @@ struct Interleave_Config : public Effect_Config {
 };
 
 struct Interleave_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Interleave";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Interleave";
+    static constexpr char const* help = "";
     static constexpr int32_t legacy_id = 23;
     static constexpr char* legacy_ape_id = NULL;
 

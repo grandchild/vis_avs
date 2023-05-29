@@ -16,9 +16,9 @@ void maketab(Effect* component,
 #define OFFSET(field) offsetof(Fadeout_Config, field)
 
 struct Fadeout_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Fadeout";
-    static constexpr char* help =
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Fadeout";
+    static constexpr char const* help =
         "Fadeout the whole screen a certain amount per frame.\n";
     static constexpr int32_t legacy_id = 3;
     static constexpr char* legacy_ape_id = NULL;

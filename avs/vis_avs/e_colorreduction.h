@@ -19,9 +19,9 @@ struct ColorReduction_Config : public Effect_Config {
 };
 
 struct ColorReduction_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Color Reduction";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Color Reduction";
+    static constexpr char const* help = "";
     static constexpr int32_t legacy_id = -1;
     static constexpr char* legacy_ape_id = "Color Reduction";
 

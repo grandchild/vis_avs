@@ -57,8 +57,8 @@
  * some required fields:
  *
  *     struct Foo_Info : public Effect_Info {
- *         static constexpr char* group = "Render";
- *         static constexpr char* name = "Foo";
+ *         static constexpr char const* group = "Render";
+ *         static constexpr char const* name = "Foo";
  *
  *         static constexpr uint32_t num_parameters = 2;
  *         static constexpr Parameter parameters[num_parameters] = {

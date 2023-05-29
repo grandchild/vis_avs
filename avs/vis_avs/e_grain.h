@@ -11,9 +11,9 @@ struct Grain_Config : public Effect_Config {
 };
 
 struct Grain_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Grain";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Grain";
+    static constexpr char const* help = "";
     static constexpr int32_t legacy_id = 24;
     static constexpr char* legacy_ape_id = NULL;
 

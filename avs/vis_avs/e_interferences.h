@@ -22,9 +22,9 @@ struct Interferences_Config : public Effect_Config {
 };
 
 struct Interferences_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Interferences";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Interferences";
+    static constexpr char const* help = "";
     static constexpr int32_t legacy_id = 41;
     static constexpr char* legacy_ape_id = NULL;
 

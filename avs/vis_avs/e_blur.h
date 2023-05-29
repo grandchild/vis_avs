@@ -20,9 +20,9 @@ struct Blur_Config : public Effect_Config {
 };
 
 struct Blur_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Blur";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Blur";
+    static constexpr char const* help = "";
     static constexpr int32_t legacy_id = 6;
     static constexpr char* legacy_ape_id = NULL;
 

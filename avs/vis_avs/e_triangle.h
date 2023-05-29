@@ -14,9 +14,9 @@ struct Triangle_Config : public Effect_Config {
 };
 
 struct Triangle_Info : public Effect_Info {
-    static constexpr char* group = "Render";
-    static constexpr char* name = "Triangle";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Render";
+    static constexpr char const* name = "Triangle";
+    static constexpr char const* help = "";
     static constexpr int32_t legacy_id = -1;
     static constexpr char* legacy_ape_id = "Render: Triangle";
 

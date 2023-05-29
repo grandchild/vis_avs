@@ -43,9 +43,9 @@ struct Texer2_Example {
 };
 
 struct Texer2_Info : public Effect_Info {
-    static constexpr char* group = "Render";
-    static constexpr char* name = "Texer II";
-    static constexpr char* help =
+    static constexpr char const* group = "Render";
+    static constexpr char const* name = "Texer II";
+    static constexpr char const* help =
         "Texer II is a rendering component that draws what is commonly known as "
         "particles.\r\n"
         "At specified positions on screen, a copy of the source image is placed and "

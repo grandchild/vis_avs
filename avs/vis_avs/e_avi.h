@@ -22,9 +22,9 @@ struct AVI_Config : public Effect_Config {
 };
 
 struct AVI_Info : public Effect_Info {
-    static constexpr char* group = "Render";
-    static constexpr char* name = "AVI";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Render";
+    static constexpr char const* name = "AVI";
+    static constexpr char const* help = "";
     static constexpr int32_t legacy_id = 32;
     static constexpr char* legacy_ape_id = NULL;
 

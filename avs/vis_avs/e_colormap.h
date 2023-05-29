@@ -115,9 +115,9 @@ void save_map(Effect*, const Parameter*, const std::vector<int64_t>&);
 void load_map(Effect*, const Parameter*, const std::vector<int64_t>&);
 
 struct ColorMap_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Color Map";
-    static constexpr char* help =
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Color Map";
+    static constexpr char const* help =
         "Color Map stores 8 different colormaps. For every point on the screen, a key"
         " is calculated and used as an index (value 0-255) into the map. The point's"
         " color will be replaced by the one in the map at that index.\n"

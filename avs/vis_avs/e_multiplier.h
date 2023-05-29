@@ -19,9 +19,9 @@ struct Multiplier_Config : public Effect_Config {
 };
 
 struct Multiplier_Info : public Effect_Info {
-    static constexpr char* group = "Trans";
-    static constexpr char* name = "Multiplier";
-    static constexpr char* help = "";
+    static constexpr char const* group = "Trans";
+    static constexpr char const* name = "Multiplier";
+    static constexpr char const* help = "";
     static constexpr int32_t legacy_id = -1;
     static constexpr char* legacy_ape_id = "Multiplier";
 
