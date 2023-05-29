@@ -117,7 +117,7 @@ int E_DynamicMovement::smp_finish(char[2][2][576], int, int*, int*, int, int) {
 int E_DynamicMovement::smp_begin(int max_threads,
                                  char visdata[2][2][576],
                                  int is_beat,
-                                 int* framebuffer,
+                                 int*,
                                  int*,
                                  int w,
                                  int h) {
@@ -160,13 +160,6 @@ int E_DynamicMovement::smp_begin(int max_threads,
     if (is_beat & 0x80000000) {
         return 0;
     }
-    int* fbin = this->config.buffer == 0
-                    ? framebuffer
-                    : (int*)getGlobalBuffer(w, h, this->config.buffer - 1, 0);
-    if (!fbin) {
-        return 0;
-    }
-
     if (this->need_init) {
         this->code_init.exec(visdata);
         this->need_init = false;
@@ -176,78 +169,76 @@ int E_DynamicMovement::smp_begin(int max_threads,
     if (is_beat) {
         this->code_beat.exec(visdata);
     }
-    {
-        int x;
-        int y;
-        int* tabptr = this->tab;
+    int x;
+    int y;
+    int* tabptr = this->tab;
 
-        double xsc = 2.0 / w, ysc = 2.0 / h;
-        double dw2 = ((double)w * 32768.0);
-        double dh2 = ((double)h * 32768.0);
-        double max_screen_d = sqrt((double)(w * w + h * h)) * 0.5;
+    double xsc = 2.0 / w, ysc = 2.0 / h;
+    double dw2 = ((double)w * 32768.0);
+    double dh2 = ((double)h * 32768.0);
+    double max_screen_d = sqrt((double)(w * w + h * h)) * 0.5;
 
-        double divmax_d = 1.0 / max_screen_d;
+    double divmax_d = 1.0 / max_screen_d;
 
-        max_screen_d *= 65536.0;
+    max_screen_d *= 65536.0;
 
-        int yc_pos, yc_dpos, xc_pos, xc_dpos;
-        yc_pos = 0;
-        xc_dpos = (w << 16) / (this->XRES - 1);
-        yc_dpos = (h << 16) / (this->YRES - 1);
-        for (y = 0; y < this->YRES; y++) {
-            xc_pos = 0;
-            for (x = 0; x < this->XRES; x++) {
-                double xd, yd;
+    int yc_pos, yc_dpos, xc_pos, xc_dpos;
+    yc_pos = 0;
+    xc_dpos = (w << 16) / (this->XRES - 1);
+    yc_dpos = (h << 16) / (this->YRES - 1);
+    for (y = 0; y < this->YRES; y++) {
+        xc_pos = 0;
+        for (x = 0; x < this->XRES; x++) {
+            double xd, yd;
 
-                xd = ((double)xc_pos - dw2) * (1.0 / 65536.0);
-                yd = ((double)yc_pos - dh2) * (1.0 / 65536.0);
+            xd = ((double)xc_pos - dw2) * (1.0 / 65536.0);
+            yd = ((double)yc_pos - dh2) * (1.0 / 65536.0);
 
-                xc_pos += xc_dpos;
+            xc_pos += xc_dpos;
 
-                *this->vars.x = xd * xsc;
-                *this->vars.y = yd * ysc;
-                *this->vars.d = sqrt(xd * xd + yd * yd) * divmax_d;
-                *this->vars.r = atan2(yd, xd) + M_PI * 0.5;
+            *this->vars.x = xd * xsc;
+            *this->vars.y = yd * ysc;
+            *this->vars.d = sqrt(xd * xd + yd * yd) * divmax_d;
+            *this->vars.r = atan2(yd, xd) + M_PI * 0.5;
 
-                this->code_point.exec(visdata);
+            this->code_point.exec(visdata);
 
-                int tmp1, tmp2;
-                if (this->coordinates == COORDS_POLAR) {
-                    *this->vars.d *= max_screen_d;
-                    *this->vars.r -= M_PI * 0.5;
-                    tmp1 = (int)(dw2 + cos(*this->vars.r) * *this->vars.d);
-                    tmp2 = (int)(dh2 + sin(*this->vars.r) * *this->vars.d);
-                } else {
-                    tmp1 = (int)((*this->vars.x + 1.0) * dw2);
-                    tmp2 = (int)((*this->vars.y + 1.0) * dh2);
-                }
-                if (!this->wrap) {
-                    if (tmp1 < 0) {
-                        tmp1 = 0;
-                    }
-                    if (tmp1 > this->w_adj) {
-                        tmp1 = this->w_adj;
-                    }
-                    if (tmp2 < 0) {
-                        tmp2 = 0;
-                    }
-                    if (tmp2 > this->h_adj) {
-                        tmp2 = this->h_adj;
-                    }
-                }
-                *tabptr++ = tmp1;
-                *tabptr++ = tmp2;
-                double va = *this->vars.alpha;
-                if (va < 0.0) {
-                    va = 0.0;
-                } else if (va > 1.0) {
-                    va = 1.0;
-                }
-                int a = (int)(va * 255.0 * 65536.0);
-                *tabptr++ = a;
+            int tmp1, tmp2;
+            if (this->coordinates == COORDS_POLAR) {
+                *this->vars.d *= max_screen_d;
+                *this->vars.r -= M_PI * 0.5;
+                tmp1 = (int)(dw2 + cos(*this->vars.r) * *this->vars.d);
+                tmp2 = (int)(dh2 + sin(*this->vars.r) * *this->vars.d);
+            } else {
+                tmp1 = (int)((*this->vars.x + 1.0) * dw2);
+                tmp2 = (int)((*this->vars.y + 1.0) * dh2);
             }
-            yc_pos += yc_dpos;
+            if (!this->wrap) {
+                if (tmp1 < 0) {
+                    tmp1 = 0;
+                }
+                if (tmp1 > this->w_adj) {
+                    tmp1 = this->w_adj;
+                }
+                if (tmp2 < 0) {
+                    tmp2 = 0;
+                }
+                if (tmp2 > this->h_adj) {
+                    tmp2 = this->h_adj;
+                }
+            }
+            *tabptr++ = tmp1;
+            *tabptr++ = tmp2;
+            double va = *this->vars.alpha;
+            if (va < 0.0) {
+                va = 0.0;
+            } else if (va > 1.0) {
+                va = 1.0;
+            }
+            int a = (int)(va * 255.0 * 65536.0);
+            *tabptr++ = a;
         }
+        yc_pos += yc_dpos;
     }
 
     return max_threads;
@@ -289,102 +280,101 @@ void E_DynamicMovement::smp_render(int this_thread,
     // yay, the table is generated. now we do a fixed point
     // interpolation of the whole thing and pray.
 
-    {
-        int* interptab = this->tab + this->XRES * this->YRES * 3
-                         + this_thread * (this->XRES * 6 + 6);
-        int* rdtab = this->tab;
-        unsigned int* in = (unsigned int*)fbin;
-        unsigned int* blendin = (unsigned int*)framebuffer;
-        unsigned int* out = (unsigned int*)fbout;
-        int yseek = 1;
-        int xc_dpos, yc_pos = 0, yc_dpos;
-        xc_dpos = (w << 16) / (this->XRES - 1);
-        yc_dpos = (h << 16) / (this->YRES - 1);
-        int lypos = 0;
-        int yl = end_l;
-        while (yl > 0) {
-            yc_pos += yc_dpos;
-            yseek = (yc_pos >> 16) - lypos;
-            if (!yseek) {
+    int* interptab =
+        this->tab + this->XRES * this->YRES * 3 + this_thread * (this->XRES * 6 + 6);
+    int* rdtab = this->tab;
+    unsigned int* in = (unsigned int*)fbin;
+    unsigned int* blendin = (unsigned int*)framebuffer;
+    unsigned int* out = (unsigned int*)fbout;
+    int yseek = 1;
+    int xc_dpos, yc_pos = 0, yc_dpos;
+    xc_dpos = (w << 16) / (this->XRES - 1);
+    yc_dpos = (h << 16) / (this->YRES - 1);
+    int lypos = 0;
+    int yl = end_l;
+    while (yl > 0) {
+        yc_pos += yc_dpos;
+        yseek = (yc_pos >> 16) - lypos;
+        if (!yseek) {
 #ifndef NO_MMX
-                _mm_empty();
+            _mm_empty();
 #endif
-                return;
-            }
-            lypos = yc_pos >> 16;
-            int l = this->XRES;
-            int* stab = interptab;
-            int xr3 = this->XRES * 3;
-            while (l--) {
-                int tmp1, tmp2, tmp3;
-                tmp1 = rdtab[0];
-                tmp2 = rdtab[1];
-                tmp3 = rdtab[2];
-                stab[0] = tmp1;
-                stab[1] = tmp2;
-                stab[2] = (rdtab[xr3] - tmp1) / yseek;
-                stab[3] = (rdtab[xr3 + 1] - tmp2) / yseek;
-                stab[4] = tmp3;
-                stab[5] = (rdtab[xr3 + 2] - tmp3) / yseek;
-                rdtab += 3;
-                stab += 6;
-            }
+            return;
+        }
+        lypos = yc_pos >> 16;
+        int l = this->XRES;
+        int* stab = interptab;
+        int xr3 = this->XRES * 3;
+        while (l--) {
+            int tmp1, tmp2, tmp3;
+            tmp1 = rdtab[0];
+            tmp2 = rdtab[1];
+            tmp3 = rdtab[2];
+            stab[0] = tmp1;
+            stab[1] = tmp2;
+            stab[2] = (rdtab[xr3] - tmp1) / yseek;
+            stab[3] = (rdtab[xr3 + 1] - tmp2) / yseek;
+            stab[4] = tmp3;
+            stab[5] = (rdtab[xr3 + 2] - tmp3) / yseek;
+            rdtab += 3;
+            stab += 6;
+        }
 
-            if (yseek > yl) {
-                yseek = yl;
-            }
-            yl -= yseek;
+        if (yseek > yl) {
+            yseek = yl;
+        }
+        yl -= yseek;
 
-            if (yseek > 0) {
-                while (yseek--) {
-                    int d_x;
-                    int d_y;
-                    int d_a;
-                    int ap;
-                    int seek;
-                    int* seektab = interptab;
-                    int xp, yp;
-                    int l = w;
-                    int lpos = 0;
-                    int xc_pos = 0;
-                    ypos++;
-                    {
-                        while (l > 0) {
-                            xc_pos += xc_dpos;
-                            seek = (xc_pos >> 16) - lpos;
-                            if (!seek) {
+        if (yseek > 0) {
+            while (yseek--) {
+                int d_x;
+                int d_y;
+                int d_a;
+                int ap;
+                int seek;
+                int* seektab = interptab;
+                int xp, yp;
+                int l = w;
+                int lpos = 0;
+                int xc_pos = 0;
+                ypos++;
+                {
+                    while (l > 0) {
+                        xc_pos += xc_dpos;
+                        seek = (xc_pos >> 16) - lpos;
+                        if (!seek) {
 #ifndef NO_MMX
-                                _mm_empty();
+                            _mm_empty();
 #endif
-                                return;
-                            }
-                            lpos = xc_pos >> 16;
-                            xp = seektab[0];
-                            yp = seektab[1];
-                            ap = seektab[4];
-                            d_a = (seektab[10] - ap) / (seek);
-                            d_x = (seektab[6] - xp) / (seek);
-                            d_y = (seektab[7] - yp) / (seek);
-                            seektab[0] += seektab[2];
-                            seektab[1] += seektab[3];
-                            seektab[4] += seektab[5];
-                            seektab += 6;
+                            return;
+                        }
+                        lpos = xc_pos >> 16;
+                        xp = seektab[0];
+                        yp = seektab[1];
+                        ap = seektab[4];
+                        d_a = (seektab[10] - ap) / (seek);
+                        d_x = (seektab[6] - xp) / (seek);
+                        d_y = (seektab[7] - yp) / (seek);
+                        seektab[0] += seektab[2];
+                        seektab[1] += seektab[3];
+                        seektab[4] += seektab[5];
+                        seektab += 6;
 
-                            if (seek > l) {
-                                seek = l;
+                        if (seek > l) {
+                            seek = l;
+                        }
+                        l -= seek;
+                        if (seek > 0 && ypos <= start_l) {
+                            blendin += seek;
+                            if (this->alpha_only) {
+                                in += seek;
+                            } else {
+                                out += seek;
                             }
-                            l -= seek;
-                            if (seek > 0 && ypos <= start_l) {
-                                blendin += seek;
-                                if (this->alpha_only) {
-                                    in += seek;
-                                } else {
-                                    out += seek;
-                                }
 
-                                seek = 0;
-                            }
-                            if (seek > 0) {
+                            seek = 0;
+                        }
+                        if (seek > 0) {
 #define CHECK
 // normal loop
 #define NORMAL_LOOP(Z) \
@@ -461,67 +451,65 @@ void E_DynamicMovement::smp_render(int this_thread,
     else                                                                        \
         DO(CHECK* out++ = in[(xp >> 16) + (this->w_mul[yp >> 16])])
 
-                                if (this->alpha_only) {
-                                    if (fbin != framebuffer) {
-                                        while (seek--) {
-                                            *blendin =
-                                                BLEND_ADJ(*in++, *blendin, ap >> 16);
-                                            ap += d_a;
-                                            blendin++;
-                                        }
-                                    } else {
-                                        while (seek--) {
-                                            *blendin = BLEND_ADJ(0, *blendin, ap >> 16);
-                                            ap += d_a;
-                                            blendin++;
-                                        }
+                            if (this->alpha_only) {
+                                if (fbin != framebuffer) {
+                                    while (seek--) {
+                                        *blendin = BLEND_ADJ(*in++, *blendin, ap >> 16);
+                                        ap += d_a;
+                                        blendin++;
                                     }
-                                } else if (!this->wrap) {
-                                    // this might not really be necessary b/c of the
-                                    // clamping in the loop, but I'm sick of crashes
-                                    if (xp < 0) {
-                                        xp = 0;
-                                    } else if (xp >= this->w_adj) {
-                                        xp = this->w_adj - 1;
+                                } else {
+                                    while (seek--) {
+                                        *blendin = BLEND_ADJ(0, *blendin, ap >> 16);
+                                        ap += d_a;
+                                        blendin++;
                                     }
-                                    if (yp < 0) {
-                                        yp = 0;
-                                    } else if (yp >= this->h_adj) {
-                                        yp = this->h_adj - 1;
-                                    }
-
-                                    LOOPS(CLAMPED_LOOPS)
-                                } else {  // this->wrap
-                                    xp %= this->w_adj;
-                                    yp %= this->h_adj;
-                                    if (xp < 0) {
-                                        xp += this->w_adj;
-                                    }
-                                    if (yp < 0) {
-                                        yp += this->h_adj;
-                                    }
-
-                                    if (d_x <= -this->w_adj) {
-                                        d_x = -this->w_adj + 1;
-                                    } else if (d_x >= this->w_adj) {
-                                        d_x = this->w_adj - 1;
-                                    }
-
-                                    if (d_y <= -this->h_adj) {
-                                        d_y = -this->h_adj + 1;
-                                    } else if (d_y >= this->h_adj) {
-                                        d_y = this->h_adj - 1;
-                                    }
-
-                                    LOOPS(WRAPPING_LOOPS)
                                 }
-                            }  // if seek>0
-                        }
-                        // adjust final (rightmost elem) part of seektab
-                        seektab[0] += seektab[2];
-                        seektab[1] += seektab[3];
-                        seektab[4] += seektab[5];
+                            } else if (!this->wrap) {
+                                // this might not really be necessary b/c of the
+                                // clamping in the loop, but I'm sick of crashes
+                                if (xp < 0) {
+                                    xp = 0;
+                                } else if (xp >= this->w_adj) {
+                                    xp = this->w_adj - 1;
+                                }
+                                if (yp < 0) {
+                                    yp = 0;
+                                } else if (yp >= this->h_adj) {
+                                    yp = this->h_adj - 1;
+                                }
+
+                                LOOPS(CLAMPED_LOOPS)
+                            } else {  // this->wrap
+                                xp %= this->w_adj;
+                                yp %= this->h_adj;
+                                if (xp < 0) {
+                                    xp += this->w_adj;
+                                }
+                                if (yp < 0) {
+                                    yp += this->h_adj;
+                                }
+
+                                if (d_x <= -this->w_adj) {
+                                    d_x = -this->w_adj + 1;
+                                } else if (d_x >= this->w_adj) {
+                                    d_x = this->w_adj - 1;
+                                }
+
+                                if (d_y <= -this->h_adj) {
+                                    d_y = -this->h_adj + 1;
+                                } else if (d_y >= this->h_adj) {
+                                    d_y = this->h_adj - 1;
+                                }
+
+                                LOOPS(WRAPPING_LOOPS)
+                            }
+                        }  // if seek>0
                     }
+                    // adjust final (rightmost elem) part of seektab
+                    seektab[0] += seektab[2];
+                    seektab[1] += seektab[3];
+                    seektab[4] += seektab[5];
                 }
             }
         }
