@@ -453,7 +453,7 @@ class Configurable_Effect : public Effect {
         if (std::is_same<Global_Config_T, Effect_Config>::value) {
             return;
         }
-        {
+        {  // This scope is needed for the shared_ptr to get deallocated at the end.
             std::shared_ptr<Global> tmp;
             for (auto& g : Configurable_Effect::globals) {
                 if (g.expired()) {

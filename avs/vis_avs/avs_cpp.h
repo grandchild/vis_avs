@@ -62,7 +62,8 @@
  *       // Edit values through the component's `config` member:
  *       ssc.config["Code Init"] = "n = 100;";
  *       ssc.config["Code Point"] = "x = i * 2 - 1; y = v;";
- *       // Some values are inside mutable lists.
+ *
+ *       // Some values may be inside mutable lists.
  *       ssc.config["Colors"][0]["Color"] = 0xff0000;
  *       ssc.config["Colors"].add_child();
  *       ssc.config["Colors"][1]["Color"] = 0x00ff00;

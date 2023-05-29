@@ -48,7 +48,7 @@ enum AVS_Parameter_Type {
     AVS_PARAM_INVALID = -1,
 
     /**
-     * A list of several sets of child parameters. The size/index of the list is
+     * A list of several sets of child parameters. The size/index of the list is a
      * signed(!) 64-bit integer.
      */
     AVS_PARAM_LIST = 0,
