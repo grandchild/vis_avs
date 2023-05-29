@@ -345,7 +345,7 @@ class E_Movement
     virtual bool can_multithread() { return true; };
     virtual int smp_begin(int max_threads,
                           char visdata[2][2][576],
-                          int isBeat,
+                          int is_beat,
                           int* framebuffer,
                           int* fbout,
                           int w,
@@ -354,14 +354,14 @@ class E_Movement
     virtual void smp_render(int this_thread,
                             int max_threads,
                             char visdata[2][2][576],
-                            int isBeat,
+                            int is_beat,
                             int* framebuffer,
                             int* fbout,
                             int w,
                             int h);
 
     virtual int smp_finish(char visdata[2][2][576],
-                           int isBeat,
+                           int is_beat,
                            int* framebuffer,
                            int* fbout,
                            int w,

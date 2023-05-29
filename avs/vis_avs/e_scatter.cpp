@@ -62,7 +62,7 @@ E_Scatter::E_Scatter() : ftw(0) {}
 E_Scatter::~E_Scatter() {}
 
 int E_Scatter::render(char[2][2][576],
-                      int isBeat,
+                      int is_beat,
                       int* framebuffer,
                       int* fbout,
                       int w,
@@ -85,7 +85,7 @@ int E_Scatter::render(char[2][2][576],
         }
         ftw = w;
     }
-    if (isBeat & 0x80000000) {
+    if (is_beat & 0x80000000) {
         return 0;
     }
 

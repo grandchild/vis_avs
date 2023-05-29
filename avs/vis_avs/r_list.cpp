@@ -381,14 +381,14 @@ static int __inline depthof(int c, int i) {
 }
 
 int C_RenderListClass::render(char visdata[2][2][576],
-                              int isBeat,
+                              int is_beat,
                               int* framebuffer,
                               int* fbout,
                               int w,
                               int h) {
-    int is_preinit = (isBeat & 0x80000000);
+    int is_preinit = (is_beat & 0x80000000);
 
-    if (isBeat && beat_render) {
+    if (is_beat && beat_render) {
         fake_enabled = beat_render_frames;
     }
 
@@ -423,7 +423,7 @@ int C_RenderListClass::render(char visdata[2][2][576],
             lock_unlock(this->code_lock);
         }
 
-        *var_beat = ((isBeat & 1) && !is_preinit) ? 1.0 : 0.0;
+        *var_beat = ((is_beat & 1) && !is_preinit) ? 1.0 : 0.0;
         *var_enabled = use_enabled ? 1.0 : 0.0;
         *var_w = (double)w;
         *var_h = (double)h;
@@ -437,7 +437,7 @@ int C_RenderListClass::render(char visdata[2][2][576],
         executeCode(codehandle[1], visdata);
 
         if (!is_preinit) {
-            isBeat = *var_beat > 0.1 || *var_beat < -0.1;
+            is_beat = *var_beat > 0.1 || *var_beat < -0.1;
         }
         use_inblendval = (int)(*var_alphain * 255.0);
         if (use_inblendval < 0) {
@@ -488,7 +488,7 @@ int C_RenderListClass::render(char visdata[2][2][576],
                 int nt = smp_max_threads;
                 nt = render.smp_begin(nt,
                                       visdata,
-                                      isBeat,
+                                      is_beat,
                                       s ? fbout : framebuffer,
                                       s ? framebuffer : fbout,
                                       w,
@@ -502,14 +502,14 @@ int C_RenderListClass::render(char visdata[2][2][576],
                     smp_Render(nt,
                                &render,
                                visdata,
-                               isBeat,
+                               is_beat,
                                s ? fbout : framebuffer,
                                s ? framebuffer : fbout,
                                w,
                                h);
 
                     t = render.smp_finish(visdata,
-                                          isBeat,
+                                          is_beat,
                                           s ? fbout : framebuffer,
                                           s ? framebuffer : fbout,
                                           w,
@@ -520,7 +520,7 @@ int C_RenderListClass::render(char visdata[2][2][576],
                 if (g_config_seh && renders[x].effect_index != LIST_ID) {
                     try {
                         t = render.render(visdata,
-                                          isBeat,
+                                          is_beat,
                                           s ? fbout : framebuffer,
                                           s ? framebuffer : fbout,
                                           w,
@@ -530,7 +530,7 @@ int C_RenderListClass::render(char visdata[2][2][576],
                     }
                 } else {
                     t = render.render(visdata,
-                                      isBeat,
+                                      is_beat,
                                       s ? fbout : framebuffer,
                                       s ? framebuffer : fbout,
                                       w,
@@ -543,10 +543,10 @@ int C_RenderListClass::render(char visdata[2][2][576],
             }
             if (!is_preinit) {
                 if (t & 0x10000000) {
-                    isBeat = 1;
+                    is_beat = 1;
                 }
                 if (t & 0x20000000) {
-                    isBeat = 0;
+                    is_beat = 0;
                 }
             }
         }
@@ -729,7 +729,7 @@ int C_RenderListClass::render(char visdata[2][2][576],
             int nt = smp_max_threads;
             nt = render.smp_begin(nt,
                                   visdata,
-                                  isBeat,
+                                  is_beat,
                                   s ? fbout : framebuffer,
                                   s ? framebuffer : fbout,
                                   w,
@@ -743,14 +743,14 @@ int C_RenderListClass::render(char visdata[2][2][576],
                 smp_Render(nt,
                            &render,
                            visdata,
-                           isBeat,
+                           is_beat,
                            s ? fbout : thisfb,
                            s ? thisfb : fbout,
                            w,
                            h);
 
                 t = render.smp_finish(visdata,
-                                      isBeat,
+                                      is_beat,
                                       s ? fbout : framebuffer,
                                       s ? framebuffer : fbout,
                                       w,
@@ -760,13 +760,13 @@ int C_RenderListClass::render(char visdata[2][2][576],
         } else if (g_config_seh && renders[x].effect_index != LIST_ID) {
             try {
                 t = renders[x].effect.render(
-                    visdata, isBeat, s ? fbout : thisfb, s ? thisfb : fbout, w, h);
+                    visdata, is_beat, s ? fbout : thisfb, s ? thisfb : fbout, w, h);
             } catch (...) {
                 t = 0;
             }
         } else {
             t = renders[x].effect.render(
-                visdata, isBeat, s ? fbout : thisfb, s ? thisfb : fbout, w, h);
+                visdata, is_beat, s ? fbout : thisfb, s ? thisfb : fbout, w, h);
         }
 
         if (t & 1) {
@@ -774,10 +774,10 @@ int C_RenderListClass::render(char visdata[2][2][576],
         }
         if (!is_preinit) {
             if (t & 0x10000000) {
-                isBeat = 1;
+                is_beat = 1;
             }
             if (t & 0x20000000) {
-                isBeat = 0;
+                is_beat = 0;
             }
         }
     }
@@ -1132,7 +1132,7 @@ int C_RenderListClass::__LoadPresetFromUndo(C_UndoItem& item, int clear) {
 void C_RenderListClass::smp_Render(int minthreads,
                                    Legacy_Effect_Proxy* render,
                                    char visdata[2][2][576],
-                                   int isBeat,
+                                   int is_beat,
                                    int* framebuffer,
                                    int* fbout,
                                    int w,
@@ -1144,7 +1144,7 @@ void C_RenderListClass::smp_Render(int minthreads,
     }
 
     smp_parms.vis_data_ptr = visdata;
-    smp_parms.isBeat = isBeat;
+    smp_parms.is_beat = is_beat;
     smp_parms.framebuffer = framebuffer;
     smp_parms.fbout = fbout;
     smp_parms.w = w;
@@ -1178,7 +1178,7 @@ uint32_t C_RenderListClass::smp_threadProc(void* parm) {
                                      smp_parms.nthreads,
                                      *(char(*)[2][2][576])smp_parms.vis_data_ptr,
 
-                                     smp_parms.isBeat,
+                                     smp_parms.is_beat,
                                      smp_parms.framebuffer,
                                      smp_parms.fbout,
                                      smp_parms.w,

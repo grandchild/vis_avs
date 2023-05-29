@@ -39,7 +39,7 @@ E_Invert::E_Invert() { enabled = 1; }
 E_Invert::~E_Invert() {}
 
 int E_Invert::render(char[2][2][576],
-                     int isBeat,
+                     int is_beat,
                      int* framebuffer,
                      int*,
                      int w,
@@ -47,7 +47,7 @@ int E_Invert::render(char[2][2][576],
     int i = w * h;
     int* p = framebuffer;
 
-    if (isBeat & 0x80000000) {
+    if (is_beat & 0x80000000) {
         return 0;
     }
     if (!enabled) {

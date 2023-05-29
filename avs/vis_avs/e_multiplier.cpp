@@ -40,12 +40,12 @@ E_Multiplier::E_Multiplier() {}
 E_Multiplier::~E_Multiplier() {}
 
 int E_Multiplier::render(char[2][2][576],
-                         int isBeat,
+                         int is_beat,
                          int* framebuffer,
                          int*,
                          int w,
                          int h) {
-    if (isBeat & 0x80000000) {
+    if (is_beat & 0x80000000) {
         return 0;
     }
 

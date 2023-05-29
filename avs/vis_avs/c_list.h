@@ -104,7 +104,7 @@ class C_RenderListClass : public C_RBASE {
     void smp_Render(int minthreads,
                     Legacy_Effect_Proxy* render,
                     char visdata[2][2][576],
-                    int isBeat,
+                    int is_beat,
                     int* framebuffer,
                     int* fbout,
                     int w,
@@ -112,7 +112,7 @@ class C_RenderListClass : public C_RBASE {
     typedef struct {
         void* vis_data_ptr;
         int nthreads;
-        int isBeat;
+        int is_beat;
         int* framebuffer;
         int* fbout;
         int w;
@@ -138,7 +138,7 @@ class C_RenderListClass : public C_RBASE {
     virtual ~C_RenderListClass();
 
     virtual int render(char visdata[2][2][576],
-                       int isBeat,
+                       int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,

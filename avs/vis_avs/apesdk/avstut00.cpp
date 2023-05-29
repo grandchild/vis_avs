@@ -48,7 +48,7 @@ class C_THISCLASS : public C_RBASE
 		C_THISCLASS();
 		virtual ~C_THISCLASS();
 
-		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h);
+		virtual int render(char visdata[2][2][576], int is_beat, int *framebuffer, int *fbout, int w, int h);
 		
 		virtual char *get_desc();
 
@@ -163,10 +163,10 @@ C_THISCLASS::~C_THISCLASS()
 // render should return 0 if it only used framebuffer, or 1 if the new output data is in fbout. this is
 // used when you want to do something that you'd otherwise need to make a copy of the framebuffer.
 // w and h are the-*/ width and height of the screen, in pixels.
-// isBeat is 1 if a beat has been detected.
+// is_beat is 1 if a beat has been detected.
 // visdata is in the format of [spectrum:0,wave:1][channel][band].
 
-int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)
+int C_THISCLASS::render(char visdata[2][2][576], int is_beat, int *framebuffer, int *fbout, int w, int h)
 {
 	int halfw;
 	int halfh;
@@ -178,7 +178,7 @@ int C_THISCLASS::render(char visdata[2][2][576], int isBeat, int *framebuffer, i
 	}
 
 	// did we just hit a beat?
-	if(isBeat)
+	if(is_beat)
 	{
 		// draw our magic box
 		halfw=w/2;

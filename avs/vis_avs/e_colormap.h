@@ -233,7 +233,7 @@ class E_ColorMap : public Configurable_Effect<ColorMap_Info, ColorMap_Config> {
 
     /* APE interface */
     virtual int render(char visdata[2][2][576],
-                       int isBeat,
+                       int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,

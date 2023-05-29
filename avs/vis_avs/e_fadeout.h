@@ -39,7 +39,7 @@ class E_Fadeout : public Configurable_Effect<Fadeout_Info, Fadeout_Config> {
     E_Fadeout();
     virtual ~E_Fadeout();
     virtual int render(char visdata[2][2][576],
-                       int isBeat,
+                       int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,

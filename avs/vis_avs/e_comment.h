@@ -27,7 +27,7 @@ class E_Comment : public Configurable_Effect<Comment_Info, Comment_Config> {
     E_Comment();
     virtual ~E_Comment();
     virtual int render(char visdata[2][2][576],
-                       int isBeat,
+                       int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,

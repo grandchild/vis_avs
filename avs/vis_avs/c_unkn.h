@@ -41,7 +41,7 @@ class C_UnknClass : public C_RBASE {
     C_UnknClass();
     virtual ~C_UnknClass();
     virtual int render(char visdata[2][2][576],
-                       int isBeat,
+                       int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,

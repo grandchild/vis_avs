@@ -91,7 +91,7 @@ static inline int makeint(double t) {
 }
 
 int E_SuperScope::render(char visdata[2][2][576],
-                         int isBeat,
+                         int is_beat,
                          int* framebuffer,
                          int*,
                          int w,
@@ -104,7 +104,7 @@ int E_SuperScope::render(char visdata[2][2][576],
         *this->vars.n = 100.0;
         this->need_init = true;
     }
-    if (isBeat & 0x80000000 || this->config.colors.empty()) {
+    if (is_beat & 0x80000000 || this->config.colors.empty()) {
         return 0;
     }
 
@@ -153,13 +153,14 @@ int E_SuperScope::render(char visdata[2][2][576],
     r3 = ((((c1 >> 16) & 255) * (63 - r)) + (((c2 >> 16) & 255) * r)) / 64;
     current_color = r1 | (r2 << 8) | (r3 << 16);
 
-    this->init_variables(w, h, isBeat, current_color, (uint32_t)this->config.draw_mode);
+    this->init_variables(
+        w, h, is_beat, current_color, (uint32_t)this->config.draw_mode);
     if (this->need_init) {
         this->code_init.exec(visdata);
         this->need_init = false;
     }
     this->code_frame.exec(visdata);
-    if (isBeat) {
+    if (is_beat) {
         this->code_beat.exec(visdata);
     }
     if (this->code_point.is_valid()) {

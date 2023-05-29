@@ -53,18 +53,18 @@ E_Water::~E_Water() { free(this->lastframe); }
 static const int zero = 0;
 
 int E_Water::render(char visdata[2][2][576],
-                    int isBeat,
+                    int is_beat,
                     int* framebuffer,
                     int* fbout,
                     int w,
                     int h) {
-    smp_begin(1, visdata, isBeat, framebuffer, fbout, w, h);
-    if (isBeat & 0x80000000) {
+    smp_begin(1, visdata, is_beat, framebuffer, fbout, w, h);
+    if (is_beat & 0x80000000) {
         return 0;
     }
 
-    smp_render(0, 1, visdata, isBeat, framebuffer, fbout, w, h);
-    return smp_finish(visdata, isBeat, framebuffer, fbout, w, h);
+    smp_render(0, 1, visdata, is_beat, framebuffer, fbout, w, h);
+    return smp_finish(visdata, is_beat, framebuffer, fbout, w, h);
 }
 
 int E_Water::smp_begin(int max_threads,

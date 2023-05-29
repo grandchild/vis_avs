@@ -84,7 +84,7 @@ class E_Triangle
     E_Triangle();
     virtual ~E_Triangle();
     virtual int render(char visdata[2][2][576],
-                       int isBeat,
+                       int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,

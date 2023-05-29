@@ -19,7 +19,7 @@ class C_THISCLASS : public C_RBASE {
     void CreateStar(int A);
     virtual ~C_THISCLASS();
     virtual int render(char visdata[2][2][576],
-                       int isBeat,
+                       int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,

@@ -53,6 +53,6 @@ typedef struct {
 
 BOOL CALLBACK DlgProc_Bpm(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void initBpm(void);
-int refineBeat(int isBeat);
+int refineBeat(int is_beat);
 
 #endif

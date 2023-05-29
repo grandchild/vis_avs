@@ -20,7 +20,7 @@ class E_Normalise : public Configurable_Effect<Normalise_Info, Normalise_Config>
     E_Normalise();
     virtual ~E_Normalise();
     virtual int render(char visdata[2][2][576],
-                       int isBeat,
+                       int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,

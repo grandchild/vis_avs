@@ -556,11 +556,11 @@ static int getNWords(char* buf) {
 // render should return 0 if it only used framebuffer, or 1 if the new output data is in
 // fbout. this is used when you want to do something that you'd otherwise need to make a
 // copy of the framebuffer. w and h are the width and height of the screen, in pixels.
-// isBeat is 1 if a beat has been detected.
+// is_beat is 1 if a beat has been detected.
 // visdata is in the format of [spectrum:0,wave:1][channel][band].
 
 int C_THISCLASS::render(char[2][2][576],
-                        int isBeat,
+                        int is_beat,
                         int* framebuffer,
                         int*,
                         int w,
@@ -576,7 +576,7 @@ int C_THISCLASS::render(char[2][2][576],
     if (!enabled) {
         return 0;
     }
-    if (isBeat & 0x80000000) {
+    if (is_beat & 0x80000000) {
         return 0;
     }
 
@@ -593,9 +593,8 @@ int C_THISCLASS::render(char[2][2][576],
 
     // If not beat sensitive and time is up for this word
     // OR if beat sensitive and this frame is a beat and time is up for last beat
-    if ((!onbeat && nf >= normSpeed) || (onbeat && isBeat && !nb)) {  // Then choose
-                                                                      // which word to
-                                                                      // show
+    if ((!onbeat && nf >= normSpeed) || (onbeat && is_beat && !nb)) {
+        // Then choose which word to show
         if (!(insertBlank && !(oddeven % 2))) {
             if (randomword) {
                 curword = rand() % (getNWords(text) + 1);
@@ -609,13 +608,13 @@ int C_THISCLASS::render(char[2][2][576],
     }
 
     if (forceBeat) {
-        isBeat = 1;
+        is_beat = 1;
         forceBeat = 0;
     }
 
     // If beat sensitive and frame is a beat and last beat expired, start frame timer
     // for this beat
-    if (onbeat && isBeat && !nb) {
+    if (onbeat && is_beat && !nb) {
         nb = onbeatSpeed;
     }
 
@@ -626,7 +625,7 @@ int C_THISCLASS::render(char[2][2][576],
     }
 
     // Same test as above but takes care of nb init
-    if ((!onbeat && nf >= normSpeed) || (onbeat && isBeat && nb == onbeatSpeed)) {
+    if ((!onbeat && nf >= normSpeed) || (onbeat && is_beat && nb == onbeatSpeed)) {
         nf = 0;
         if (randomPos && w && h)  // Handle random position
         {

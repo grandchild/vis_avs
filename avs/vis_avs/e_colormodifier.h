@@ -163,7 +163,7 @@ class E_ColorModifier : public Programmable_Effect<ColorModifier_Info,
     E_ColorModifier();
     virtual ~E_ColorModifier();
     virtual int render(char visdata[2][2][576],
-                       int isBeat,
+                       int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,

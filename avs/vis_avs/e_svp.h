@@ -40,7 +40,7 @@ class E_SVP : public Configurable_Effect<SVP_Info, SVP_Config> {
     E_SVP();
     virtual ~E_SVP();
     virtual int render(char visdata[2][2][576],
-                       int isBeat,
+                       int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,

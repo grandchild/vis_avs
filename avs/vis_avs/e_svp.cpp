@@ -144,12 +144,12 @@ void E_SVP::set_library() {
 }
 
 int E_SVP::render(char visdata[2][2][576],
-                  int isBeat,
+                  int is_beat,
                   int* framebuffer,
                   int*,
                   int w,
                   int h) {
-    if (isBeat & 0x80000000) {
+    if (is_beat & 0x80000000) {
         return 0;
     }
     lock_lock(this->library_lock);

@@ -20,7 +20,7 @@ class E_Scatter : public Configurable_Effect<Scatter_Info, Scatter_Config> {
     E_Scatter();
     virtual ~E_Scatter();
     virtual int render(char visdata[2][2][576],
-                       int isBeat,
+                       int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,

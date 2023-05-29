@@ -296,7 +296,7 @@ void Bump_Vars::register_(void* vm_context) {
     this->bi = NSEEL_VM_regvar(vm_context, "bi");
     this->x = NSEEL_VM_regvar(vm_context, "x");
     this->y = NSEEL_VM_regvar(vm_context, "y");
-    this->is_beat = NSEEL_VM_regvar(vm_context, "is_beat");
+    this->is_beat = NSEEL_VM_regvar(vm_context, "isBeat");
     this->is_long_beat = NSEEL_VM_regvar(vm_context, "is_long_beat");
 }
 

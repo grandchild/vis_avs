@@ -55,7 +55,7 @@ class E_Simple : public Configurable_Effect<Simple_Info, Simple_Config> {
     E_Simple();
     virtual ~E_Simple();
     virtual int render(char visdata[2][2][576],
-                       int isBeat,
+                       int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,

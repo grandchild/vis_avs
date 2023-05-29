@@ -42,7 +42,7 @@ class E_RotStar : public Configurable_Effect<RotStar_Info, RotStar_Config> {
     E_RotStar();
     virtual ~E_RotStar();
     virtual int render(char visdata[2][2][576],
-                       int isBeat,
+                       int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,

@@ -11,12 +11,12 @@ class C_RBASE {
     C_RBASE(){};
     virtual ~C_RBASE(){};
     virtual int render(char visdata[2][2][576],
-                       int isBeat,
+                       int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,
                        int h) {
-        (void)visdata, (void)isBeat, (void)framebuffer, (void)fbout, (void)w, (void)h;
+        (void)visdata, (void)is_beat, (void)framebuffer, (void)fbout, (void)w, (void)h;
         return 0;  // returns 1 if fbout has dest
     };
     virtual char* get_desc() = 0;
@@ -40,33 +40,33 @@ class C_RBASE2 : public C_RBASE {
     // default should return max_threads if you are flexible
     virtual int smp_begin(int max_threads,
                           char visdata[2][2][576],
-                          int isBeat,
+                          int is_beat,
                           int* framebuffer,
                           int* fbout,
                           int w,
                           int h) {
-        (void)max_threads, (void)visdata, (void)isBeat, (void)framebuffer, (void)fbout,
+        (void)max_threads, (void)visdata, (void)is_beat, (void)framebuffer, (void)fbout,
             (void)w, (void)h;
         return 0;
     }
     virtual void smp_render(int this_thread,
                             int max_threads,
                             char visdata[2][2][576],
-                            int isBeat,
+                            int is_beat,
                             int* framebuffer,
                             int* fbout,
                             int w,
                             int h) {
-        (void)this_thread, (void)max_threads, (void)visdata, (void)isBeat,
+        (void)this_thread, (void)max_threads, (void)visdata, (void)is_beat,
             (void)framebuffer, (void)fbout, (void)w, (void)h;
     };
     virtual int smp_finish(char visdata[2][2][576],
-                           int isBeat,
+                           int is_beat,
                            int* framebuffer,
                            int* fbout,
                            int w,
                            int h) {
-        (void)visdata, (void)isBeat, (void)framebuffer, (void)fbout, (void)w, (void)h;
+        (void)visdata, (void)is_beat, (void)framebuffer, (void)fbout, (void)w, (void)h;
         return 0;  // returns 1 if fbout has dest
     };
 };
@@ -134,7 +134,7 @@ class Legacy_Effect_Proxy {
     };
 
     int render(char visdata[2][2][576],
-               int isBeat,
+               int is_beat,
                int* framebuffer,
                int* fbout,
                int w,
@@ -144,10 +144,10 @@ class Legacy_Effect_Proxy {
                 if (!this->effect->enabled) {
                     return 0;
                 }
-                return this->effect->render(visdata, isBeat, framebuffer, fbout, w, h);
+                return this->effect->render(visdata, is_beat, framebuffer, fbout, w, h);
             default:
                 return this->legacy_effect->render(
-                    visdata, isBeat, framebuffer, fbout, w, h);
+                    visdata, is_beat, framebuffer, fbout, w, h);
         }
     };
     char* get_desc() {
@@ -178,7 +178,7 @@ class Legacy_Effect_Proxy {
     };
     int smp_begin(int max_threads,
                   char visdata[2][2][576],
-                  int isBeat,
+                  int is_beat,
                   int* framebuffer,
                   int* fbout,
                   int w,
@@ -189,7 +189,7 @@ class Legacy_Effect_Proxy {
                     return 0;
                 }
                 return this->effect->smp_begin(
-                    max_threads, visdata, isBeat, framebuffer, fbout, w, h);
+                    max_threads, visdata, is_beat, framebuffer, fbout, w, h);
             default:
             case LEGACY_EFFECT: return 0;
         }
@@ -197,7 +197,7 @@ class Legacy_Effect_Proxy {
     void smp_render(int this_thread,
                     int max_threads,
                     char visdata[2][2][576],
-                    int isBeat,
+                    int is_beat,
                     int* framebuffer,
                     int* fbout,
                     int w,
@@ -210,7 +210,7 @@ class Legacy_Effect_Proxy {
                 return this->effect->smp_render(this_thread,
                                                 max_threads,
                                                 visdata,
-                                                isBeat,
+                                                is_beat,
                                                 framebuffer,
                                                 fbout,
                                                 w,
@@ -220,7 +220,7 @@ class Legacy_Effect_Proxy {
         }
     };
     int smp_finish(char visdata[2][2][576],
-                   int isBeat,
+                   int is_beat,
                    int* framebuffer,
                    int* fbout,
                    int w,
@@ -231,7 +231,7 @@ class Legacy_Effect_Proxy {
                     return 0;
                 }
                 return this->effect->smp_finish(
-                    visdata, isBeat, framebuffer, fbout, w, h);
+                    visdata, is_beat, framebuffer, fbout, w, h);
             default:
             case LEGACY_EFFECT: return 0;
         }

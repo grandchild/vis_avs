@@ -53,7 +53,7 @@ class E_Multiplier : public Configurable_Effect<Multiplier_Info, Multiplier_Conf
     E_Multiplier();
     virtual ~E_Multiplier();
     virtual int render(char visdata[2][2][576],
-                       int isBeat,
+                       int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,

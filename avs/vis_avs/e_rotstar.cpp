@@ -51,7 +51,7 @@ E_RotStar::E_RotStar() : color_pos(0), r(0.0) {}
 E_RotStar::~E_RotStar() {}
 
 int E_RotStar::render(char visdata[2][2][576],
-                      int isBeat,
+                      int is_beat,
                       int* framebuffer,
                       int*,
                       int w,
@@ -59,7 +59,7 @@ int E_RotStar::render(char visdata[2][2][576],
     int x, y, c;
     int current_color;
 
-    if (isBeat & 0x80000000) {
+    if (is_beat & 0x80000000) {
         return 0;
     }
     if (this->config.colors.empty()) {

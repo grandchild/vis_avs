@@ -76,7 +76,7 @@ class E_AVI : public Configurable_Effect<AVI_Info, AVI_Config> {
     E_AVI();
     virtual ~E_AVI();
     virtual int render(char visdata[2][2][576],
-                       int isBeat,
+                       int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,

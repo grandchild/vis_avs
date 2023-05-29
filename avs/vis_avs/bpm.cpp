@@ -50,7 +50,7 @@ extern CRITICAL_SECTION g_title_cs;
 extern char g_title[2048];
 #endif
 
-int refineBeat(int isBeat);
+int refineBeat(int is_beat);
 BOOL TCHistStep(BeatType* t,
                 int* _halfDiscriminated,
                 int* _hdPos,
@@ -404,7 +404,7 @@ void halfBeat(void) {
     memset(halfDiscriminated, 0, TCHistSize * sizeof(int));
 }
 
-// Called whenever isBeat was true in render
+// Called whenever is_beat was true in render
 BOOL TCHistStep(BeatType* t,
                 int* _halfDiscriminated,
                 int* _hdPos,
@@ -653,16 +653,16 @@ void SliderStep(int Ctl, int* slide) {
 // render should return 0 if it only used framebuffer, or 1 if the new output data is in
 // fbout. this is used when you want to do something that you'd otherwise need to make a
 // copy of the framebuffer. w and h are the width and height of the screen, in pixels.
-// isBeat is 1 if a beat has been detected.
+// is_beat is 1 if a beat has been detected.
 // visdata is in the format of [spectrum:0,wave:1][channel][band].
 
-int refineBeat(int isBeat) {
+int refineBeat(int is_beat) {
     BOOL accepted = FALSE;
     BOOL predicted = FALSE;
     BOOL resyncin = FALSE;
     BOOL resyncout = FALSE;
 
-    if (isBeat) {  // Show the beat received from AVS
+    if (is_beat) {  // Show the beat received from AVS
         SliderStep(IDC_IN, &inSlide);
     }
 
@@ -682,8 +682,8 @@ int refineBeat(int isBeat) {
         predicted = TRUE;
     }
 
-    if (isBeat) {  // If it is a real beat, do discrimination/guessing and computations,
-                   // then see if it is accepted
+    if (is_beat) {  // If it is a real beat, do discrimination/guessing and
+                    // computations, then see if it is accepted
         accepted =
             TCHistStep(TCHist, halfDiscriminated, &hdPos, &lastTC, TCNow, BEAT_REAL);
     }
@@ -755,7 +755,7 @@ int refineBeat(int isBeat) {
         return ((cfg_smartbeat && !cfg_smartbeatonlysticky)
                 || (cfg_smartbeat && cfg_smartbeatonlysticky && sticked))
                    ? 1
-                   : isBeat;
+                   : is_beat;
     }
     if (predicted) {
         predictionLastTC = TCNow;
@@ -767,7 +767,7 @@ int refineBeat(int isBeat) {
         return ((cfg_smartbeat && !cfg_smartbeatonlysticky)
                 || (cfg_smartbeat && cfg_smartbeatonlysticky && sticked))
                    ? 1
-                   : isBeat;
+                   : is_beat;
     }
     if (resyncout) {
         predictionLastTC = TCNow;
@@ -775,11 +775,11 @@ int refineBeat(int isBeat) {
         return ((cfg_smartbeat && !cfg_smartbeatonlysticky)
                 || (cfg_smartbeat && cfg_smartbeatonlysticky && sticked))
                    ? 0
-                   : isBeat;
+                   : is_beat;
     }
 
     return ((cfg_smartbeat && !cfg_smartbeatonlysticky)
             || (cfg_smartbeat && cfg_smartbeatonlysticky && sticked))
-               ? (predictionBpm ? 0 : isBeat)
-               : isBeat;
+               ? (predictionBpm ? 0 : is_beat)
+               : is_beat;
 }

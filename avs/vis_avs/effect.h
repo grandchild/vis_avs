@@ -81,12 +81,12 @@ class Effect {
 
     // render api
     virtual int render(char visdata[2][2][576],
-                       int isBeat,
+                       int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,
                        int h) {
-        (void)visdata, (void)isBeat, (void)framebuffer, (void)fbout, (void)w, (void)h;
+        (void)visdata, (void)is_beat, (void)framebuffer, (void)fbout, (void)w, (void)h;
         return 0;  // returns 1 if fbout has dest
     };
     virtual char* get_desc() = 0;
@@ -114,33 +114,33 @@ class Effect {
     virtual int smp_getflags() { return 0; }
     virtual int smp_begin(int max_threads,
                           char visdata[2][2][576],
-                          int isBeat,
+                          int is_beat,
                           int* framebuffer,
                           int* fbout,
                           int w,
                           int h) {
-        (void)max_threads, (void)visdata, (void)isBeat, (void)framebuffer, (void)fbout,
+        (void)max_threads, (void)visdata, (void)is_beat, (void)framebuffer, (void)fbout,
             (void)w, (void)h;
         return 0;
     }
     virtual void smp_render(int this_thread,
                             int max_threads,
                             char visdata[2][2][576],
-                            int isBeat,
+                            int is_beat,
                             int* framebuffer,
                             int* fbout,
                             int w,
                             int h) {
-        (void)this_thread, (void)max_threads, (void)visdata, (void)isBeat,
+        (void)this_thread, (void)max_threads, (void)visdata, (void)is_beat,
             (void)framebuffer, (void)fbout, (void)w, (void)h;
     };
     virtual int smp_finish(char visdata[2][2][576],
-                           int isBeat,
+                           int is_beat,
                            int* framebuffer,
                            int* fbout,
                            int w,
                            int h) {
-        (void)visdata, (void)isBeat, (void)framebuffer, (void)fbout, (void)w, (void)h;
+        (void)visdata, (void)is_beat, (void)framebuffer, (void)fbout, (void)w, (void)h;
         return 0;
     };
 

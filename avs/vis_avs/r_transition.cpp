@@ -177,7 +177,7 @@ void C_RenderTransitionClass::clean_prev_renders_if_needed() {
 extern int g_rnd_cnt;
 
 int C_RenderTransitionClass::render(char visdata[2][2][576],
-                                    int isBeat,
+                                    int is_beat,
                                     int* framebuffer,
                                     int* fbout,
                                     int w,
@@ -236,7 +236,7 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
         if (!initThread && g_render_effects2->getNumRenders()) {
             this->prev_renders_need_cleanup = true;
         }
-        return g_render_effects->render(visdata, isBeat, framebuffer, fbout, w, h);
+        return g_render_effects->render(visdata, is_beat, framebuffer, fbout, w, h);
     }
 
     // handle resize
@@ -260,12 +260,13 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
     // maybe there's a faster way than using 3 more buffers without screwing
     // any effect... justin ?
     if (curtrans & 0x8000) {
-        ep[1] ^=
-            g_render_effects2->render(visdata, isBeat, fbs[ep[1]], fbs[ep[1] ^ 1], w, h)
-            & 1;
+        ep[1] ^= g_render_effects2->render(
+                     visdata, is_beat, fbs[ep[1]], fbs[ep[1] ^ 1], w, h)
+                 & 1;
     }
     ep[0] ^=
-        g_render_effects->render(visdata, isBeat, fbs[ep[0]], fbs[ep[0] ^ 1], w, h) & 1;
+        g_render_effects->render(visdata, is_beat, fbs[ep[0]], fbs[ep[0] ^ 1], w, h)
+        & 1;
 
     int* p = fbs[ep[1]];
     int* d = fbs[ep[0]];
