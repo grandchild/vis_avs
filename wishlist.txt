@@ -164,6 +164,11 @@ Render / TexerII
     * Bug: image filenames starting with "_" are buggy (because they are sorted before the default image).
 
 
+Trans / Convolution Filter
+
+    * Select mulitple kernel fields (or rows/coloumns) and edit them together.
+
+
 Input / Audio handling
 
     * Enable equalizer-/compressor-effects on input spectrum-data
