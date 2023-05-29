@@ -42,8 +42,6 @@ integrated as builtin effects instead.
   * _Texer_, originally by [Steven Wittens](https://acko.net).
 * 🥵 Performance is generally the same as the official build, but can be a bit slower
   for some effects. A few effects have gained faster SSE3-enabled versions.
-* 🧨 APE files are crashing AVS or preventing it from starting. Rename or remove .ape
-  files for now.
 
 
 ### The Future
