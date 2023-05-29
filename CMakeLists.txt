@@ -22,6 +22,10 @@ set(SRC_FILES_VIS_AVS_COMPILER)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(
         /W4                 # Warning level 4 (maximum)
+        /wd4458             # Ignore warning about overriding member with local
+                            # parameter. Setters should be able to have a parameter
+                            # named exactly the same as the member it's setting. The
+                            # code style advocates for `this->` everywhere anyway.
         /MP                 # Multithreaded compilation
         /std:c++14          # Pin to C++14 features
         /Zc:__cplusplus     # Define the actual C++ standard in __cplusplus, instead of
