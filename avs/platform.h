@@ -57,33 +57,108 @@ unsigned int umax(unsigned int a, unsigned int b);
 uint64_t timer_ms();
 /* A high-precision microsecond resolution counter for performance measuring. */
 uint64_t timer_us();
+/**
+ * The actual timer precision available from `timer_us()`, in microseconds.
+ */
 double timer_us_precision();
 
+/**
+ * Create a new lock object.
+ */
 lock_t* lock_init();
+/**
+ * Lock the lock.
+ */
 void lock_lock(lock_t* lock_obj);
+/**
+ * Check if the lock is free. Take it if possible and return `true`, else return
+ * `false`.
+ */
 bool lock_try(lock_t* lock_obj);
+/**
+ * Take the lock if possible, else wait for it to become available.
+ */
 void lock_unlock(lock_t* lock_obj);
+/**
+ * Destroy the given lock object.
+ */
 void lock_destroy(lock_t* lock_obj);
 
+/**
+ * Load a dynamic library (.dll, .so) by file path.
+ * Returns NULL on error.
+ */
 dlib_t* library_load(const char* path);
+/**
+ * Get a pointer to a named function in the library.
+ * Use `FORCE_FUNCTION_CAST()` to cast the function type to the correct one.
+ * Returns NULL on error.
+ */
 void* library_get(dlib_t* library, const char* func_name);
+/**
+ * Unmap the given library from memory and destroy the library object.
+ */
 void library_unload(dlib_t* library);
 
 #define WAIT_INFINITE (-1)
+/**
+ * Create a signal which, when fired, will be received by _one_ (random) thread waiting
+ * for it.
+ */
 signal_t* signal_create_single();
+/**
+ * Create a signal which, when fired, will be received by _all_ threads waiting for it.
+ */
 signal_t* signal_create_broadcast();
+/**
+ * Fire the signal. Depending on the type one or all threads will receive it. */
 void signal_set(signal_t* signal);
+/**
+ * Reset a signal to non-fired state.
+ */
 void signal_unset(signal_t* signal);
-// All wait functions return NULL if timeout was hit or other error occurred.
+/**
+ * Wait for a signal to be received, at most `wait_ms`.
+ * Pass `WAIT_INFINITE` to `wait_ms` to wait forever.
+ * Returns NULL if timeout was hit or other error occurred.
+ */
 signal_t* signal_wait(signal_t* signal, int32_t wait_ms);
+/**
+ * Wait for any of the given signals to be received, at most `wait_ms`.
+ * Pass `WAIT_INFINITE` to `wait_ms` to wait forever.
+ * Returns NULL if timeout was hit or other error occurred.
+ */
 signal_t* signal_wait_any(signal_t** signals, uint32_t num_signals, int32_t wait_ms);
+/**
+ * Wait for all of the given signals to be received, at most `wait_ms`.
+ * Pass `WAIT_INFINITE` to `wait_ms` to wait forever.
+ * Returns NULL if timeout was hit or other error occurred.
+ */
 signal_t* signal_wait_all(signal_t** signals, uint32_t num_signals, int32_t wait_ms);
+/**
+ * Destroy the given signal object.
+ */
 void signal_destroy(signal_t* signal);
 
+/**
+ * Create a thread object.
+ */
 thread_t* thread_create(uint32_t (*func)(void* data), void* data);
-// All join functions return false if timeout was hit or other error occurred.
+/**
+ * Wait for a thread to finish, at most `wait_ms`.
+ * Pass `WAIT_INFINITE` to `wait_ms` to wait forever.
+ * Returns false if timeout was hit or other error occurred.
+ */
 bool thread_join(thread_t* thread, int32_t wait_ms);
+/**
+ * Wait for all of the given threads to finish, at most `wait_ms`.
+ * Pass `WAIT_INFINITE` to `wait_ms` to wait forever.
+ * Returns false if timeout was hit or other error occurred.
+ */
 bool thread_join_all(thread_t** threads, uint32_t num_threads, int32_t wait_ms);
+/**
+ * Destroy the given thread object.
+ */
 void thread_destroy(thread_t* thread);
 
 int create_directory(const char* path);
