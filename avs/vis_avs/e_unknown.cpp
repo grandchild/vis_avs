@@ -29,59 +29,51 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "c_unkn.h"
+#include "e_unknown.h"
 
 #include "r_defs.h"
-
-char* C_UnknClass::get_desc() { return MOD_NAME; }
-void C_UnknClass::SetID(int d, char* dString) {
-    id = d;
-    memset(idString, 0, sizeof(idString));
-    strcpy(idString, dString);
-}
 
 #define PUT_INT(y)                   \
     data[pos] = (y)&255;             \
     data[pos + 1] = (y >> 8) & 255;  \
     data[pos + 2] = (y >> 16) & 255; \
     data[pos + 3] = (y >> 24) & 255
+
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
-void C_UnknClass::load_config(unsigned char* data, int len) {
-    if (configdata) {
-        free(configdata);
+
+constexpr Parameter Unknown_Info::parameters[];
+
+E_Unknown::E_Unknown() : legacy_id(0), legacy_ape_id() {}
+
+int E_Unknown::render(char[2][2][576], int, int*, int*, int, int) { return 0; }
+
+void E_Unknown::set_id(int builtin_id, const char* ape_id) {
+    this->legacy_id = builtin_id;
+    memset(this->legacy_ape_id, 0, LEGACY_APE_ID_LENGTH);
+    if (ape_id) {
+        memcpy(this->legacy_ape_id, ape_id, LEGACY_APE_ID_LENGTH);
     }
-    configdata = (char*)malloc(len);
-    memcpy(configdata, data, len);
-    configdata_len = len;
-    //  char s[1024]="";
-    //  for (int x = 0 ;x  < configdata_len; x ++)
-    //    wsprintf(s+strlen(s),"%X,",configdata[x]);
-    //  MessageBox(NULL,s,"loaded config",0);
-}
-int C_UnknClass::save_config(unsigned char* data) {
-    int pos = 0;
-    //  char s[1024]="";
-    //  for (int x = 0 ;x  < configdata_len; x ++)
-    //    wsprintf(s+strlen(s),"%X,",configdata[x]);
-    //  MessageBox(NULL,s,"saving config",0);
-    memcpy(data + pos, configdata, configdata_len);
-    pos += configdata_len;
-    return pos;
 }
 
-C_UnknClass::C_UnknClass() {
-    configdata = 0;
-    configdata_len = 0;
-    id = 0;
-    idString[0] = 0;
-}
-
-C_UnknClass::~C_UnknClass() {
-    if (configdata) {
-        free(configdata);
+void E_Unknown::load_legacy(unsigned char* data, int len) {
+    // Need to call `set_id()` first!
+    if (this->legacy_ape_id[0] != '\0') {
+        this->config.id = std::string(this->legacy_ape_id, LEGACY_APE_ID_LENGTH);
+    } else {
+        char buf[8];
+        memset(buf, 0, sizeof(buf));
+        itoa(this->legacy_id, buf, 10);
+        this->config.id = buf;
     }
-    configdata = 0;
+    this->config.config = std::string((char*)data, len);
 }
 
-int C_UnknClass::render(char[2][2][576], int, int*, int*, int, int) { return 0; }
+int E_Unknown::save_legacy(unsigned char* data) {
+    memcpy(data, this->config.config.c_str(), this->config.config.size());
+    return (int)this->config.config.size();
+}
+
+Effect_Info* create_Unknown_Info() { return new Unknown_Info(); }
+Effect* create_Unknown() { return new E_Unknown(); }
+void set_Unknown_desc(char* desc) { E_Unknown::set_desc(desc); }

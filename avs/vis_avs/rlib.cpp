@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 #include "c_list.h"
-#include "c_unkn.h"
+#include "e_unknown.h"
 
 #include "r_defs.h"
 
@@ -309,10 +309,10 @@ Legacy_Effect_Proxy C_RLibrary::CreateRenderer(int* which) {
         }
     }
     int r = *which;
-    *which = UNKN_ID;
-    C_UnknClass* p = new C_UnknClass();
-    p->SetID(r, (r >= DLLRENDERBASE) ? (char*)r : (char*)"");
-    return Legacy_Effect_Proxy(p, NULL, *which);
+    auto p = new E_Unknown();
+    *which = E_Unknown::info.legacy_id;
+    p->set_id(r, (r >= DLLRENDERBASE) ? (char*)r : (char*)"");
+    return Legacy_Effect_Proxy(NULL, p, *which);
 }
 
 C_RLibrary::C_RLibrary() {

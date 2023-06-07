@@ -1,5 +1,5 @@
 #include "c_list.h"
-#include "c_unkn.h"
+#include "e_unknown.h"
 
 #include "g__lib.h"
 
@@ -100,7 +100,7 @@ C_GLibrary::C_GLibrary() {
     // clang-format on
     this->size = i;
 
-    this->unknown.id = UNKN_ID;
+    this->unknown.id = E_Unknown::info.legacy_id;
     this->unknown.idstring[0] = '\0';
     this->unknown.dialog_resource_id = IDD_CFG_UNKN;
     this->unknown.ui_handler = (DLGPROC)win32_dlgproc_unknown;

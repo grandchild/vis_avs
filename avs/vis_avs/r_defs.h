@@ -46,6 +46,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Same as MAX_PATH now, but while MAX_PATH could be anything, LEGACY_SAVE_PATH_LEN is
 // fixed as part of the legacy preset file format.
 #define LEGACY_SAVE_PATH_LEN 260
+// Length of the APE ID string which includes trailing null-bytes if any
+#define LEGACY_APE_ID_LENGTH 32
 
 #ifndef RGB
 #define RGB(r, g, b) ((((r)&0xff) << 16) | (((g)&0xff) << 8) | ((b)&0xff))

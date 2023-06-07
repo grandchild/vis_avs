@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 #include "c_list.h"
-#include "c_unkn.h"
+#include "e_unknown.h"
 
 #include "r_defs.h"
 
@@ -219,15 +219,15 @@ int C_RenderListClass::save_config_ex(unsigned char* data, int rootsave) {
     for (x = 0; x < num_renders; x++) {
         int t;
         int idx = renders[x].effect_index;
-        if (idx == UNKN_ID) {
-            C_UnknClass* r = (C_UnknClass*)renders[x].effect.legacy_effect;
-            if (!r->idString[0]) {
-                PUT_INT(r->id);
+        if (idx == E_Unknown::info.legacy_id) {
+            auto r = (E_Unknown*)renders[x].effect.effect;
+            if (!r->legacy_ape_id[0]) {
+                PUT_INT(r->legacy_id);
                 pos += 4;
             } else {
-                PUT_INT(r->id);
+                PUT_INT(r->legacy_id);
                 pos += 4;
-                memcpy(data + pos, r->idString, 32);
+                memcpy(data + pos, r->legacy_ape_id, 32);
                 pos += 32;
             }
         } else {

@@ -31,28 +31,46 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 
-#include "c__base.h"
+#include "r_defs.h"
 
-#define MOD_NAME "Unknown Render Object"
-#define UNKN_ID  -1  // 0xffffffff
+#include "effect.h"
+#include "effect_info.h"
 
-class C_UnknClass : public C_RBASE {
+struct Unknown_Config : public Effect_Config {
+    std::string id;
+    std::string config;
+};
+
+struct Unknown_Info : public Effect_Info {
+    static constexpr char const* group = "";
+    static constexpr char const* name = "Unknown Render Object";
+    static constexpr char const* help = "";
+    static constexpr int32_t legacy_id = -1;
+    static constexpr char const* legacy_ape_id = nullptr;
+
+    static constexpr uint32_t num_parameters = 2;
+    static constexpr Parameter parameters[num_parameters] = {
+        P_STRING(offsetof(Unknown_Config, id), "ID"),
+        P_STRING(offsetof(Unknown_Config, config), "Config Data"),
+    };
+
+    EFFECT_INFO_GETTERS;
+};
+
+class E_Unknown : public Configurable_Effect<Unknown_Info, Unknown_Config> {
    public:
-    C_UnknClass();
-    virtual ~C_UnknClass();
+    E_Unknown();
+    virtual ~E_Unknown() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,
                        int h);
-    virtual void load_config(unsigned char* data, int len);
-    virtual int save_config(unsigned char* data);
-    virtual char* get_desc();
+    virtual void load_legacy(unsigned char* data, int len);
+    virtual int save_legacy(unsigned char* data);
+    virtual void set_id(int builtin_id, const char* ape_id);
 
-    virtual void SetID(int d, char* dString);
-    int id;
-    char idString[33];
-    char* configdata;
-    int configdata_len;
+    int legacy_id;
+    char legacy_ape_id[LEGACY_APE_ID_LENGTH];
 };
