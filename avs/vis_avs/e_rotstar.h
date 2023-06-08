@@ -18,6 +18,8 @@ struct RotStar_Info : public Effect_Info {
     static constexpr char const* group = "Render";
     static constexpr char const* name = "Rotating Stars";
     static constexpr char const* help = "";
+    static constexpr int32_t legacy_id = 13;
+    static constexpr char const* legacy_ape_id = nullptr;
 
     static constexpr uint32_t num_color_params = 1;
     static constexpr Parameter color_params[num_color_params] = {
