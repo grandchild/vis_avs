@@ -45,7 +45,7 @@ struct Unknown_Info : public Effect_Info {
     static constexpr char const* group = "";
     static constexpr char const* name = "Unknown Render Object";
     static constexpr char const* help = "";
-    static constexpr int32_t legacy_id = -1;
+    static constexpr int32_t legacy_id = -3;
     static constexpr char const* legacy_ape_id = nullptr;
 
     static constexpr uint32_t num_parameters = 2;
