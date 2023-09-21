@@ -10,30 +10,25 @@
 
 int win32_dlgproc_brightness(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto g_this = (E_Brightness*)g_current_render;
-    AVS_Parameter_Handle p_blend_mode = g_this->info.parameters[0].handle;
-    const Parameter& p_red = g_this->info.parameters[1];
-    const Parameter& p_green = g_this->info.parameters[2];
-    const Parameter& p_blue = g_this->info.parameters[3];
-    AVS_Parameter_Handle p_separate = g_this->info.parameters[4].handle;
-    AVS_Parameter_Handle p_exclude = g_this->info.parameters[5].handle;
-    AVS_Parameter_Handle p_exclude_color = g_this->info.parameters[6].handle;
-    const Parameter& p_exclude_distance = g_this->info.parameters[7];
+    AVS_Parameter_Handle p_blend_mode = Brightness_Info::parameters[0].handle;
+    const Parameter& p_red = Brightness_Info::parameters[1];
+    const Parameter& p_green = Brightness_Info::parameters[2];
+    const Parameter& p_blue = Brightness_Info::parameters[3];
+    AVS_Parameter_Handle p_separate = Brightness_Info::parameters[4].handle;
+    AVS_Parameter_Handle p_exclude = Brightness_Info::parameters[5].handle;
+    AVS_Parameter_Handle p_exclude_color = Brightness_Info::parameters[6].handle;
+    const Parameter& p_exclude_distance = Brightness_Info::parameters[7];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
             auto red = g_this->get_int(p_red.handle);
-            init_ranged_slider(p_red, red, hwndDlg, IDC_RED);
+            init_ranged_slider(p_red, red, hwndDlg, IDC_RED, 256);
             auto green = g_this->get_int(p_green.handle);
-            init_ranged_slider(p_green, green, hwndDlg, IDC_GREEN);
+            init_ranged_slider(p_green, green, hwndDlg, IDC_GREEN, 256);
             auto blue = g_this->get_int(p_blue.handle);
-            init_ranged_slider(p_blue, blue, hwndDlg, IDC_BLUE);
+            init_ranged_slider(p_blue, blue, hwndDlg, IDC_BLUE, 256);
             auto distance = g_this->get_int(p_exclude_distance.handle);
-            init_ranged_slider(p_exclude_distance, distance, hwndDlg, IDC_DISTANCE);
-
-            SendDlgItemMessage(hwndDlg, IDC_RED, TBM_SETTICFREQ, 256, 0);
-            SendDlgItemMessage(hwndDlg, IDC_GREEN, TBM_SETTICFREQ, 256, 0);
-            SendDlgItemMessage(hwndDlg, IDC_BLUE, TBM_SETTICFREQ, 256, 0);
-            SendDlgItemMessage(hwndDlg, IDC_DISTANCE, TBM_SETTICFREQ, 16, 0);
+            init_ranged_slider(p_exclude_distance, distance, hwndDlg, IDC_DISTANCE, 16);
 
             CheckDlgButton(hwndDlg, IDC_CHECK1, g_this->enabled);
             CheckDlgButton(hwndDlg, IDC_EXCLUDE, g_this->get_bool(p_exclude));
