@@ -49,14 +49,15 @@ Effect* Effect::lift(Effect* to_lift) {
     for (auto child = this->children.begin(); child != this->children.end();) {
         if (*child == to_lift) {
             lifted = *child;
-            child = this->children.erase(child);
+            this->children.erase(child);
             break;
         } else {
+            Effect* subtree_result = (*child)->lift(to_lift);
+            if (subtree_result != nullptr) {
+                lifted = subtree_result;
+                break;
+            }
             child++;
-        }
-        Effect* subtree_result = (*child)->lift(to_lift);
-        if (subtree_result != NULL) {
-            return subtree_result;
         }
     }
     return lifted;
