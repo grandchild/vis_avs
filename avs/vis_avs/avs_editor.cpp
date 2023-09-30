@@ -201,6 +201,10 @@ AVS_Component_Handle avs_component_create(AVS_Handle avs,
                 break;
             }
             case AVS_COMPONENT_POSITION_DONTCARE:
+                if (relative_to_tree == &instance->root) {
+                    insert_direction = Effect::INSERT_CHILD;
+                    break;
+                }
             case AVS_COMPONENT_POSITION_AFTER: {
                 if (relative_to_tree == &instance->root) {
                     instance->error =
