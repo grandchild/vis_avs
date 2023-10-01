@@ -176,7 +176,7 @@ AVS_Component_Handle avs_component_create(AVS_Handle avs,
     if (!resolve_handles(avs, effect, 0, 0, &instance, &_effect)) {
         return 0;
     }
-    if (effect == g_root_handle) {
+    if (effect == Root_Info::handle) {
         instance->error = "Cannot create a root component";
         return 0;
     }

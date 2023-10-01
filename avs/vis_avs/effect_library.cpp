@@ -5,11 +5,10 @@
 #include <string>
 #include <vector>
 
-typedef Effect* (*effect_component_factory)(AVS_Handle);
+typedef Effect* (*effect_component_factory)();
 
 std::unordered_map<AVS_Effect_Handle, Effect_Info*> g_effect_lib;
 std::vector<AVS_Effect_Handle> g_effect_lib_handles_for_api;
-AVS_Effect_Handle g_root_handle;
 std::unordered_map<Effect_Info*, effect_component_factory> g_component_factories;
 
 static std::vector<std::string> find_duplicate_effect_names(
@@ -34,12 +33,20 @@ static std::vector<std::string> find_duplicate_effect_names(
     return duplicates;
 }
 
+#define MAKE_EFFECT_LIB_ENTRY(NAME)                 \
+    extern Effect_Info* create_##NAME##_Info(void); \
+    extern Effect* create_##NAME();                 \
+    auto NAME##_info = create_##NAME##_Info();      \
+    auto NAME##_handle = NAME##_info->get_handle(); \
+    g_effect_lib[NAME##_handle] = NAME##_info;      \
+    g_component_factories[NAME##_info] = create_##NAME;
+
 bool make_effect_lib() {
     if (!g_effect_lib.empty()) {
         return true;
     }
-    g_root_handle = h_effects.get();
-    g_effect_lib[g_root_handle] = new Root_Info();
+    MAKE_EFFECT_LIB_ENTRY(Root);
+
     g_effect_lib_handles_for_api.clear();
     g_effect_lib_handles_for_api.reserve(g_effect_lib.size());
     for (auto const& entry : g_effect_lib) {
@@ -56,8 +63,12 @@ bool make_effect_lib() {
 Effect* component_factory(const Effect_Info* effect, AVS_Handle avs) {
     for (auto const& factory : g_component_factories) {
         if (factory.first->get_handle() == effect->get_handle()) {
-            return factory.second(avs);
+            if (!effect->is_createable_by_user()) {
+                log_warn("%s is not user-creatable", effect->get_name());
+            } else {
+                return factory.second(/*avs*/);
+            }
         }
     }
-    return NULL;
+    return nullptr;
 }
