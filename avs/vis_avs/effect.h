@@ -3,6 +3,8 @@
 #include "avs_editor.h"
 #include "effect_info.h"
 
+#include "../platform.h"
+
 #include <algorithm>  // std::remove
 #include <memory>     // std::shared_ptr, std::weak_ptr
 #include <set>
@@ -211,8 +213,10 @@ class Configurable_Effect : public Effect {
             param->on_value_change(this, param, parameter_path);
         }
         if (this->trace_parameter_changes) {
-            print_trace_prefix(this->info.name, param->name, parameter_path);
-            parameter_dispatch<T>::trace(param, value, addr);
+            auto prefix = trace_prefix(this->info.name, param->name, parameter_path);
+            log_info("%s %s",
+                     prefix.c_str(),
+                     parameter_dispatch<T>::trace(param, value, addr).c_str());
         }
         return true;
     }
@@ -300,8 +304,9 @@ class Configurable_Effect : public Effect {
                 param->on_list_add(this, param, parameter_path, before, 0);
             }
             if (this->trace_parameter_changes) {
-                print_trace_prefix(this->info.name, param->name, parameter_path);
-                printf("added new entry #%lld\n", before);
+                auto prefix =
+                    trace_prefix(this->info.name, param->name, parameter_path);
+                log_info("%s added new entry #%lld\n", prefix.c_str(), before);
             }
         }
         return success;
@@ -322,8 +327,9 @@ class Configurable_Effect : public Effect {
         if (success && param->on_list_move != NULL) {
             param->on_list_move(this, param, parameter_path, from, to);
             if (this->trace_parameter_changes) {
-                print_trace_prefix(this->info.name, param->name, parameter_path);
-                printf("moved entry #%lld to #%lld\n", from, to);
+                auto prefix =
+                    trace_prefix(this->info.name, param->name, parameter_path);
+                log_info("%s moved entry #%lld to #%lld\n", prefix.c_str(), from, to);
             }
         }
         return success;
@@ -344,8 +350,9 @@ class Configurable_Effect : public Effect {
         if (success && param->on_list_remove != NULL) {
             param->on_list_remove(this, param, parameter_path, to_remove, 0);
             if (this->trace_parameter_changes) {
-                print_trace_prefix(this->info.name, param->name, parameter_path);
-                printf("removed entry #%lld\n", to_remove);
+                auto prefix =
+                    trace_prefix(this->info.name, param->name, parameter_path);
+                log_info("%s removed entry #%lld\n", prefix.c_str(), to_remove);
             }
         }
         return success;
@@ -362,29 +369,28 @@ class Configurable_Effect : public Effect {
         }
         param->on_value_change(this, param, parameter_path);
         if (this->trace_parameter_changes) {
-            print_trace_prefix(this->info.name, param->name, parameter_path);
-            printf("triggered\n");
+            auto prefix = trace_prefix(this->info.name, param->name, parameter_path);
+            log_info("%s triggered", prefix.c_str());
         }
         return true;
     }
 
-    static void print_trace_prefix(const char* effect_name,
-                                   const char* param_name,
-                                   const std::vector<int64_t>& path) {
-        std::string param_path_str;
+    static std::string trace_prefix(const char* effect_name,
+                                    const char* param_name,
+                                    const std::vector<int64_t>& path) {
+        std::stringstream prefix;
+        prefix << effect_name << "/" << param_name;
         if (!path.empty()) {
-            param_path_str = "[";
+            prefix << "[";
             for (size_t i = 0; i < path.size(); i++) {
-                char index_buf[10];
-                itoa((int)path[i], index_buf, 10);
-                param_path_str += index_buf;
+                prefix << path[i];
                 if (i < path.size() - 1) {
-                    param_path_str += ",";
+                    prefix << ",";
                 }
             }
-            param_path_str += "]";
+            prefix << "]";
         }
-        printf("%s/%s%s ", effect_name, param_name, param_path_str.c_str());
+        return prefix.str();
     }
 
     static size_t instance_count() { return Configurable_Effect::globals.size(); }

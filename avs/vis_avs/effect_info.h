@@ -241,6 +241,8 @@
 #include "handles.h"
 
 #include <algorithm>  // std::move() for list_move
+#include <iomanip>
+#include <sstream>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -837,13 +839,14 @@ struct parameter_dispatch<bool> {
         *(bool*)addr = value;
     }
     static bool zero() { return false; };
-    static void trace(const Parameter*, bool value, uint8_t* config_data) {
-        printf("set to %s", value ? "true" : "false");
+    static std::string trace(const Parameter*, bool value, uint8_t* config_data) {
+        std::stringstream output;
+        output << "set to " << std::boolalpha << value;
         auto actual_value = get(config_data);
         if (actual_value != value) {
-            printf(", but corrected to %s", value ? "true" : "false");
+            output << ", but corrected to " << std::boolalpha << value;
         }
-        printf("\n");
+        return output.str();
     }
 };
 
@@ -862,7 +865,10 @@ struct parameter_dispatch<int64_t> {
         return *(std::vector<int64_t>*)config_data;
     };
     static int64_t zero() { return 0; };
-    static void trace(const Parameter* parameter, int64_t value, uint8_t* config_data) {
+    static std::string trace(const Parameter* parameter,
+                             int64_t value,
+                             uint8_t* config_data) {
+        std::stringstream output;
         const char* option = nullptr;
         if (parameter->type == AVS_PARAM_SELECT) {
             int64_t length = -1;
@@ -872,21 +878,21 @@ struct parameter_dispatch<int64_t> {
             }
         }
         if (option) {
-            printf("set to %s", option);
+            output << "set to " << option;
         } else {
-            printf("set to %lld", value);
+            output << "set to " << value;
         }
         auto actual_value = get(config_data);
         if (actual_value != value) {
-            printf(", but corrected to ");
+            output << ", but corrected to ";
             if (parameter->type == AVS_PARAM_SELECT) {
                 auto actual_option = parameter->get_options(nullptr)[actual_value];
-                printf("%s", actual_option);
+                output << actual_option;
             } else {
-                printf("%lld", actual_value);
+                output << actual_value;
             }
         }
-        printf("\n");
+        return output.str();
     }
 };
 
@@ -905,13 +911,16 @@ struct parameter_dispatch<double> {
         return *(std::vector<double>*)config_data;
     };
     static double zero() { return 0.0; };
-    static void trace(const Parameter*, double value, uint8_t* config_data) {
-        printf("set to %0.3f", value);
+    static std::string trace(const Parameter*, double value, uint8_t* config_data) {
+        // create output stream with fixed representation and 3 decimal precision
+        std::stringstream output;
+        output.precision(3);
+        output << "set to " << std::fixed << value;
         auto actual_value = get(config_data);
         if (actual_value != value) {
-            printf(", but corrected to %0.3f", actual_value);
+            output << ", but corrected to " << std::fixed << actual_value;
         }
-        printf("\n");
+        return output.str();
     }
 };
 
@@ -925,13 +934,15 @@ struct parameter_dispatch<uint64_t> {
         return *(std::vector<uint64_t>*)config_data;
     };
     static uint64_t zero() { return 0; };
-    static void trace(const Parameter*, uint64_t value, uint8_t* config_data) {
-        printf("set to 0x%08llx", value);
+    static std::string trace(const Parameter*, uint64_t value, uint8_t* config_data) {
+        std::stringstream output;
+        output << "set to 0x" << std::hex << std::setfill('0') << std::setw(8) << value;
         auto actual_value = get(config_data);
         if (actual_value != value) {
-            printf(", but corrected to %08llx", actual_value);
+            output << ", but corrected to 0x" << std::hex << std::setfill('0')
+                   << std::setw(8) << actual_value;
         }
-        printf("\n");
+        return output.str();
     }
 };
 
@@ -971,23 +982,26 @@ struct parameter_dispatch<const char*> {
     };
 
     static const char* zero() { return ""; };
-    static void trace(const Parameter*, const char* value, uint8_t* config_data) {
+    static std::string trace(const Parameter*,
+                             const char* value,
+                             uint8_t* config_data) {
+        std::stringstream output;
         const size_t max_len = 20;
         std::string str_value(value);
         if (str_value.size() > max_len) {
-            printf("set to %s...", str_value.substr(0, max_len - 3).c_str());
+            output << "set to " << str_value.substr(0, max_len - 3) << "...";
         } else {
-            printf("set to %s", value);
+            output << "set to " << value;
         }
         auto actual_value = (std::string*)config_data;
         if (*actual_value != value) {
-            printf(", but corrected to ");
+            output << ", but corrected to ";
             if (actual_value->size() > max_len) {
-                printf("%s...", actual_value->substr(0, max_len - 3).c_str());
+                output << actual_value->substr(0, max_len - 3) << "...";
             } else {
-                printf("%s", actual_value->c_str());
+                output << actual_value;
             }
         }
-        printf("\n");
+        return output.str();
     }
 };
