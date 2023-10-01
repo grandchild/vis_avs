@@ -163,6 +163,31 @@ void thread_destroy(thread_t* thread);
 
 int create_directory(const char* path);
 
+/**
+ * The available logging levels from most- to least verbose.
+ */
+enum LogLevel { LOG_INFO, LOG_WARN, LOG_ERR, LOG_NONE };
+/**
+ * The current log level.
+ */
+extern enum LogLevel g_log_level;
+/**
+ * Set the current log level.
+ */
+void log_set_level(enum LogLevel level);
+/**
+ * Log a message at INFO level, i.e. the lowest importance.
+ */
+void log_info(const char* fmt, ...);
+/**
+ * Log a message at WARN level, i.e. recoverable errors that should be looked into.
+ */
+void log_warn(const char* fmt, ...);
+/**
+ * Log a message at ERR level, i.e. unrecoverable errors.
+ */
+void log_err(const char* fmt, ...);
+
 #ifdef __cplusplus
 }
 #endif
