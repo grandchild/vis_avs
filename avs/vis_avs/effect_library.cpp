@@ -53,21 +53,9 @@ bool make_effect_lib() {
     return true;
 }
 
-AVS_Effect_Handle get_handle_from_effect_info(Effect_Info* effect) {
-    for (auto const& entry : g_effect_lib) {
-        if (entry.second == NULL) {
-            continue;
-        }
-        if (std::string(entry.second->get_name()) == std::string(effect->get_name())) {
-            return entry.first;
-        }
-    }
-    return 0;
-}
-
 Effect* component_factory(const Effect_Info* effect, AVS_Handle avs) {
     for (auto const& factory : g_component_factories) {
-        if (factory.first == effect) {
+        if (factory.first->get_handle() == effect->get_handle()) {
             return factory.second(avs);
         }
     }

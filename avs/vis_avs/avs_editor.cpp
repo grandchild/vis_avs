@@ -131,7 +131,7 @@ AVS_Effect_Handle avs_component_effect(AVS_Handle avs, AVS_Component_Handle comp
     if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
         return 0;
     }
-    return get_handle_from_effect_info(_component->get_info());
+    return _component->get_info()->get_handle();
 }
 
 AVS_EDITOR_API
