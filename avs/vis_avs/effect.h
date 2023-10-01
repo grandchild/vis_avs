@@ -92,6 +92,8 @@ class Effect {
         return 0;  // returns 1 if fbout has dest
     };
     virtual char* get_desc() = 0;
+    virtual int32_t get_legacy_id() { return -1; }
+    virtual const char* get_legacy_ape_id() { return nullptr; }
     virtual void load_legacy(unsigned char* data, int len) { (void)data, (void)len; };
     virtual int save_legacy(unsigned char* data) {
         (void)data;
@@ -420,6 +422,9 @@ class Configurable_Effect : public Effect {
     GET_ARRAY_PARAMETER(int, int64_t)
     GET_ARRAY_PARAMETER(float, double)
     GET_ARRAY_PARAMETER(color, uint64_t)
+
+    virtual int32_t get_legacy_id() { return this->info.legacy_id; }
+    virtual const char* get_legacy_ape_id() { return this->info.legacy_ape_id; }
 
    protected:
     static std::string desc;

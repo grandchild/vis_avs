@@ -664,6 +664,8 @@ struct Effect_Info {
     virtual const char* get_group() const = 0;
     virtual const char* get_name() const = 0;
     virtual const char* get_help() const = 0;
+    virtual int32_t get_legacy_id() const = 0;
+    virtual const char* get_legacy_ape_id() const = 0;
     static constexpr uint32_t num_parameters = 0;
     static constexpr Parameter* parameters = NULL;
     virtual uint32_t get_num_parameters() const { return 0; };
@@ -783,10 +785,12 @@ struct Effect_Info {
  */
 // Use this first one only for effects that have no parameters, i.e. only "enable".
 // Use EFFECT_INFO_GETTERS for all other effects.
-#define EFFECT_INFO_GETTERS_NO_PARAMETERS                          \
-    virtual const char* get_group() const { return this->group; }; \
-    virtual const char* get_name() const { return this->name; };   \
-    virtual const char* get_help() const { return this->help; };
+#define EFFECT_INFO_GETTERS_NO_PARAMETERS                              \
+    virtual const char* get_group() const { return this->group; };     \
+    virtual const char* get_name() const { return this->name; };       \
+    virtual const char* get_help() const { return this->help; };       \
+    virtual int32_t get_legacy_id() const { return this->legacy_id; }; \
+    virtual const char* get_legacy_ape_id() const { return this->legacy_ape_id; };
 
 #define EFFECT_INFO_GETTERS                                                           \
     EFFECT_INFO_GETTERS_NO_PARAMETERS                                                 \

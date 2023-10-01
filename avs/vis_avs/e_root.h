@@ -16,6 +16,8 @@ struct Root_Info : public Effect_Info {
     static constexpr char const* help =
         "The main component of the preset\n"
         "Define basic settings for the preset here\n";
+    static constexpr int32_t legacy_id = -4;
+    static constexpr char const* legacy_ape_id = nullptr;
 
     static constexpr uint32_t num_parameters = 1;
     static constexpr Parameter parameters[num_parameters] = {
