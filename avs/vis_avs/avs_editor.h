@@ -209,12 +209,12 @@ typedef struct {
     /** The number of child parameters if `type` is `AVS_PARAM_LIST`. 0 otherwise. */
     uint32_t children_length;
     /**
-     * The maximum number of child parameters if `type` is `AVS_PARAM_LIST`.
+     * The minimum number of child parameters if `type` is `AVS_PARAM_LIST`.
      * 0 otherwise.
      */
     uint32_t children_length_min;
     /**
-     * The minimum number of child parameters if `type` is `AVS_PARAM_LIST`.
+     * The maximum number of child parameters if `type` is `AVS_PARAM_LIST`.
      * 0 otherwise.
      */
     uint32_t children_length_max;
@@ -294,9 +294,9 @@ const AVS_Component_Handle* avs_component_children(AVS_Handle avs,
  * use `AVS_COMPONENT_POSITION_DONTCARE` to highlight this fact. Note that it is the
  * same as `AVS_COMPONENT_POSITION_AFTER`.
  *
- * Returns a pointer to the new component. Returns 0 if `effect` is invalid,
- * `relative_to` is not 0 but doesn't exist, or `direction` is invalid or another error
- * occurred.
+ * Returns a handle to the new component. Returns 0 if the `effect` is invalid, doesn't
+ * allow creation by users, `relative_to` is not 0 but doesn't exist, or `direction` is
+ * invalid or another error occurred.
  */
 AVS_Component_Handle avs_component_create(AVS_Handle avs,
                                           AVS_Effect_Handle effect,
