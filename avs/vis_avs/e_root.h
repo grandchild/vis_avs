@@ -26,7 +26,7 @@ struct Root_Info : public Effect_Info {
                "Clear the screen for every new frame"),
     };
 
-    bool can_have_child_components() const { return true; };
+    virtual bool can_have_child_components() const { return true; };
     virtual bool is_createable_by_user() const { return false; };
     EFFECT_INFO_GETTERS;
 };
