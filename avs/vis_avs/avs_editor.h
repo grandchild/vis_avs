@@ -158,6 +158,11 @@ typedef struct {
      */
     const AVS_Parameter_Handle* parameters;
     /**
+     * Is `true` if the components created from this effect can have child components.
+     * Most effects cannot have children, but a few do, such as Root and Effect List.
+     */
+    bool can_have_child_components;
+    /**
      * Is `true` if the effect can be added to a preset by the user. A few effects are
      * only ever created by AVS internally:
      * - "Root", the root of the preset tree &
