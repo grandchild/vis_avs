@@ -668,6 +668,7 @@ struct Effect_Info {
     virtual const Parameter* get_parameters() const { return NULL; };
     virtual const AVS_Parameter_Handle* get_parameters_for_api() const { return NULL; };
     virtual bool can_have_child_components() const { return false; };
+    virtual bool is_createable_by_user() const { return true; };
     const Parameter* get_parameter_from_handle(AVS_Parameter_Handle to_find) {
         return this->_get_parameter_from_handle(
             this->get_num_parameters(), this->get_parameters(), to_find);

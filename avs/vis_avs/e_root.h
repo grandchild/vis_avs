@@ -25,6 +25,7 @@ struct Root_Info : public Effect_Info {
     };
 
     bool can_have_child_components() const { return true; };
+    virtual bool is_createable_by_user() const { return false; };
     EFFECT_INFO_GETTERS;
 };
 

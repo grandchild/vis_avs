@@ -54,6 +54,7 @@ struct Unknown_Info : public Effect_Info {
         P_STRING(offsetof(Unknown_Config, config), "Config Data"),
     };
 
+    virtual bool is_createable_by_user() const { return false; }
     EFFECT_INFO_GETTERS;
 };
 
