@@ -1,12 +1,17 @@
 #include "platform.h"
 
+int min(int a, int b) { return a > b ? b : a; }
+int max(int a, int b) { return a < b ? b : a; }
+
+// Yes, these includes should come _after_ min/max are defined.
+// Otherwise MSVC will complain: "error C2059: syntax error: '<parameter-list>'"
+// TODO [clean][bug]: Fix cleanly or ensure that min/max still works as intended on
+//                    Windows.
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-int min(int a, int b) { return a > b ? b : a; }
-int max(int a, int b) { return a < b ? b : a; }
 unsigned int umin(unsigned int a, unsigned int b) { return a > b ? b : a; }
 unsigned int umax(unsigned int a, unsigned int b) { return a < b ? b : a; }
 
