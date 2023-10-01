@@ -111,6 +111,7 @@ bool avs_effect_info(AVS_Handle avs,
         info_out->help = "";
         info_out->parameters_length = 0;
         info_out->parameters = NULL;
+        info_out->is_user_creatable = false;
         return false;
     }
     info_out->group = _effect->get_group();
@@ -118,6 +119,7 @@ bool avs_effect_info(AVS_Handle avs,
     info_out->help = _effect->get_help();
     info_out->parameters_length = _effect->get_num_parameters();
     info_out->parameters = _effect->get_parameters_for_api();
+    info_out->is_user_creatable = _effect->is_createable_by_user();
     return true;
 }
 

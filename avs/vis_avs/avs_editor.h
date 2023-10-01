@@ -157,6 +157,15 @@ typedef struct {
      * will be NULL.
      */
     const AVS_Parameter_Handle* parameters;
+    /**
+     * Is `true` if the effect can be added to a preset by the user. A few effects are
+     * only ever created by AVS internally:
+     * - "Root", the root of the preset tree &
+     * - "Unknown Effect", when a preset is loaded with an effect not known to AVS.
+     * This flag is helpful if you want to filter for effects that users can actually
+     * add to a preset.
+     */
+    bool is_user_creatable;
 } AVS_Effect_Info;
 
 /**
