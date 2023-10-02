@@ -1,4 +1,5 @@
 #include "c_list.h"
+#include "e_root.h"
 #include "e_unknown.h"
 
 #include "g__lib.h"
@@ -109,12 +110,11 @@ C_GLibrary::C_GLibrary() {
     this->effectlist.idstring[0] = '\0';
     this->effectlist.dialog_resource_id = IDD_CFG_LIST;
     this->effectlist.ui_handler = (DLGPROC)win32_dlgproc_effectlist;
-    // the root EL is the same component, but has "isroot" attr set that disambiguates
-    // -> special handling in this->get().
-    this->root_effectlist.id = LIST_ID;
-    this->root_effectlist.idstring[0] = '\0';
-    this->root_effectlist.dialog_resource_id = IDD_CFG_LISTROOT;
-    this->root_effectlist.ui_handler = (DLGPROC)win32_dlgproc_root_effectlist;
+
+    this->root.id = Root_Info::legacy_id;
+    this->root.idstring[0] = '\0';
+    this->root.dialog_resource_id = IDD_CFG_LISTROOT;
+    this->root.ui_handler = (DLGPROC)win32_dlgproc_root;
 }
 
 C_GLibrary::~C_GLibrary() { free(this->components); }
@@ -132,11 +132,10 @@ C_Win32GuiComponent* C_GLibrary::get(int id_or_idstring, void* render_component)
         }
     }
     if (id_or_idstring == LIST_ID) {
-        if (((C_RenderListClass*)render_component)->isroot) {
-            return &this->root_effectlist;
-        } else {
-            return &this->effectlist;
-        }
+        return &this->effectlist;
+    }
+    if (id_or_idstring == Root_Info::legacy_id) {
+        return &this->root;
     }
     return NULL;
 }

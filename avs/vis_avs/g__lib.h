@@ -11,7 +11,7 @@
 #define DECL_UIPREP(NAME)  extern void win32_uiprep_##NAME(HINSTANCE)
 
 DECL_HANDLER(unknown);
-DECL_HANDLER(root_effectlist);
+DECL_HANDLER(root);
 DECL_HANDLER(effectlist);
 DECL_HANDLER(simple);
 DECL_HANDLER(dotplane);
@@ -106,7 +106,7 @@ class C_GLibrary {
     C_Win32GuiComponent* components;
     C_Win32GuiComponent unknown;
     C_Win32GuiComponent effectlist;
-    C_Win32GuiComponent root_effectlist;
+    C_Win32GuiComponent root;
     unsigned int size;
 };
 
