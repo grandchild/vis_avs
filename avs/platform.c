@@ -20,10 +20,16 @@ void log_set_level(enum LogLevel level) { g_log_level = level; }
 #define LOG(level)                                                              \
     if (g_log_level <= LOG_##level) {                                           \
         const char* prefix = #level;                                            \
-        size_t fmt_str_len = strlen(prefix) + strlen(": ") + strnlen(fmt, 1024) \
-                             + strlen("\n") + sizeof('\0');                     \
+        uint64_t time = timer_ms();                                             \
+        char time_str[32];                                                      \
+        snprintf(time_str, 32, "%llu.%03llu", time / 1000, time % 1000);        \
+        size_t fmt_str_len = strlen(time_str) + strlen(" ") + strlen(prefix)    \
+                             + strlen(": ") + strnlen(fmt, 1024) + strlen("\n") \
+                             + sizeof('\0');                                    \
         char* log_fmt_str = (char*)calloc(fmt_str_len, sizeof(char));           \
-        strcpy(log_fmt_str, prefix);                                            \
+        strcpy(log_fmt_str, time_str);                                          \
+        strcat(log_fmt_str, " ");                                               \
+        strcat(log_fmt_str, prefix);                                            \
         strcat(log_fmt_str, ": ");                                              \
         strncat(log_fmt_str, fmt, 1024);                                        \
         strcat(log_fmt_str, "\n");                                              \
