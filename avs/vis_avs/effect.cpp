@@ -154,7 +154,8 @@ uint32_t Effect::string_load_legacy(const char* src,
         pos += size;
         // So far so good. But some older effects's save format has length-prefixed
         // strings which _include_ the null-terminator. If that's the case remove
-        // anything including and after it.
+        // anything including and after it (which should usually only be the last byte,
+        // but we're playing it safe).
         size_t first_null_byte = dest.find_first_of('\0');
         if (first_null_byte != std::string::npos) {
             dest.resize(first_null_byte);
