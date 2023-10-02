@@ -1310,17 +1310,17 @@ BEGIN
     COMBOBOX        IDC_COMBO1,121,37,101,168,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     CONTROL         "Slider2",IDC_OUTSLIDE,"msctls_trackbar32",TBS_BOTH | 
-                    TBS_NOTICKS | WS_TABSTOP,117,51,106,11
+                    TBS_NOTICKS | NOT WS_VISIBLE | WS_TABSTOP,117,51,106,11
     GROUPBOX        "Output blending",IDC_FR2,115,27,111,39
     GROUPBOX        "Input blending",IDC_FR1,0,27,111,39
     COMBOBOX        IDC_CBBUF2,121,50,62,64,CBS_DROPDOWNLIST | CBS_SORT | 
                     NOT WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Invert",IDC_INVERT2,"Button",BS_AUTOCHECKBOX | NOT 
-                    WS_VISIBLE | WS_TABSTOP,187,52,34,10
-    COMBOBOX        IDC_CBBUF1,5,50,62,67,CBS_DROPDOWNLIST | CBS_SORT | NOT 
-                    WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Invert",IDC_INVERT1,"Button",BS_AUTOCHECKBOX | NOT 
-                    WS_VISIBLE | WS_TABSTOP,72,51,34,10
+    CONTROL         "Invert",IDC_INVERT2,"Button",BS_AUTOCHECKBOX |
+                    NOT WS_VISIBLE | WS_TABSTOP,187,52,34,10
+    COMBOBOX        IDC_CBBUF1,5,50,62,67,CBS_DROPDOWNLIST | CBS_SORT |
+                    NOT WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Invert",IDC_INVERT1,"Button",BS_AUTOCHECKBOX |
+                    NOT WS_VISIBLE | WS_TABSTOP,72,51,34,10
     CONTROL         "Enabled OnBeat for",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,89,3,78,9
     EDITTEXT        IDC_EDIT1,167,1,19,12,ES_AUTOHSCROLL | ES_NUMBER
