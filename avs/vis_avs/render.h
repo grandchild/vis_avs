@@ -29,7 +29,6 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "c_list.h"
 #include "c_transition.h"
 
 #include "r_defs.h"
@@ -45,5 +44,3 @@ void Render_Quit();
 extern AVS_Instance* g_single_instance;
 extern Transition* g_render_transition;
 extern C_RLibrary* g_render_library;
-
-// extern lock_t* g_render_cs;

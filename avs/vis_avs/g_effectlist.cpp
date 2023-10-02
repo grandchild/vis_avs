@@ -1,4 +1,4 @@
-#include "c_list.h"
+#include "e_effectlist.h"
 
 #include "g__defs.h"
 #include "g__lib.h"

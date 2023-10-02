@@ -29,7 +29,7 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "c_list.h"
+#include "e_effectlist.h"
 #include "e_unknown.h"
 
 #include "r_defs.h"
