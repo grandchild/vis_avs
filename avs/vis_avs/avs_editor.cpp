@@ -296,7 +296,7 @@ bool avs_component_delete(AVS_Handle avs, AVS_Component_Handle component) {
         return false;
     }
     if (component == instance->root.handle) {
-        instance->preset_clear();
+        instance->clear();
         return true;
     }
     instance->root.remove(_component);

@@ -32,7 +32,7 @@ bool AVS_Instance::preset_set_legacy(uint8_t* preset, size_t preset_length) {
 void AVS_Instance::preset_save(const char* file_path, bool indent) { return; }
 void AVS_Instance::preset_save_legacy(const char* file_path) { return; }
 const char* AVS_Instance::preset_get() { return ""; }
-void AVS_Instance::preset_clear() { this->root = E_Root(); }
+void AVS_Instance::clear() { this->root = E_Root(); }
 const char* AVS_Instance::error_str() { return this->error; }
 
 Effect* AVS_Instance::get_component_from_handle(AVS_Component_Handle component) {

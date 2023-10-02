@@ -31,7 +31,7 @@ class AVS_Instance {
     void preset_save(const char* file_path, bool indent);
     void preset_save_legacy(const char* file_path);
     const char* preset_get();
-    void preset_clear();
+    void clear();
     const char* error_str();
 
     Effect_Info* get_effect_from_handle(AVS_Effect_Handle effect);
