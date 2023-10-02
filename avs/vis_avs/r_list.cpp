@@ -287,8 +287,8 @@ C_RenderListClass::C_RenderListClass(int iroot) {
     fake_enabled = 0;
 }
 
-extern int g_n_buffers_w[NBUF], g_n_buffers_h[NBUF];
-extern void* g_n_buffers[NBUF];
+extern int g_buffers_w[NBUF], g_buffers_h[NBUF];
+extern void* g_buffers[NBUF];
 
 void C_RenderListClass::set_n_Context() {
     if (!isroot) {
@@ -298,13 +298,13 @@ void C_RenderListClass::set_n_Context() {
         return;
     }
     nsaved = 1;
-    memcpy(nbw_save2, g_n_buffers_w, sizeof(nbw_save2));
-    memcpy(nbh_save2, g_n_buffers_h, sizeof(nbh_save2));
-    memcpy(nb_save2, g_n_buffers, sizeof(nb_save2));
+    memcpy(nbw_save2, g_buffers_w, sizeof(nbw_save2));
+    memcpy(nbh_save2, g_buffers_h, sizeof(nbh_save2));
+    memcpy(nb_save2, g_buffers, sizeof(nb_save2));
 
-    memcpy(g_n_buffers_w, nbw_save, sizeof(nbw_save));
-    memcpy(g_n_buffers_h, nbh_save, sizeof(nbh_save));
-    memcpy(g_n_buffers, nb_save, sizeof(nb_save));
+    memcpy(g_buffers_w, nbw_save, sizeof(nbw_save));
+    memcpy(g_buffers_h, nbh_save, sizeof(nbh_save));
+    memcpy(g_buffers, nb_save, sizeof(nb_save));
 }
 
 void C_RenderListClass::unset_n_Context() {
@@ -316,13 +316,13 @@ void C_RenderListClass::unset_n_Context() {
     }
     nsaved = 0;
 
-    memcpy(nbw_save, g_n_buffers_w, sizeof(nbw_save));
-    memcpy(nbh_save, g_n_buffers_h, sizeof(nbh_save));
-    memcpy(nb_save, g_n_buffers, sizeof(nb_save));
+    memcpy(nbw_save, g_buffers_w, sizeof(nbw_save));
+    memcpy(nbh_save, g_buffers_h, sizeof(nbh_save));
+    memcpy(nb_save, g_buffers, sizeof(nb_save));
 
-    memcpy(g_n_buffers_w, nbw_save2, sizeof(nbw_save2));
-    memcpy(g_n_buffers_h, nbh_save2, sizeof(nbh_save2));
-    memcpy(g_n_buffers, nb_save2, sizeof(nb_save2));
+    memcpy(g_buffers_w, nbw_save2, sizeof(nbw_save2));
+    memcpy(g_buffers_h, nbh_save2, sizeof(nbh_save2));
+    memcpy(g_buffers, nb_save2, sizeof(nb_save2));
 }
 
 void C_RenderListClass::smp_cleanupthreads() {

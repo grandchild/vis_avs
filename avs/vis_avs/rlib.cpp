@@ -339,29 +339,29 @@ C_RLibrary::~C_RLibrary() {
     NumDLLFuncs = 0;
 }
 
-void* g_n_buffers[NBUF];
-int g_n_buffers_w[NBUF], g_n_buffers_h[NBUF];
+void* g_buffers[NBUF];
+int g_buffers_w[NBUF], g_buffers_h[NBUF];
 
 void* getGlobalBuffer(int w, int h, int n, int do_alloc) {
     if (n < 0 || n >= NBUF) {
-        return 0;
+        return nullptr;
     }
 
-    if (!g_n_buffers[n] || g_n_buffers_w[n] != w || g_n_buffers_h[n] != h) {
-        if (g_n_buffers[n]) {
-            free(g_n_buffers[n]);
+    if (!g_buffers[n] || g_buffers_w[n] != w || g_buffers_h[n] != h) {
+        if (g_buffers[n]) {
+            free(g_buffers[n]);
         }
         if (do_alloc) {
-            g_n_buffers_w[n] = w;
-            g_n_buffers_h[n] = h;
-            return g_n_buffers[n] = calloc(w * h, sizeof(int));
+            g_buffers_w[n] = w;
+            g_buffers_h[n] = h;
+            return g_buffers[n] = calloc(w * h, sizeof(int));
         }
 
-        g_n_buffers[n] = NULL;
-        g_n_buffers_w[n] = 0;
-        g_n_buffers_h[n] = 0;
+        g_buffers[n] = nullptr;
+        g_buffers_w[n] = 0;
+        g_buffers_h[n] = 0;
 
-        return 0;
+        return nullptr;
     }
-    return g_n_buffers[n];
+    return g_buffers[n];
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "c__defs.h"
 #include "effect.h"
 #include "effect_info.h"
 
@@ -31,4 +32,32 @@ struct Root_Info : public Effect_Info {
     EFFECT_INFO_GETTERS;
 };
 
-class E_Root : public Configurable_Effect<Root_Info, Root_Config> {};
+class E_Root : public Configurable_Effect<Root_Info, Root_Config> {
+   public:
+    E_Root();
+    virtual ~E_Root();
+    virtual int render(char visdata[2][2][576],
+                       int is_beat,
+                       int* framebuffer,
+                       int* fbout,
+                       int w,
+                       int h);
+    virtual void load_legacy(unsigned char* data, int len);
+    virtual int save_legacy(unsigned char* data);
+    int64_t get_num_renders() { return this->children.size(); };
+    void start_buffer_context();
+    void end_buffer_context();
+
+   private:
+    // these are our framebuffers (formerly nb_save)
+    int buffers_w[NBUF] = {};
+    int buffers_h[NBUF] = {};
+    void* buffers[NBUF] = {};
+
+    // these are temp space for saving the global ones (formerly nb_save2)
+    int buffers_temp_w[NBUF] = {};
+    int buffers_temp_h[NBUF] = {};
+    void* buffers_temp[NBUF] = {};
+
+    bool buffers_saved;
+};
