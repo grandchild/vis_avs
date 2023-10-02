@@ -148,6 +148,8 @@ class Effect {
         return 0;
     };
 
+    void print_tree(std::string indent = "");
+
    protected:
     Effect* duplicate_with_children();
 };
