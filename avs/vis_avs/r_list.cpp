@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "r_defs.h"
 
 #include "avs_eelif.h"
+#include "effect_library.h"
 #include "render.h"
 #include "undo.h"
 
@@ -50,329 +51,47 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
 
-char* C_RenderListClass::get_desc() {
-    if (isroot) {
-        return "Main";
-    }
-    return "Effect list";
-}
-
 int g_config_seh = 1;
 extern int g_config_smp_mt, g_config_smp;
 
-static char extsigstr[] = "AVS 2.8+ Effect List Config";
+constexpr Parameter EffectList_Info::parameters[];
 
-void C_RenderListClass::load_config_code(unsigned char* data, int len) {
-    int pos = 0;
-    if (len - pos >= 4) {
-        use_code = GET_INT();
-        pos += 4;
-        load_string(effect_exp[0], data, pos, len);
-        load_string(effect_exp[1], data, pos, len);
+void EffectList_Info::recompile(Effect* component,
+                                const Parameter* parameter,
+                                const std::vector<int64_t>&) {
+    auto effectlist = (E_EffectList*)component;
+    if (std::string("Init") == parameter->name) {
+        effectlist->code_init.need_recompile = true;
+        effectlist->need_init = true;
+    } else if (std::string("Frame") == parameter->name) {
+        effectlist->code_frame.need_recompile = true;
     }
+    effectlist->recompile_if_needed();
 }
 
-void C_RenderListClass::load_config(unsigned char* data, int len) {
-    int pos = 0, ext;
-    if (pos < len) {
-        mode = data[pos++];
-    }
-    if (mode & 0x80) {
-        mode &= ~0x80;
-        mode = mode | GET_INT();
-        pos += 4;
-    }
-    ext = get_extended_datasize() + 5;
-    if (ext > 5) {
-        if (pos < ext) {
-            inblendval = GET_INT();
-            pos += 4;
-        }
-        if (pos < ext) {
-            outblendval = GET_INT();
-            pos += 4;
-        }
-        if (pos < ext) {
-            bufferin = GET_INT();
-            pos += 4;
-        }
-        if (pos < ext) {
-            bufferout = GET_INT();
-            pos += 4;
-        }
-        if (pos < ext) {
-            ininvert = GET_INT();
-            pos += 4;
-        }
-        if (pos < ext) {
-            outinvert = GET_INT();
-            pos += 4;
-        }
-        if (pos < ext - 4) {
-            beat_render = GET_INT();
-            pos += 4;
-        }  // BU
-        if (pos < ext - 4) {
-            beat_render_frames = GET_INT();
-            pos += 4;
-        }
-    }
-    use_code = 0;
-    effect_exp[0].assign("");
-    effect_exp[1].assign("");
-    while (pos < len) {
-        char s[33];
-        T_RenderListType t;
-        int l_len;
-        int effect_index = GET_INT();
-        pos += 4;
-        if (effect_index >= DLLRENDERBASE) {
-            if (pos + 32 > len) {
-                break;
-            }
-            memcpy(s, data + pos, 32);
-            s[32] = 0;
-            effect_index = (int)s;
-            pos += 32;
-        }
-        if (pos + 4 > len) {
-            break;
-        }
-        l_len = GET_INT();
-        pos += 4;
-        if (pos + l_len > len || l_len < 0) {
-            break;
+E_EffectList::E_EffectList()
+    : list_framebuffer(nullptr), last_w(0), last_h(0), on_beat_frames_cooldown(0) {}
+
+void E_EffectList::smp_cleanup_threads() {
+    if (E_EffectList::smp.num_threads > 0) {
+        if (E_EffectList::smp.quit_signal) {
+            signal_set(E_EffectList::smp.quit_signal);
         }
 
-        // special case for new 2.81+ codable effect list. saved as an effect, but
-        // loaded into this very EL right here.
-        if (ext > 5 && effect_index >= DLLRENDERBASE
-            && !memcmp(s, extsigstr, strlen(extsigstr) + 1)) {
-            load_config_code(data + pos, l_len);
-        } else {
-            t.effect = g_render_library->CreateRenderer(&effect_index);
-            t.effect_index = effect_index;
-            if (t.effect.valid()) {
-                t.effect.load_config(data + pos, l_len);
-                insertRender(&t, -1);
-            }
-        }
-        pos += l_len;
-    }
-}
-
-int C_RenderListClass::save_config_code(unsigned char* data) {
-    int pos = 0;
-    PUT_INT(use_code);
-    pos += 4;
-    save_string(data, pos, effect_exp[0]);
-    save_string(data, pos, effect_exp[1]);
-    return pos;
-}
-
-int C_RenderListClass::save_config(unsigned char* data) {
-    return save_config_ex(data, 0);
-}
-int C_RenderListClass::save_config_ex(unsigned char* data, int rootsave) {
-    int pos = 0;
-    int x;
-    if (!rootsave) {
-        set_extended_datasize(36);  // size of extended data + 4 cause we fucked up
-        data[pos++] = (mode & 0xff) | 0x80;
-        PUT_INT(mode);
-        pos += 4;
-        // extended_data
-        PUT_INT(inblendval);
-        pos += 4;
-        PUT_INT(outblendval);
-        pos += 4;
-        PUT_INT(bufferin);
-        pos += 4;
-        PUT_INT(bufferout);
-        pos += 4;
-        PUT_INT(ininvert);
-        pos += 4;
-        PUT_INT(outinvert);
-        pos += 4;
-        PUT_INT(beat_render);
-        pos += 4;
-        PUT_INT(beat_render_frames);
-        pos += 4;
-        // end extended data
-    } else {
-        data[pos++] = mode;
-    }
-
-    if (!rootsave) {
-        // write in our ext field
-        PUT_INT(DLLRENDERBASE);
-        pos += 4;
-        char s[33];
-        strncpy(s, extsigstr, 32);
-        memcpy(data + pos, s, 32);
-        pos += 32;
-        int t = save_config_code(data + pos + 4);
-        PUT_INT(t);
-        pos += 4 + t;
-    }
-
-    for (x = 0; x < num_renders; x++) {
-        int t;
-        int idx = renders[x].effect_index;
-        if (idx == E_Unknown::info.legacy_id) {
-            auto r = (E_Unknown*)renders[x].effect.effect;
-            if (!r->legacy_ape_id[0]) {
-                PUT_INT(r->legacy_id);
-                pos += 4;
-            } else {
-                PUT_INT(r->legacy_id);
-                pos += 4;
-                memcpy(data + pos, r->legacy_ape_id, 32);
-                pos += 32;
-            }
-        } else {
-            PUT_INT(idx);
-            pos += 4;
-            if (idx >= DLLRENDERBASE) {
-                char s[33];
-                strncpy(s, (char*)idx, 32);
-                memcpy(data + pos, s, 32);
-                pos += 32;
-            }
-        }
-
-        t = renders[x].effect.save_config(data + pos + 4);
-        PUT_INT(t);
-        pos += 4 + t;
-    }
-
-    return pos;
-}
-
-C_RenderListClass::C_RenderListClass(int iroot) {
-    AVS_EEL_INITINST();
-    isstart = 0;
-    nsaved = 0;
-    memset(nbw_save, 0, sizeof(nbw_save));
-    memset(nbw_save2, 0, sizeof(nbw_save2));
-    memset(nbh_save, 0, sizeof(nbh_save));
-    memset(nbh_save2, 0, sizeof(nbh_save2));
-    memset(nb_save, 0, sizeof(nb_save));
-    memset(nb_save2, 0, sizeof(nb_save2));
-    inblendval = 128;
-    outblendval = 128;
-    ininvert = 0;
-
-    this->code_lock = lock_init();
-    use_code = 0;
-    inited = 0;
-    need_recompile = 1;
-    memset(codehandle, 0, sizeof(codehandle));
-    var_beat = 0;
-
-    effect_exp[0].assign("");
-    effect_exp[1].assign("");
-    outinvert = 0;
-    bufferin = 0;
-    bufferout = 0;
-    isroot = iroot;
-    num_renders = 0;
-    num_renders_alloc = 0;
-    renders = NULL;
-    thisfb = NULL;
-    l_w = l_h = 0;
-    mode = 0;
-    beat_render = 0;
-    beat_render_frames = 1;
-    fake_enabled = 0;
-}
-
-extern int g_buffers_w[NBUF], g_buffers_h[NBUF];
-extern void* g_buffers[NBUF];
-
-void C_RenderListClass::set_n_Context() {
-    if (!isroot) {
-        return;
-    }
-    if (nsaved) {
-        return;
-    }
-    nsaved = 1;
-    memcpy(nbw_save2, g_buffers_w, sizeof(nbw_save2));
-    memcpy(nbh_save2, g_buffers_h, sizeof(nbh_save2));
-    memcpy(nb_save2, g_buffers, sizeof(nb_save2));
-
-    memcpy(g_buffers_w, nbw_save, sizeof(nbw_save));
-    memcpy(g_buffers_h, nbh_save, sizeof(nbh_save));
-    memcpy(g_buffers, nb_save, sizeof(nb_save));
-}
-
-void C_RenderListClass::unset_n_Context() {
-    if (!isroot) {
-        return;
-    }
-    if (!nsaved) {
-        return;
-    }
-    nsaved = 0;
-
-    memcpy(nbw_save, g_buffers_w, sizeof(nbw_save));
-    memcpy(nbh_save, g_buffers_h, sizeof(nbh_save));
-    memcpy(nb_save, g_buffers, sizeof(nb_save));
-
-    memcpy(g_buffers_w, nbw_save2, sizeof(nbw_save2));
-    memcpy(g_buffers_h, nbh_save2, sizeof(nbh_save2));
-    memcpy(g_buffers, nb_save2, sizeof(nb_save2));
-}
-
-void C_RenderListClass::smp_cleanupthreads() {
-    if (smp_parms.threadTop > 0) {
-        if (smp_parms.hQuitHandle) {
-            signal_set(smp_parms.hQuitHandle);
-        }
-
-        thread_join_all(smp_parms.hThreads, smp_parms.threadTop, WAIT_INFINITE);
-        int x;
-        for (x = 0; x < smp_parms.threadTop; x++) {
-            thread_destroy(smp_parms.hThreads[x]);
-            signal_destroy(smp_parms.hThreadSignalsDone[x]);
-            signal_destroy(smp_parms.hThreadSignalsStart[x]);
+        thread_join_all(
+            E_EffectList::smp.threads, E_EffectList::smp.num_threads, WAIT_INFINITE);
+        for (int x = 0; x < E_EffectList::smp.num_threads; x++) {
+            thread_destroy(E_EffectList::smp.threads[x]);
+            signal_destroy(E_EffectList::smp.thread_done[x]);
+            signal_destroy(E_EffectList::smp.thread_start[x]);
         }
     }
 
-    if (smp_parms.hQuitHandle) {
-        signal_destroy(smp_parms.hQuitHandle);
+    if (E_EffectList::smp.quit_signal) {
+        signal_destroy(E_EffectList::smp.quit_signal);
     }
 
-    memset(&smp_parms, 0, sizeof(smp_parms));
-}
-
-void C_RenderListClass::freeBuffers() {
-    if (isroot) {
-        int x;
-        for (x = 0; x < NBUF; x++) {
-            if (nb_save[x]) {
-                free(nb_save[x]);
-            }
-            nb_save[x] = NULL;
-            nbw_save[x] = nbh_save[x] = 0;
-        }
-    }
-}
-
-C_RenderListClass::~C_RenderListClass() {
-    clearRenders();
-
-    // free nb_save
-    freeBuffers();
-
-    int x;
-    for (x = 0; x < 2; x++) {
-        freeCode(codehandle[x]);
-        codehandle[x] = 0;
-    }
-    AVS_EEL_QUITINST();
-    lock_destroy(this->code_lock);
+    memset(&E_EffectList::smp, 0, sizeof(E_EffectList::smp));
 }
 
 static int __inline depthof(int c, int i) {
@@ -380,113 +99,88 @@ static int __inline depthof(int c, int i) {
     return i ? 255 - r : r;
 }
 
-int C_RenderListClass::render(char visdata[2][2][576],
-                              int is_beat,
-                              int* framebuffer,
-                              int* fbout,
-                              int w,
-                              int h) {
+int E_EffectList::render(char visdata[2][2][576],
+                         int is_beat,
+                         int* framebuffer,
+                         int* fbout,
+                         int w,
+                         int h) {
     int is_preinit = (is_beat & 0x80000000);
 
-    if (is_beat && beat_render) {
-        fake_enabled = beat_render_frames;
+    if (is_beat && this->config.on_beat) {
+        this->on_beat_frames_cooldown = this->config.on_beat_frames;
     }
 
-    int use_enabled = enabled();
-    int use_inblendval = inblendval;
-    int use_outblendval = outblendval;
-    int use_clear = clearfb();
+    bool enabled_this_frame = this->enabled || this->on_beat_frames_cooldown > 0;
+    int64_t input_blend_this_frame = this->config.output_blend_adjustable;
+    int64_t output_blend_this_frame = this->config.output_blend_adjustable;
+    bool clear_this_frame = this->config.clear_every_frame;
 
-    if (!isroot && use_code) {
-        if (need_recompile) {
-            lock_lock(this->code_lock);
-
-            if (!var_beat || g_reset_vars_on_recompile) {
-                clearVars();
-                var_beat = registerVar("beat");
-                var_alphain = registerVar("alphain");
-                var_alphaout = registerVar("alphaout");
-                var_enabled = registerVar("enabled");
-                var_clear = registerVar("clear");
-                var_w = registerVar("w");
-                var_h = registerVar("h");
-                inited = 0;
-            }
-
-            need_recompile = 0;
-            int x;
-            for (x = 0; x < 2; x++) {
-                freeCode(codehandle[x]);
-                codehandle[x] = compileCode((char*)effect_exp[x].c_str());
-            }
-
-            lock_unlock(this->code_lock);
+    if (this->config.use_code) {
+        this->recompile_if_needed();
+        this->init_variables(w,
+                             h,
+                             is_beat,
+                             enabled_this_frame,
+                             clear_this_frame,
+                             this->config.input_blend_adjustable,
+                             this->config.output_blend_adjustable);
+        if (this->need_init) {
+            this->code_init.exec(visdata);
+            this->need_init = false;
         }
-
-        *var_beat = ((is_beat & 1) && !is_preinit) ? 1.0 : 0.0;
-        *var_enabled = use_enabled ? 1.0 : 0.0;
-        *var_w = (double)w;
-        *var_h = (double)h;
-        *var_clear = use_clear ? 1.0 : 0.0;
-        *var_alphain = use_inblendval / 255.0;
-        *var_alphaout = use_outblendval / 255.0;
-        if (codehandle[0] && !inited) {
-            executeCode(codehandle[0], visdata);
-            inited = 1;
-        }
-        executeCode(codehandle[1], visdata);
+        this->code_frame.exec(visdata);
 
         if (!is_preinit) {
-            is_beat = *var_beat > 0.1 || *var_beat < -0.1;
+            is_beat = *this->vars.beat > 0.1 || *this->vars.beat < -0.1;
         }
-        use_inblendval = (int)(*var_alphain * 255.0);
-        if (use_inblendval < 0) {
-            use_inblendval = 0;
-        } else if (use_inblendval > 255) {
-            use_inblendval = 255;
+        input_blend_this_frame = (int)(*this->vars.alpha_in * 255.0);
+        if (input_blend_this_frame < 0) {
+            input_blend_this_frame = 0;
+        } else if (input_blend_this_frame > 255) {
+            input_blend_this_frame = 255;
         }
-        use_outblendval = (int)(*var_alphaout * 255.0);
-        if (use_outblendval < 0) {
-            use_outblendval = 0;
-        } else if (use_outblendval > 255) {
-            use_outblendval = 255;
+        output_blend_this_frame = (int)(*this->vars.alpha_out * 255.0);
+        if (output_blend_this_frame < 0) {
+            output_blend_this_frame = 0;
+        } else if (output_blend_this_frame > 255) {
+            output_blend_this_frame = 255;
         }
 
-        use_enabled = *var_enabled > 0.1 || *var_enabled < -0.1;
-        use_clear = *var_clear > 0.1 || *var_clear < -0.1;
+        enabled_this_frame = *this->vars.enabled > 0.1 || *this->vars.enabled < -0.1;
+        clear_this_frame = *this->vars.clear > 0.1 || *this->vars.clear < -0.1;
 
         // code execute
     }
 
     // root/replaceinout special cases
-    if (isroot || (use_enabled && blendin() == 1 && blendout() == 1)) {
-        int s = 0, x;
+    if (enabled_this_frame && this->config.input_blend_mode == LIST_BLEND_REPLACE
+        && this->config.output_blend_mode == LIST_BLEND_REPLACE) {
+        int s = 0;
         int line_blend_mode_save = g_line_blend_mode;
-        if (thisfb) {
-            free(thisfb);
+        if (this->list_framebuffer) {
+            free(this->list_framebuffer);
         }
-        thisfb = NULL;
-        if (use_clear && (isroot || blendin() != 1)) {
+        this->list_framebuffer = nullptr;
+        if (clear_this_frame && (this->config.input_blend_mode != 1)) {
             memset(framebuffer, 0, w * h * sizeof(int));
         }
         if (!is_preinit) {
             g_line_blend_mode = 0;
-            set_n_Context();
+            // set_n_Context();
         }
-        for (x = 0; x < num_renders; x++) {
+        for (auto& child : this->children) {
             int t = 0;
             int smp_max_threads;
-            Legacy_Effect_Proxy render = renders[x].effect;
 
-            if (g_config_smp && render.can_multithread() && g_config_smp_mt > 1) {
+            if (g_config_smp && child->can_multithread() && g_config_smp_mt > 1) {
                 smp_max_threads = g_config_smp;
-                render = renders[x].effect;
                 if (smp_max_threads > MAX_SMP_THREADS) {
                     smp_max_threads = MAX_SMP_THREADS;
                 }
 
                 int nt = smp_max_threads;
-                nt = render.smp_begin(nt,
+                nt = child->smp_begin(nt,
                                       visdata,
                                       is_beat,
                                       s ? fbout : framebuffer,
@@ -499,16 +193,16 @@ int C_RenderListClass::render(char visdata[2][2][576],
                     }
 
                     // launch threads
-                    smp_Render(nt,
-                               &render,
-                               visdata,
-                               is_beat,
-                               s ? fbout : framebuffer,
-                               s ? framebuffer : fbout,
-                               w,
-                               h);
+                    this->smp_render_list(nt,
+                                          child,
+                                          visdata,
+                                          is_beat,
+                                          s ? fbout : framebuffer,
+                                          s ? framebuffer : fbout,
+                                          w,
+                                          h);
 
-                    t = render.smp_finish(visdata,
+                    t = child->smp_finish(visdata,
                                           is_beat,
                                           s ? fbout : framebuffer,
                                           s ? framebuffer : fbout,
@@ -517,9 +211,9 @@ int C_RenderListClass::render(char visdata[2][2][576],
                 }
 
             } else {
-                if (g_config_seh && renders[x].effect_index != LIST_ID) {
+                if (g_config_seh && child->get_legacy_id() != LIST_ID) {
                     try {
-                        t = render.render(visdata,
+                        t = child->render(visdata,
                                           is_beat,
                                           s ? fbout : framebuffer,
                                           s ? framebuffer : fbout,
@@ -529,7 +223,7 @@ int C_RenderListClass::render(char visdata[2][2][576],
                         t = 0;
                     }
                 } else {
-                    t = render.render(visdata,
+                    t = child->render(visdata,
                                       is_beat,
                                       s ? fbout : framebuffer,
                                       s ? framebuffer : fbout,
@@ -552,27 +246,27 @@ int C_RenderListClass::render(char visdata[2][2][576],
         }
         if (!is_preinit) {
             g_line_blend_mode = line_blend_mode_save;
-            unset_n_Context();
+            // unset_n_Context();
         }
-        fake_enabled--;
+        this->on_beat_frames_cooldown--;
         return s;
     }
 
-    // check to see if we're enabled
-    if (!use_enabled) {
-        if (thisfb) {
-            free(thisfb);
+    if (!enabled_this_frame) {
+        if (this->list_framebuffer) {
+            free(this->list_framebuffer);
         }
-        thisfb = NULL;
+        this->list_framebuffer = NULL;
         return 0;
     }
 
-    fake_enabled--;
+    this->on_beat_frames_cooldown--;
 
     // handle resize
-    if (l_w != w || l_h != h || !thisfb) {
+    if (this->last_w != w || this->last_h != h || !this->list_framebuffer) {
         extern int config_reuseonresize;
-        int do_resize = config_reuseonresize && !!thisfb && l_w && l_h && !use_clear;
+        int do_resize = config_reuseonresize && !!this->list_framebuffer && this->last_w
+                        && this->last_h && !clear_this_frame;
 
         int* newfb;
         if (!do_resize) {
@@ -580,15 +274,14 @@ int C_RenderListClass::render(char visdata[2][2][576],
         } else {
             newfb = (int*)malloc(w * h * sizeof(int));
             if (newfb) {
-                int x, y;
-                int dxpos = (l_w << 16) / w;
+                int dxpos = (this->last_w << 16) / w;
                 int ypos = 0;
-                int dypos = (l_h << 16) / h;
+                int dypos = (this->last_h << 16) / h;
                 int* out = newfb;
-                for (y = 0; y < h; y++) {
-                    int* p = thisfb + l_w * (ypos >> 16);
+                for (int y = 0; y < h; y++) {
+                    int* p = this->list_framebuffer + this->last_w * (ypos >> 16);
                     int xpos = 0;
-                    for (x = 0; x < w; x++) {
+                    for (int x = 0; x < w; x++) {
                         *out++ = p[xpos >> 16];
                         xpos += dxpos;
                     }
@@ -597,53 +290,52 @@ int C_RenderListClass::render(char visdata[2][2][576],
             }
         }
         // TODO [bug]: What happens here if newfb alloc failed?
-        l_w = w;
-        l_h = h;
-        if (thisfb) {
-            free(thisfb);
+        this->last_w = w;
+        this->last_h = h;
+        if (this->list_framebuffer) {
+            free(this->list_framebuffer);
         }
-        thisfb = newfb;
+        this->list_framebuffer = newfb;
     }
     // handle clear mode
-    if (use_clear) {
-        memset(thisfb, 0, w * h * sizeof(int));
+    if (clear_this_frame) {
+        memset(this->list_framebuffer, 0, w * h * sizeof(int));
     }
 
     // blend parent framebuffer into current, if necessary
-
     if (!is_preinit) {
         int x = w * h;
         int* tfb = framebuffer;
-        int* o = thisfb;
-        set_n_Context();
-        int use_blendin = blendin();
-        if (use_blendin == 10 && use_inblendval >= 255) {
-            use_blendin = 1;
+        int* o = this->list_framebuffer;
+        // set_n_Context();
+        int64_t use_blendin = this->config.input_blend_mode;
+        if (use_blendin == LIST_BLEND_ADJUSTABLE && input_blend_this_frame >= 255) {
+            use_blendin = LIST_BLEND_REPLACE;
         }
 
         switch (use_blendin) {
-            case 1: memcpy(o, tfb, w * h * sizeof(int)); break;
-            case 2: mmx_avgblend_block(o, tfb, x); break;
-            case 3:
+            case LIST_BLEND_REPLACE: memcpy(o, tfb, w * h * sizeof(int)); break;
+            case LIST_BLEND_5050: mmx_avgblend_block(o, tfb, x); break;
+            case LIST_BLEND_MAXIMUM:
                 while (x--) {
                     *o = BLEND_MAX(*o, *tfb++);
                     o++;
                 }
                 break;
-            case 4: mmx_addblend_block(o, tfb, x); break;
-            case 5:
+            case LIST_BLEND_ADDITIVE: mmx_addblend_block(o, tfb, x); break;
+            case LIST_BLEND_SUB_1:
                 while (x--) {
                     *o = BLEND_SUB(*o, *tfb++);
                     o++;
                 }
                 break;
-            case 6:
+            case LIST_BLEND_SUB_2:
                 while (x--) {
                     *o = BLEND_SUB(*tfb++, *o);
                     o++;
                 }
                 break;
-            case 7: {
+            case LIST_BLEND_EVERY_OTHER_LINE: {
                 int y = h / 2;
                 while (y-- > 0) {
                     memcpy(o, tfb, w * sizeof(int));
@@ -651,7 +343,7 @@ int C_RenderListClass::render(char visdata[2][2][576],
                     o += w * 2;
                 }
             } break;
-            case 8: {
+            case LIST_BLEND_EVERY_OTHER_PIXEL: {
                 int r = 0;
                 int y = h;
                 while (y-- > 0) {
@@ -669,31 +361,37 @@ int C_RenderListClass::render(char visdata[2][2][576],
                     tfb += w;
                 }
             } break;
-            case 9:
+            case LIST_BLEND_XOR:
                 while (x--) {
                     *o = *o ^ *tfb++;
                     o++;
                 }
                 break;
-            case 10: mmx_adjblend_block(o, tfb, o, x, use_inblendval); break;
-            case 11: mmx_mulblend_block(o, tfb, x); break;
-            case 13:
+            case LIST_BLEND_ADJUSTABLE:
+                mmx_adjblend_block(o, tfb, o, x, input_blend_this_frame);
+                break;
+            case LIST_BLEND_MULTIPLY: mmx_mulblend_block(o, tfb, x); break;
+            case LIST_BLEND_MINIMUM:
                 while (x--) {
                     *o = BLEND_MIN(*o, *tfb++);
                     o++;
                 }
                 break;
-            case 12: {
-                int* buf = (int*)getGlobalBuffer(w, h, bufferin, 0);
+            default: break;
+            case LIST_BLEND_BUFFER: {
+                int* buf =
+                    (int*)getGlobalBuffer(w, h, this->config.input_blend_buffer, 0);
                 if (!buf) {
                     break;
                 }
                 while (x--) {
-                    *o = BLEND_ADJ(*tfb++, *o, depthof(*buf, ininvert));
+                    *o = BLEND_ADJ(
+                        *tfb++,
+                        *o,
+                        depthof(*buf, this->config.input_blend_buffer_invert));
                     o++;
                     buf++;
                 }
-            }
 #ifndef NO_MMX
 #ifdef _MSC_VER  // MSVC asm
                 __asm emms;
@@ -702,9 +400,9 @@ int C_RenderListClass::render(char visdata[2][2][576],
 #endif  // _MSC_VER
 #endif
                 break;
-            default: break;
+            }
         }
-        unset_n_Context();
+        // unset_n_Context();
     }
 
     int s = 0;
@@ -714,20 +412,19 @@ int C_RenderListClass::render(char visdata[2][2][576],
         g_line_blend_mode = 0;
     }
 
-    for (x = 0; x < num_renders; x++) {
+    for (auto& child : this->children) {
         int t = 0;
 
         int smp_max_threads;
-        Legacy_Effect_Proxy render = renders[x].effect;
 
-        if (g_config_smp && render.can_multithread() && g_config_smp_mt > 1) {
+        if (g_config_smp && child->can_multithread() && g_config_smp_mt > 1) {
             smp_max_threads = g_config_smp_mt;
             if (smp_max_threads > MAX_SMP_THREADS) {
                 smp_max_threads = MAX_SMP_THREADS;
             }
 
             int nt = smp_max_threads;
-            nt = render.smp_begin(nt,
+            nt = child->smp_begin(nt,
                                   visdata,
                                   is_beat,
                                   s ? fbout : framebuffer,
@@ -740,16 +437,16 @@ int C_RenderListClass::render(char visdata[2][2][576],
                 }
 
                 // launch threads
-                smp_Render(nt,
-                           &render,
-                           visdata,
-                           is_beat,
-                           s ? fbout : thisfb,
-                           s ? thisfb : fbout,
-                           w,
-                           h);
+                this->smp_render_list(nt,
+                                      child,
+                                      visdata,
+                                      is_beat,
+                                      s ? fbout : this->list_framebuffer,
+                                      s ? this->list_framebuffer : fbout,
+                                      w,
+                                      h);
 
-                t = render.smp_finish(visdata,
+                t = child->smp_finish(visdata,
                                       is_beat,
                                       s ? fbout : framebuffer,
                                       s ? framebuffer : fbout,
@@ -757,16 +454,24 @@ int C_RenderListClass::render(char visdata[2][2][576],
                                       h);
             }
 
-        } else if (g_config_seh && renders[x].effect_index != LIST_ID) {
+        } else if (g_config_seh && child->get_legacy_id() != LIST_ID) {
             try {
-                t = renders[x].effect.render(
-                    visdata, is_beat, s ? fbout : thisfb, s ? thisfb : fbout, w, h);
+                t = child->render(visdata,
+                                  is_beat,
+                                  s ? fbout : this->list_framebuffer,
+                                  s ? this->list_framebuffer : fbout,
+                                  w,
+                                  h);
             } catch (...) {
                 t = 0;
             }
         } else {
-            t = renders[x].effect.render(
-                visdata, is_beat, s ? fbout : thisfb, s ? thisfb : fbout, w, h);
+            t = child->render(visdata,
+                              is_beat,
+                              s ? fbout : this->list_framebuffer,
+                              s ? this->list_framebuffer : fbout,
+                              w,
+                              h);
         }
 
         if (t & 1) {
@@ -789,47 +494,47 @@ int C_RenderListClass::render(char visdata[2][2][576],
 
     if (!is_preinit) {
         if (s) {
-            memcpy(thisfb, fbout, w * h * sizeof(int));
+            memcpy(this->list_framebuffer, fbout, w * h * sizeof(int));
         }
 
-        int* tfb = s ? fbout : thisfb;
+        int* tfb = s ? fbout : this->list_framebuffer;
         int* o = framebuffer;
         x = w * h;
-        set_n_Context();
+        // set_n_Context();
 
-        int use_blendout = blendout();
-        if (use_blendout == 10 && use_outblendval >= 255) {
+        int64_t use_blendout = this->config.output_blend_mode;
+        if (use_blendout == LIST_BLEND_ADJUSTABLE && output_blend_this_frame >= 255) {
             use_blendout = 1;
         }
         switch (use_blendout) {
-            case 1:
+            case LIST_BLEND_REPLACE:
                 if (s) {
-                    unset_n_Context();
+                    // unset_n_Context();
                     return 1;
                 }
                 memcpy(o, tfb, x * sizeof(int));
                 break;
-            case 2: mmx_avgblend_block(o, tfb, x); break;
-            case 3:
+            case LIST_BLEND_5050: mmx_avgblend_block(o, tfb, x); break;
+            case LIST_BLEND_MAXIMUM:
                 while (x--) {
                     *o = BLEND_MAX(*o, *tfb++);
                     o++;
                 }
                 break;
-            case 4: mmx_addblend_block(o, tfb, x); break;
-            case 5:
+            case LIST_BLEND_ADDITIVE: mmx_addblend_block(o, tfb, x); break;
+            case LIST_BLEND_SUB_1:
                 while (x--) {
                     *o = BLEND_SUB(*o, *tfb++);
                     o++;
                 }
                 break;
-            case 6:
+            case LIST_BLEND_SUB_2:
                 while (x--) {
                     *o = BLEND_SUB(*tfb++, *o);
                     o++;
                 }
                 break;
-            case 7: {
+            case LIST_BLEND_EVERY_OTHER_LINE: {
                 int y = h / 2;
                 while (y-- > 0) {
                     memcpy(o, tfb, w * sizeof(int));
@@ -837,7 +542,7 @@ int C_RenderListClass::render(char visdata[2][2][576],
                     o += w * 2;
                 }
             } break;
-            case 8: {
+            case LIST_BLEND_EVERY_OTHER_PIXEL: {
                 int r = 0;
                 int y = h;
                 while (y-- > 0) {
@@ -855,27 +560,33 @@ int C_RenderListClass::render(char visdata[2][2][576],
                     tfb += w;
                 }
             } break;
-            case 9:
+            case LIST_BLEND_XOR:
                 while (x--) {
                     *o = *o ^ *tfb++;
                     o++;
                 }
                 break;
-            case 10: mmx_adjblend_block(o, tfb, o, x, use_outblendval); break;
-            case 11: mmx_mulblend_block(o, tfb, x); break;
-            case 13:
+            case LIST_BLEND_ADJUSTABLE:
+                mmx_adjblend_block(o, tfb, o, x, output_blend_this_frame);
+                break;
+            case LIST_BLEND_MULTIPLY: mmx_mulblend_block(o, tfb, x); break;
+            case LIST_BLEND_MINIMUM:
                 while (x--) {
                     *o = BLEND_MIN(*o, *tfb++);
                     o++;
                 }
                 break;
-            case 12: {
-                int* buf = (int*)getGlobalBuffer(w, h, bufferout, 0);
+            case LIST_BLEND_BUFFER: {
+                int* buf =
+                    (int*)getGlobalBuffer(w, h, this->config.output_blend_buffer, 0);
                 if (!buf) {
                     break;
                 }
                 while (x--) {
-                    *o = BLEND_ADJ(*tfb++, *o, depthof(*buf, outinvert));
+                    *o = BLEND_ADJ(
+                        *tfb++,
+                        *o,
+                        depthof(*buf, this->config.output_blend_buffer_invert));
                     o++;
                     buf++;
                 }
@@ -886,251 +597,99 @@ int C_RenderListClass::render(char visdata[2][2][576],
                 __asm__ __volatile__("emms");
 #endif  // _MSC_VER
 #endif
-            } break;
+                break;
+            }
             default: break;
         }
-        unset_n_Context();
+        // unset_n_Context();
     }
     return 0;
 }
 
-int C_RenderListClass::getNumRenders(void) { return num_renders; }
+void EffectList_Vars::register_(void* vm_context) {
+    this->enabled = NSEEL_VM_regvar(vm_context, "enabled");
+    this->clear = NSEEL_VM_regvar(vm_context, "clear");
+    this->beat = NSEEL_VM_regvar(vm_context, "beat");
+    this->alpha_in = NSEEL_VM_regvar(vm_context, "alphain");
+    this->alpha_out = NSEEL_VM_regvar(vm_context, "alphaout");
+    this->w = NSEEL_VM_regvar(vm_context, "w");
+    this->h = NSEEL_VM_regvar(vm_context, "h");
+}
 
-C_RenderListClass::T_RenderListType* C_RenderListClass::getRender(int index) {
-    if (index >= 0 && index < num_renders) {
-        return &renders[index];
+// extra_args must contain in this order:
+//  int enabled
+//  int clear
+//  int alpha_in
+//  int alpha_out
+void EffectList_Vars::init(int w, int h, int is_beat, va_list extra_args) {
+    *this->beat = is_beat ? 1.0 : 0.0;
+    *this->w = w;
+    *this->h = h;
+    *this->enabled = va_arg(extra_args, int) ? 1.0 : 0.0;
+    *this->clear = va_arg(extra_args, int) ? 1.0 : 0.0;
+    *this->alpha_in = va_arg(extra_args, int) / 255.0;
+    *this->alpha_out = va_arg(extra_args, int) / 255.0;
+}
+
+Effect* E_EffectList::get_child(int index) {
+    if (index >= 0 && index < (int)this->children.size()) {
+        return this->children[index];
     }
     return NULL;
 }
 
-int C_RenderListClass::findRender(T_RenderListType* r) {
-    int idx;
-    if (!r) {
-        return -1;
-    }
-    for (idx = 0; idx < num_renders && renders[idx].effect != r->effect; idx++) {
-        ;
-    }
-    if (idx < num_renders) {
-        return idx;
+int64_t E_EffectList::find(Effect* effect) {
+    auto result = std::find(this->children.begin(), this->children.end(), effect);
+    if (result != this->children.end()) {
+        return result - this->children.begin();
     }
     return -1;
 }
 
-int C_RenderListClass::removeRenderFrom(T_RenderListType* r, int del) {
-    int idx;
+bool E_EffectList::remove_render_from(Effect* r, int del) {
     if (!r) {
-        return 1;
+        return false;
     }
-    for (idx = 0; idx < num_renders && renders[idx].effect != r->effect; idx++) {
+    int index = 0;
+    for (; index < (int)this->children.size() && this->children[index] != r; index++) {
         ;
     }
-    return removeRender(idx, del);
+    return remove_render(index, del);
 }
 
-int C_RenderListClass::removeRender(int index, int del) {
-    if (index >= 0 && index < num_renders) {
-        if (del && renders[index].effect.valid()) {
-            delete renders[index].effect.effect;
-            delete renders[index].effect.legacy_effect;
+bool E_EffectList::remove_render(int index, int del) {
+    for (auto it = this->children.begin(); it != this->children.end(); ++it) {
+        if (del && this->children[index] == *it) {
+            this->children.erase(it);
+            return true;
         }
-        num_renders--;
-        while (index < num_renders) {
-            renders[index] = renders[index + 1];
-            index++;
-        }
-        if (!num_renders) {
-            num_renders_alloc = 0;
-            if (renders) {
-                free(renders);
-            }
-            renders = NULL;
-        }
-        return 0;
     }
-    return 1;
-}
-void C_RenderListClass::clearRenders(void) {
-    int x;
-    if (renders) {
-        for (x = 0; x < num_renders; x++) {
-            delete renders[x].effect.effect;
-            delete renders[x].effect.legacy_effect;
-        }
-        free(renders);
-    }
-    num_renders = 0;
-    num_renders_alloc = 0;
-    renders = NULL;
-    if (thisfb) {
-        free(thisfb);
-    }
-    thisfb = 0;
+    return false;
 }
 
-int C_RenderListClass::insertRenderBefore(T_RenderListType* r,
-                                          T_RenderListType* before) {
-    int idx;
-    if (!before) {
-        idx = num_renders;
-    } else {
-        for (idx = 0; idx < num_renders && renders[idx].effect != before->effect;
-             idx++) {
-            ;
-        }
+void E_EffectList::clear_renders() {
+    this->children.clear();
+    if (this->list_framebuffer) {
+        free(this->list_framebuffer);
     }
-    return insertRender(r, idx);
+    this->list_framebuffer = 0;
 }
 
-int C_RenderListClass::insertRender(T_RenderListType* r, int index)  // index=-1 for add
-{
-    if (num_renders + 1 >= num_renders_alloc || !renders) {
-        num_renders_alloc = num_renders + 16;
-        T_RenderListType* newr =
-            (T_RenderListType*)calloc(num_renders_alloc, sizeof(T_RenderListType));
-        if (!newr) {
-            return -1;
-        }
-        if (num_renders && renders) {
-            memcpy(newr, renders, num_renders * sizeof(T_RenderListType));
-        }
-        if (renders) {
-            free(renders);
-        }
-        renders = newr;
+// index=-1 for add
+int64_t E_EffectList::insert_render(Effect* effect, int index) {
+    if (!effect || index < -1) {
+        return INT64_MAX;
     }
-
-    if (index < 0 || index >= num_renders) {
-        renders[num_renders] = *r;
-        return num_renders++;
+    if (index >= 0 && (size_t)index < this->children.size()) {
+        this->insert(effect, this->children[index], INSERT_BEFORE);
+        return index;
     }
-    int x;
-    for (x = num_renders++; x > index; x--) {
-        renders[x] = renders[x - 1];
-    }
-    renders[x] = *r;
-
-    return x;
+    this->insert(effect, this, INSERT_CHILD);
+    return this->children.size() - 1;
 }
 
-char C_RenderListClass::sig_str[] = "Nullsoft AVS Preset 0.2\x1a";
-
-int C_RenderListClass::__SavePreset(char* filename) {
-    lock_lock(g_render_cs);
-    unsigned char* data = (unsigned char*)calloc(1024 * 1024, 1);
-    int success = -1;
-    if (data) {
-        int pos = 0;
-        memcpy(data + pos, sig_str, strlen(sig_str));
-        pos += strlen(sig_str);
-        pos += save_config_ex(data + pos, 1);
-        if (pos < 1024 * 1024) {
-            FILE* fp = fopen(filename, "wb");
-            if (fp != NULL) {
-                success = 0;
-                fwrite(data, 1, pos, fp);
-                fclose(fp);
-            } else {
-                success = 2;
-            }
-        } else {
-            success = 1;
-        }
-        free(data);
-    }
-    lock_unlock(g_render_cs);
-    return success;
-}
-
-int C_RenderListClass::__LoadPreset(char* filename, int clear) {
-    lock_lock(g_render_cs);
-    unsigned char* data = (unsigned char*)calloc(1024 * 1024, 1);
-    int success = 1;
-    if (clear) {
-        clearRenders();
-    }
-    if (data) {
-        FILE* fp = fopen(filename, "rb");
-        if (fp != NULL) {
-            fseek(fp, 0, SEEK_END);
-            unsigned long int len = ftell(fp);
-            fseek(fp, 0, SEEK_SET);
-            if (!fread(data, 1, min(len, 1024 * 1024), fp)) {
-                len = 0;
-            }
-            fclose(fp);
-            if (len > strlen(sig_str) + 2 && !memcmp(data, sig_str, strlen(sig_str) - 2)
-                && data[strlen(sig_str) - 2] >= '1' && data[strlen(sig_str) - 2] <= '2'
-                && data[strlen(sig_str) - 1] == '\x1a') {
-                load_config(data + strlen(sig_str), len - strlen(sig_str));
-                success = 0;
-            }
-        }
-        free(data);
-    }
-    lock_unlock(g_render_cs);
-    return success;
-}
-
-int C_RenderListClass::__SavePresetToUndo(C_UndoItem& item) {
-    lock_lock(g_render_cs);
-    unsigned char* data = (unsigned char*)calloc(1024 * 1024, 1);
-    int success = -1;
-    if (data) {
-        // Do whatever the file saving stuff did
-        int pos = 0;
-        memcpy(data + pos, sig_str, strlen(sig_str));
-        pos += strlen(sig_str);
-        pos += save_config_ex(data + pos, 1);
-
-        // And then set the data into the undo object.
-        if (pos < 1024 * 1024) {
-            item.set(data, pos, true);  // all undo items start dirty.
-        }
-
-        else {
-            success = 1;
-        }
-        free(data);
-    }
-    lock_unlock(g_render_cs);
-    return success;
-}
-
-int C_RenderListClass::__LoadPresetFromUndo(C_UndoItem& item, int clear) {
-    lock_lock(g_render_cs);
-    unsigned char* data = (unsigned char*)calloc(1024 * 1024, 1);
-    int success = 1;
-    if (clear) {
-        clearRenders();
-    }
-    if (data) {
-        if (item.size() < 1024 * 1024) {
-            // Get the data from the undo object.
-            unsigned int len = item.size();
-            if (len == 0xffffffff) {
-                len = 0;
-            }
-            memcpy(data, item.get(), item.size());
-
-            // And then do whatever the file loading stuff did.
-            if (!memcmp(data, sig_str, strlen(sig_str) - 2)
-                && data[strlen(sig_str) - 2] >= '1' && data[strlen(sig_str) - 2] <= '2'
-                && data[strlen(sig_str) - 1] == '\x1a') {
-                load_config(data + strlen(sig_str), len - strlen(sig_str));
-                success = 0;
-            }
-        }
-        free(data);
-    }
-    lock_unlock(g_render_cs);
-    return success;
-}
-
-/// smp fun
-
-void C_RenderListClass::smp_Render(int minthreads,
-                                   Legacy_Effect_Proxy* render,
+void E_EffectList::smp_render_list(int min_threads,
+                                   Effect* component,
                                    char visdata[2][2][576],
                                    int is_beat,
                                    int* framebuffer,
@@ -1138,53 +697,278 @@ void C_RenderListClass::smp_Render(int minthreads,
                                    int w,
                                    int h) {
     int x;
-    smp_parms.nthreads = minthreads;
-    if (!smp_parms.hQuitHandle) {
-        smp_parms.hQuitHandle = signal_create_broadcast();
+    E_EffectList::smp.nthreads = min_threads;
+    if (!E_EffectList::smp.quit_signal) {
+        E_EffectList::smp.quit_signal = signal_create_broadcast();
     }
 
-    smp_parms.vis_data_ptr = visdata;
-    smp_parms.is_beat = is_beat;
-    smp_parms.framebuffer = framebuffer;
-    smp_parms.fbout = fbout;
-    smp_parms.w = w;
-    smp_parms.h = h;
-    smp_parms.render = render;
-    for (x = 0; x < minthreads; x++) {
-        if (x >= smp_parms.threadTop) {
+    E_EffectList::smp.vis_data = visdata;
+    E_EffectList::smp.is_beat = is_beat;
+    E_EffectList::smp.framebuffer = framebuffer;
+    E_EffectList::smp.fbout = fbout;
+    E_EffectList::smp.w = w;
+    E_EffectList::smp.h = h;
+    E_EffectList::smp.render = component;
+    for (x = 0; x < min_threads; x++) {
+        if (x >= E_EffectList::smp.num_threads) {
             // unsigned long int id;
-            smp_parms.hThreadSignalsStart[x] = signal_create_single();
-            signal_set(smp_parms.hThreadSignalsStart[x]);
-            smp_parms.hThreadSignalsDone[x] = signal_create_single();
+            E_EffectList::smp.thread_start[x] = signal_create_single();
+            signal_set(E_EffectList::smp.thread_start[x]);
+            E_EffectList::smp.thread_done[x] = signal_create_single();
 
-            smp_parms.hThreads[x] = thread_create(smp_threadProc, (void*)(x));
-            smp_parms.threadTop = x + 1;
+            E_EffectList::smp.threads[x] =
+                thread_create(E_EffectList::smp_thread_proc, (void*)(x));
+            E_EffectList::smp.num_threads = x + 1;
         } else {
-            signal_set(smp_parms.hThreadSignalsStart[x]);
+            signal_set(E_EffectList::smp.thread_start[x]);
         }
     }
-    signal_wait_all(smp_parms.hThreadSignalsDone, smp_parms.nthreads, WAIT_INFINITE);
+    signal_wait_all(
+        E_EffectList::smp.thread_done, E_EffectList::smp.nthreads, WAIT_INFINITE);
 }
 
-uint32_t C_RenderListClass::smp_threadProc(void* parm) {
+uint32_t E_EffectList::smp_thread_proc(void* parm) {
     int which = (int)parm;
-    void* hdls[2] = {smp_parms.hThreadSignalsStart[which], smp_parms.hQuitHandle};
+    void* hdls[2] = {E_EffectList::smp.thread_start[which],
+                     E_EffectList::smp.quit_signal};
     for (;;) {
-        if (signal_wait_any(hdls, 2, WAIT_INFINITE) == smp_parms.hQuitHandle) {
+        if (signal_wait_any(hdls, 2, WAIT_INFINITE) == E_EffectList::smp.quit_signal) {
             return 0;
         }
 
-        smp_parms.render->smp_render(which,
-                                     smp_parms.nthreads,
-                                     *(char(*)[2][2][576])smp_parms.vis_data_ptr,
-
-                                     smp_parms.is_beat,
-                                     smp_parms.framebuffer,
-                                     smp_parms.fbout,
-                                     smp_parms.w,
-                                     smp_parms.h);
-        signal_set(smp_parms.hThreadSignalsDone[which]);
+        E_EffectList::smp.render->smp_render(
+            which,
+            E_EffectList::smp.nthreads,
+            *(char(*)[2][2][576])E_EffectList::smp.vis_data,
+            E_EffectList::smp.is_beat,
+            E_EffectList::smp.framebuffer,
+            E_EffectList::smp.fbout,
+            E_EffectList::smp.w,
+            E_EffectList::smp.h);
+        signal_set(E_EffectList::smp.thread_done[which]);
     }
 }
 
-C_RenderListClass::_s_smp_parms C_RenderListClass::smp_parms;
+E_EffectList::smp_param_t E_EffectList::smp;
+
+// output_blend_modes:
+// (note how the blendmodes are pairwise flipped with the input list)
+//     Replace
+//     Ignore
+//     Maximum
+//     Fifty Fifty
+//     Sub Dest Src
+//     Additive
+//     Every Other Line
+//     Sub Src Dest
+//     Xor
+//     Every Other Pixel
+//     Multiply
+//     Adjustable
+//     Buffer
+
+void E_EffectList::load_legacy(unsigned char* data, int len) {
+    int pos = 0;
+    // the "first mode byte" is present twice in succession, except for the MSB which is
+    // 1 in the first copy for virtually all but the most ancient versions of AVS.
+    uint8_t first_mode_byte = 0;
+    if (pos < len) {
+        first_mode_byte = data[pos++];
+        this->config.clear_every_frame = first_mode_byte & 0b01;
+        this->enabled = (first_mode_byte & 0b10) >> 1;
+    }
+    uint8_t mode[4] = {0, 0, 0, 0};
+    if (first_mode_byte & 0x80) {  // true for 99.99% of known legacy preset files.
+        first_mode_byte &= ~0x80;
+        mode[0] = first_mode_byte | data[pos++];
+        mode[1] = data[pos++];
+        mode[2] = data[pos++];
+        mode[3] = data[pos++];
+    }
+    this->config.input_blend_mode = mode[1] & 0b111111;
+    // yes, the output blendmode flips the 1-bit for some reason.
+    // (probably so that 0 maps to Replace instead of Ignore, which is a saner default
+    // when loading ancient EffectLists which interprets the field as 0. the consequence
+    // is that all following blendmode pairs in the list are also switched.)
+    this->config.output_blend_mode = (mode[2] & 0b111111) ^ 1;
+    int ext = (int)mode[3] + 5;
+    if (ext > 5) {
+        if (pos < ext) {
+            this->config.input_blend_adjustable = GET_INT();
+            pos += 4;
+        }
+        if (pos < ext) {
+            this->config.output_blend_adjustable = GET_INT();
+            pos += 4;
+        }
+        if (pos < ext) {
+            this->config.input_blend_buffer = GET_INT();
+            pos += 4;
+        }
+        if (pos < ext) {
+            this->config.output_blend_buffer = GET_INT();
+            pos += 4;
+        }
+        if (pos < ext) {
+            this->config.input_blend_buffer_invert = GET_INT();
+            pos += 4;
+        }
+        if (pos < ext) {
+            this->config.output_blend_buffer_invert = GET_INT();
+            pos += 4;
+        }
+        if (pos < ext - 4) {
+            this->config.on_beat = GET_INT();
+            pos += 4;
+        }
+        if (pos < ext - 4) {
+            this->config.on_beat_frames = GET_INT();
+            pos += 4;
+        }
+    }
+    while (pos < len) {
+        int legacy_effect_id = GET_INT();
+        char legacy_effect_ape_id[LEGACY_APE_ID_LENGTH + 1];
+        legacy_effect_ape_id[0] = '\0';
+        pos += 4;
+        if (legacy_effect_id >= DLLRENDERBASE) {
+            if (pos + 32 > len) {
+                break;
+            }
+            memcpy(legacy_effect_ape_id, data + pos, LEGACY_APE_ID_LENGTH);
+            legacy_effect_ape_id[LEGACY_APE_ID_LENGTH] = '\0';
+            pos += LEGACY_APE_ID_LENGTH;
+        }
+        if (pos + 4 > len) {
+            break;
+        }
+        int l_len = GET_INT();
+        pos += 4;
+        if (pos + l_len > len || l_len < 0) {
+            break;
+        }
+
+        // special case for v2.81+ codeable EffectList.
+        // saved as an effect, but loaded into this EffectList's config.
+        if (ext > 5 && legacy_effect_id >= DLLRENDERBASE
+            && !strncmp(legacy_effect_ape_id,
+                        EffectList_Info::legacy_v28_ape_id,
+                        LEGACY_APE_ID_LENGTH)) {
+            int effect_end = pos + l_len;
+            // pos += 4;
+            if (len - pos >= 4) {
+                this->config.use_code = *(uint32_t*)(&data[pos]);
+                pos += 4;
+            }
+            auto* str = (char*)data;
+            pos += Effect::string_load_legacy(
+                &str[pos], this->config.init, effect_end - pos);
+            pos += Effect::string_load_legacy(
+                &str[pos], this->config.frame, effect_end - pos);
+        } else {
+            auto effect =
+                component_factory_legacy(legacy_effect_id, legacy_effect_ape_id);
+            effect->load_legacy(data + pos, l_len);
+            pos += l_len;
+            this->insert(effect, this, INSERT_CHILD);
+        }
+    }
+}
+
+uint32_t E_EffectList::legacy_save_code_section_size() {
+    // If the string is completely empty, save only the length.
+    // Else save length+1 for the terminating null byte.
+    uint32_t init_length = this->config.init.empty() ? 0 : this->config.init.size() + 1;
+    uint32_t frame_length =
+        this->config.frame.empty() ? 0 : this->config.frame.size() + 1;
+    return sizeof(uint32_t)    // code-enabled
+           + sizeof(uint32_t)  // init length
+           + init_length       // init code
+           + sizeof(uint32_t)  // frame length
+           + frame_length;     // frame code
+}
+
+int E_EffectList::save_legacy(unsigned char* data) {
+    uint32_t pos = 0;
+    uint8_t first_mode_byte =
+        (this->config.clear_every_frame & 0x01) | ((!this->enabled) & 0x02);
+    data[pos++] = first_mode_byte | 0x80;
+    data[pos++] = first_mode_byte;
+    data[pos++] = this->config.input_blend_mode & 0xff;
+    data[pos++] = (this->config.output_blend_mode & 0xff) ^ 1;
+    data[pos++] = EFFECTLIST_AVS281D_EXT_SIZE;
+    // extended_data
+    PUT_INT(this->config.input_blend_adjustable);
+    pos += 4;
+    PUT_INT(this->config.output_blend_adjustable);
+    pos += 4;
+    PUT_INT(this->config.input_blend_buffer);
+    pos += 4;
+    PUT_INT(this->config.output_blend_buffer);
+    pos += 4;
+    PUT_INT(this->config.input_blend_buffer_invert);
+    pos += 4;
+    PUT_INT(this->config.output_blend_buffer_invert);
+    pos += 4;
+    PUT_INT(this->config.on_beat);
+    pos += 4;
+    PUT_INT(this->config.on_beat_frames);
+    pos += 4;
+    // end extended data
+
+    // write APE extension
+    PUT_INT(DLLRENDERBASE);
+    pos += 4;
+    char* str = (char*)data;
+    memset(&str[pos], 0, LEGACY_APE_ID_LENGTH);
+    strncpy(&str[pos], EffectList_Info::legacy_v28_ape_id, LEGACY_APE_ID_LENGTH);
+    pos += LEGACY_APE_ID_LENGTH;
+    uint32_t code_section_size = this->legacy_save_code_section_size();
+    PUT_INT(code_section_size);
+    pos += 4;
+    PUT_INT(this->config.use_code);
+    pos += 4;
+    pos += Effect::string_save_legacy(
+        this->config.init, &str[pos], MAX_CODE_LEN - 1 - pos, /*with_nt*/ true);
+    pos += Effect::string_save_legacy(
+        this->config.frame, &str[pos], MAX_CODE_LEN - 1 - pos, /*with_nt*/ true);
+
+    for (auto& effect : this->children) {
+        int32_t legacy_effect_id = effect->get_legacy_id();
+        if (legacy_effect_id == Unknown_Info::legacy_id) {
+            auto unknown = (E_Unknown*)effect;
+            if (!unknown->legacy_ape_id[0]) {
+                PUT_INT(unknown->legacy_id);
+                pos += 4;
+            } else {
+                PUT_INT(DLLRENDERBASE);
+                pos += 4;
+                memcpy(data + pos, unknown->legacy_ape_id, LEGACY_APE_ID_LENGTH);
+                pos += LEGACY_APE_ID_LENGTH;
+            }
+        } else {
+            if (legacy_effect_id == -1) {
+                PUT_INT(DLLRENDERBASE);
+                pos += 4;
+                char ape_id_buf[LEGACY_APE_ID_LENGTH];
+                memset(ape_id_buf, 0, LEGACY_APE_ID_LENGTH);
+                strncpy(ape_id_buf, effect->get_legacy_ape_id(), LEGACY_APE_ID_LENGTH);
+                memcpy(data + pos, ape_id_buf, LEGACY_APE_ID_LENGTH);
+                pos += LEGACY_APE_ID_LENGTH;
+            } else {
+                PUT_INT(legacy_effect_id);
+                pos += 4;
+            }
+        }
+
+        int t = effect->save_legacy(data + pos + 4);
+        PUT_INT(t);
+        pos += 4 + t;
+    }
+
+    return pos;
+}
+
+Effect_Info* create_EffectList_Info() { return new EffectList_Info(); }
+Effect* create_EffectList() { return new E_EffectList(); }
+void set_EffectList_desc(char* desc) { E_EffectList::set_desc(desc); }

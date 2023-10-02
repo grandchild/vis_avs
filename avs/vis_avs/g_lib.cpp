@@ -101,12 +101,12 @@ C_GLibrary::C_GLibrary() {
     // clang-format on
     this->size = i;
 
-    this->unknown.id = E_Unknown::info.legacy_id;
+    this->unknown.id = Unknown_Info::legacy_id;
     this->unknown.idstring[0] = '\0';
     this->unknown.dialog_resource_id = IDD_CFG_UNKN;
     this->unknown.ui_handler = (DLGPROC)win32_dlgproc_unknown;
 
-    this->effectlist.id = LIST_ID;
+    this->effectlist.id = EffectList_Info::legacy_id;
     this->effectlist.idstring[0] = '\0';
     this->effectlist.dialog_resource_id = IDD_CFG_LIST;
     this->effectlist.ui_handler = (DLGPROC)win32_dlgproc_effectlist;
@@ -131,7 +131,7 @@ C_Win32GuiComponent* C_GLibrary::get(int id_or_idstring) {
             return &this->components[i];
         }
     }
-    if (id_or_idstring == LIST_ID) {
+    if (id_or_idstring == EffectList_Info::legacy_id) {
         return &this->effectlist;
     }
     if (id_or_idstring == Root_Info::legacy_id) {

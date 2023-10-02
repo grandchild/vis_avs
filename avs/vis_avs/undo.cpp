@@ -38,14 +38,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 unsigned int C_UndoStack::list_pos;
 C_UndoItem* C_UndoStack::list[256];
 
-C_UndoItem::C_UndoItem() : data(NULL), length(0), isdirty(true) {}
+C_UndoItem::C_UndoItem() : data(nullptr), length(0), isdirty(true) {}
 
-C_UndoItem::C_UndoItem(const C_UndoItem& T) : data(NULL), length(0), isdirty(true) {
+C_UndoItem::C_UndoItem(const C_UndoItem& T) : data(nullptr), length(0), isdirty(true) {
     *this = T;
 }
 
 C_UndoItem::C_UndoItem(void* _data, int _length, bool _isdirty)
-    : data(NULL), length(_length), isdirty(_isdirty) {
+    : data(nullptr), length(_length), isdirty(_isdirty) {
     data = calloc(length, 1);
     memcpy(data, _data, length);
 }
@@ -85,16 +85,16 @@ void C_UndoItem::set(void* _data, int _length, bool _isdirty) {
     memcpy(data, _data, length);
 }
 
-void C_UndoStack::saveundo(int is2) {
+void C_UndoStack::save_undo(bool save_secondary) {
     // Save to the undo buffer (sets the dirty bit for this item)
     C_UndoItem* item = new C_UndoItem;
     C_UndoItem* old = list[list_pos];
 
-    if (is2) {
-        g_render_effects2->__SavePresetToUndo(*item);
-    } else {
-        g_render_effects->__SavePresetToUndo(*item);
-    }
+    uint8_t* data = (uint8_t*)calloc(MAX_LEGACY_PRESET_FILESIZE_BYTES, 1);
+    size_t size =
+        g_single_instance->preset_save_legacy(data, /*secondary*/ save_secondary);
+    item->set(data, (int)size, false);
+    free(data);
 
     // Only add it to the stack if it has changed.
     if (!old || !(*old == *item)) {
@@ -109,14 +109,14 @@ void C_UndoStack::saveundo(int is2) {
     }
 }
 
-void C_UndoStack::cleardirty() {
+void C_UndoStack::clear_dirty() {
     // If we're clearing the dirty bit, we only clear it on the current item.
     if (list_pos < sizeof(list) / sizeof(list[0]) && list[list_pos]) {
         list[list_pos]->isdirty = 0;
     }
 }
 
-bool C_UndoStack::isdirty() {
+bool C_UndoStack::is_dirty() {
     if (list_pos < sizeof(list) / sizeof(list[0]) && list[list_pos]) {
         return list[list_pos]->isdirty;
     }
@@ -131,13 +131,13 @@ int C_UndoStack::can_redo() {
 
 void C_UndoStack::undo() {
     if (list_pos > 0 && list[list_pos - 1]) {
-        g_render_transition->LoadPreset(NULL, 0, list[--list_pos]);
+        g_render_transition->load_preset(nullptr, 0, list[--list_pos]);
     }
 }
 
 void C_UndoStack::redo() {
     if (list_pos < sizeof(list) / sizeof(list[0]) - 1 && list[list_pos + 1]) {
-        g_render_transition->LoadPreset(NULL, 0, list[++list_pos]);
+        g_render_transition->load_preset(nullptr, 0, list[++list_pos]);
     }
 }
 

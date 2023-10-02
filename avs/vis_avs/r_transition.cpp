@@ -43,39 +43,38 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 extern char* scanstr_back(char* str, char* toscan, char* defval);
 
-C_RenderTransitionClass::C_RenderTransitionClass() {
+Transition::Transition()
+    : l_w(0),
+      l_h(0),
+      enabled(0),
+      start_time(0),
+      initThread(nullptr),
+      do_transition_flag(0),
+      prev_renders_need_cleanup(false) {
     last_file[0] = 0;
-    l_w = l_h = 0;
-    memset(fbs, 0, sizeof(fbs));
-    enabled = 0;
-    start_time = 0;
-    _dotransitionflag = 0;
-    initThread = 0;
-    prev_renders_need_cleanup = false;
+    memset(this->fbs, 0, sizeof(this->fbs));
 }
 
-C_RenderTransitionClass::~C_RenderTransitionClass() {
-    int x;
+Transition::~Transition() {
     if (initThread) {
         WaitForSingleObject(initThread, INFINITE);
         CloseHandle(initThread);
-        initThread = 0;
+        initThread = nullptr;
     }
-    for (x = 0; x < 4; x++) {
-        if (fbs[x]) {
-            free(fbs[x]);
-        }
-        fbs[x] = NULL;
+    for (auto& fb : this->fbs) {
+        free(fb);
+        fb = nullptr;
     }
 }
 
-unsigned int WINAPI C_RenderTransitionClass::m_initThread(LPVOID p) {
-    C_RenderTransitionClass* _this = (C_RenderTransitionClass*)p;
+unsigned int WINAPI Transition::m_initThread(LPVOID p) {
+    auto transition = (Transition*)p;
     FILETIME ft;
     GetSystemTimeAsFileTime(&ft);
     srand(ft.dwLowDateTime | (ft.dwHighDateTime ^ GetCurrentThreadId()));
     if (cfg_transitions2 & 32) {
         extern HANDLE g_hThread;
+
         int d = GetThreadPriority(g_hThread);
         if (d == THREAD_PRIORITY_TIME_CRITICAL) {
             d = THREAD_PRIORITY_HIGHEST;
@@ -92,58 +91,62 @@ unsigned int WINAPI C_RenderTransitionClass::m_initThread(LPVOID p) {
         }
         SetThreadPriority(GetCurrentThread(), d);
     }
-    int* fb = (int*)calloc(_this->l_w * _this->l_h, sizeof(int));
-    char last_visdata[2][2][576] = {
-        0,
-    };
-    g_render_effects2->render(last_visdata, 0x80000000, fb, fb, _this->l_w, _this->l_h);
+    int* fb = (int*)calloc(transition->l_w * transition->l_h, sizeof(int));
+    char last_visdata[2][2][576] = {{{0}}};
+    g_single_instance->root_secondary.render(
+        last_visdata, (int)0x80000000, fb, fb, transition->l_w, transition->l_h);
     free(fb);
 
-    _this->_dotransitionflag = 2;
+    transition->do_transition_flag = 2;
 
     _endthreadex(0);
     return 0;
 }
 
-int C_RenderTransitionClass::LoadPreset(char* file, int which, C_UndoItem* item) {
-    if (initThread) {
-        if (WaitForSingleObject(initThread, 0) == WAIT_TIMEOUT) {
+int Transition::load_preset(char* file, int which, C_UndoItem* item) {
+    if (this->initThread) {
+        if (WaitForSingleObject(this->initThread, 0) == WAIT_TIMEOUT) {
             DDraw_SetStatusText("loading [wait]...", 1000 * 100);
             return 2;
         }
-        CloseHandle(initThread);
-        initThread = 0;
+        CloseHandle(this->initThread);
+        this->initThread = nullptr;
     }
 
-    lock_lock(g_render_cs);
-    if (enabled) {
-        enabled = 0;
+    if (this->enabled) {
+        this->enabled = false;
     }
 
     int r = 0;
 
     if (item) {
-        g_render_effects2->__LoadPresetFromUndo(*item, 1);
-        last_which = which;
-        _dotransitionflag = 2;
+        if (item->size() < MAX_LEGACY_PRESET_FILESIZE_BYTES) {
+            auto data = (uint8_t*)calloc(item->size(), 1);
+            memcpy(data, item->get(), item->size());
+            g_single_instance->preset_load_legacy(
+                data, item->size(), /*with_transition*/ true);
+            free(data);
+            this->last_which = which;
+            this->do_transition_flag = 2;
+        }
     } else {
         lstrcpyn(last_file, file, sizeof(last_file));
         if (file[0]) {
-            r = g_render_effects2->__LoadPreset(file, 1);
+            r = g_single_instance->preset_load_file(file);
         } else {
-            g_render_effects2->clearRenders();
+            g_single_instance->clear_secondary();
         }
         if (!r && l_w && l_h && (cfg_transitions2 & which)
             && ((cfg_transitions2 & 128) || DDraw_IsFullScreen())) {
             DWORD id;
-            last_which = which;
-            _dotransitionflag = 1;
-            initThread = (HANDLE)_beginthreadex(
-                NULL, 0, m_initThread, (LPVOID)this, 0, (unsigned int*)&id);
+            this->last_which = which;
+            this->do_transition_flag = 1;
+            this->initThread = (HANDLE)_beginthreadex(
+                nullptr, 0, m_initThread, (LPVOID)this, 0, (unsigned int*)&id);
             DDraw_SetStatusText("loading...", 1000 * 100);
         } else {
-            last_which = which;
-            _dotransitionflag = 2;
+            this->last_which = which;
+            this->do_transition_flag = 2;
         }
 
         if (r) {
@@ -152,21 +155,19 @@ int C_RenderTransitionClass::LoadPreset(char* file, int which, C_UndoItem* item)
                      "error loading: %s",
                      scanstr_back(last_file, "\\", last_file - 1) + 1);
             DDraw_SetStatusText(s);
-            _dotransitionflag = 3;
+            this->do_transition_flag = 3;
         }
         C_UndoStack::clear();
-        C_UndoStack::saveundo(1);
-        C_UndoStack::cleardirty();
+        C_UndoStack::save_undo(false);
+        C_UndoStack::clear_dirty();
     }
-    lock_unlock(g_render_cs);
 
     return !!r;
 }
 
-void C_RenderTransitionClass::clean_prev_renders_if_needed() {
+void Transition::clean_prev_renders_if_needed() {
     if (this->prev_renders_need_cleanup) {
-        g_render_effects2->clearRenders();
-        g_render_effects2->freeBuffers();
+        g_single_instance->clear_secondary();
         this->prev_renders_need_cleanup = false;
     }
 }
@@ -176,19 +177,19 @@ void C_RenderTransitionClass::clean_prev_renders_if_needed() {
 
 extern int g_rnd_cnt;
 
-int C_RenderTransitionClass::render(char visdata[2][2][576],
-                                    int is_beat,
-                                    int* framebuffer,
-                                    int* fbout,
-                                    int w,
-                                    int h) {
-    if (_dotransitionflag || enabled) {
+int Transition::render(char visdata[2][2][576],
+                       int is_beat,
+                       int* framebuffer,
+                       int* fbout,
+                       int w,
+                       int h) {
+    if (this->do_transition_flag || this->enabled) {
         g_rnd_cnt = 0;
     }
-    if (_dotransitionflag == 2 || _dotransitionflag == 3) {
-        int notext = _dotransitionflag == 3;
-        _dotransitionflag = 0;
-        if (cfg_transitions & last_which) {
+    if (this->do_transition_flag == 2 || this->do_transition_flag == 3) {
+        int notext = this->do_transition_flag == 3;
+        this->do_transition_flag = 0;
+        if (cfg_transitions & this->last_which) {
             curtrans =
                 (cfg_transition_mode & 0x7fff)
                     ? (cfg_transition_mode & 0x7fff)
@@ -202,11 +203,11 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
             ep[1] = 2;
             mask = 0;
             start_time = 0;
-            enabled = 1;
+            this->enabled = 1;
         }
-        C_RenderListClass* temp = g_render_effects;
-        g_render_effects = g_render_effects2;
-        g_render_effects2 = temp;
+        E_Root&& temp = std::move(g_single_instance->root);
+        g_single_instance->root = g_single_instance->root_secondary;
+        g_single_instance->root_secondary = temp;
         extern int need_repop;
         extern char* extension(char* fn);
         need_repop = 1;
@@ -221,7 +222,7 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
         }
     }
 
-    if (!enabled) {
+    if (!this->enabled) {
         int x;
         l_w = w;
         l_h = h;
@@ -229,14 +230,15 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
             for (x = 0; x < 4; x++) {
                 if (fbs[x]) {
                     free(fbs[x]);
-                    fbs[x] = NULL;
+                    fbs[x] = nullptr;
                 }
             }
         }
-        if (!initThread && g_render_effects2->getNumRenders()) {
+        if (!this->initThread && !g_single_instance->root_secondary.children.empty()) {
             this->prev_renders_need_cleanup = true;
         }
-        return g_render_effects->render(visdata, is_beat, framebuffer, fbout, w, h);
+        return g_single_instance->root.render(
+            visdata, is_beat, framebuffer, fbout, w, h);
     }
 
     // handle resize
@@ -260,13 +262,13 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
     // maybe there's a faster way than using 3 more buffers without screwing
     // any effect... justin ?
     if (curtrans & 0x8000) {
-        ep[1] ^= g_render_effects2->render(
+        ep[1] ^= g_single_instance->root_secondary.render(
                      visdata, is_beat, fbs[ep[1]], fbs[ep[1] ^ 1], w, h)
                  & 1;
     }
-    ep[0] ^=
-        g_render_effects->render(visdata, is_beat, fbs[ep[0]], fbs[ep[0] ^ 1], w, h)
-        & 1;
+    ep[0] ^= g_single_instance->root.render(
+                 visdata, is_beat, fbs[ep[0]], fbs[ep[0] ^ 1], w, h)
+             & 1;
 
     int* p = fbs[ep[1]];
     int* d = fbs[ep[0]];
@@ -290,18 +292,14 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
         n = 255;
     }
 
-    float sintrans =
-        (float)(sin(((float)n / 255) * PI - PI / 2) / 2 + 0.5);  // used for smoothing
-                                                                 // transitions now
-                                                                 // sintrans does a
-                                                                 // smooth curve from 0
-                                                                 // to 1
+    // used for smoothing transitions
+    // now sintrans does a smooth curve from 0 to 1
+    float sintrans = (float)(sin(((float)n / 255) * PI - PI / 2) / 2 + 0.5);
     switch (curtrans & 0x7fff) {
         case 1:  // Crossfade
             mmx_adjblend_block(o, d, p, x, n);
             break;
-        case 2:  // Left to right push
-        {
+        case 2: {  // Left to right push
             int i = (int)(sintrans * w);
             int j;
             for (j = 0; j < h; j++) {
@@ -309,8 +307,7 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
                 memcpy(framebuffer + (j * w) + i, p + (j * w), (w - i) * 4);
             }
         } break;
-        case 3:  // Right to left push
-        {
+        case 3: {  // Right to left push
             int i = (int)(sintrans * w);
             int j;
             for (j = 0; j < h; j++) {
@@ -318,20 +315,17 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
                 memcpy(framebuffer + (j * w) + (w - i), d + (j * w), i * 4);
             }
         } break;
-        case 4:  // Top to bottom push
-        {
+        case 4: {  // Top to bottom push
             int i = (int)(sintrans * h);
             memcpy(framebuffer, d + (h - i) * w, w * i * 4);
             memcpy(framebuffer + w * i, p, w * (h - i) * 4);
         } break;
-        case 5:  // Bottom to Top push
-        {
+        case 5: {  // Bottom to Top push
             int i = (int)(sintrans * h);
             memcpy(framebuffer, p + i * w, w * (h - i) * 4);
             memcpy(framebuffer + w * (h - i), d, w * i * 4);
         } break;
-        case 6:  // 9 random blocks
-        {
+        case 6: {  // 9 random blocks
             if (!(mask & (1 << (10 + n / 28)))) {
                 int r = 0;
                 if ((mask & 0x1ff) != 0x1ff) {
@@ -360,8 +354,7 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
                 }
             }
         } break;
-        case 7:  // Left/Right to Right/Left
-        {
+        case 7: {  // Left/Right to Right/Left
             int i = (int)(sintrans * w);
             int j;
             for (j = 0; j < h / 2; j++) {
@@ -373,8 +366,7 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
                 memcpy(framebuffer + (j * w) + (w - i), d + (j * w), i * 4);
             }
         } break;
-        case 8:  // Left/Right to Center
-        {
+        case 8: {  // Left/Right to Center
             int i = (int)(sintrans * w / 2);
             int j;
             for (j = 0; j < h; j++) {
@@ -383,8 +375,7 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
                 memcpy(framebuffer + (j * w) + i, p + (j * w) + i, (w - i * 2) * 4);
             }
         } break;
-        case 9:  // Left/Right to Center, squeeze
-        {
+        case 9: {  // Left/Right to Center, squeeze
             int i = (int)(sintrans * w / 2);
             int j;
             for (j = 0; j < h; j++) {
@@ -424,8 +415,7 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
                 }
             }
         } break;
-        case 10:  // Left to right wipe
-        {
+        case 10: {  // Left to right wipe
             int i = (int)(sintrans * w);
             int j;
             for (j = 0; j < h; j++) {
@@ -433,8 +423,7 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
                 memcpy(framebuffer + (j * w), d + (j * w), i * 4);
             }
         } break;
-        case 11:  // Right to left wipe
-        {
+        case 11: {  // Right to left wipe
             int i = (int)(sintrans * w);
             int j;
             for (j = 0; j < h; j++) {
@@ -442,20 +431,17 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
                 memcpy(framebuffer + (j * w) + (w - i), d + (j * w) + (w - i), i * 4);
             }
         } break;
-        case 12:  // Top to bottom wipe
-        {
+        case 12: {  // Top to bottom wipe
             int i = (int)(sintrans * h);
             memcpy(framebuffer, d, w * i * 4);
             memcpy(framebuffer + w * i, p + w * i, w * (h - i) * 4);
         } break;
-        case 13:  // Bottom to top wipe
-        {
+        case 13: {  // Bottom to top wipe
             int i = (int)(sintrans * h);
             memcpy(framebuffer, p, w * (h - i) * 4);
             memcpy(framebuffer + w * (h - i), d + w * (h - i), w * i * 4);
         } break;
-        case 14:  // dot dissolve
-        {
+        case 14: {  // dot dissolve
             int i = ((int)(sintrans * 5)) - 5;
             int j;
             int t = 0;
@@ -496,16 +482,15 @@ int C_RenderTransitionClass::render(char visdata[2][2][576],
 
     if (n == 255) {
         int x;
-        enabled = 0;
+        this->enabled = 0;
         start_time = 0;
         for (x = 0; x < 4; x++) {
             if (fbs[x]) {
                 free(fbs[x]);
             }
-            fbs[x] = NULL;
+            fbs[x] = nullptr;
         }
-        g_render_effects2->clearRenders();
-        g_render_effects2->freeBuffers();
+        g_single_instance->clear_secondary();
     }
     return 0;
 }

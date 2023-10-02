@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "undo.h"
 
-class C_RenderTransitionClass {
+class Transition {
    protected:
     int* fbs[4];
     int ep[2];
@@ -47,16 +47,16 @@ class C_RenderTransitionClass {
     void* initThread;
     char last_file[MAX_PATH];
     int last_which;
-    int _dotransitionflag;
+    int do_transition_flag;
     bool prev_renders_need_cleanup;
 
    public:
     static unsigned int __stdcall m_initThread(void* p);
 
-    int LoadPreset(char* file, int which, C_UndoItem* item = 0);  // 0 on success
+    int load_preset(char* file, int which, C_UndoItem* item = 0);  // 0 on success
     void clean_prev_renders_if_needed();
-    C_RenderTransitionClass();
-    virtual ~C_RenderTransitionClass();
+    Transition();
+    virtual ~Transition();
 
     virtual int render(char visdata[2][2][576],
                        int is_beat,

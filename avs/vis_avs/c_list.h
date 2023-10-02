@@ -33,189 +33,204 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "r_defs.h"
 
-#include "c__base.h"
 #include "effect.h"
+#include "effect_info.h"
+#include "effect_programmable.h"
 
-#include "../platform.h"
+// size of extended data + 4 -- "cause we fucked up"
+#define EFFECTLIST_AVS281D_EXT_SIZE 36
 
-#include <string>
+enum EffectList_Blend_Modes {
+    LIST_BLEND_IGNORE = 0,
+    LIST_BLEND_REPLACE = 1,
+    LIST_BLEND_5050 = 2,
+    LIST_BLEND_MAXIMUM = 3,
+    LIST_BLEND_ADDITIVE = 4,
+    LIST_BLEND_SUB_1 = 5,
+    LIST_BLEND_SUB_2 = 6,
+    LIST_BLEND_EVERY_OTHER_LINE = 7,
+    LIST_BLEND_EVERY_OTHER_PIXEL = 8,
+    LIST_BLEND_XOR = 9,
+    LIST_BLEND_ADJUSTABLE = 10,
+    LIST_BLEND_MULTIPLY = 11,
+    LIST_BLEND_BUFFER = 12,
+    LIST_BLEND_MINIMUM = 13,
+};
 
-extern unsigned char blendtable[256][256];
-extern bool blendtableInited;
+struct EffectList_Config : public Effect_Config {
+    bool on_beat = false;
+    int64_t on_beat_frames = 1;
+    bool clear_every_frame = false;
+    int64_t input_blend_mode = 0;
+    int64_t output_blend_mode = 0;
+    int64_t input_blend_adjustable = 128;
+    int64_t output_blend_adjustable = 128;
+    int64_t input_blend_buffer = 0;
+    int64_t output_blend_buffer = 0;
+    bool input_blend_buffer_invert = false;
+    bool output_blend_buffer_invert = false;
+    bool use_code = false;
+    std::string init;
+    std::string frame;
+    std::string beat;   // unused
+    std::string point;  // unused
+};
 
-class C_RenderTransitionClass;
-class C_UndoItem;
+struct EffectList_Info : public Effect_Info {
+    static constexpr char const* group = "";
+    static constexpr char const* name = "Effect List";
+    static constexpr char const* help =
+        "Read/write 'enabled' to get/set whether the effect list is enabled for this"
+        " frame\r\n"
+        "Read/write 'beat' to get/set whether there is currently a beat\r\n"
+        "Read/write 'clear' to get/set whether to clear the framebuffer\r\n"
+        "If the input blend is set to adjustable, 'alphain' can be set from 0.0-1.0\r\n"
+        "If the output blend is set to adjustable, 'alphaout' can be set from"
+        " 0.0-1.0\r\n"
+        "'w' and 'h' are set with the current width and height of the frame\r\n";
+    static constexpr int32_t legacy_id = -2;
+    static constexpr char const* legacy_ape_id = nullptr;
+    static constexpr char const* legacy_v28_ape_id = "AVS 2.8+ Effect List Config";
 
-class C_RenderListClass : public C_RBASE {
-    friend C_RenderTransitionClass;
+    static const char* const* blend_modes(int64_t* length_out) {
+        *length_out = 14;
+        static const char* const options[14] = {
+            "Ignore",
+            "Replace",
+            "50/50",
+            "Maximum",
+            "Additive",
+            "Subtractive 1",
+            "Subtractive 2",
+            "Every Other Line",
+            "Every Other Pixel",
+            "XOR",
+            "Adjustable",
+            "Multiply",
+            "Buffer",
+            "Minimum",
+        };
+        return options;
+    };
 
+    static void recompile(Effect*, const Parameter*, const std::vector<int64_t>&);
+
+    static constexpr uint32_t num_parameters = 14;
+    static constexpr Parameter parameters[num_parameters] = {
+        P_BOOL(offsetof(EffectList_Config, on_beat), "On Beat"),
+        P_IRANGE(offsetof(EffectList_Config, on_beat_frames),
+                 "On Beat Frames",
+                 0,
+                 INT64_MAX),
+        P_BOOL(offsetof(EffectList_Config, clear_every_frame), "Clear Every Frame"),
+        P_SELECT(offsetof(EffectList_Config, input_blend_mode),
+                 "Input Blend Mode",
+                 blend_modes),
+        P_SELECT(offsetof(EffectList_Config, output_blend_mode),
+                 "Output Blend Mode",
+                 blend_modes),
+        P_IRANGE(offsetof(EffectList_Config, input_blend_adjustable),
+                 "Input Blend Adjustable",
+                 0,
+                 255),
+        P_IRANGE(offsetof(EffectList_Config, output_blend_adjustable),
+                 "Output Blend Adjustable",
+                 0,
+                 255),
+        P_IRANGE(offsetof(EffectList_Config, input_blend_buffer),
+                 "Input Blend Buffer",
+                 1,
+                 8),
+        P_IRANGE(offsetof(EffectList_Config, output_blend_buffer),
+                 "Output Blend Buffer",
+                 1,
+                 8),
+        P_BOOL(offsetof(EffectList_Config, input_blend_buffer_invert),
+               "Input Blend Buffer Invert"),
+        P_BOOL(offsetof(EffectList_Config, output_blend_buffer_invert),
+               "Output Blend Buffer Invert"),
+        P_BOOL(offsetof(EffectList_Config, use_code), "Use Code"),
+        P_STRING(offsetof(EffectList_Config, init), "Init", nullptr, recompile),
+        P_STRING(offsetof(EffectList_Config, frame), "Frame", nullptr, recompile),
+    };
+
+    virtual bool can_have_child_components() const { return true; }
+
+    EFFECT_INFO_GETTERS;
+};
+
+struct EffectList_Vars : public Variables {
+    double* enabled;
+    double* clear;
+    double* beat;
+    double* alpha_in;
+    double* alpha_out;
+    double* w;
+    double* h;
+
+    virtual void register_(void*);
+    virtual void init(int, int, int, va_list);
+};
+
+class E_EffectList
+    : public Programmable_Effect<EffectList_Info, EffectList_Config, EffectList_Vars> {
    public:
-    typedef struct {
-        Legacy_Effect_Proxy effect;
-        int effect_index;
-    } T_RenderListType;
-
-   protected:
-    static char sig_str[];
-    int* thisfb;
-    int l_w, l_h;
-
-    int num_renders, num_renders_alloc;
-    T_RenderListType* renders;
-
-    int codehandle[4];
-
-    int AVS_EEL_CONTEXTNAME;
-    double *var_beat, *var_alphain, *var_alphaout, *var_enabled, *var_clear, *var_w,
-        *var_h;
-
-    int fake_enabled;
-
-   public:
-    int isroot;
-    int inblendval, outblendval;
-    int bufferin, bufferout;
-    int ininvert, outinvert;
-
-    int use_code;
-    std::string effect_exp[2];
-
-    int inited;
-    int need_recompile;
-    lock_t* code_lock;
-
-    int isstart;
-    int mode;
-    int beat_render, beat_render_frames;
-
-    void set_n_Context();
-    void unset_n_Context();
-
-    int nbw_save[NBUF], nbh_save[NBUF];  // these are our framebuffers
-    void* nb_save[NBUF];
-
-    int nbw_save2[NBUF], nbh_save2[NBUF];  // this are temp space for saving the global
-                                           // ones
-    void* nb_save2[NBUF];
-    int nsaved;
-
-#define MAX_SMP_THREADS 8
-    // smp stuff
-    void smp_Render(int minthreads,
-                    Legacy_Effect_Proxy* render,
-                    char visdata[2][2][576],
-                    int is_beat,
-                    int* framebuffer,
-                    int* fbout,
-                    int w,
-                    int h);
-    typedef struct {
-        void* vis_data_ptr;
-        int nthreads;
-        int is_beat;
-        int* framebuffer;
-        int* fbout;
-        int w;
-        int h;
-        Legacy_Effect_Proxy* render;
-
-        signal_t* hQuitHandle;
-        thread_t* hThreads[MAX_SMP_THREADS];
-        signal_t* hThreadSignalsStart[MAX_SMP_THREADS];
-        signal_t* hThreadSignalsDone[MAX_SMP_THREADS];
-
-        int threadTop;
-
-    } _s_smp_parms;
-
-    static _s_smp_parms smp_parms;
-    static uint32_t smp_threadProc(void* parm);
-
-   public:
-    static void smp_cleanupthreads();
-
-    C_RenderListClass(int iroot = 0);
-    virtual ~C_RenderListClass();
-
+    E_EffectList();
+    virtual ~E_EffectList() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,
                        int h);
-    virtual void load_config(unsigned char* data, int len);
-    virtual int save_config(unsigned char* data);
-    virtual char* get_desc();
+    virtual void load_legacy(unsigned char* data, int len);
+    virtual int save_legacy(unsigned char* data);
+    int64_t get_num_renders() { return this->children.size(); };
 
-    int getNumRenders(void);
-    T_RenderListType* getRender(int index);
-    int findRender(T_RenderListType* r);
-    int removeRender(int index, int del);                // return 0 on success
-    int removeRenderFrom(T_RenderListType* r, int del);  // return 0 on success
-    int insertRender(T_RenderListType* r, int index);    // return -1 on failure, actual
-                                                         // position on success
-    // return -1 on failure, actual position on success
-    int insertRenderBefore(T_RenderListType* r, T_RenderListType* before);
-    void clearRenders(void);
-    void freeBuffers();
+    virtual bool can_multithread() { return true; };
+    void smp_render_list(int min_threads,
+                         Effect* component,
+                         char visdata[2][2][576],
+                         int is_beat,
+                         int* framebuffer,
+                         int* fbout,
+                         int w,
+                         int h);
+    static void smp_cleanup_threads();
 
-    int __SavePreset(char* filename);
-    int __LoadPreset(char* filename, int clear);
+    Effect* get_child(int index);
+    int64_t find(Effect* effect);
+    bool remove_render(int index, int del);
+    bool remove_render_from(Effect* effect, int del);
+    int64_t insert_render(Effect* effect, int index);
+    void clear_renders();
 
-    int __SavePresetToUndo(C_UndoItem& item);
-    int __LoadPresetFromUndo(C_UndoItem& item, int clear);
+    typedef struct {
+        void* vis_data;
+        int nthreads;
+        int is_beat;
+        int* framebuffer;
+        int* fbout;
+        int w;
+        int h;
+        Effect* render;
 
-    int clearfb() { return mode & 1; }
-    void set_clearfb(int v) {
-        if (v) {
-            mode |= 1;
-        } else {
-            mode &= ~1;
-        }
-    }
+        signal_t* quit_signal;
+        thread_t* threads[MAX_SMP_THREADS];
+        signal_t* thread_start[MAX_SMP_THREADS];
+        signal_t* thread_done[MAX_SMP_THREADS];
 
-    int blendin() { return ((mode >> 8) & 31); }
-    void set_blendin(int v) {
-        mode &= ~(31 << 8);
-        mode |= (v & 31) << 8;
-    }
-    int blendout() { return ((mode >> 16) & 31) ^ 1; }
-    void set_blendout(int v) {
-        mode &= ~(31 << 16);
-        mode |= ((v ^ 1) & 31) << 16;
-    }
-    unsigned char get_extended_datasize(void) { return ((mode & 0xFF000000) >> 24); }
-    void set_extended_datasize(unsigned char s) {
-        mode &= 0xFFFFFF;
-        mode |= s << 24;
-    }
+        int num_threads;
+    } smp_param_t;
+    static uint32_t smp_thread_proc(void* parm);
 
-    int enabled() { return ((mode & 2) ^ 2) || fake_enabled > 0; }
-    void set_enabled(int v) {
-        if (!v) {
-            mode |= 2;
-        } else {
-            mode &= ~2;
-        }
-    }
-    int save_config_ex(unsigned char* data, int rootsave);
-    void load_config_code(unsigned char* data, int len);
-    int save_config_code(unsigned char* data);
+    static smp_param_t smp;
 
-    char* blendmodes[14] = {
-        "Ignore",
-        "Replace",
-        "50/50",
-        "Maximum",
-        "Additive",
-        "Subtractive 1",
-        "Subtractive 2",
-        "Every other line",
-        "Every other pixel",
-        "XOR",
-        "Adjustable",
-        "Multiply",
-        "Buffer",
-        "Minimum",
-    };
+   private:
+    // ...
+    uint32_t legacy_save_code_section_size();
+    /* pixel_rgb0_8* */ int* list_framebuffer;
+    int32_t last_w;
+    int32_t last_h;
+    int64_t on_beat_frames_cooldown;
 };

@@ -139,7 +139,6 @@ static void config(struct winampVisModule* this_mod) {
     }
 }
 
-lock_t* g_render_cs;
 static int g_is_beat;
 char g_path[1024];
 
@@ -215,7 +214,6 @@ static int init(struct winampVisModule* this_mod) {
 #ifndef WA3_COMPONENT
     g_cs = lock_init();
 #endif
-    g_render_cs = lock_init();
     g_ThreadQuit = 0;
     g_visdata_pstat = 1;
 
@@ -358,10 +356,9 @@ static void quit(struct winampVisModule*) {
 #ifndef WA3_COMPONENT
         lock_destroy(g_cs);
 #endif
-        lock_destroy(g_render_cs);
 
         DS("smp_cleanupthreads\n");
-        C_RenderListClass::smp_cleanupthreads();
+        E_EffectList::smp_cleanup_threads();
     }
 #undef DS
 #if 0  // syntax highlighting
@@ -475,10 +472,10 @@ static unsigned int WINAPI RenderThread(LPVOID) {
             if (fb && fb2) {
                 extern int g_dlg_w, g_dlg_h, g_dlg_fps;
 
-                lock_lock(g_render_cs);
+                lock_lock(g_single_instance->render_lock);
                 int t = g_render_transition->render(
                     vis_data, beat, s ? fb2 : fb, s ? fb : fb2, w, h);
-                lock_unlock(g_render_cs);
+                lock_unlock(g_single_instance->render_lock);
                 if (t & 1) {
                     s ^= 1;
                 }

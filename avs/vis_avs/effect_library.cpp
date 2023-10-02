@@ -56,7 +56,7 @@ bool make_effect_lib() {
     }
     /* Builtins */
     MAKE_EFFECT_LIB_ENTRY(Root);
-    // MAKE_EFFECT_LIB_ENTRY(EffectList);
+    MAKE_EFFECT_LIB_ENTRY(EffectList);
     MAKE_EFFECT_LIB_ENTRY(Unknown);
     MAKE_EFFECT_LIB_ENTRY(Simple);
     MAKE_EFFECT_LIB_ENTRY(DotPlane);

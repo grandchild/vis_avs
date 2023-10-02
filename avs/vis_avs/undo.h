@@ -58,9 +58,9 @@ class C_UndoItem {
 
 class C_UndoStack {
    public:
-    static void saveundo(int is2 = 0);
-    static void cleardirty();
-    static bool isdirty();
+    static void save_undo(bool save_secondary = false);
+    static void clear_dirty();
+    static bool is_dirty();
 
     static void undo();
     static void redo();

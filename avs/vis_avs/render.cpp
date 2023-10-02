@@ -36,9 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wa_ipc.h"
 #include "wnd.h"
 
-C_RenderListClass* g_render_effects;
-C_RenderListClass* g_render_effects2;
-C_RenderTransitionClass* g_render_transition;
+AVS_Instance* g_single_instance;
+Transition* g_render_transition;
 C_RLibrary* g_render_library;
 
 int is_mmx(void) {
@@ -95,9 +94,8 @@ void Render_Init() {
     }
 
     g_render_library = new C_RLibrary();
-    g_render_effects = new C_RenderListClass(1);
-    g_render_effects2 = new C_RenderListClass(1);
-    g_render_transition = new C_RenderTransitionClass();
+    g_single_instance = new AVS_Instance(AVS_AUDIO_INTERNAL, AVS_BEAT_INTERNAL);
+    g_render_transition = new Transition();
 
     char INI_FILE[MAX_PATH];
     char* p = INI_FILE;
@@ -113,20 +111,18 @@ void Render_Init() {
     extern int g_saved_preset_dirty;
     // clear the undo stack before loading a file.
     C_UndoStack::clear();
-    g_render_effects->__LoadPreset(INI_FILE, 1);
+    g_single_instance->preset_load_file(INI_FILE);
     // then add the new load to the undo stack but mark it clean if it is supposed to be
-    C_UndoStack::saveundo();
+    C_UndoStack::save_undo();
     if (!g_saved_preset_dirty) {
-        C_UndoStack::cleardirty();
+        C_UndoStack::clear_dirty();
     }
 }
 
 void Render_Quit() {
-    if (g_render_transition) {
-        delete g_render_transition;
-    }
-    g_render_transition = NULL;
-    if (g_render_effects) {
+    delete g_render_transition;
+    g_render_transition = nullptr;
+    if (g_single_instance) {
         char INI_FILE[MAX_PATH];
         char* p = INI_FILE;
         strncpy(INI_FILE,
@@ -138,18 +134,11 @@ void Render_Quit() {
             p--;
         }
         strcpy(p, "\\plugins\\vis_avs.dat");
-        g_render_effects->__SavePreset(INI_FILE);
+        g_single_instance->preset_save_file_legacy(INI_FILE);
     }
 
-    if (g_render_effects) {
-        delete g_render_effects;
-    }
-    g_render_effects = NULL;
-    if (g_render_effects2) {
-        delete g_render_effects2;
-    }
-    g_render_effects2 = NULL;
-
+    delete g_single_instance;
+    g_single_instance = NULL;
     if (g_render_library) {
         delete g_render_library;
     }

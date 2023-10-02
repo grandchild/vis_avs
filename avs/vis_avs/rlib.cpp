@@ -271,7 +271,7 @@ Legacy_Effect_Proxy C_RLibrary::CreateRenderer(int* which) {
     }
 
     if (*which == LIST_ID) {
-        return Legacy_Effect_Proxy((C_RBASE*)new C_RenderListClass(), NULL, *which);
+        return Legacy_Effect_Proxy(NULL, new E_EffectList(), *which);
     }
 
     if (*which >= DLLRENDERBASE) {

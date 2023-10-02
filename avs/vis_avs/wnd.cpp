@@ -161,7 +161,7 @@ HWND GetWinampHwnd(void) { return hwnd_WinampParent; }
 int LoadPreset(int preset) {
     char temp[MAX_PATH];
     wsprintf(temp, "%s\\PRESET%02d.APH", g_path, preset);
-    if (g_render_transition->LoadPreset(temp, 1)) {
+    if (g_render_transition->load_preset(temp, 1)) {
         return 0;
     }
     if (preset < 12) {
@@ -177,7 +177,7 @@ int LoadPreset(int preset) {
 void WritePreset(int preset) {
     char temp[MAX_PATH];
     wsprintf(temp, "%s\\PRESET%02d.APH", g_path, preset);
-    g_render_effects->__SavePreset(temp);
+    g_single_instance->preset_save_file_legacy(temp);
 }
 
 void my_getViewport(RECT* r, RECT* sr) {
@@ -256,7 +256,7 @@ void SetTransparency(HWND hWnd, int enable, int amount) {
 }
 
 int readyToLoadPreset(HWND parent, int isnew) {
-    if (config_prompt_save_preset && C_UndoStack::isdirty()) {
+    if (config_prompt_save_preset && C_UndoStack::is_dirty()) {
         static int here;
         if (here) {
             return 0;
@@ -285,7 +285,7 @@ int readyToLoadPreset(HWND parent, int isnew) {
             int dosavePreset(HWND hwndDlg);
             int r = 1;
             //      if (last_preset[0])
-            //      r=g_render_effects->SavePreset(last_preset);
+            //      r = g_single_instance->preset_save_file_legacy(last_preset);
 
             if (r) {
                 if (dosavePreset(parent)) {
@@ -585,7 +585,7 @@ int Wnd_Init(struct winampVisModule* this_mod) {
         cfg_render_prio = GetPrivateProfileInt(
             AVS_SECTION, "cfg_render_prio", cfg_render_prio, INI_FILE);
         g_saved_preset_dirty = GetPrivateProfileInt(
-            AVS_SECTION, "g_preset_dirty", C_UndoStack::isdirty(), INI_FILE);
+            AVS_SECTION, "g_preset_dirty", C_UndoStack::is_dirty(), INI_FILE);
         config_prompt_save_preset = GetPrivateProfileInt(
             AVS_SECTION, "cfg_prompt_save_preset", config_prompt_save_preset, INI_FILE);
         config_reuseonresize = GetPrivateProfileInt(
@@ -779,7 +779,7 @@ void Wnd_Quit(void) {
         WriteInt("cfg_bkgnd_render", cfg_bkgnd_render);
         WriteInt("cfg_bkgnd_render_color", cfg_bkgnd_render_color);
         WriteInt("cfg_render_prio", cfg_render_prio);
-        WriteInt("g_preset_dirty", C_UndoStack::isdirty());
+        WriteInt("g_preset_dirty", C_UndoStack::is_dirty());
         WriteInt("cfg_prompt_save_preset", config_prompt_save_preset);
         WritePrivateProfileString(
             AVS_SECTION, "last_preset_name", last_preset, INI_FILE);
@@ -1038,7 +1038,7 @@ void next_preset(HWND hwnd) {
         find_preset(i_path, 1, last_preset, dirmask, &state);
 
         if (dirmask[0] && stricmp(last_preset, dirmask)) {
-            if (g_render_transition->LoadPreset(dirmask, 2) != 2) {
+            if (g_render_transition->load_preset(dirmask, 2) != 2) {
                 lstrcpyn(last_preset, dirmask, sizeof(last_preset));
             }
         }
@@ -1062,7 +1062,7 @@ void random_preset(HWND hwnd) {
         find_preset(i_path, 0, NULL, dirmask, &state);
 
         if (dirmask[0] && g_render_transition) {
-            if (g_render_transition->LoadPreset(dirmask, 4) != 2) {
+            if (g_render_transition->load_preset(dirmask, 4) != 2) {
                 lstrcpyn(last_preset, dirmask, sizeof(last_preset));
             }
         }
@@ -1086,7 +1086,7 @@ void previous_preset(HWND hwnd) {
         find_preset(i_path, -1, last_preset, dirmask, &state);
 
         if (dirmask[0] && stricmp(last_preset, dirmask)) {
-            if (g_render_transition->LoadPreset(dirmask, 2) != 2) {
+            if (g_render_transition->load_preset(dirmask, 2) != 2) {
                 lstrcpyn(last_preset, dirmask, sizeof(last_preset));
             }
         }
@@ -1222,11 +1222,11 @@ void DoPopupMenu() {
                 if (findInMenu(presetTreeMenu, 0, x, buf, 2048)) {
                     char temp[4096];
                     wsprintf(temp, "%s%s.avs", g_path, buf);
-                    if (g_render_transition->LoadPreset(temp, 1) != 2) {
+                    if (g_render_transition->load_preset(temp, 1) != 2) {
                         lstrcpyn(last_preset, temp, sizeof(last_preset));
                     }
                 } else {
-                    //            g_render_transition->LoadPreset
+                    //            g_render_transition->load_preset
                     //          wsprintf(temp,"%s\\%s",g_path,curfilename);
                 }
             }
@@ -1586,7 +1586,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
             DragQueryFile(hdrop, 0, temp, sizeof(temp));
             if (readyToLoadPreset(hwnd, 0)) {
                 if (!stricmp(extension(temp), "avs")) {
-                    if (g_render_transition->LoadPreset(temp, 1) != 2) {
+                    if (g_render_transition->load_preset(temp, 1) != 2) {
                         lstrcpyn(last_preset, temp, sizeof(last_preset));
                     }
                 }

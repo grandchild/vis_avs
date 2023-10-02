@@ -29,15 +29,19 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "cfgwin.h"
+#include "c_list.h"
+#include "e_unknown.h"
 
 #include "r_defs.h"
 #include "g__defs.h"
 #include "g__lib.h"
 
+#include "avs_editor.h"
 #include "avs_eelif.h"
 #include "bpm.h"
+#include "cfgwin.h"
 #include "draw.h"
+#include "effect_library.h"
 #include "render.h"
 #include "resource.h"
 #include "rlib.h"
@@ -49,7 +53,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <commctrl.h>
 #include <stdio.h>
 
-static void _do_add(HWND hwnd, HTREEITEM h, C_RenderListClass* list);
+static void _do_add(HWND hwnd, HTREEITEM h, Effect* list);
 static int treeview_hack;
 static HTREEITEM g_hroot;
 
@@ -69,7 +73,6 @@ int config_prompt_save_preset = 1, config_reuseonresize = 1;
 // int g_preset_dirty;
 
 extern BOOL CALLBACK aboutProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-extern BOOL CALLBACK DlgProc_Bpm(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 extern int win32_dlgproc_transition(HWND hwndDlg,
                                     UINT uMsg,
                                     WPARAM wParam,
@@ -100,14 +103,12 @@ char last_preset[2048];
 static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HWND g_hwndDlg;
 
-extern HWND g_hwnd;
-
 #ifdef WA2_EMBED
 #include "wa_ipc.h"
 extern embedWindowState myWindowState;
 #endif
 
-static unsigned int ExtractWindowsVersion(void) {
+static unsigned int ExtractWindowsVersion() {
     // Get major version number of Windows
     return (DWORD)(LOBYTE(LOWORD(GetVersion())));
 }
@@ -120,7 +121,7 @@ void CfgWnd_Create(struct winampVisModule* this_mod) {
                  dlgProc);
 }
 
-void CfgWnd_Destroy(void) {
+void CfgWnd_Destroy() {
     if (g_hwndDlg && IsWindow(g_hwndDlg)) {
         RECT r;
         GetWindowRect(g_hwndDlg, &r);
@@ -128,7 +129,7 @@ void CfgWnd_Destroy(void) {
         cfg_cfgwnd_y = r.top;
         DestroyWindow(g_hwndDlg);
     }
-    g_hwndDlg = 0;
+    g_hwndDlg = nullptr;
     if (g_debugwnd) {
         DestroyWindow(g_debugwnd);
     }
@@ -145,7 +146,7 @@ void CfgWnd_Destroy(void) {
     delete g_ui_library;
 }
 
-static void recursiveAddDirList(HMENU menu, UINT* id, char* path, int pathlen) {
+static void recursive_add_dir_list(HMENU menu, UINT* id, char* path, int pathlen) {
     HANDLE h;
     WIN32_FIND_DATA d;
     char dirmask[4096];
@@ -165,10 +166,10 @@ static void recursiveAddDirList(HMENU menu, UINT* id, char* path, int pathlen) {
                 i.wID = *id;
                 i.dwTypeData = dirmask + pathlen + 1;
                 i.cch = strlen(i.dwTypeData);
-                InsertMenuItem(menu, *id + 2 - 1025, TRUE, &i);
+                InsertMenuItem(menu, *id + 2 - 1025, true, &i);
                 (*id)++;
 
-                recursiveAddDirList(menu, id, dirmask, pathlen);
+                recursive_add_dir_list(menu, id, dirmask, pathlen);
             }
         } while (FindNextFile(h, &d));
         FindClose(h);
@@ -197,7 +198,7 @@ static BOOL CALLBACK DlgProc_Preset(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 
             CheckDlgButton(
                 hwndDlg, IDC_CHECK3, cfg_fs_rnd ? BST_CHECKED : BST_UNCHECKED);
-            SetDlgItemInt(hwndDlg, IDC_EDIT1, cfg_fs_rnd_time, FALSE);
+            SetDlgItemInt(hwndDlg, IDC_EDIT1, cfg_fs_rnd_time, false);
             if (config_prompt_save_preset) {
                 CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
             }
@@ -207,8 +208,8 @@ static BOOL CALLBACK DlgProc_Preset(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             } else {
                 SetDlgItemText(hwndDlg, IDC_BUTTON3, "All");
             }
-        }
             return 1;
+        }
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
                 case IDC_BUTTON3: {
@@ -222,13 +223,13 @@ static BOOL CALLBACK DlgProc_Preset(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     i.wID = 1024;
                     i.dwTypeData = "All";
                     i.cch = strlen("All");
-                    InsertMenuItem(hMenu, 0, TRUE, &i);
+                    InsertMenuItem(hMenu, 0, true, &i);
                     i.wID = 0;
                     i.fType = MFT_SEPARATOR;
-                    InsertMenuItem(hMenu, 1, TRUE, &i);
+                    InsertMenuItem(hMenu, 1, true, &i);
 
                     UINT id = 1025;
-                    recursiveAddDirList(hMenu, &id, g_path, strlen(g_path));
+                    recursive_add_dir_list(hMenu, &id, g_path, strlen(g_path));
 
                     RECT r;
                     GetWindowRect(GetDlgItem(hwndDlg, IDC_BUTTON3), &r);
@@ -241,7 +242,7 @@ static BOOL CALLBACK DlgProc_Preset(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                            r.bottom,
                                            0,
                                            hwndDlg,
-                                           NULL);
+                                           nullptr);
                     if (x == 1024) {
                         config_pres_subdir[0] = 0;
                         SetDlgItemText(hwndDlg, IDC_BUTTON3, "All");
@@ -251,7 +252,7 @@ static BOOL CALLBACK DlgProc_Preset(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         mi.fMask = MIIM_TYPE;
                         mi.dwTypeData = config_pres_subdir;
                         mi.cch = sizeof(config_pres_subdir);
-                        GetMenuItemInfo(hMenu, x, FALSE, &mi);
+                        GetMenuItemInfo(hMenu, x, false, &mi);
                         SetDlgItemText(hwndDlg, IDC_BUTTON3, config_pres_subdir);
                     }
                     DestroyMenu(hMenu);
@@ -304,6 +305,8 @@ static BOOL CALLBACK DlgProc_Disp(HWND hwndDlg,
                                   UINT uMsg,
                                   WPARAM wParam,
                                   LPARAM lParam) {
+    extern void GetClientRect_adj(HWND hwnd, RECT * r);
+    extern void main_setRenderThreadPriority();
     switch (uMsg) {
         case WM_INITDIALOG: {
             if (ExtractWindowsVersion() < 5) {
@@ -315,18 +318,18 @@ static BOOL CALLBACK DlgProc_Disp(HWND hwndDlg,
                 SendDlgItemMessage(hwndDlg,
                                    IDC_TRANS_SLIDER,
                                    TBM_SETRANGE,
-                                   (WPARAM)TRUE,
+                                   (WPARAM) true,
                                    (LPARAM)MAKELONG(16, 255));
                 SendDlgItemMessage(
                     hwndDlg, IDC_TRANS_SLIDER, TBM_SETTICFREQ, 10, (LPARAM)0);
                 SendDlgItemMessage(hwndDlg,
                                    IDC_TRANS_SLIDER,
                                    TBM_SETPOS,
-                                   (WPARAM)TRUE,
+                                   (WPARAM) true,
                                    (LPARAM)cfg_trans_amount);
             }
             CheckDlgButton(hwndDlg, IDC_CHECK4, g_config_smp ? BST_CHECKED : 0);
-            SetDlgItemInt(hwndDlg, IDC_EDIT1, g_config_smp_mt, FALSE);
+            SetDlgItemInt(hwndDlg, IDC_EDIT1, g_config_smp_mt, false);
         }
 #ifdef WA2_EMBED
             {
@@ -338,11 +341,11 @@ static BOOL CALLBACK DlgProc_Disp(HWND hwndDlg,
                 GetClassName(w, classname, 255);
                 classname[255] = 0;
                 if (!stricmp(classname, "BaseWindow_RootWnd")) {
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_STATIC_ALPHA), FALSE);
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_TRANS_CHECK), FALSE);
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_TRANS_SLIDER), FALSE);
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_STATIC_TRANS_TOTAL), FALSE);
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_STATIC_TRANS_NONE), FALSE);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_STATIC_ALPHA), false);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_TRANS_CHECK), false);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_TRANS_SLIDER), false);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_STATIC_TRANS_TOTAL), false);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_STATIC_TRANS_NONE), false);
                 }
             }
 #endif
@@ -388,8 +391,8 @@ static BOOL CALLBACK DlgProc_Disp(HWND hwndDlg,
                     GR_DrawColoredButton(di, cfg_bkgnd_render_color);
                     break;
             }
-        }
             return 0;
+        }
         case WM_HSCROLL: {
             HWND swnd = (HWND)lParam;
             int t = (int)SendMessage(swnd, TBM_GETPOS, 0, 0);
@@ -401,9 +404,8 @@ static BOOL CALLBACK DlgProc_Disp(HWND hwndDlg,
                 cfg_trans_amount = t;
                 SetTransparency(g_hwnd, cfg_trans, cfg_trans_amount);
             }
+            return 0;
         }
-            return 0;
-            return 0;
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
                 case IDC_CHECK4:
@@ -411,7 +413,7 @@ static BOOL CALLBACK DlgProc_Disp(HWND hwndDlg,
                     return 0;
                 case IDC_EDIT1: {
                     BOOL t;
-                    g_config_smp_mt = GetDlgItemInt(hwndDlg, IDC_EDIT1, &t, FALSE);
+                    g_config_smp_mt = GetDlgItemInt(hwndDlg, IDC_EDIT1, &t, false);
                 }
                     return 0;
                 case IDC_TRANS_CHECK:
@@ -423,7 +425,6 @@ static BOOL CALLBACK DlgProc_Disp(HWND hwndDlg,
                     cfg_fs_d |= IsDlgButtonChecked(hwndDlg, IDC_CHECK1) ? 2 : 0;
                     {
                         RECT r;
-                        extern void GetClientRect_adj(HWND hwnd, RECT * r);
                         GetClientRect_adj(g_hwnd, &r);
                         DDraw_Resize(r.right, r.bottom, cfg_fs_d & 2);
                     }
@@ -448,11 +449,13 @@ static BOOL CALLBACK DlgProc_Disp(HWND hwndDlg,
                     // cfg_dont_min_avs=IsDlgButtonChecked(hwndDlg,IDC_DONT_MIN_AVS)?1:0;
                 case IDC_DEFOVERLAYCOLOR:
                     cfg_bkgnd_render_color = 0x1F000F;
-                    InvalidateRect(GetDlgItem(hwndDlg, IDC_OVERLAYCOLOR), NULL, FALSE);
+                    InvalidateRect(
+                        GetDlgItem(hwndDlg, IDC_OVERLAYCOLOR), nullptr, false);
                     goto update_overlayshit;
                 case IDC_OVERLAYCOLOR:
                     GR_SelectColor(hwndDlg, &cfg_bkgnd_render_color);
-                    InvalidateRect(GetDlgItem(hwndDlg, IDC_OVERLAYCOLOR), NULL, FALSE);
+                    InvalidateRect(
+                        GetDlgItem(hwndDlg, IDC_OVERLAYCOLOR), nullptr, false);
                     goto update_overlayshit;
                 case IDC_SETDESKTOPCOLOR:
                 case IDC_BKGND_RENDER:
@@ -461,13 +464,11 @@ static BOOL CALLBACK DlgProc_Disp(HWND hwndDlg,
                         | (IsDlgButtonChecked(hwndDlg, IDC_SETDESKTOPCOLOR) ? 2 : 0);
                 update_overlayshit : {
                     RECT r;
-                    extern void GetClientRect_adj(HWND hwnd, RECT * r);
                     GetClientRect_adj(g_hwnd, &r);
                     DDraw_Resize(r.right, r.bottom, cfg_fs_d & 2);
-                }
                     return 0;
+                }
                 case IDC_THREAD_PRIORITY:
-                    extern void main_setRenderThreadPriority();
                     cfg_render_prio = SendDlgItemMessage(
                         hwndDlg, IDC_THREAD_PRIORITY, CB_GETCURSEL, 0, 0);
                     main_setRenderThreadPriority();
@@ -553,7 +554,7 @@ static BOOL CALLBACK DlgProc_FS(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
                            (cfg_cancelfs_on_deactivate) ? BST_UNCHECKED : BST_CHECKED);
             CheckDlgButton(
                 hwndDlg, IDC_BPP_CONV, (cfg_fs_flip & 8) ? BST_UNCHECKED : BST_CHECKED);
-            SetDlgItemInt(hwndDlg, IDC_EDIT1, cfg_fs_height, FALSE);
+            SetDlgItemInt(hwndDlg, IDC_EDIT1, cfg_fs_height, false);
             SendDlgItemMessage(hwndDlg, IDC_SLIDER1, TBM_SETRANGEMIN, 0, 0);
             SendDlgItemMessage(hwndDlg, IDC_SLIDER1, TBM_SETRANGEMAX, 0, 80);
             SendDlgItemMessage(
@@ -620,7 +621,7 @@ static BOOL CALLBACK DlgProc_FS(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
                 case IDC_EDIT1:
                     if (HIWORD(wParam) == EN_CHANGE) {
                         BOOL t;
-                        int r = GetDlgItemInt(hwndDlg, IDC_EDIT1, &t, FALSE);
+                        int r = GetDlgItemInt(hwndDlg, IDC_EDIT1, &t, false);
                         if (r > 0 && r <= 100 && t) {
                             cfg_fs_height = r;
                         }
@@ -678,7 +679,7 @@ static BOOL CALLBACK DlgProc_FS(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
     return 0;
 }
 
-static void _insertintomenu2(HMENU hMenu, int wid, int id, char* str) {
+static void _insertintomenu2(HMENU hMenu, int wid, Effect_Info* id, char* str) {
     int x;
     for (x = 0; x < 4096; x++) {
         MENUITEMINFO mi = {};
@@ -688,7 +689,7 @@ static void _insertintomenu2(HMENU hMenu, int wid, int id, char* str) {
         char c[512];
         mi.dwTypeData = c;
         mi.cch = 512;
-        if (!GetMenuItemInfo(hMenu, x, TRUE, &mi)) {
+        if (!GetMenuItemInfo(hMenu, x, true, &mi)) {
             break;
         }
         if (strcmp(str, c) < 0 && !mi.hSubMenu) {
@@ -701,10 +702,10 @@ static void _insertintomenu2(HMENU hMenu, int wid, int id, char* str) {
     i.fMask = MIIM_TYPE | MIIM_DATA | MIIM_ID;
     i.fType = MFT_STRING;
     i.wID = wid;
-    i.dwItemData = id;
+    i.dwItemData = (uint32_t)id;
     i.dwTypeData = str;
     i.cch = strlen(str);
-    InsertMenuItem(hMenu, x, TRUE, &i);
+    InsertMenuItem(hMenu, x, true, &i);
 }
 
 static HMENU _findsubmenu(HMENU hmenu, char* str) {
@@ -717,17 +718,17 @@ static HMENU _findsubmenu(HMENU hmenu, char* str) {
         char c[512];
         mi.dwTypeData = c;
         mi.cch = 512;
-        if (!GetMenuItemInfo(hmenu, x, TRUE, &mi)) {
+        if (!GetMenuItemInfo(hmenu, x, true, &mi)) {
             break;
         }
         if (!strcmp(str, c) && mi.hSubMenu) {
             return mi.hSubMenu;
         }
     }
-    return 0;
+    return nullptr;
 }
 
-static void _insertintomenu(HMENU hMenu, int wid, int id, char* str) {
+static void _insertintomenu(HMENU hMenu, int wid, Effect_Info* id, char* str) {
     char ostr[1024];
     strncpy(ostr, str, 1023);
     char* first = str;
@@ -754,7 +755,7 @@ static void _insertintomenu(HMENU hMenu, int wid, int id, char* str) {
                 i.cch = strlen(first);
                 i.hSubMenu = hs = CreatePopupMenu();
                 i.wID = 0;
-                InsertMenuItem(hMenu, 0, TRUE, &i);
+                InsertMenuItem(hMenu, 0, true, &i);
             }
             _insertintomenu2(hs, wid, id, second);
             return;
@@ -762,8 +763,9 @@ static void _insertintomenu(HMENU hMenu, int wid, int id, char* str) {
     }
     _insertintomenu2(hMenu, wid, id, ostr);
 }
-static HTREEITEM g_dragsource_item, g_dragsource_parent, g_draglastdest, g_dragplace;
-static int g_dragplaceisbelow;
+static HTREEITEM g_drag_source, g_dragsource_parent, g_drag_last_dest,
+    g_drag_placeholder;
+static AVS_Component_Position g_drag_insert_direction;
 extern int findInMenu(HMENU parent, HMENU sub, UINT id, char* buf, int buf_len);
 
 #define UNDO_TIMER_INTERVAL 333
@@ -790,7 +792,7 @@ static BOOL CALLBACK sniffConfigWindow_newProc(HWND hwndDlg,
     // Don't save the new state until the window proc handles it.  :)
     if (dirty) {
         KillTimer(GetParent(hwndDlg), 69);
-        SetTimer(GetParent(hwndDlg), 69, UNDO_TIMER_INTERVAL, NULL);
+        SetTimer(GetParent(hwndDlg), 69, UNDO_TIMER_INTERVAL, nullptr);
 
         //      g_preset_dirty=1;
     }
@@ -818,7 +820,7 @@ int dosavePreset(HWND hwndDlg) {
     l.Flags = OFN_HIDEREADONLY | OFN_EXPLORER | OFN_OVERWRITEPROMPT;
     if (GetSaveFileName(&l)) {
         strcpy(last_preset, temp);
-        r = g_render_effects->__SavePreset(temp);
+        r = g_single_instance->preset_save_file_legacy(temp);
         if (r == 1) {
             MessageBox(hwndDlg, "Error saving preset", "Save Preset", MB_OK);
         } else if (r == 2) {
@@ -826,7 +828,7 @@ int dosavePreset(HWND hwndDlg) {
         } else if (r == -1) {
             MessageBox(hwndDlg, "Out of memory", "Save Preset", MB_OK);
         } else {
-            C_UndoStack::cleardirty();
+            C_UndoStack::clear_dirty();
             // g_preset_dirty=0;
         }
     }
@@ -842,9 +844,9 @@ static BOOL CALLBACK debugProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
         case WM_INITDIALOG: {
             int x;
             for (x = 0; x < 8; x++) {
-                SetDlgItemInt(hwndDlg, IDC_DEBUGREG_1 + x * 2, debug_reg[x], FALSE);
+                SetDlgItemInt(hwndDlg, IDC_DEBUGREG_1 + x * 2, debug_reg[x], false);
             }
-            SetTimer(hwndDlg, 1, 250, NULL);
+            SetTimer(hwndDlg, 1, 250, nullptr);
         }
             if (g_log_errors) {
                 CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
@@ -877,7 +879,7 @@ static BOOL CALLBACK debugProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                     char buf[1025];
                     GetDlgItemText(hwndDlg, IDC_EDIT1, buf, sizeof(buf) - 1);
                     buf[sizeof(buf) - 1] = 0;
-                    if (strcmp(buf, last_error_string)) {
+                    if (strncmp(buf, last_error_string, sizeof(buf)) != 0) {
                         SetDlgItemText(hwndDlg, IDC_EDIT1, last_error_string);
                     }
                     lock_unlock(g_eval_cs);
@@ -929,7 +931,7 @@ static BOOL CALLBACK debugProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                             }
                             BOOL t;
                             int v = GetDlgItemInt(
-                                hwndDlg, IDC_DEBUGREG_1 + x * 2, &t, FALSE);
+                                hwndDlg, IDC_DEBUGREG_1 + x * 2, &t, false);
                             if (t) {
                                 debug_reg[x] = v;
                             }
@@ -987,7 +989,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 mi.dwTypeData = d.cFileName;
                                 mi.cch = strlen(d.cFileName);
                                 InsertMenuItem(
-                                    (HMENU)wParam, directory_pos++, TRUE, &mi);
+                                    (HMENU)wParam, directory_pos++, true, &mi);
                                 insert_pos++;
                             } else if (!stricmp(extension(d.cFileName), "avs")) {
                                 extension(d.cFileName)[-1] = 0;
@@ -1000,7 +1002,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 i.dwItemData = 0xFFFFFFFF;  // preset
                                 i.dwTypeData = d.cFileName;
                                 i.cch = strlen(d.cFileName);
-                                InsertMenuItem((HMENU)wParam, insert_pos++, TRUE, &i);
+                                InsertMenuItem((HMENU)wParam, insert_pos++, true, &i);
                             }
                         } while (FindNextFile(h, &d));
                         FindClose(h);
@@ -1033,13 +1035,13 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             // SetDlgItemText(hwndDlg,IDC_AVS_VER,verstr);
         }
             TreeView_SetIndent(GetDlgItem(hwndDlg, IDC_TREE1), 8);
-            SetTimer(hwndDlg, 1, 250, NULL);
+            SetTimer(hwndDlg, 1, 250, nullptr);
             if (cfg_cfgwnd_open) {
                 ShowWindow(hwndDlg, SW_SHOWNA);
             }
             CfgWnd_Populate();
             SetWindowPos(hwndDlg,
-                         NULL,
+                         nullptr,
                          cfg_cfgwnd_x,
                          cfg_cfgwnd_y,
                          0,
@@ -1055,14 +1057,14 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 GetWindowRect(GetDlgItem(g_hwndDlg, IDC_TREE1), &r2);
                 ShowWindow(GetDlgItem(g_hwndDlg, IDC_RRECT), SW_HIDE);
                 SetWindowPos(GetDlgItem(g_hwndDlg, IDC_TREE1),
-                             NULL,
+                             nullptr,
                              0,
                              0,
                              r2.right - r2.left,
                              r.bottom - r2.top - 2,
                              SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
             }
-            return TRUE;
+            return true;
         case WM_TIMER:
             if (wParam == 1) {
                 char s[1024];
@@ -1096,11 +1098,11 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             }
             if (wParam == 69) {
                 KillTimer(hwndDlg, 69);
-                C_UndoStack::saveundo();
+                C_UndoStack::save_undo();
             }
-            return FALSE;
+            return false;
         case WM_MOUSEMOVE:
-            if (g_dragsource_item) {
+            if (g_drag_source) {
                 TVHITTESTINFO hti = {};
                 HWND hwnd = GetDlgItem(hwndDlg, IDC_TREE1);
                 hti.pt.x = (int)LOWORD(lParam);
@@ -1123,82 +1125,84 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     && h) {
                     HTREEITEM temp = h;
                     while (temp && temp != TVI_ROOT) {
-                        if (temp == g_dragsource_item) {
-                            h = g_dragsource_item;
+                        if (temp == g_drag_source) {
+                            h = g_drag_source;
                             break;
                         }
                         temp = TreeView_GetParent(hwnd, temp);
                     }
-                    if (h == g_dragsource_item) {
-                        SetCursor(LoadCursor(NULL, IDC_NO));
-                        if (g_dragplace) {
-                            TreeView_DeleteItem(hwnd, g_dragplace);
+                    if (h == g_drag_source) {
+                        SetCursor(LoadCursor(nullptr, IDC_NO));
+                        if (g_drag_placeholder) {
+                            TreeView_DeleteItem(hwnd, g_drag_placeholder);
                         }
-                        g_dragplace = 0;
+                        g_drag_placeholder = nullptr;
                     } else {
-                        SetCursor(LoadCursor(NULL, IDC_ARROW));
+                        SetCursor(LoadCursor(nullptr, IDC_ARROW));
                         TV_ITEM i = {
-                            TVIF_HANDLE | TVIF_PARAM, h, 0, 0, 0, 0, 0, 0, 0, 0};
+                            TVIF_HANDLE | TVIF_PARAM, h, 0, 0, nullptr, 0, 0, 0, 0, 0};
                         TreeView_GetItem(hwnd, &i);
                         if (i.lParam) {
                             RECT r;
-                            TreeView_GetItemRect(hwnd, h, &r, FALSE);
+                            TreeView_GetItemRect(hwnd, h, &r, false);
                             if (hti.pt.y > r.bottom - (r.bottom - r.top) / 2) {
-                                g_dragplaceisbelow = 1;
+                                g_drag_insert_direction = AVS_COMPONENT_POSITION_AFTER;
                             } else {
-                                g_dragplaceisbelow = 0;
+                                g_drag_insert_direction = AVS_COMPONENT_POSITION_BEFORE;
                             }
                             HTREEITEM parenth;
-                            g_draglastdest = h;
-                            C_RenderListClass::T_RenderListType* it =
-                                (C_RenderListClass::T_RenderListType*)i.lParam;
-
-                            if (it->effect_index == LIST_ID
+                            g_drag_last_dest = h;
+                            auto it = (Effect*)i.lParam;
+                            if (it->can_have_child_components()
                                 && (hti.flags & (TVHT_ONITEMINDENT | TVHT_ONITEMBUTTON)
-                                    || h == g_hroot)) {
-                                if (g_dragplace
-                                    && (TreeView_GetParent(hwnd, g_dragplace) != h
-                                        || TreeView_GetNextSibling(hwnd,
-                                                                   g_dragplace))) {
-                                    TreeView_DeleteItem(hwnd, g_dragplace);
-                                    g_dragplace = 0;
+                                    || it == Root_Info())) {
+                                if (g_drag_placeholder
+                                    && (TreeView_GetParent(hwnd, g_drag_placeholder)
+                                            != h
+                                        || TreeView_GetNextSibling(
+                                            hwnd, g_drag_placeholder))) {
+                                    TreeView_DeleteItem(hwnd, g_drag_placeholder);
+                                    g_drag_placeholder = nullptr;
                                 }
 
-                                g_dragplaceisbelow = 2;
+                                g_drag_insert_direction = AVS_COMPONENT_POSITION_CHILD;
                                 parenth = h;
                                 h = TVI_LAST;
                             } else {
                                 parenth = TreeView_GetParent(hwnd, h);
-                                if (g_dragplace
-                                    && ((g_dragplaceisbelow & 1)
+                                if (g_drag_placeholder
+                                    && ((g_drag_insert_direction
+                                         == AVS_COMPONENT_POSITION_AFTER)
                                             ? TreeView_GetNextSibling(hwnd, h)
-                                                  != g_dragplace
+                                                  != g_drag_placeholder
                                             : TreeView_GetPrevSibling(hwnd, h)
-                                                  != g_dragplace)) {
-                                    TreeView_DeleteItem(hwnd, g_dragplace);
-                                    g_dragplace = 0;
+                                                  != g_drag_placeholder)) {
+                                    TreeView_DeleteItem(hwnd, g_drag_placeholder);
+                                    g_drag_placeholder = nullptr;
                                 }
-                                if (!g_dragplaceisbelow) {
+                                if (g_drag_insert_direction
+                                    == AVS_COMPONENT_POSITION_BEFORE) {
                                     h = TreeView_GetPrevSibling(hwnd, h);
                                     if (!h) {
                                         h = TVI_FIRST;
                                     }
                                 }
                             }
-                            if (!g_dragplace) {
+                            if (!g_drag_placeholder) {
                                 TV_INSERTSTRUCT is = {};
                                 is.hParent = parenth;
                                 is.hInsertAfter = h;
                                 is.item.mask = TVIF_PARAM | TVIF_TEXT | TVIF_CHILDREN;
                                 is.item.pszText = "<move here>";
-                                g_dragplace = TreeView_InsertItem(hwnd, &is);
-                                if (g_dragplaceisbelow == 2) {
+                                g_drag_placeholder = TreeView_InsertItem(hwnd, &is);
+                                if (g_drag_insert_direction
+                                    == AVS_COMPONENT_POSITION_CHILD) {
                                     SendMessage(
                                         hwnd, TVM_EXPAND, TVE_EXPAND, (long)parenth);
                                 }
                             }
 
-                            //            TreeView_Select(hwnd,g_dragplace,TVGN_DROPHILITE);
+                            // TreeView_Select(hwnd,g_drag_placeholder,TVGN_DROPHILITE);
                         }
                     }
                 }
@@ -1206,155 +1210,91 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             }
             break;
         case WM_LBUTTONUP:
-            if (g_dragsource_item) {
+            if (g_drag_source) {
                 HWND hwnd = GetDlgItem(hwndDlg, IDC_TREE1);
-                SetCursor(LoadCursor(NULL, IDC_ARROW));
-                if (g_dragplace) {
-                    TreeView_DeleteItem(hwnd, g_dragplace);
-                    g_dragplace = 0;
+                SetCursor(LoadCursor(nullptr, IDC_ARROW));
+                if (g_drag_placeholder) {
+                    TreeView_DeleteItem(hwnd, g_drag_placeholder);
+                    g_drag_placeholder = nullptr;
                 }
-                HTREEITEM h = g_draglastdest;
-                if (h) {
-                    C_RenderListClass::T_RenderListType *source, *source_parent;
-                    C_RenderListClass::T_RenderListType *dest,  // handle of item to
-                                                                // insert above. NULL if
-                                                                // end.
-                        *dest_parent = NULL;                    // handle
-                                                                // of
-                                                                // parent
-                                                                // to
-                                                                // insert
-                                                                // into
-                    HTREEITEM dest_handle = h,  // handle of item to insert above. NULL
-                                                // if folder.
-                        dest_parent_handle = TreeView_GetParent(hwnd, h);  // handle of
-                                                                           // parent
-                    {
-                        TV_ITEM i = {TVIF_HANDLE | TVIF_PARAM,
-                                     dest_handle,
-                                     0,
-                                     0,
-                                     0,
-                                     0,
-                                     0,
-                                     0,
-                                     0,
-                                     0};
-                        TreeView_GetItem(hwnd, &i);
-                        dest = (C_RenderListClass::T_RenderListType*)i.lParam;
-                    }
-                    if (dest_parent_handle) {
-                        TV_ITEM i = {TVIF_HANDLE | TVIF_PARAM,
-                                     dest_parent_handle,
-                                     0,
-                                     0,
-                                     0,
-                                     0,
-                                     0,
-                                     0,
-                                     0,
-                                     0};
-                        TreeView_GetItem(hwnd, &i);
-                        dest_parent = (C_RenderListClass::T_RenderListType*)i.lParam;
-                    }
-                    if (dest->effect_index == LIST_ID
-                        && (!dest_parent_handle || g_dragplaceisbelow == 2)) {
+                if (g_drag_last_dest) {
+                    TV_ITEM dest_item{};
+                    dest_item.mask = TVIF_HANDLE | TVIF_PARAM;
+                    dest_item.hItem = g_drag_last_dest;
+                    TreeView_GetItem(hwnd, &dest_item);
+                    auto dest = (Effect*)dest_item.lParam;
+                    HTREEITEM dest_handle = g_drag_last_dest;
+                    HTREEITEM dest_parent_handle =
+                        TreeView_GetParent(hwnd, g_drag_last_dest);
+                    if (dest->can_have_child_components()
+                        && (!dest_parent_handle
+                            || g_drag_insert_direction
+                                   == AVS_COMPONENT_POSITION_CHILD)) {
                         dest_parent_handle = dest_handle;
-                        dest_handle = NULL;
-                        dest_parent = dest;
-                        dest = NULL;
                     }
 
-                    TV_ITEM i = {TVIF_HANDLE | TVIF_PARAM | TVIF_STATE,
-                                 g_dragsource_item,
-                                 0,
-                                 TVIS_EXPANDED,
-                                 0,
-                                 0,
-                                 0,
-                                 0,
-                                 0,
-                                 0};
-                    TreeView_GetItem(hwnd, &i);
-                    int expand = i.state & TVIS_EXPANDED;
-                    source = (C_RenderListClass::T_RenderListType*)i.lParam;
+                    TV_ITEM source_item{};
+                    source_item.mask = TVIF_HANDLE | TVIF_PARAM | TVIF_STATE;
+                    source_item.hItem = g_drag_source;
+                    source_item.stateMask = TVIS_EXPANDED;
+                    TreeView_GetItem(hwnd, &source_item);
+                    unsigned int expand = source_item.state & TVIS_EXPANDED;
+                    auto source = (Effect*)source_item.lParam;
 
-                    TV_ITEM i2 = {TVIF_HANDLE | TVIF_PARAM,
-                                  g_dragsource_parent,
-                                  0,
-                                  0,
-                                  0,
-                                  0,
-                                  0,
-                                  0,
-                                  0,
-                                  0};
-                    TreeView_GetItem(hwnd, &i2);
-                    source_parent = (C_RenderListClass::T_RenderListType*)i2.lParam;
-
-                    int recurse_okay = 1;
-                    {
-                        HTREEITEM temp = dest_parent_handle;
-                        while (temp && temp != TVI_ROOT) {
-                            if (temp == g_dragsource_item) {
-                                recurse_okay = 0;
-                            }
-                            temp = TreeView_GetParent(hwnd, temp);
-                        }
+                    Effect::Insert_Direction direction;
+                    switch (g_drag_insert_direction) {
+                        case AVS_COMPONENT_POSITION_BEFORE:
+                            direction = Effect::INSERT_BEFORE;
+                            break;
+                        default:
+                        case AVS_COMPONENT_POSITION_AFTER:
+                            direction = Effect::INSERT_AFTER;
+                            break;
+                        case AVS_COMPONENT_POSITION_CHILD:
+                            direction = Effect::INSERT_CHILD;
+                            break;
                     }
-                    if (dest_handle != g_dragsource_item && recurse_okay) {
-                        C_RenderListClass* s =
-                            (C_RenderListClass*)source_parent->effect.legacy_effect;
-                        C_RenderListClass* d =
-                            (C_RenderListClass*)dest_parent->effect.legacy_effect;
-                        int a = s->findRender(source);
-                        int b = d->findRender(dest);
-                        int err = 1;
-                        if (a >= 0) {
-                            lock_lock(g_render_cs);
-                            err = s->removeRender(a, 0);
-                            if (!err) {
-                                d->insertRender(source, b + (g_dragplaceisbelow & 1));
-                            }
-                            lock_unlock(g_render_cs);
-                        }
-                        if (err) {
-                            MessageBox(NULL,
-                                       "error: inconsistency in tree. this should "
-                                       "never happen. ACK!",
-                                       "critical error occurred",
-                                       MB_OK);
-                        }
 
+                    lock_lock(g_single_instance->render_lock);
+                    auto success = g_single_instance->root.move(
+                        source,
+                        dest,
+                        direction,
+                        true /* insert even if not found in preset */);
+                    lock_unlock(g_single_instance->render_lock);
+
+                    if (success) {
                         treeview_hack = 1;
-                        TreeView_DeleteItem(hwnd, g_dragsource_item);
+                        TreeView_DeleteItem(hwnd, g_drag_source);
 
-                        TV_INSERTSTRUCT is = {};
-                        is.hParent = dest_parent_handle;
-                        is.item.mask = TVIF_PARAM | TVIF_TEXT | TVIF_CHILDREN;
-                        is.item.pszText = source->effect.get_desc();
-                        is.item.cChildren = source->effect_index == LIST_ID ? 1 : 0;
-                        is.item.lParam = (int)source;
+                        TV_INSERTSTRUCT new_item = {};
+                        new_item.hParent = dest_parent_handle;
+                        new_item.item.mask = TVIF_PARAM | TVIF_TEXT | TVIF_CHILDREN;
+                        new_item.item.pszText = source->get_desc();
+                        new_item.item.cChildren = source->can_have_child_components();
+                        new_item.item.lParam = (int)source;
+                        new_item.hInsertAfter = TVI_LAST;
 
                         if (dest_handle) {
-                            if (g_dragplaceisbelow & 1) {
-                                is.hInsertAfter = dest_handle;
-                            } else {
-                                is.hInsertAfter =
-                                    TreeView_GetPrevSibling(hwnd, dest_handle);
-                                if (!is.hInsertAfter) {
-                                    is.hInsertAfter = TVI_FIRST;
-                                }
+                            switch (g_drag_insert_direction) {
+                                case AVS_COMPONENT_POSITION_AFTER:
+                                    new_item.hInsertAfter = dest_handle;
+                                    break;
+                                case AVS_COMPONENT_POSITION_BEFORE:
+                                    new_item.hInsertAfter =
+                                        TreeView_GetPrevSibling(hwnd, dest_handle);
+                                    if (!new_item.hInsertAfter) {
+                                        new_item.hInsertAfter = TVI_FIRST;
+                                    }
+                                    break;
+                                case AVS_COMPONENT_POSITION_CHILD:
+                                case AVS_COMPONENT_POSITION_DONTCARE: break;
                             }
-                        } else {
-                            is.hInsertAfter = TVI_LAST;
                         }
 
-                        HTREEITEM newi = TreeView_InsertItem(hwnd, &is);
-                        if (source->effect_index == LIST_ID) {
-                            _do_add(hwnd,
-                                    newi,
-                                    (C_RenderListClass*)source->effect.legacy_effect);
+                        HTREEITEM newi = TreeView_InsertItem(hwnd, &new_item);
+                        if (source->can_have_child_components()) {
+                            _do_add(hwnd, newi, source);
                             if (expand) {
                                 SendMessage(hwnd, TVM_EXPAND, TVE_EXPAND, (long)newi);
                             }
@@ -1362,16 +1302,18 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         TreeView_Select(hwnd, newi, TVGN_CARET);
                         treeview_hack = 0;
 
-                        // After everything is changed, then save the undo and set the
-                        // dirty bit.
+                        // After everything is changed, then save the undo and set
+                        // the dirty bit.
                         KillTimer(hwndDlg, 69);
-                        SetTimer(hwndDlg, 69, UNDO_TIMER_INTERVAL, NULL);
+                        SetTimer(hwndDlg, 69, UNDO_TIMER_INTERVAL, nullptr);
                         // g_preset_dirty=1;
+                    } else {
+                        log_err("failed to move effect %s", source->get_desc());
                     }
                 }
-                TreeView_Select(hwnd, NULL, TVGN_DROPHILITE);
+                TreeView_Select(hwnd, nullptr, TVGN_DROPHILITE);
                 ReleaseCapture();
-                g_dragsource_item = 0;
+                g_drag_source = nullptr;
                 return 0;
             }
             break;
@@ -1381,22 +1323,21 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             if (p->hdr.hwndFrom == GetDlgItem(hwndDlg, IDC_TREE1)) {
                 if (p->hdr.code == TVN_BEGINDRAG) {
                     if (p->itemNew.hItem != g_hroot) {
-                        g_draglastdest = 0;
+                        g_drag_last_dest = nullptr;
                         g_dragsource_parent =
                             TreeView_GetParent(p->hdr.hwndFrom, p->itemNew.hItem);
                         if (g_dragsource_parent) {
                             SetCapture(hwndDlg);
-                            g_dragsource_item = p->itemNew.hItem;
-                            g_dragplace = 0;
+                            g_drag_source = p->itemNew.hItem;
+                            g_drag_placeholder = nullptr;
 
-                            TreeView_Select(
-                                p->hdr.hwndFrom, g_dragsource_item, TVGN_CARET);
-                            SetCursor(LoadCursor(NULL, IDC_APPSTARTING));
+                            TreeView_Select(p->hdr.hwndFrom, g_drag_source, TVGN_CARET);
+                            SetCursor(LoadCursor(nullptr, IDC_APPSTARTING));
                         } else {
-                            g_dragsource_item = NULL;
+                            g_drag_source = nullptr;
                         }
                     } else {
-                        g_dragsource_item = NULL;
+                        g_drag_source = nullptr;
                     }
                 }
                 if (p->hdr.code == TVN_SELCHANGED && !treeview_hack) {
@@ -1406,27 +1347,28 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                      hTreeItem,
                                      0,
                                      0,
-                                     0,
+                                     nullptr,
                                      0,
                                      0,
                                      0,
                                      0,
                                      0};
                         TreeView_GetItem(p->hdr.hwndFrom, &i);
-                        C_RenderListClass::T_RenderListType* tp =
-                            (C_RenderListClass::T_RenderListType*)i.lParam;
+                        auto tp = (Effect*)i.lParam;
 
                         is_aux_wnd = 0;
-                        if (tp && tp->effect.valid()) {
-                            SetDlgItemText(hwndDlg, IDC_EFNAME, tp->effect.get_desc());
+                        if (tp) {
+                            SetDlgItemText(hwndDlg, IDC_EFNAME, tp->get_desc());
                             if (cur_hwnd) {
                                 DestroyWindow(cur_hwnd);
                             }
-                            g_current_render = tp->effect.void_ref();
+                            g_current_render = (void*)tp;
                             C_Win32GuiComponent* ui_component =
-                                g_ui_library->get(tp->effect_index);
-                            if (ui_component != NULL) {
-                                if (ui_component->uiprep != NULL) {
+                                g_ui_library->get((tp->get_legacy_id() == -1)
+                                                      ? (int32_t)tp->get_legacy_ape_id()
+                                                      : tp->get_legacy_id());
+                            if (ui_component != nullptr) {
+                                if (ui_component->uiprep != nullptr) {
                                     ui_component->uiprep(g_hInstance);
                                 }
                                 cur_hwnd = CreateDialog(
@@ -1447,7 +1389,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                             GetWindowRect(GetDlgItem(hwndDlg, IDC_EFFECTRECT), &r);
                             ScreenToClient(hwndDlg, (LPPOINT)&r);
                             SetWindowPos(cur_hwnd,
-                                         0,
+                                         nullptr,
                                          r.left,
                                          r.top,
                                          0,
@@ -1460,7 +1402,8 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     }
                 }
             }
-        } break;
+            break;
+        }
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
                 case IDC_RRECT:
@@ -1509,7 +1452,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     if (x >= 1 && x <= 5) {
                         SetDlgItemText(hwndDlg, IDC_EFNAME, names[x - 1]);
                         TreeView_Select(
-                            GetDlgItem(hwndDlg, IDC_TREE1), NULL, TVGN_CARET);
+                            GetDlgItem(hwndDlg, IDC_TREE1), nullptr, TVGN_CARET);
                         if (cur_hwnd) {
                             DestroyWindow(cur_hwnd);
                         }
@@ -1550,7 +1493,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                             GetWindowRect(GetDlgItem(hwndDlg, IDC_EFFECTRECT), &r);
                             ScreenToClient(hwndDlg, (LPPOINT)&r);
                             SetWindowPos(cur_hwnd,
-                                         0,
+                                         nullptr,
                                          r.left,
                                          r.top,
                                          0,
@@ -1561,100 +1504,93 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                             SetDlgItemText(hwndDlg, IDC_EFNAME, g_noeffectstr);
                         }
                     }
-                }
                     return 0;
+                }
                 case IDC_ADD: {
-                    C_RenderListClass::T_RenderListType ren = {};
                     RECT r;
                     presetTreeMenu = CreatePopupMenu();
 
                     HMENU hAddMenu = CreatePopupMenu();
 
-                    //            int insert_pos=0;
                     int p = 64;
-                    int x = 0;
-                    while (1) {
-                        char str[1024];
-
-                        if (!g_render_library->GetRendererDesc(x, str)) {
-                            break;
+                    Effect_Info* effectlist_info = nullptr;
+                    for (const auto& effect : g_effect_lib) {
+                        auto info = effect.second;
+                        if (!info->is_createable_by_user()) {
+                            continue;
                         }
-
-                        if (str[0]) {
-                            _insertintomenu(hAddMenu, p++, x, str);
+                        if (info == EffectList_Info()) {
+                            effectlist_info = info;
+                            continue;
                         }
-
-                        x++;
+                        std::string display = info->get_group();
+                        display += "/";
+                        display += info->get_name();
+                        char* display_str =
+                            (char*)calloc(display.size() + 1, sizeof(char));
+                        strncpy(display_str, display.c_str(), display.size());
+                        _insertintomenu(hAddMenu, p++, info, display_str);
+                        free(display_str);
                     }
-                    x = DLLRENDERBASE;
-                    while (1) {
-                        char str[1024];
-                        int id = g_render_library->GetRendererDesc(x++, str);
-                        if (!id) {
-                            break;
-                        }
-                        if (str[0]) {
-                            _insertintomenu(hAddMenu, p++, id, str);
-                        }
+                    if (effectlist_info) {
+                        _insertintomenu(hAddMenu, p++, effectlist_info, "Effect List");
                     }
-                    _insertintomenu(hAddMenu, p++, LIST_ID, "Effect list");
 
-                    int preset_base = presetTreeCount = p;
+                    presetTreeCount = p;
+                    int preset_base = p;
                     // add presets
-                    {
-                        MENUITEMINFO i = {};
-                        i.cbSize = sizeof(i);
-                        i.hSubMenu = presetTreeMenu;
-                        i.fMask = MIIM_SUBMENU | MIIM_TYPE | MIIM_ID;
-                        i.fType = MFT_STRING;
-                        i.dwTypeData = "Presets";
-                        i.cch = strlen((char*)i.dwTypeData);
-                        InsertMenuItem(hAddMenu, 0, TRUE, &i);
-                        i.hSubMenu = 0;
-                        i.fMask = MIIM_TYPE | MIIM_ID;
-                        i.fType = MFT_SEPARATOR;
-                        InsertMenuItem(hAddMenu, 1, TRUE, &i);
+                    MENUITEMINFO i = {};
+                    i.cbSize = sizeof(i);
+                    i.hSubMenu = presetTreeMenu;
+                    i.fMask = MIIM_SUBMENU | MIIM_TYPE | MIIM_ID;
+                    i.fType = MFT_STRING;
+                    i.dwTypeData = "Presets";
+                    i.cch = strlen((char*)i.dwTypeData);
+                    InsertMenuItem(hAddMenu, 0, true, &i);
+                    i.hSubMenu = nullptr;
+                    i.fMask = MIIM_TYPE | MIIM_ID;
+                    i.fType = MFT_SEPARATOR;
+                    InsertMenuItem(hAddMenu, 1, true, &i);
 
-                        HANDLE h;
-                        WIN32_FIND_DATA d;
-                        char dirmask[1024];
-                        wsprintf(dirmask, "%s\\*.*", g_path);
+                    HANDLE h;
+                    WIN32_FIND_DATA d;
+                    char dirmask[1024];
+                    wsprintf(dirmask, "%s\\*.*", g_path);
 
-                        int directory_pos = 0, insert_pos = 0;
+                    int directory_pos = 0;
+                    int insert_pos = 0;
 
-                        h = FindFirstFile(dirmask, &d);
-                        if (h != INVALID_HANDLE_VALUE) {
-                            do {
-                                if (d.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY
-                                    && d.cFileName[0] != '.') {
-                                    MENUITEMINFO mi = {};
-                                    mi.cbSize = sizeof(mi);
-                                    mi.fMask = MIIM_SUBMENU | MIIM_TYPE;
-                                    mi.fType = MFT_STRING;
-                                    mi.fState = MFS_DEFAULT;
-                                    mi.hSubMenu = CreatePopupMenu();
-                                    mi.dwTypeData = d.cFileName;
-                                    mi.cch = strlen(d.cFileName);
-                                    InsertMenuItem(
-                                        presetTreeMenu, directory_pos++, TRUE, &mi);
-                                    insert_pos++;
-                                } else if (!stricmp(extension(d.cFileName), "avs")) {
-                                    extension(d.cFileName)[-1] = 0;
-                                    MENUITEMINFO i = {};
-                                    i.cbSize = sizeof(i);
-                                    i.fMask = MIIM_DATA | MIIM_TYPE | MIIM_ID;
-                                    i.fType = MFT_STRING;
-                                    i.fState = MFS_DEFAULT;
-                                    i.wID = presetTreeCount++;
-                                    i.dwItemData = 0xffffffff;
-                                    i.dwTypeData = d.cFileName;
-                                    i.cch = strlen(d.cFileName);
-                                    InsertMenuItem(
-                                        presetTreeMenu, insert_pos++, TRUE, &i);
-                                }
-                            } while (FindNextFile(h, &d));
-                            FindClose(h);
-                        }
+                    h = FindFirstFile(dirmask, &d);
+                    if (h != INVALID_HANDLE_VALUE) {
+                        do {
+                            if (d.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY
+                                && d.cFileName[0] != '.') {
+                                MENUITEMINFO mi = {};
+                                mi.cbSize = sizeof(mi);
+                                mi.fMask = MIIM_SUBMENU | MIIM_TYPE;
+                                mi.fType = MFT_STRING;
+                                mi.fState = MFS_DEFAULT;
+                                mi.hSubMenu = CreatePopupMenu();
+                                mi.dwTypeData = d.cFileName;
+                                mi.cch = strlen(d.cFileName);
+                                InsertMenuItem(
+                                    presetTreeMenu, directory_pos++, true, &mi);
+                                insert_pos++;
+                            } else if (!stricmp(extension(d.cFileName), "avs")) {
+                                extension(d.cFileName)[-1] = 0;
+                                MENUITEMINFO i = {};
+                                i.cbSize = sizeof(i);
+                                i.fMask = MIIM_DATA | MIIM_TYPE | MIIM_ID;
+                                i.fType = MFT_STRING;
+                                i.fState = MFS_DEFAULT;
+                                i.wID = presetTreeCount++;
+                                i.dwItemData = 0xffffffff;
+                                i.dwTypeData = d.cFileName;
+                                i.cch = strlen(d.cFileName);
+                                InsertMenuItem(presetTreeMenu, insert_pos++, true, &i);
+                            }
+                        } while (FindNextFile(h, &d));
+                        FindClose(h);
                     }
 
                     GetWindowRect(GetDlgItem(hwndDlg, IDC_ADD), &r);
@@ -1665,73 +1601,70 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                            r.top,
                                            0,
                                            hwndDlg,
-                                           NULL);
+                                           nullptr);
                     if (t) {
+                        Effect* new_component = nullptr;
                         char buf[2048];
                         buf[0] = 0;
                         if (t >= preset_base) {
-                            if (findInMenu(presetTreeMenu, 0, t, buf, 2048)) {
+                            if (findInMenu(presetTreeMenu, nullptr, t, buf, 2048)) {
                                 // preset
-                                C_RenderListClass* r;
+                                new_component = new E_EffectList();
+
                                 char temp[4096];
-                                ren.effect_index = LIST_ID;
                                 wsprintf(temp, "%s%s.avs", g_path, buf);
-                                r = new C_RenderListClass();
-                                if (!r->__LoadPreset(temp, 1)) {
-                                    ren.effect = (C_RBASE*)r;
-                                    ren.effect_index = LIST_ID;
+                                AVS_Instance loader(AVS_AUDIO_EXTERNAL,
+                                                    AVS_BEAT_EXTERNAL);
+                                if (loader.preset_load_file(temp)) {
+                                    new_component->children =
+                                        std::move(loader.root.children);
                                 } else {
-                                    delete r;
-                                    ren.effect.invalidate();
+                                    delete new_component;
+                                    new_component = nullptr;
                                 }
                             }
                         } else {
                             MENUITEMINFO mi = {};
                             mi.cbSize = sizeof(mi);
                             mi.fMask = MIIM_DATA;
-                            GetMenuItemInfo(hAddMenu, t, FALSE, &mi);
+                            GetMenuItemInfo(hAddMenu, t, false, &mi);
                             if (mi.dwItemData != 0xffffffff) {
-                                int effect_index_tmp = mi.dwItemData;
-                                ren.effect =
-                                    g_render_library->CreateRenderer(&effect_index_tmp);
-                                ren.effect_index = effect_index_tmp;
-                                mi.dwItemData = effect_index_tmp;
+                                auto effect_info = (Effect_Info*)mi.dwItemData;
+                                new_component = component_factory(effect_info, 0);
                             }
                         }
 
-                        if (ren.effect.valid()) {
-                            int insert_pos = 0;
-                            HTREEITEM hTreeItem =
+                        if (new_component) {
+                            HTREEITEM h_selected =
                                 TreeView_GetSelection(GetDlgItem(hwndDlg, IDC_TREE1));
-                            C_RenderListClass* parentrender = g_render_effects;
-                            HTREEITEM parenthandle = g_hroot;
-                            if (hTreeItem) {
+                            Effect* parent = &g_single_instance->root;
+                            HTREEITEM h_parent = g_hroot;
+                            Effect* selected = nullptr;
+                            if (h_selected) {
                                 TV_ITEM i = {TVIF_HANDLE | TVIF_PARAM,
-                                             hTreeItem,
+                                             h_selected,
                                              0,
                                              0,
-                                             0,
+                                             nullptr,
                                              0,
                                              0,
                                              0,
                                              0,
                                              0};
                                 TreeView_GetItem(GetDlgItem(hwndDlg, IDC_TREE1), &i);
-                                C_RenderListClass::T_RenderListType* tp =
-                                    (C_RenderListClass::T_RenderListType*)i.lParam;
-                                if (tp->effect_index == LIST_ID) {
-                                    parentrender =
-                                        (C_RenderListClass*)tp->effect.legacy_effect;
-                                    parenthandle = hTreeItem;
+                                selected = (Effect*)i.lParam;
+                                if (selected->can_have_child_components()) {
+                                    parent = selected;
+                                    h_parent = h_selected;
                                 } else {
-                                    HTREEITEM hParent = TreeView_GetParent(
-                                        GetDlgItem(hwndDlg, IDC_TREE1), hTreeItem);
-                                    if (hParent && hParent != TVI_ROOT) {
+                                    HTREEITEM h_parent2 = TreeView_GetParent(
+                                        GetDlgItem(hwndDlg, IDC_TREE1), h_selected);
+                                    if (h_parent2 && h_parent2 != TVI_ROOT) {
                                         TV_ITEM i2 = {TVIF_HANDLE | TVIF_PARAM,
-                                                      hParent,
+                                                      h_parent2,
                                                       0,
                                                       0,
-                                                      0,
+                                                      nullptr,
                                                       0,
                                                       0,
                                                       0,
@@ -1739,42 +1672,29 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                                       0};
                                         TreeView_GetItem(GetDlgItem(hwndDlg, IDC_TREE1),
                                                          &i2);
-                                        C_RenderListClass::T_RenderListType* tparent =
-                                            (C_RenderListClass::T_RenderListType*)
-                                                i2.lParam;
-                                        parentrender =
-                                            (C_RenderListClass*)
-                                                tparent->effect.legacy_effect;
-                                        parenthandle = hParent;
-                                    }
-                                    for (insert_pos = 0;
-                                         insert_pos < parentrender->getNumRenders()
-                                         && parentrender->getRender(insert_pos)->effect
-                                                != tp->effect;
-                                         insert_pos++) {
-                                        ;
+                                        parent = (Effect*)i2.lParam;
+                                        h_parent = h_parent2;
                                     }
                                 }
                             }
 
-                            lock_lock(g_render_cs);
-                            parentrender->insertRender(&ren, insert_pos);
-                            lock_unlock(g_render_cs);
-                            C_RenderListClass::T_RenderListType* newt =
-                                (C_RenderListClass::T_RenderListType*)malloc(
-                                    sizeof(C_RenderListClass::T_RenderListType));
-                            *newt = ren;
+                            lock_lock(g_single_instance->render_lock);
+                            auto res = parent->insert(new_component,
+                                                      selected ? selected : parent,
+                                                      Effect::INSERT_CHILD);
+                            lock_unlock(g_single_instance->render_lock);
                             TV_INSERTSTRUCT is = {};
-                            is.hParent = parenthandle;
+                            is.hParent = h_parent;
                             is.item.mask = TVIF_PARAM | TVIF_TEXT | TVIF_CHILDREN;
-                            is.item.pszText = ren.effect.get_desc();
-                            is.item.cChildren = newt->effect_index == LIST_ID ? 1 : 0;
-                            is.item.lParam = (int)newt;
-                            if (!hTreeItem || parenthandle == hTreeItem) {
+                            is.item.pszText = new_component->get_desc();
+                            is.item.cChildren =
+                                new_component->can_have_child_components();
+                            is.item.lParam = (int)new_component;
+                            if (!h_selected || h_parent == h_selected) {
                                 is.hInsertAfter = TVI_FIRST;
                             } else {
                                 is.hInsertAfter = TreeView_GetPrevSibling(
-                                    GetDlgItem(hwndDlg, IDC_TREE1), hTreeItem);
+                                    GetDlgItem(hwndDlg, IDC_TREE1), h_selected);
                                 if (!is.hInsertAfter) {
                                     is.hInsertAfter = TVI_FIRST;
                                 }
@@ -1783,25 +1703,25 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 GetDlgItem(hwndDlg, IDC_TREE1), &is);
                             TreeView_Select(
                                 GetDlgItem(hwndDlg, IDC_TREE1), newh, TVGN_CARET);
-                            if (ren.effect_index == LIST_ID) {
+                            if (new_component->can_have_child_components()) {
                                 _do_add(GetDlgItem(hwndDlg, IDC_TREE1),
                                         newh,
-                                        (C_RenderListClass*)ren.effect.legacy_effect);
+                                        new_component);
                             }
 
                             // Always do undo last.
                             KillTimer(hwndDlg, 69);
-                            SetTimer(hwndDlg, 69, UNDO_TIMER_INTERVAL, NULL);
+                            SetTimer(hwndDlg, 69, UNDO_TIMER_INTERVAL, nullptr);
                             // g_preset_dirty=1;
                         }
                     }
                     DestroyMenu(hAddMenu);
-                    presetTreeMenu = 0;
-                }
+                    presetTreeMenu = nullptr;
                     return 0;
+                }
                 case IDC_CLEAR:
                     if (readyToLoadPreset(hwndDlg, 1)) {
-                        if (g_render_transition->LoadPreset("", 0) != 2) {
+                        if (g_render_transition->load_preset("", 0) != 2) {
                             last_preset[0] = 0;
                         }
                     }
@@ -1811,50 +1731,40 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         TreeView_GetSelection(GetDlgItem(hwndDlg, IDC_TREE1));
                     if (hTreeItem == g_hroot) {
                         CfgWnd_Unpopulate();
-                        lock_lock(g_render_cs);
-                        g_render_effects->clearRenders();
-                        lock_unlock(g_render_cs);
+                        lock_lock(g_single_instance->render_lock);
+                        g_single_instance->clear();
+                        lock_unlock(g_single_instance->render_lock);
                         CfgWnd_Populate();
                     } else if (hTreeItem) {
-                        C_RenderListClass* parentrender;
                         TV_ITEM i = {};
                         i.mask = TVIF_HANDLE | TVIF_PARAM;
                         i.hItem = hTreeItem;
                         if (TreeView_GetItem(GetDlgItem(hwndDlg, IDC_TREE1), &i)) {
-                            C_RenderListClass::T_RenderListType* tp =
-                                (C_RenderListClass::T_RenderListType*)i.lParam;
+                            auto tp = (Effect*)i.lParam;
                             HTREEITEM hParent = TreeView_GetParent(
                                 GetDlgItem(hwndDlg, IDC_TREE1), hTreeItem);
-                            if (hParent != NULL) {
+                            if (hParent != nullptr) {
                                 TV_ITEM i2 = {};
                                 i2.mask = TVIF_HANDLE | TVIF_PARAM;
                                 i2.hItem = hParent;
                                 TreeView_GetItem(GetDlgItem(hwndDlg, IDC_TREE1), &i2);
-                                C_RenderListClass::T_RenderListType* tparent =
-                                    (C_RenderListClass::T_RenderListType*)i2.lParam;
-                                parentrender =
-                                    (C_RenderListClass*)tparent->effect.legacy_effect;
-                                lock_lock(g_render_cs);
-                                if (!parentrender->removeRenderFrom(tp, 1)) {
-                                    TreeView_DeleteItem(GetDlgItem(hwndDlg, IDC_TREE1),
-                                                        hTreeItem);
-                                    if (tp) {
-                                        free(tp);
-                                    }
-                                }
-                                lock_unlock(g_render_cs);
+                                auto parent = (Effect*)i2.lParam;
+                                lock_lock(g_single_instance->render_lock);
+                                parent->remove(tp);
+                                TreeView_DeleteItem(GetDlgItem(hwndDlg, IDC_TREE1),
+                                                    hTreeItem);
+                                lock_unlock(g_single_instance->render_lock);
                             }
                         }
                     }
                     // Always save undo last.
                     KillTimer(hwndDlg, 69);
-                    SetTimer(hwndDlg, 69, UNDO_TIMER_INTERVAL, NULL);
+                    SetTimer(hwndDlg, 69, UNDO_TIMER_INTERVAL, nullptr);
                     // g_preset_dirty=1;
-                }
                     return 0;
+                }
                 case IDC_CLONESEL: {
-                    C_RenderListClass::T_RenderListType ren = {};
-                    int insert_pos = -1;
+                    Effect* new_component = nullptr;
 
                     HTREEITEM hTreeItem =
                         TreeView_GetSelection(GetDlgItem(hwndDlg, IDC_TREE1));
@@ -1863,12 +1773,10 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         i.mask = TVIF_HANDLE | TVIF_PARAM;
                         i.hItem = hTreeItem;
                         TreeView_GetItem(GetDlgItem(hwndDlg, IDC_TREE1), &i);
-                        C_RenderListClass::T_RenderListType* tp =
-                            (C_RenderListClass::T_RenderListType*)i.lParam;
-                        ren.effect =
-                            g_render_library->CreateRenderer(&tp->effect_index);
-                        ren.effect_index = tp->effect_index;
-                        if (ren.effect.valid()) {
+                        E_EffectList* tp = (E_EffectList*)i.lParam;
+                        auto effect_info = tp->get_info();
+                        new_component = component_factory(effect_info, 0);
+                        if (new_component) {
                             HTREEITEM hParent = TreeView_GetParent(
                                 GetDlgItem(hwndDlg, IDC_TREE1), hTreeItem);
 
@@ -1877,59 +1785,46 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 i2.mask = TVIF_HANDLE | TVIF_PARAM;
                                 i2.hItem = hParent;
                                 TreeView_GetItem(GetDlgItem(hwndDlg, IDC_TREE1), &i2);
-                                C_RenderListClass::T_RenderListType* tparent =
-                                    (C_RenderListClass::T_RenderListType*)i2.lParam;
-                                C_RenderListClass* parentrender =
-                                    (C_RenderListClass*)tparent->effect.legacy_effect;
-                                for (insert_pos = 0;
-                                     insert_pos < parentrender->getNumRenders()
-                                     && parentrender->getRender(insert_pos)->effect
-                                            != tp->effect;
-                                     insert_pos++) {
-                                    ;
-                                }
-                                insert_pos++;
-                                unsigned char* buf = (unsigned char*)calloc(
-                                    1024 * 1024, sizeof(unsigned char));
+                                auto tparent = (E_EffectList*)i2.lParam;
+                                auto parentrender = (E_EffectList*)tparent;
+                                auto buf = (uint8_t*)calloc(
+                                    MAX_LEGACY_PRESET_FILESIZE_BYTES, sizeof(uint8_t));
                                 if (buf) {
-                                    int len = tp->effect.save_config(buf);
-                                    ren.effect.load_config(buf, len);
+                                    int len = tp->save_legacy(buf);
+                                    new_component->load_legacy(buf, len);
                                     free(buf);
                                 }
-                                lock_lock(g_render_cs);
-                                parentrender->insertRender(&ren, insert_pos);
-                                lock_unlock(g_render_cs);
+                                lock_lock(g_single_instance->render_lock);
+                                parentrender->insert(
+                                    new_component, tp, Effect::INSERT_AFTER);
+                                lock_unlock(g_single_instance->render_lock);
 
-                                C_RenderListClass::T_RenderListType* newt =
-                                    (C_RenderListClass::T_RenderListType*)malloc(
-                                        sizeof(C_RenderListClass::T_RenderListType));
-                                *newt = ren;
                                 TV_INSERTSTRUCT is = {};
                                 is.hParent = hParent;
                                 is.hInsertAfter = hTreeItem;
                                 is.item.mask = TVIF_PARAM | TVIF_TEXT | TVIF_CHILDREN;
-                                is.item.pszText = ren.effect.get_desc();
-                                is.item.cChildren = newt->effect.is_list() ? 1 : 0;
-                                is.item.lParam = (int)newt;
+                                is.item.pszText = new_component->get_desc();
+                                is.item.cChildren =
+                                    new_component->can_have_child_components();
+                                is.item.lParam = (int)new_component;
                                 HTREEITEM newh = TreeView_InsertItem(
                                     GetDlgItem(hwndDlg, IDC_TREE1), &is);
                                 TreeView_Select(
                                     GetDlgItem(hwndDlg, IDC_TREE1), newh, TVGN_CARET);
-                                if (ren.effect_index == LIST_ID) {
-                                    _do_add(
-                                        GetDlgItem(hwndDlg, IDC_TREE1),
-                                        newh,
-                                        (C_RenderListClass*)ren.effect.legacy_effect);
+                                if (new_component->can_have_child_components()) {
+                                    _do_add(GetDlgItem(hwndDlg, IDC_TREE1),
+                                            newh,
+                                            new_component);
                                 }
                             }
                         }
                         // Always save undo last.
                         KillTimer(hwndDlg, 69);
-                        SetTimer(hwndDlg, 69, UNDO_TIMER_INTERVAL, NULL);
+                        SetTimer(hwndDlg, 69, UNDO_TIMER_INTERVAL, nullptr);
                         // g_preset_dirty=1;
                     }
-                }
                     return 0;
+                }
                 case IDC_LOAD: {
                     char temp[2048];
                     OPENFILENAME l = {};
@@ -1947,7 +1842,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     l.lpstrDefExt = "AVS";
                     l.Flags = OFN_HIDEREADONLY | OFN_EXPLORER;
                     if (readyToLoadPreset(hwndDlg, 0) && GetOpenFileName(&l)) {
-                        int x = g_render_transition->LoadPreset(temp, 0);
+                        int x = g_render_transition->load_preset(temp, 0);
                         if (x == 2) {
                             MessageBox(hwndDlg,
                                        "Still initializing previous preset",
@@ -1958,8 +1853,8 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         }
                     }
                     SetCurrentDirectory(buf2);
-                }
                     return 0;
+                }
                 case IDC_SAVE: dosavePreset(hwndDlg); return 0;
                 case IDM_UNDO: C_UndoStack::undo(); return 0;
                 case IDM_REDO: C_UndoStack::redo(); return 0;
@@ -1969,30 +1864,21 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
     return 0;
 }
 
-static void _do_add(HWND hwnd, HTREEITEM h, C_RenderListClass* list) {
-    int x, l;
-    l = list->getNumRenders();
-    for (x = 0; x < l; x++) {
-        C_RenderListClass::T_RenderListType* t = list->getRender(x);
-        if (t) {
-            C_RenderListClass::T_RenderListType* newt =
-                (C_RenderListClass::T_RenderListType*)malloc(
-                    sizeof(C_RenderListClass::T_RenderListType));
-            memcpy(newt, t, sizeof(C_RenderListClass::T_RenderListType));
-            TV_INSERTSTRUCT is;
-            memset(&is, 0, sizeof(is));
+static void _do_add(HWND hwnd, HTREEITEM h, Effect* list) {
+    for (auto& child : list->children) {
+        TV_INSERTSTRUCT is;
+        memset(&is, 0, sizeof(is));
 
-            is.hParent = h;
-            is.hInsertAfter = TVI_LAST;
-            is.item.mask = TVIF_PARAM | TVIF_TEXT | TVIF_CHILDREN;
-            is.item.pszText = t->effect.get_desc();
-            is.item.cChildren = t->effect_index == LIST_ID ? 1 : 0;
-            is.item.lParam = (int)newt;
+        is.hParent = h;
+        is.hInsertAfter = TVI_LAST;
+        is.item.mask = TVIF_PARAM | TVIF_TEXT | TVIF_CHILDREN;
+        is.item.pszText = child->get_desc();
+        is.item.cChildren = child->can_have_child_components();
+        is.item.lParam = (int)child;
 
-            HTREEITEM h2 = TreeView_InsertItem(hwnd, &is);
-            if (t->effect_index == LIST_ID) {
-                _do_add(hwnd, h2, (C_RenderListClass*)t->effect.legacy_effect);
-            }
+        HTREEITEM h2 = TreeView_InsertItem(hwnd, &is);
+        if (child->can_have_child_components()) {
+            _do_add(hwnd, h2, child);
         }
     }
     SendMessage(hwnd, TVM_EXPAND, TVE_EXPAND, (long)h);
@@ -2017,7 +1903,7 @@ static void _do_free(HWND hwnd, HTREEITEM h) {
 
 int need_repop;
 
-void CfgWnd_RePopIfNeeded(void) {
+void CfgWnd_RePopIfNeeded() {
     if (need_repop) {
         CfgWnd_Unpopulate(1);
         CfgWnd_Populate(1);
@@ -2048,11 +1934,7 @@ void CfgWnd_Populate(int force) {
     if (force || (IsWindowVisible(g_hwndDlg) && !DDraw_IsFullScreen())) {
         treeview_hack = 1;
         HWND hwnd = GetDlgItem(g_hwndDlg, IDC_TREE1);
-        C_RenderListClass::T_RenderListType* newt =
-            (C_RenderListClass::T_RenderListType*)malloc(
-                sizeof(C_RenderListClass::T_RenderListType));
-        newt->effect = g_render_effects;
-        newt->effect_index = LIST_ID;
+        Effect* newt = &g_single_instance->root;
         TV_INSERTSTRUCT is;
         memset(&is, 0, sizeof(is));
         is.hParent = TVI_ROOT;
@@ -2063,7 +1945,7 @@ void CfgWnd_Populate(int force) {
         is.item.lParam = (int)newt;
         g_hroot = TreeView_InsertItem(hwnd, &is);
         if (g_hroot) {
-            _do_add(hwnd, g_hroot, g_render_effects);
+            _do_add(hwnd, g_hroot, newt);
             SendMessage(hwnd, TVM_EXPAND, TVE_EXPAND, (long)g_hroot);
         }
         treeview_hack = 0;
