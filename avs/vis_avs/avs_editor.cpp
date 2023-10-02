@@ -74,6 +74,8 @@ static bool resolve_handles(AVS_Handle avs,
             return false;
         }
     }
+    // This cleans out the instance error message in all API calls (all of which use
+    // `resolve_handles()`).
     instance->error = "";
     return true;
 }
