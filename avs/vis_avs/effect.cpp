@@ -105,6 +105,18 @@ Effect* Effect::duplicate_with_children() {
     return duplicate_;
 }
 
+bool Effect::is_ancestor_of(Effect* descendent) {
+    if (descendent == this) {
+        return true;
+    }
+    for (auto child : this->children) {
+        if (child->is_ancestor_of(descendent)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void Effect::set_enabled(bool enabled) {
     this->enabled = enabled;
     this->on_enable(enabled);
