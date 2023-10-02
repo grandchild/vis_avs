@@ -13,6 +13,9 @@ Effect::~Effect() {
 Effect* Effect::insert(Effect* to_insert,
                        Effect* relative_to,
                        Effect::Insert_Direction direction) {
+    if (!this->can_have_child_components()) {
+        return nullptr;
+    }
     if (relative_to == this) {
         if (direction == INSERT_CHILD) {
             this->children.push_back(to_insert);
