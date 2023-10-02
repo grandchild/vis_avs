@@ -40,7 +40,7 @@ class Effect {
 
     virtual Effect* clone() = 0;
     virtual bool can_have_child_components() = 0;
-    virtual Effect_Info* get_info() = 0;
+    virtual Effect_Info* get_info() const = 0;
     virtual size_t parameter_list_length(
         AVS_Parameter_Handle parameter,
         const std::vector<int64_t>& parameter_path) = 0;
@@ -154,6 +154,11 @@ class Effect {
     Effect* duplicate_with_children();
 };
 
+bool operator==(const Effect& a, const Effect_Info& b);
+bool operator==(const Effect* a, const Effect_Info& b);
+bool operator!=(const Effect& a, const Effect_Info& b);
+bool operator!=(const Effect* a, const Effect_Info& b);
+
 template <class Info_T, class Config_T, class Global_Config_T = Effect_Config>
 class Configurable_Effect : public Effect {
     bool trace_parameter_changes = false;
@@ -174,7 +179,7 @@ class Configurable_Effect : public Effect {
         return cloned;
     }
     bool can_have_child_components() { return this->info.can_have_child_components(); }
-    Effect_Info* get_info() { return &this->info; }
+    Effect_Info* get_info() const { return &this->info; }
     static void set_desc(char* desc) {
         Configurable_Effect::_set_desc();
         if (desc) {

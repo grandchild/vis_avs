@@ -777,6 +777,17 @@ struct Effect_Info {
 };
 
 /**
+ * Equality operators.
+ */
+
+bool operator==(const Effect_Info& a, const Effect_Info& b);
+bool operator==(const Effect_Info* a, const Effect_Info& b);
+bool operator==(const Effect_Info& a, const Effect_Info* b);
+bool operator!=(const Effect_Info& a, const Effect_Info& b);
+bool operator!=(const Effect_Info* a, const Effect_Info& b);
+bool operator!=(const Effect_Info& a, const Effect_Info* b);
+
+/**
  * Every struct inheriting from Effect_Info should add this macro to the bottom of the
  * effect's info-struct declaration. This macro defines all the accessor methods to the
  * static members an Effect_Info subclass should define.

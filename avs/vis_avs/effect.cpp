@@ -134,6 +134,13 @@ const AVS_Component_Handle* Effect::get_child_handles_for_api() {
     return this->child_handles_for_api;
 }
 
+bool operator==(const Effect& a, const Effect_Info& b) { return a.get_info() == b; }
+bool operator==(const Effect* a, const Effect_Info& b) {
+    return a == nullptr ? false : *a == b;
+}
+bool operator!=(const Effect& a, const Effect_Info& b) { return !(a == b); }
+bool operator!=(const Effect* a, const Effect_Info& b) { return !(a == b); }
+
 uint32_t Effect::string_load_legacy(const char* src,
                                     std::string& dest,
                                     uint32_t max_length) {
