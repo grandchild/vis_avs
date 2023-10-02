@@ -65,10 +65,8 @@ int E_Root::render(char visdata[2][2][576],
                    int* fbout,
                    int w,
                    int h) {
-    if (is_beat & 0x800000000) {
-        if (this->config.clear) {
-            memset(framebuffer, 0, w * h * sizeof(pixel_rgb0_8));
-        }
+    if (this->config.clear) {
+        memset(framebuffer, 0, w * h * sizeof(pixel_rgb0_8));
     }
     this->start_buffer_context();
     for (auto& effect : this->children) {
