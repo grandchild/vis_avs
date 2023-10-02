@@ -111,6 +111,9 @@ void Effect::set_enabled(bool enabled) {
 }
 
 Effect* Effect::find_by_handle(AVS_Component_Handle handle) {
+    if (handle == 0) {
+        return nullptr;
+    }
     if (this->handle == handle) {
         return this;
     }
