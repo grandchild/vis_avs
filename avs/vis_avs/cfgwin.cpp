@@ -1424,7 +1424,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                             }
                             g_current_render = tp->effect.void_ref();
                             C_Win32GuiComponent* ui_component =
-                                g_ui_library->get(tp->effect_index, g_current_render);
+                                g_ui_library->get(tp->effect_index);
                             if (ui_component != NULL) {
                                 if (ui_component->uiprep != NULL) {
                                     ui_component->uiprep(g_hInstance);

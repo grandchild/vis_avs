@@ -99,7 +99,7 @@ class C_GLibrary {
    public:
     C_GLibrary();
     ~C_GLibrary();
-    C_Win32GuiComponent* get(int id_or_idstring, void* render_component);
+    C_Win32GuiComponent* get(int id_or_idstring);
 
    protected:
     C_Win32GuiComponent* get_by_idstring(char* idstring);

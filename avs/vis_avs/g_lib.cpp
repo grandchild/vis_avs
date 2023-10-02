@@ -16,7 +16,7 @@
 
 #define ADD_STANDARD_COMPONENT(ID_NUM, RES_SUFFIX, HANDLER_SUFFIX) \
     this->components[i].idstring[0] = '\0';                        \
-    ADD_COMPONENT(ID_NUM, NULL, RES_SUFFIX, HANDLER_SUFFIX)
+    ADD_COMPONENT(ID_NUM, nullptr, RES_SUFFIX, HANDLER_SUFFIX)
 
 #define ADD_APE_COMPONENT(ID_STRING, RES_SUFFIX, HANDLER_SUFFIX)              \
     strncpy(this->components[i].idstring, ID_STRING, COMPONENT_IDSTRING_LEN); \
@@ -119,7 +119,7 @@ C_GLibrary::C_GLibrary() {
 
 C_GLibrary::~C_GLibrary() { free(this->components); }
 
-C_Win32GuiComponent* C_GLibrary::get(int id_or_idstring, void* render_component) {
+C_Win32GuiComponent* C_GLibrary::get(int id_or_idstring) {
     if (id_or_idstring == -1) {
         return &this->unknown;
     }
@@ -137,7 +137,7 @@ C_Win32GuiComponent* C_GLibrary::get(int id_or_idstring, void* render_component)
     if (id_or_idstring == Root_Info::legacy_id) {
         return &this->root;
     }
-    return NULL;
+    return nullptr;
 }
 
 C_Win32GuiComponent* C_GLibrary::get_by_idstring(char* idstring) {
@@ -147,7 +147,7 @@ C_Win32GuiComponent* C_GLibrary::get_by_idstring(char* idstring) {
             return &this->components[i];
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 std::string string_from_dlgitem(HWND hwnd, int dlgItem) {
