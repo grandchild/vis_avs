@@ -8,6 +8,7 @@ Effect::~Effect() {
     for (auto child : this->children) {
         delete child;
     }
+    delete[] this->child_handles_for_api;
 }
 
 Effect* Effect::insert(Effect* to_insert,
