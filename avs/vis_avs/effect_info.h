@@ -661,6 +661,7 @@ constexpr Parameter P_ACTION(const char* name,
 }
 
 struct Effect_Info {
+    static constexpr AVS_Effect_Handle handle = 0;
     virtual uint32_t get_handle() const = 0;
     virtual const char* get_group() const = 0;
     virtual const char* get_name() const = 0;
