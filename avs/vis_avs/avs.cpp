@@ -19,7 +19,6 @@
 
 std::unordered_map<AVS_Handle, AVS_Instance*> g_instances;
 const char* g_error = "";
-#define NUM_EFFECTS 2
 
 AVS_Instance* get_instance_from_handle(AVS_Handle avs) {
     if (avs > 0) {
