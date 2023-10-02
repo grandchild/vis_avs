@@ -65,12 +65,28 @@ Effect* Effect::lift(Effect* to_lift) {
 
 Effect* Effect::move(Effect* to_move,
                      Effect* relative_to,
-                     Effect::Insert_Direction direction) {
-    Effect* lifted = this->lift(to_move);
-    if (lifted == NULL) {
-        return NULL;
+                     Effect::Insert_Direction direction,
+                     bool insert_if_not_found) {
+    if (to_move->is_ancestor_of(relative_to)) {
+        log_err(
+            "Effect::move(): cannot move into itself, destination (%s) cannot be inside"
+            " item to-move (%s)",
+            relative_to->get_desc(),
+            to_move->get_desc());
+        return nullptr;
     }
-    return this->insert(lifted, relative_to, direction);
+    Effect* lifted = this->lift(to_move);
+    if (lifted == nullptr) {
+        if (insert_if_not_found) {
+            log_warn("Effect::move(): effect not found in tree, but inserting anyway.");
+        } else {
+            return nullptr;
+        }
+    } else if (lifted != to_move) {
+        log_err("Effect::move(): lifted effect is not the one to move");
+        return nullptr;
+    }
+    return this->insert(to_move, relative_to, direction);
 }
 
 void Effect::remove(Effect* to_remove) {

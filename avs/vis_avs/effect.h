@@ -30,7 +30,10 @@ class Effect {
     virtual ~Effect();
     Effect* insert(Effect* to_insert, Effect* relative_to, Insert_Direction direction);
     Effect* lift(Effect* to_lift);
-    Effect* move(Effect* to_move, Effect* relative_to, Insert_Direction direction);
+    Effect* move(Effect* to_move,
+                 Effect* relative_to,
+                 Insert_Direction direction,
+                 bool insert_if_not_found = false);
     void remove(Effect* to_remove);
     Effect* duplicate(Effect* to_duplicate);
     bool is_ancestor_of(Effect* descendent);
