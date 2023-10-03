@@ -17,15 +17,17 @@
 
 #define DEFINE_FUNC(FUNC) decltype(&FUNC) AVS_Video::LibAV::FUNC
 
+#define STR(x) #x
+
 bool AVS_Video::LibAV::load_libav_dlibs() {
     if (LibAV::libavutil != NULL && LibAV::libavformat != NULL
         && LibAV::libavcodec != NULL && LibAV::libswscale != NULL) {
         return true;
     }
-    LOAD_LIB(avutil, "-57");
-    LOAD_LIB(avformat, "-59");
-    LOAD_LIB(avcodec, "-59");
-    LOAD_LIB(swscale, "-6");
+    LOAD_LIB(avutil, "-" STR(LIBAV_VERSION_AVUTIL));
+    LOAD_LIB(avformat, "-" STR(LIBAV_VERSION_AVFORMAT));
+    LOAD_LIB(avcodec, "-" STR(LIBAV_VERSION_AVCODEC));
+    LOAD_LIB(swscale, "-" STR(LIBAV_VERSION_SWSCALE));
     LOAD_FUNC(libavformat, avformat_alloc_context);
     LOAD_FUNC(libavformat, avformat_open_input);
     LOAD_FUNC(libavformat, avformat_close_input);
