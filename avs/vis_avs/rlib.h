@@ -73,7 +73,6 @@ class C_RLibrary {
     // if which is >= DLLRENDERBASE
     // returns "id" of DLL. which is used to enumerate. str is desc
     // otherwise, returns 1 on success, 0 on error
-    Legacy_Effect_Proxy CreateRenderer(int* which);
     int GetRendererDesc(int which, char* str);
     void add_dll(C_RBASE* (*create_legacy)(char*),
                  char* ape_id,

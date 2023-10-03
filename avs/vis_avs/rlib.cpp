@@ -260,62 +260,6 @@ int C_RLibrary::GetRendererDesc(int which, char* str) {
     return 0;
 }
 
-Legacy_Effect_Proxy C_RLibrary::CreateRenderer(int* which) {
-    if (*which >= 0 && *which < NumRetrFuncs) {
-        if (RetrFuncs[*which].is_legacy) {
-            return Legacy_Effect_Proxy(
-                RetrFuncs[*which].create_legacy(NULL), NULL, *which);
-        } else {
-            return Legacy_Effect_Proxy(NULL, RetrFuncs[*which].create(NULL), *which);
-        }
-    }
-
-    if (*which == LIST_ID) {
-        return Legacy_Effect_Proxy(NULL, new E_EffectList(NULL), *which);
-    }
-
-    if (*which >= DLLRENDERBASE) {
-        int x;
-        char* p = (char*)*which;
-        for (x = 0; x < NumDLLFuncs; x++) {
-            if (!DLLFuncs[x].create_legacy && !DLLFuncs[x].create) {
-                break;
-            }
-            if (DLLFuncs[x].idstring) {
-                if (!strncmp(p, DLLFuncs[x].idstring, 32)) {
-                    *which = (int)DLLFuncs[x].idstring;
-                    if (DLLFuncs[x].is_legacy) {
-                        return Legacy_Effect_Proxy(
-                            DLLFuncs[x].create_legacy(NULL), NULL, *which);
-                    } else {
-                        return Legacy_Effect_Proxy(
-                            NULL, DLLFuncs[x].create(NULL), *which);
-                    }
-                }
-            }
-        }
-        for (x = 0; x < ssizeof32(NamedApeToBuiltinTrans)
-                            / ssizeof32(NamedApeToBuiltinTrans[0]);
-             x++) {
-            if (!strncmp(p, NamedApeToBuiltinTrans[x].id, 32)) {
-                *which = NamedApeToBuiltinTrans[x].newidx;
-                if (RetrFuncs[*which].is_legacy) {
-                    return Legacy_Effect_Proxy(
-                        RetrFuncs[*which].create_legacy(NULL), NULL, *which);
-                } else {
-                    return Legacy_Effect_Proxy(
-                        NULL, RetrFuncs[*which].create(NULL), *which);
-                }
-            }
-        }
-    }
-    int r = *which;
-    auto p = new E_Unknown(NULL);
-    *which = E_Unknown::info.legacy_id;
-    p->set_id(r, (r >= DLLRENDERBASE) ? (char*)r : (char*)"");
-    return Legacy_Effect_Proxy(NULL, p, *which);
-}
-
 C_RLibrary::C_RLibrary() {
     DLLFuncs = NULL;
     NumDLLFuncs = 0;
