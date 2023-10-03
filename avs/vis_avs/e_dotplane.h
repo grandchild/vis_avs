@@ -72,7 +72,7 @@ struct DotPlane_Info : public Effect_Info {
 
 class E_DotPlane : public Configurable_Effect<DotPlane_Info, DotPlane_Config> {
    public:
-    E_DotPlane();
+    E_DotPlane(AVS_Instance* avs);
     virtual ~E_DotPlane() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

@@ -74,7 +74,7 @@ struct DotGrid_Info : public Effect_Info {
 
 class E_DotGrid : public Configurable_Effect<DotGrid_Info, DotGrid_Config> {
    public:
-    E_DotGrid();
+    E_DotGrid(AVS_Instance* avs);
     virtual ~E_DotGrid() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

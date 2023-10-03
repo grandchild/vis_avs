@@ -40,7 +40,7 @@ struct WaterBump_Info : public Effect_Info {
 
 class E_WaterBump : public Configurable_Effect<WaterBump_Info, WaterBump_Config> {
    public:
-    E_WaterBump();
+    E_WaterBump(AVS_Instance* avs);
     virtual ~E_WaterBump();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

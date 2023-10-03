@@ -67,7 +67,7 @@ typedef struct {
 
 class E_Starfield : public Configurable_Effect<Starfield_Info, Starfield_Config> {
    public:
-    E_Starfield();
+    E_Starfield(AVS_Instance* avs);
     virtual ~E_Starfield() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

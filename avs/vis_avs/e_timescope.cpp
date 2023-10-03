@@ -47,7 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 constexpr Parameter Timescope_Info::parameters[];
 
-E_Timescope::E_Timescope() : position(0) {}
+E_Timescope::E_Timescope(AVS_Instance* avs) : Configurable_Effect(avs), position(0) {}
 
 int E_Timescope::render(char visdata[2][2][576],
                         int is_beat,
@@ -176,5 +176,5 @@ int E_Timescope::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Timescope_Info() { return new Timescope_Info(); }
-Effect* create_Timescope() { return new E_Timescope(); }
+Effect* create_Timescope(AVS_Instance* avs) { return new E_Timescope(avs); }
 void set_Timescope_desc(char* desc) { E_Timescope::set_desc(desc); }

@@ -76,7 +76,7 @@ struct Interferences_Info : public Effect_Info {
 class E_Interferences
     : public Configurable_Effect<Interferences_Info, Interferences_Config> {
    public:
-    E_Interferences();
+    E_Interferences(AVS_Instance* avs);
     virtual ~E_Interferences(){};
     virtual int render(char visdata[2][2][576],
                        int is_beat,

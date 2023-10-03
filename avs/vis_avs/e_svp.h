@@ -37,7 +37,7 @@ struct SVP_Info : public Effect_Info {
 
 class E_SVP : public Configurable_Effect<SVP_Info, SVP_Config> {
    public:
-    E_SVP();
+    E_SVP(AVS_Instance* avs);
     virtual ~E_SVP();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

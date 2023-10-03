@@ -64,7 +64,8 @@ void DotFountain_Info::init_color_map_list(Effect* component,
     ((E_DotFountain*)component)->init_color_map();
 }
 
-E_DotFountain::E_DotFountain() : points(), color_map() {
+E_DotFountain::E_DotFountain(AVS_Instance* avs)
+    : Configurable_Effect(avs), points(), color_map() {
     this->init_color_map();
     memset(this->points, 0, sizeof(this->points));
 }
@@ -245,5 +246,5 @@ int E_DotFountain::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_DotFountain_Info() { return new DotFountain_Info(); }
-Effect* create_DotFountain() { return new E_DotFountain(); }
+Effect* create_DotFountain(AVS_Instance* avs) { return new E_DotFountain(avs); }
 void set_DotFountain_desc(char* desc) { E_DotFountain::set_desc(desc); }

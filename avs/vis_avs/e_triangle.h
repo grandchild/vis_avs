@@ -81,7 +81,7 @@ typedef struct {
 class E_Triangle
     : public Programmable_Effect<Triangle_Info, Triangle_Config, Triangle_Vars> {
    public:
-    E_Triangle();
+    E_Triangle(AVS_Instance* avs);
     virtual ~E_Triangle();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

@@ -53,7 +53,7 @@ struct OscilloscopeStar_Info : public Effect_Info {
 class E_OscilloscopeStar
     : public Configurable_Effect<OscilloscopeStar_Info, OscilloscopeStar_Config> {
    public:
-    E_OscilloscopeStar();
+    E_OscilloscopeStar(AVS_Instance* avs);
     virtual ~E_OscilloscopeStar() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

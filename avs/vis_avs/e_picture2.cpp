@@ -27,8 +27,9 @@ const char* const* Picture2_Info::image_files(int64_t* length_out) {
     return E_Picture2::file_list.data();
 }
 
-E_Picture2::E_Picture2()
-    : image_lock(lock_init()),
+E_Picture2::E_Picture2(AVS_Instance* avs)
+    : Configurable_Effect(avs),
+      image_lock(lock_init()),
       image(nullptr),
       iw(0),
       ih(0),
@@ -364,5 +365,5 @@ int E_Picture2::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Picture2_Info() { return new Picture2_Info(); }
-Effect* create_Picture2() { return new E_Picture2(); }
+Effect* create_Picture2(AVS_Instance* avs) { return new E_Picture2(avs); }
 void set_Picture2_desc(char* desc) { E_Picture2::set_desc(desc); }

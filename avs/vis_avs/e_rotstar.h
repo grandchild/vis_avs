@@ -41,7 +41,7 @@ struct RotStar_Info : public Effect_Info {
 
 class E_RotStar : public Configurable_Effect<RotStar_Info, RotStar_Config> {
    public:
-    E_RotStar();
+    E_RotStar(AVS_Instance* avs);
     virtual ~E_RotStar();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

@@ -51,7 +51,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 constexpr Parameter Ring_Info::color_params[];
 constexpr Parameter Ring_Info::parameters[];
 
-E_Ring::E_Ring() : current_color_pos(0) {}
+E_Ring::E_Ring(AVS_Instance* avs) : Configurable_Effect(avs), current_color_pos(0) {}
 
 int E_Ring::render(char visdata[2][2][576],
                    int is_beat,
@@ -248,5 +248,5 @@ int E_Ring::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Ring_Info() { return new Ring_Info(); }
-Effect* create_Ring() { return new E_Ring(); }
+Effect* create_Ring(AVS_Instance* avs) { return new E_Ring(avs); }
 void set_Ring_desc(char* desc) { E_Ring::set_desc(desc); }

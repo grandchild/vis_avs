@@ -50,8 +50,8 @@ void GlobalVariables_Info::recompile(Effect* component,
     globalvars->recompile_if_needed();
 }
 
-E_GlobalVariables::E_GlobalVariables()
-    : is_first_frame(true), load_code_next_frame(false) {
+E_GlobalVariables::E_GlobalVariables(AVS_Instance* avs)
+    : Programmable_Effect(avs), is_first_frame(true), load_code_next_frame(false) {
     this->need_full_recompile();
     for (int i = 0; i < 10; i++) {
         this->config.file += (char)('a' + rand() % ('z' - 'a' + 1));
@@ -351,5 +351,5 @@ int E_GlobalVariables::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_GlobalVariables_Info() { return new GlobalVariables_Info(); }
-Effect* create_GlobalVariables() { return new E_GlobalVariables(); }
+Effect* create_GlobalVariables(AVS_Instance* avs) { return new E_GlobalVariables(avs); }
 void set_GlobalVariables_desc(char* desc) { E_GlobalVariables::set_desc(desc); }

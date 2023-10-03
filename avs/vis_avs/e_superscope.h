@@ -350,7 +350,7 @@ struct SuperScope_Vars : public Variables {
 class E_SuperScope
     : public Programmable_Effect<SuperScope_Info, SuperScope_Config, SuperScope_Vars> {
    public:
-    E_SuperScope();
+    E_SuperScope(AVS_Instance* avs);
     virtual ~E_SuperScope();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

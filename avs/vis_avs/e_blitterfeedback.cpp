@@ -63,7 +63,8 @@ void BlitterFeedback_Info::on_zoom_change(Effect* component,
 static const uint32_t revn[2] = {0xff00ff, 0xff00ff};
 static const int zero = 0;
 
-E_BlitterFeedback::E_BlitterFeedback() : current_zoom(this->config.zoom) {}
+E_BlitterFeedback::E_BlitterFeedback(AVS_Instance* avs)
+    : Configurable_Effect(avs), current_zoom(this->config.zoom) {}
 
 void E_BlitterFeedback::set_current_zoom(int32_t zoom) { this->current_zoom = zoom; }
 
@@ -558,5 +559,5 @@ int E_BlitterFeedback::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_BlitterFeedback_Info() { return new BlitterFeedback_Info(); }
-Effect* create_BlitterFeedback() { return new E_BlitterFeedback(); }
+Effect* create_BlitterFeedback(AVS_Instance* avs) { return new E_BlitterFeedback(avs); }
 void set_BlitterFeedback_desc(char* desc) { E_BlitterFeedback::set_desc(desc); }

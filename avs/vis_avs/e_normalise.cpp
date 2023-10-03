@@ -14,7 +14,9 @@ Must be divisible by four, or early-exit check condition will never be hit! */
 #define TRY_BAIL_SCAN_EARLY_EVERY_NTH_PIXEL 512
 #define NUM_COLOR_VALUES                    256  // 2 ^ BITS_PER_CHANNEL (i.e. 8)
 
-E_Normalise::E_Normalise() { this->enabled = true; }
+E_Normalise::E_Normalise(AVS_Instance* avs) : Configurable_Effect(avs) {
+    this->enabled = true;
+}
 
 E_Normalise::~E_Normalise() {}
 
@@ -154,5 +156,5 @@ int E_Normalise::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Normalise_Info() { return new Normalise_Info(); }
-Effect* create_Normalise() { return new E_Normalise(); }
+Effect* create_Normalise(AVS_Instance* avs) { return new E_Normalise(avs); }
 void set_Normalise_desc(char* desc) { E_Normalise::set_desc(desc); }

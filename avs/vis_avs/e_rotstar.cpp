@@ -47,7 +47,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 constexpr Parameter RotStar_Info::parameters[];
 constexpr Parameter RotStar_Info::color_params[];
 
-E_RotStar::E_RotStar() : color_pos(0), r(0.0) {}
+E_RotStar::E_RotStar(AVS_Instance* avs)
+    : Configurable_Effect(avs), color_pos(0), r(0.0) {}
 E_RotStar::~E_RotStar() {}
 
 int E_RotStar::render(char visdata[2][2][576],
@@ -171,5 +172,5 @@ int E_RotStar::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_RotStar_Info() { return new RotStar_Info(); }
-Effect* create_RotStar() { return new E_RotStar(); }
+Effect* create_RotStar(AVS_Instance* avs) { return new E_RotStar(avs); }
 void set_RotStar_desc(char* desc) { E_RotStar::set_desc(desc); }

@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 constexpr Parameter FastBright_Info::parameters[];
 
-E_FastBright::E_FastBright() {
+E_FastBright::E_FastBright(AVS_Instance* avs) : Configurable_Effect(avs) {
 #ifdef NO_MMX
     int x;
     for (x = 0; x < 128; x++) {
@@ -319,5 +319,5 @@ int E_FastBright::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_FastBright_Info() { return new FastBright_Info(); }
-Effect* create_FastBright() { return new E_FastBright(); }
+Effect* create_FastBright(AVS_Instance* avs) { return new E_FastBright(avs); }
 void set_FastBright_desc(char* desc) { E_FastBright::set_desc(desc); }

@@ -74,7 +74,8 @@ void ColorModifier_Info::load_example(Effect* component,
     color_modifier->channel_table_valid = false;
 }
 
-E_ColorModifier::E_ColorModifier() : channel_table_valid(false) {
+E_ColorModifier::E_ColorModifier(AVS_Instance* avs)
+    : Programmable_Effect(avs), channel_table_valid(false) {
     this->need_full_recompile();
 }
 
@@ -204,5 +205,5 @@ int E_ColorModifier::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_ColorModifier_Info() { return new ColorModifier_Info(); }
-Effect* create_ColorModifier() { return new E_ColorModifier(); }
+Effect* create_ColorModifier(AVS_Instance* avs) { return new E_ColorModifier(avs); }
 void set_ColorModifier_desc(char* desc) { E_ColorModifier::set_desc(desc); }

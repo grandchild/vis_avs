@@ -36,7 +36,7 @@ struct Fadeout_Info : public Effect_Info {
 class E_Fadeout : public Configurable_Effect<Fadeout_Info, Fadeout_Config> {
    protected:
    public:
-    E_Fadeout();
+    E_Fadeout(AVS_Instance* avs);
     virtual ~E_Fadeout();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

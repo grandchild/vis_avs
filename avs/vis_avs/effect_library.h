@@ -14,7 +14,7 @@ extern std::unordered_map<std::string, AVS_Effect_Handle> g_legacy_ape_effect_li
 extern std::vector<AVS_Effect_Handle> g_effect_lib_handles_for_api;
 
 bool make_effect_lib();
-Effect* component_factory(const Effect_Info* effect, AVS_Handle avs);
+Effect* component_factory(const Effect_Info* effect, AVS_Instance* avs);
 Effect* component_factory_legacy(int legacy_effect_id,
                                  char* legacy_effect_ape_id,
-                                 AVS_Handle avs = 0);
+                                 AVS_Instance* avs);

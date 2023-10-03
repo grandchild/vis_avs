@@ -33,7 +33,7 @@ struct UniqueTone_Info : public Effect_Info {
 
 class E_UniqueTone : public Configurable_Effect<UniqueTone_Info, UniqueTone_Config> {
    public:
-    E_UniqueTone();
+    E_UniqueTone(AVS_Instance* avs);
     virtual ~E_UniqueTone() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

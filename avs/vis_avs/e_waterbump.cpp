@@ -46,7 +46,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 constexpr Parameter WaterBump_Info::parameters[];
 
-E_WaterBump::E_WaterBump() : buffer_w(0), buffer_h(0), page(0) {
+E_WaterBump::E_WaterBump(AVS_Instance* avs)
+    : Configurable_Effect(avs), buffer_w(0), buffer_h(0), page(0) {
     this->buffers[0] = nullptr;
     this->buffers[1] = nullptr;
 }
@@ -343,5 +344,5 @@ int E_WaterBump::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_WaterBump_Info() { return new WaterBump_Info(); }
-Effect* create_WaterBump() { return new E_WaterBump(); }
+Effect* create_WaterBump(AVS_Instance* avs) { return new E_WaterBump(avs); }
 void set_WaterBump_desc(char* desc) { E_WaterBump::set_desc(desc); }

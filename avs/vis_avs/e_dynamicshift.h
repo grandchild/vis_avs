@@ -67,7 +67,7 @@ class E_DynamicShift : public Programmable_Effect<DynamicShift_Info,
                                                   DynamicShift_Config,
                                                   DynamicShift_Vars> {
    public:
-    E_DynamicShift();
+    E_DynamicShift(AVS_Instance* avs);
     virtual ~E_DynamicShift();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

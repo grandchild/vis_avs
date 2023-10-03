@@ -57,7 +57,7 @@ struct Mirror_Info : public Effect_Info {
 
 class E_Mirror : public Configurable_Effect<Mirror_Info, Mirror_Config> {
    public:
-    E_Mirror();
+    E_Mirror(AVS_Instance* avs);
     virtual ~E_Mirror() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

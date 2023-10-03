@@ -1609,7 +1609,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         if (t >= preset_base) {
                             if (findInMenu(presetTreeMenu, nullptr, t, buf, 2048)) {
                                 // preset
-                                new_component = new E_EffectList();
+                                new_component = new E_EffectList(g_single_instance);
 
                                 char temp[4096];
                                 wsprintf(temp, "%s%s.avs", g_path, buf);
@@ -1630,7 +1630,8 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                             GetMenuItemInfo(hAddMenu, t, false, &mi);
                             if (mi.dwItemData != 0xffffffff) {
                                 auto effect_info = (Effect_Info*)mi.dwItemData;
-                                new_component = component_factory(effect_info, 0);
+                                new_component =
+                                    component_factory(effect_info, g_single_instance);
                             }
                         }
 
@@ -1775,7 +1776,8 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         TreeView_GetItem(GetDlgItem(hwndDlg, IDC_TREE1), &i);
                         E_EffectList* tp = (E_EffectList*)i.lParam;
                         auto effect_info = tp->get_info();
-                        new_component = component_factory(effect_info, 0);
+                        new_component =
+                            component_factory(effect_info, g_single_instance);
                         if (new_component) {
                             HTREEITEM hParent = TreeView_GetParent(
                                 GetDlgItem(hwndDlg, IDC_TREE1), hTreeItem);

@@ -57,7 +57,7 @@ struct Colorfade_Info : public Effect_Info {
 
 class E_Colorfade : public Configurable_Effect<Colorfade_Info, Colorfade_Config> {
    public:
-    E_Colorfade();
+    E_Colorfade(AVS_Instance* avs);
     ~E_Colorfade() override = default;
     int render(char visdata[2][2][576],
                int is_beat,

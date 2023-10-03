@@ -93,7 +93,9 @@ void load_map(Effect* component,
     ((E_ColorMap*)component)->load_map(CLAMP(parameter_path[0], 0, INT64_MAX));
 }
 
-E_ColorMap::E_ColorMap() : change_animation_step(COLORMAP_MAP_CYCLE_ANIMATION_STEPS) {
+E_ColorMap::E_ColorMap(AVS_Instance* avs)
+    : Configurable_Effect(avs),
+      change_animation_step(COLORMAP_MAP_CYCLE_ANIMATION_STEPS) {
     for (size_t i = 0; i < COLORMAP_NUM_MAPS; i++) {
         this->bake_full_map(i);
     }
@@ -798,8 +800,8 @@ int E_ColorMap::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_ColorMap_Info() { return new ColorMap_Info(); }
-Effect* create_ColorMap() {
+Effect* create_ColorMap(AVS_Instance* avs) {
     srand(time(NULL));
-    return new E_ColorMap();
+    return new E_ColorMap(avs);
 }
 void set_ColorMap_desc(char* desc) { E_ColorMap::set_desc(desc); }

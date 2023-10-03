@@ -39,7 +39,7 @@ struct VideoDelay_Info : public Effect_Info {
 
 class E_VideoDelay : public Configurable_Effect<VideoDelay_Info, VideoDelay_Config> {
    public:
-    E_VideoDelay();
+    E_VideoDelay(AVS_Instance* avs);
     virtual ~E_VideoDelay();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

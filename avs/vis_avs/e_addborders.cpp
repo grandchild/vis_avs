@@ -7,7 +7,7 @@
 
 constexpr Parameter AddBorders_Info::parameters[];
 
-E_AddBorders::E_AddBorders() {}
+E_AddBorders::E_AddBorders(AVS_Instance* avs) : Configurable_Effect(avs) {}
 E_AddBorders::~E_AddBorders() {}
 
 int E_AddBorders::render(char visdata[2][2][576],
@@ -92,5 +92,5 @@ int E_AddBorders::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_AddBorders_Info() { return new AddBorders_Info(); }
-Effect* create_AddBorders() { return new E_AddBorders(); }
+Effect* create_AddBorders(AVS_Instance* avs) { return new E_AddBorders(avs); }
 void set_AddBorders_desc(char* desc) { E_AddBorders::set_desc(desc); }

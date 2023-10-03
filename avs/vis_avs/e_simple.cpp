@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 constexpr Parameter Simple_Info::parameters[];
 constexpr Parameter Simple_Info::color_params[];
 
-E_Simple::E_Simple() {}
+E_Simple::E_Simple(AVS_Instance* avs) : Configurable_Effect(avs) {}
 E_Simple::~E_Simple() {}
 
 int E_Simple::render(char visdata[2][2][576],
@@ -352,5 +352,5 @@ int E_Simple::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Simple_Info() { return new Simple_Info(); }
-Effect* create_Simple() { return new E_Simple(); }
+Effect* create_Simple(AVS_Instance* avs) { return new E_Simple(avs); }
 void set_Simple_desc(char* desc) { E_Simple::set_desc(desc); }

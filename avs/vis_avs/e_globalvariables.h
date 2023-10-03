@@ -124,7 +124,7 @@ class E_GlobalVariables : public Programmable_Effect<GlobalVariables_Info,
     friend GlobalVariables_Info;
 
    public:
-    E_GlobalVariables();
+    E_GlobalVariables(AVS_Instance* avs);
     virtual ~E_GlobalVariables();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

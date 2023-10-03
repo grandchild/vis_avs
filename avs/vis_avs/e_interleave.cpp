@@ -66,7 +66,8 @@ void Interleave_Info::on_duration_change(Effect* component,
     interleave->cur_y = (double)interleave->config.on_beat_y;
 }
 
-E_Interleave::E_Interleave() : cur_x(1.0), cur_y(1.0) {}
+E_Interleave::E_Interleave(AVS_Instance* avs)
+    : Configurable_Effect(avs), cur_x(1.0), cur_y(1.0) {}
 
 E_Interleave::~E_Interleave() = default;
 
@@ -282,5 +283,5 @@ int E_Interleave::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Interleave_Info() { return new Interleave_Info(); }
-Effect* create_Interleave() { return new E_Interleave(); }
+Effect* create_Interleave(AVS_Instance* avs) { return new E_Interleave(avs); }
 void set_Interleave_desc(char* desc) { E_Interleave::set_desc(desc); }

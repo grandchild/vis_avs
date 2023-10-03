@@ -160,7 +160,7 @@ class E_ColorModifier : public Programmable_Effect<ColorModifier_Info,
                                                    ColorModifier_Config,
                                                    ColorModifier_Vars> {
    public:
-    E_ColorModifier();
+    E_ColorModifier(AVS_Instance* avs);
     virtual ~E_ColorModifier();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

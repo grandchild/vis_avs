@@ -38,7 +38,7 @@ void Triangle_Info::recompile(Effect* component,
     triangle->recompile_if_needed();
 }
 
-E_Triangle::E_Triangle() {
+E_Triangle::E_Triangle(AVS_Instance* avs) : Programmable_Effect(avs) {
     this->instance_count += 1;
     if (this->depth_buffer == NULL) {
         this->need_depth_buffer = true;
@@ -462,5 +462,5 @@ int E_Triangle::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Triangle_Info() { return new Triangle_Info(); }
-Effect* create_Triangle() { return new E_Triangle(); }
+Effect* create_Triangle(AVS_Instance* avs) { return new E_Triangle(avs); }
 void set_Triangle_desc(char* desc) { E_Triangle::set_desc(desc); }

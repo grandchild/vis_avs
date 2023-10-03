@@ -9,7 +9,8 @@
 
 constexpr Parameter MultiFilter_Info::parameters[];
 
-E_MultiFilter::E_MultiFilter() : toggle_state(false) {}
+E_MultiFilter::E_MultiFilter(AVS_Instance* avs)
+    : Configurable_Effect(avs), toggle_state(false) {}
 
 int E_MultiFilter::render(char[2][2][576],
                           int is_beat,
@@ -246,5 +247,5 @@ int E_MultiFilter::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_MultiFilter_Info() { return new MultiFilter_Info(); }
-Effect* create_MultiFilter() { return new E_MultiFilter(); }
+Effect* create_MultiFilter(AVS_Instance* avs) { return new E_MultiFilter(avs); }
 void set_MultiFilter_desc(char* desc) { E_MultiFilter::set_desc(desc); }

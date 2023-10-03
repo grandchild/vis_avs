@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 constexpr Parameter ColorReduction_Info::parameters[];
 
-E_ColorReduction::E_ColorReduction() {}
+E_ColorReduction::E_ColorReduction(AVS_Instance* avs) : Configurable_Effect(avs) {}
 E_ColorReduction::~E_ColorReduction() {}
 
 int E_ColorReduction::render(char[2][2][576],
@@ -112,5 +112,5 @@ int E_ColorReduction::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_ColorReduction_Info() { return new ColorReduction_Info(); }
-Effect* create_ColorReduction() { return new E_ColorReduction(); }
+Effect* create_ColorReduction(AVS_Instance* avs) { return new E_ColorReduction(avs); }
 void set_ColorReduction_desc(char* desc) { E_ColorReduction::set_desc(desc); }

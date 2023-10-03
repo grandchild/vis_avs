@@ -60,7 +60,7 @@ struct Unknown_Info : public Effect_Info {
 
 class E_Unknown : public Configurable_Effect<Unknown_Info, Unknown_Config> {
    public:
-    E_Unknown();
+    E_Unknown(AVS_Instance* avs);
     virtual ~E_Unknown() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

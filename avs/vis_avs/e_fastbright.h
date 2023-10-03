@@ -35,7 +35,7 @@ struct FastBright_Info : public Effect_Info {
 
 class E_FastBright : public Configurable_Effect<FastBright_Info, FastBright_Config> {
    public:
-    E_FastBright();
+    E_FastBright(AVS_Instance* avs);
     virtual ~E_FastBright();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

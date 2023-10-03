@@ -72,7 +72,8 @@ void Interferences_Info::on_init_rotation(Effect* component,
     interferences->cur_rotation = interferences->config.init_rotation;
 }
 
-E_Interferences::E_Interferences() : cur_rotation(0), on_beat_fadeout(0.0) {}
+E_Interferences::E_Interferences(AVS_Instance* avs)
+    : Configurable_Effect(avs), cur_rotation(0), on_beat_fadeout(0.0) {}
 
 inline int lerp(int from, int to, float s) {
     return from + (int)((float)(to - from) * s);
@@ -440,5 +441,5 @@ int E_Interferences::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Interferences_Info() { return new Interferences_Info(); }
-Effect* create_Interferences() { return new E_Interferences(); }
+Effect* create_Interferences(AVS_Instance* avs) { return new E_Interferences(avs); }
 void set_Interferences_desc(char* desc) { E_Interferences::set_desc(desc); }

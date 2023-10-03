@@ -64,8 +64,12 @@ void DotPlane_Info::init_color_map_list(Effect* component,
     ((E_DotPlane*)component)->init_color_map();
 }
 
-E_DotPlane::E_DotPlane()
-    : grid_height(), grid_height_delta(), grid_color(), color_map() {
+E_DotPlane::E_DotPlane(AVS_Instance* avs)
+    : Configurable_Effect(avs),
+      grid_height(),
+      grid_height_delta(),
+      grid_color(),
+      color_map() {
     this->init_color_map();
 }
 
@@ -238,5 +242,5 @@ int E_DotPlane::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_DotPlane_Info() { return new DotPlane_Info(); }
-Effect* create_DotPlane() { return new E_DotPlane(); }
+Effect* create_DotPlane(AVS_Instance* avs) { return new E_DotPlane(avs); }
 void set_DotPlane_desc(char* desc) { E_DotPlane::set_desc(desc); }

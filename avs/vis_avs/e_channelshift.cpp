@@ -41,7 +41,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 constexpr Parameter ChannelShift_Info::parameters[];
 
-E_ChannelShift::E_ChannelShift() { srand(time(0)); }
+E_ChannelShift::E_ChannelShift(AVS_Instance* avs) : Configurable_Effect(avs) {
+    srand(time(0));
+}
 
 E_ChannelShift::~E_ChannelShift() {}
 
@@ -245,5 +247,5 @@ int E_ChannelShift::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_ChannelShift_Info() { return new ChannelShift_Info(); }
-Effect* create_ChannelShift() { return new E_ChannelShift(); }
+Effect* create_ChannelShift(AVS_Instance* avs) { return new E_ChannelShift(avs); }
 void set_ChannelShift_desc(char* desc) { E_ChannelShift::set_desc(desc); }

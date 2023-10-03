@@ -40,7 +40,8 @@ const char* const* Texer_Info::image_files(int64_t* length_out) {
     return E_Texer::c_filenames;
 }
 
-E_Texer::E_Texer() : image_data(NULL), image_lock(lock_init()) {
+E_Texer::E_Texer(AVS_Instance* avs)
+    : Configurable_Effect(avs), image_data(NULL), image_lock(lock_init()) {
     this->instance_count++;
     this->find_image_files();
 }
@@ -318,5 +319,5 @@ int E_Texer::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Texer_Info() { return new Texer_Info(); }
-Effect* create_Texer() { return new E_Texer(); }
+Effect* create_Texer(AVS_Instance* avs) { return new E_Texer(avs); }
 void set_Texer_desc(char* desc) { E_Texer::set_desc(desc); }

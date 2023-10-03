@@ -331,7 +331,7 @@ struct Movement_Vars : public Variables {
 class E_Movement
     : public Programmable_Effect<Movement_Info, Movement_Config, Movement_Vars> {
    public:
-    E_Movement();
+    E_Movement(AVS_Instance* avs);
     virtual ~E_Movement();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

@@ -89,7 +89,7 @@ class E_DynamicDistanceModifier
                                  DynamicDistanceModifier_Config,
                                  DynamicDistanceModifier_Vars> {
    public:
-    E_DynamicDistanceModifier();
+    E_DynamicDistanceModifier(AVS_Instance* avs);
     virtual ~E_DynamicDistanceModifier();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

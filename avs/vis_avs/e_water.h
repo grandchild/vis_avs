@@ -17,7 +17,7 @@ struct Water_Info : public Effect_Info {
 
 class E_Water : public Configurable_Effect<Water_Info, Water_Config> {
    public:
-    E_Water();
+    E_Water(AVS_Instance* avs);
     virtual ~E_Water();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

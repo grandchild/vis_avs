@@ -94,7 +94,7 @@ class E_MultiDelay : public Configurable_Effect<MultiDelay_Info,
                                                 MultiDelay_Config,
                                                 MultiDelay_Global_Config> {
    public:
-    E_MultiDelay(AVS_Handle avs = 0);
+    E_MultiDelay(AVS_Instance* avs);
     virtual ~E_MultiDelay(){};
     virtual int render(char visdata[2][2][576],
                        int is_beat,

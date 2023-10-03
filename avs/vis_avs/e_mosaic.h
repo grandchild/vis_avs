@@ -33,7 +33,7 @@ struct Mosaic_Info : public Effect_Info {
 
 class E_Mosaic : public Configurable_Effect<Mosaic_Info, Mosaic_Config> {
    public:
-    E_Mosaic();
+    E_Mosaic(AVS_Instance* avs);
     virtual ~E_Mosaic() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

@@ -261,7 +261,7 @@ struct Texer2_Vars : public Variables {
 
 class E_Texer2 : public Programmable_Effect<Texer2_Info, Texer2_Config, Texer2_Vars> {
    public:
-    E_Texer2();
+    E_Texer2(AVS_Instance* avs);
     virtual ~E_Texer2();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

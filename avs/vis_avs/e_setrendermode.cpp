@@ -84,5 +84,5 @@ int E_SetRenderMode::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_SetRenderMode_Info() { return new SetRenderMode_Info(); }
-Effect* create_SetRenderMode() { return new E_SetRenderMode(); }
+Effect* create_SetRenderMode(AVS_Instance* avs) { return new E_SetRenderMode(avs); }
 void set_SetRenderMode_desc(char* desc) { E_SetRenderMode::set_desc(desc); }

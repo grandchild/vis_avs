@@ -49,7 +49,7 @@ struct ChannelShift_Info : public Effect_Info {
 class E_ChannelShift
     : public Configurable_Effect<ChannelShift_Info, ChannelShift_Config> {
    public:
-    E_ChannelShift();
+    E_ChannelShift(AVS_Instance* avs);
     virtual ~E_ChannelShift();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

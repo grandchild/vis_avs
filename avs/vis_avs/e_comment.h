@@ -24,7 +24,7 @@ struct Comment_Info : public Effect_Info {
 
 class E_Comment : public Configurable_Effect<Comment_Info, Comment_Config> {
    public:
-    E_Comment();
+    E_Comment(AVS_Instance* avs);
     virtual ~E_Comment();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

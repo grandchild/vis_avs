@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "r_defs.h"
 
+#include "instance.h"
 #include "timing.h"
 
 #define PUT_INT(y)                   \
@@ -59,7 +60,8 @@ void BufferSave_Info::nudge_parity(Effect* component,
     ((E_BufferSave*)component)->nudge_parity();
 }
 
-E_BufferSave::E_BufferSave() : save_restore_toggle(false), need_clear(false) {}
+E_BufferSave::E_BufferSave(AVS_Instance* avs)
+    : Configurable_Effect(avs), save_restore_toggle(false), need_clear(false) {}
 
 void E_BufferSave::clear_buffer() { this->need_clear = true; }
 void E_BufferSave::nudge_parity() {
@@ -283,5 +285,5 @@ int E_BufferSave::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_BufferSave_Info() { return new BufferSave_Info(); }
-Effect* create_BufferSave() { return new E_BufferSave(); }
+Effect* create_BufferSave(AVS_Instance* avs) { return new E_BufferSave(avs); }
 void set_BufferSave_desc(char* desc) { E_BufferSave::set_desc(desc); }

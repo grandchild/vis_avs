@@ -17,7 +17,7 @@ struct Scatter_Info : public Effect_Info {
 
 class E_Scatter : public Configurable_Effect<Scatter_Info, Scatter_Config> {
    public:
-    E_Scatter();
+    E_Scatter(AVS_Instance* avs);
     virtual ~E_Scatter();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

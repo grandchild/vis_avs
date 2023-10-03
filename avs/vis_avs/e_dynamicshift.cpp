@@ -59,7 +59,8 @@ void DynamicShift_Info::recompile(Effect* component,
     dynamicshift->recompile_if_needed();
 }
 
-E_DynamicShift::E_DynamicShift() : m_lastw(0), m_lasth(0) {}
+E_DynamicShift::E_DynamicShift(AVS_Instance* avs)
+    : Programmable_Effect(avs), m_lastw(0), m_lasth(0) {}
 E_DynamicShift::~E_DynamicShift() {}
 
 int E_DynamicShift::render(char visdata[2][2][576],
@@ -374,5 +375,5 @@ int E_DynamicShift::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_DynamicShift_Info() { return new DynamicShift_Info(); }
-Effect* create_DynamicShift() { return new E_DynamicShift(); }
+Effect* create_DynamicShift(AVS_Instance* avs) { return new E_DynamicShift(avs); }
 void set_DynamicShift_desc(char* desc) { E_DynamicShift::set_desc(desc); }

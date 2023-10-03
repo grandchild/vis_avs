@@ -62,7 +62,7 @@ class E_RotoBlitter : public Configurable_Effect<RotoBlitter_Info, RotoBlitter_C
     friend RotoBlitter_Info;
 
    public:
-    E_RotoBlitter();
+    E_RotoBlitter(AVS_Instance* avs);
     virtual ~E_RotoBlitter();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

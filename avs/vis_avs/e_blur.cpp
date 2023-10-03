@@ -59,7 +59,7 @@ static unsigned int mmx_mask4[2] = {MASK_SH4, MASK_SH4};
 
 constexpr Parameter Blur_Info::parameters[];
 
-E_Blur::E_Blur() {}
+E_Blur::E_Blur(AVS_Instance* avs) : Configurable_Effect(avs) {}
 E_Blur::~E_Blur() {}
 
 void E_Blur::smp_render(int this_thread,
@@ -1125,5 +1125,5 @@ int E_Blur::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Blur_Info() { return new Blur_Info(); }
-Effect* create_Blur() { return new E_Blur(); }
+Effect* create_Blur(AVS_Instance* avs) { return new E_Blur(avs); }
 void set_Blur_desc(char* desc) { E_Blur::set_desc(desc); }

@@ -68,7 +68,7 @@ struct MovingParticle_Info : public Effect_Info {
 class E_MovingParticle
     : public Configurable_Effect<MovingParticle_Info, MovingParticle_Config> {
    public:
-    E_MovingParticle();
+    E_MovingParticle(AVS_Instance* avs);
     virtual ~E_MovingParticle() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

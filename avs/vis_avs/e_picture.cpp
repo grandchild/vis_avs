@@ -70,8 +70,9 @@ const char* const* Picture_Info::image_files(int64_t* length_out) {
     return E_Picture::file_list.data();
 }
 
-E_Picture::E_Picture()
-    : width(0),
+E_Picture::E_Picture(AVS_Instance* avs)
+    : Configurable_Effect(avs),
+      width(0),
       height(0),
       on_beat_cooldown(0),
       image_data(nullptr),
@@ -293,5 +294,5 @@ int E_Picture::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Picture_Info() { return new Picture_Info(); }
-Effect* create_Picture() { return new E_Picture(); }
+Effect* create_Picture(AVS_Instance* avs) { return new E_Picture(avs); }
 void set_Picture_desc(char* desc) { E_Picture::set_desc(desc); }

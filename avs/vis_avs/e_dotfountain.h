@@ -87,7 +87,7 @@ struct DotFountain_Point {
 
 class E_DotFountain : public Configurable_Effect<DotFountain_Info, DotFountain_Config> {
    public:
-    E_DotFountain();
+    E_DotFountain(AVS_Instance* avs);
     virtual ~E_DotFountain() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

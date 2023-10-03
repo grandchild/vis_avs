@@ -82,8 +82,14 @@ void DynamicMovement_Info::load_example(Effect* component,
     dm->need_full_recompile();
 }
 
-E_DynamicMovement::E_DynamicMovement()
-    : last_w(0), last_h(0), last_x_res(0), last_y_res(0), w_mul(NULL), tab(NULL) {
+E_DynamicMovement::E_DynamicMovement(AVS_Instance* avs)
+    : Programmable_Effect(avs),
+      last_w(0),
+      last_h(0),
+      last_x_res(0),
+      last_y_res(0),
+      w_mul(NULL),
+      tab(NULL) {
     this->need_full_recompile();
 }
 
@@ -627,5 +633,5 @@ int E_DynamicMovement::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_DynamicMovement_Info() { return new DynamicMovement_Info(); }
-Effect* create_DynamicMovement() { return new E_DynamicMovement(); }
+Effect* create_DynamicMovement(AVS_Instance* avs) { return new E_DynamicMovement(avs); }
 void set_DynamicMovement_desc(char* desc) { E_DynamicMovement::set_desc(desc); }

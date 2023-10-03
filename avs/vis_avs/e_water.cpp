@@ -47,7 +47,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _B(x)         (((x)) & 0xff0000)
 #define _RGB(r, g, b) ((r) | ((g)&0xff00) | ((b)&0xff0000))
 
-E_Water::E_Water() : lastframe(NULL), lastframe_size(0) {}
+E_Water::E_Water(AVS_Instance* avs)
+    : Configurable_Effect(avs), lastframe(NULL), lastframe_size(0) {}
 E_Water::~E_Water() { free(this->lastframe); }
 
 static const int zero = 0;
@@ -654,5 +655,5 @@ int E_Water::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Water_Info() { return new Water_Info(); }
-Effect* create_Water() { return new E_Water(); }
+Effect* create_Water(AVS_Instance* avs) { return new E_Water(avs); }
 void set_Water_desc(char* desc) { E_Water::set_desc(desc); }

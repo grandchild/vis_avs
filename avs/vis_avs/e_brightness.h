@@ -64,7 +64,7 @@ struct Brightness_Info : public Effect_Info {
 
 class E_Brightness : public Configurable_Effect<Brightness_Info, Brightness_Config> {
    public:
-    E_Brightness();
+    E_Brightness(AVS_Instance* avs);
     virtual ~E_Brightness();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdlib.h>
 
-E_Invert::E_Invert() { enabled = 1; }
+E_Invert::E_Invert(AVS_Instance* avs) : Configurable_Effect(avs) {}
 E_Invert::~E_Invert() {}
 
 int E_Invert::render(char[2][2][576],
@@ -165,5 +165,5 @@ int E_Invert::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Invert_Info() { return new Invert_Info(); }
-Effect* create_Invert() { return new E_Invert(); }
+Effect* create_Invert(AVS_Instance* avs) { return new E_Invert(avs); }
 void set_Invert_desc(char* desc) { E_Invert::set_desc(desc); }

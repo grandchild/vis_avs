@@ -26,7 +26,7 @@ struct AddBorders_Info : public Effect_Info {
 
 class E_AddBorders : public Configurable_Effect<AddBorders_Info, AddBorders_Config> {
    public:
-    E_AddBorders();
+    E_AddBorders(AVS_Instance* avs);
     virtual ~E_AddBorders();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

@@ -52,7 +52,8 @@ void ClearScreen_Info::on_only_first(Effect* component,
     ((E_ClearScreen*)component)->reset_fcounter_on_only_first();
 }
 
-E_ClearScreen::E_ClearScreen() : frame_counter(0) {}
+E_ClearScreen::E_ClearScreen(AVS_Instance* avs)
+    : Configurable_Effect(avs), frame_counter(0) {}
 
 void E_ClearScreen::reset_fcounter_on_only_first() {
     if (this->config.only_first) {
@@ -171,5 +172,5 @@ int E_ClearScreen::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_ClearScreen_Info() { return new ClearScreen_Info(); }
-Effect* create_ClearScreen() { return new E_ClearScreen(); }
+Effect* create_ClearScreen(AVS_Instance* avs) { return new E_ClearScreen(avs); }
 void set_ClearScreen_desc(char* desc) { E_ClearScreen::set_desc(desc); }

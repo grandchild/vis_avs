@@ -46,7 +46,7 @@ struct BassSpin_Info : public Effect_Info {
 
 class E_BassSpin : public Configurable_Effect<BassSpin_Info, BassSpin_Config> {
    public:
-    E_BassSpin();
+    E_BassSpin(AVS_Instance* avs);
     virtual ~E_BassSpin() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

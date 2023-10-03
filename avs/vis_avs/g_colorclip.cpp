@@ -90,7 +90,3 @@ int win32_dlgproc_colorclip(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
     }
     return 0;
 }
-
-Effect_Info* create_ColorClip_Info() { return new ColorClip_Info(); }
-Effect* create_ColorClip() { return new E_ColorClip(); }
-void set_ColorClip_desc(char* desc) { E_ColorClip::set_desc(desc); }

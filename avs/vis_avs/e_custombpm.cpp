@@ -51,7 +51,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 constexpr Parameter CustomBPM_Info::parameters[];
 
-E_CustomBPM::E_CustomBPM() : fixed_bpm_last_time(timer_ms()) {}
+E_CustomBPM::E_CustomBPM(AVS_Instance* avs)
+    : Configurable_Effect(avs), fixed_bpm_last_time(timer_ms()) {}
 
 int E_CustomBPM::render(char[2][2][576], int is_beat, int*, int*, int, int) {
     if (is_beat & 0x80000000) {
@@ -170,5 +171,5 @@ int E_CustomBPM::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_CustomBPM_Info() { return new CustomBPM_Info(); }
-Effect* create_CustomBPM() { return new E_CustomBPM(); }
+Effect* create_CustomBPM(AVS_Instance* avs) { return new E_CustomBPM(avs); }
 void set_CustomBPM_desc(char* desc) { E_CustomBPM::set_desc(desc); }

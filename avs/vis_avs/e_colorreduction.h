@@ -51,7 +51,7 @@ struct ColorReduction_Info : public Effect_Info {
 class E_ColorReduction
     : public Configurable_Effect<ColorReduction_Info, ColorReduction_Config> {
    public:
-    E_ColorReduction();
+    E_ColorReduction(AVS_Instance* avs);
     virtual ~E_ColorReduction();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

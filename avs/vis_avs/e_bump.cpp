@@ -63,8 +63,11 @@ void Bump_Info::recompile(Effect* component,
     bump->recompile_if_needed();
 }
 
-E_Bump::E_Bump()
-    : cur_depth(this->config.depth), on_beat_fadeout(0), use_old_xy_range(0) {}
+E_Bump::E_Bump(AVS_Instance* avs)
+    : Programmable_Effect(avs),
+      cur_depth(this->config.depth),
+      on_beat_fadeout(0),
+      use_old_xy_range(0) {}
 E_Bump::~E_Bump() {}
 
 static inline int max_channel(int color, bool invert) {
@@ -404,5 +407,5 @@ int E_Bump::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Bump_Info() { return new Bump_Info(); }
-Effect* create_Bump() { return new E_Bump(); }
+Effect* create_Bump(AVS_Instance* avs) { return new E_Bump(avs); }
 void set_Bump_desc(char* desc) { E_Bump::set_desc(desc); }

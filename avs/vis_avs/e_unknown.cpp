@@ -44,7 +44,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 constexpr Parameter Unknown_Info::parameters[];
 
-E_Unknown::E_Unknown() : legacy_id(0), legacy_ape_id() {}
+E_Unknown::E_Unknown(AVS_Instance* avs)
+    : Configurable_Effect(avs), legacy_id(0), legacy_ape_id() {}
 
 int E_Unknown::render(char[2][2][576], int, int*, int*, int, int) { return 0; }
 
@@ -75,5 +76,5 @@ int E_Unknown::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Unknown_Info() { return new Unknown_Info(); }
-Effect* create_Unknown() { return new E_Unknown(); }
+Effect* create_Unknown(AVS_Instance* avs) { return new E_Unknown(avs); }
 void set_Unknown_desc(char* desc) { E_Unknown::set_desc(desc); }

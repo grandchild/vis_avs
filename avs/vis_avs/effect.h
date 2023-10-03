@@ -14,6 +14,8 @@
 #include <type_traits>  // std::is_same<T1, T2>
 #include <vector>
 
+class AVS_Instance;
+
 class Effect {
    public:
     enum Insert_Direction {
@@ -22,11 +24,12 @@ class Effect {
         INSERT_CHILD,
     };
     AVS_Component_Handle handle;
+    AVS_Instance* avs;
+
     bool enabled;
     std::vector<Effect*> children;
-    AVS_Component_Handle* child_handles_for_api;
-    Effect(AVS_Handle = 0)
-        : handle(h_components.get()), enabled(true), child_handles_for_api(NULL){};
+    AVS_Component_Handle* child_handles_for_api = nullptr;
+    Effect(AVS_Instance* avs) : handle(h_components.get()), avs(avs), enabled(true){};
     virtual ~Effect();
     Effect* insert(Effect* to_insert, Effect* relative_to, Insert_Direction direction);
     Effect* lift(Effect* to_lift);
@@ -172,10 +175,11 @@ class Configurable_Effect : public Effect {
     static Info_T info;
     Config_T config;
 
-    Configurable_Effect(AVS_Handle avs = 0) {
+    Configurable_Effect(AVS_Instance* avs) : Effect(avs) {
         this->prune_empty_globals();
-        this->init_global_config(avs);
+        this->init_global_config(this->avs);
     }
+
     ~Configurable_Effect() { this->remove_from_global_instances(); }
     Effect* clone() {
         auto cloned = new Configurable_Effect(*this);
@@ -450,10 +454,10 @@ class Configurable_Effect : public Effect {
     }
 
     struct Global {
-        AVS_Handle avs;
+        AVS_Instance* avs;
         Global_Config_T config;
         std::set<Configurable_Effect*> instances;
-        Global(AVS_Handle avs) : avs(avs){};
+        Global(AVS_Instance* avs) : avs(avs){};
     };
     std::shared_ptr<Global> global = nullptr;
 
@@ -471,7 +475,7 @@ class Configurable_Effect : public Effect {
             }
         }
     }
-    void init_global_config(AVS_Handle avs) {
+    void init_global_config(AVS_Instance* avs) {
         if (std::is_same<Global_Config_T, Effect_Config>::value) {
             return;
         }

@@ -57,7 +57,7 @@ struct Blur_Info : public Effect_Info {
 
 class E_Blur : public Configurable_Effect<Blur_Info, Blur_Config> {
    public:
-    E_Blur();
+    E_Blur(AVS_Instance* avs);
     virtual ~E_Blur();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

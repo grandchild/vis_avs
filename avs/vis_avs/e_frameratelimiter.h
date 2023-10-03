@@ -32,7 +32,7 @@ struct FramerateLimiter_Info : public Effect_Info {
 class E_FramerateLimiter
     : public Configurable_Effect<FramerateLimiter_Info, FramerateLimiter_Config> {
    public:
-    E_FramerateLimiter();
+    E_FramerateLimiter(AVS_Instance* avs);
     virtual ~E_FramerateLimiter();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

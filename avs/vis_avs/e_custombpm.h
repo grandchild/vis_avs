@@ -56,7 +56,7 @@ struct CustomBPM_Info : public Effect_Info {
 
 class E_CustomBPM : public Configurable_Effect<CustomBPM_Info, CustomBPM_Config> {
    public:
-    E_CustomBPM();
+    E_CustomBPM(AVS_Instance* avs);
     virtual ~E_CustomBPM() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

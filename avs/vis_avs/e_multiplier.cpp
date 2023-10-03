@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 constexpr Parameter Multiplier_Info::parameters[];
 
-E_Multiplier::E_Multiplier() {}
+E_Multiplier::E_Multiplier(AVS_Instance* avs) : Configurable_Effect(avs) {}
 
 E_Multiplier::~E_Multiplier() {}
 
@@ -387,5 +387,5 @@ int E_Multiplier::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Multiplier_Info() { return new Multiplier_Info(); }
-Effect* create_Multiplier() { return new E_Multiplier(); }
+Effect* create_Multiplier(AVS_Instance* avs) { return new E_Multiplier(avs); }
 void set_Multiplier_desc(char* desc) { E_Multiplier::set_desc(desc); }

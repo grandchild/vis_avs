@@ -91,7 +91,7 @@ struct Picture2_Info : public Effect_Info {
 
 class E_Picture2 : public Configurable_Effect<Picture2_Info, Picture2_Config> {
    public:
-    E_Picture2();
+    E_Picture2(AVS_Instance* avs);
     virtual ~E_Picture2();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

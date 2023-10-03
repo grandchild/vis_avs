@@ -119,7 +119,7 @@ typedef int (*draw_func)(void* framebuffer, void* fbout, void* m64f_array);
 
 class E_Convolution : public Configurable_Effect<Convolution_Info, Convolution_Config> {
    public:
-    E_Convolution();
+    E_Convolution(AVS_Instance* avs);
     virtual ~E_Convolution();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

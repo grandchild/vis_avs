@@ -50,7 +50,7 @@ struct Ring_Info : public Effect_Info {
 
 class E_Ring : public Configurable_Effect<Ring_Info, Ring_Config> {
    public:
-    E_Ring();
+    E_Ring(AVS_Instance* avs);
     virtual ~E_Ring() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

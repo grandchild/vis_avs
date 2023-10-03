@@ -58,7 +58,7 @@ int E_Scatter::save_legacy(unsigned char* data) {
     return pos;
 }
 
-E_Scatter::E_Scatter() : ftw(0) {}
+E_Scatter::E_Scatter(AVS_Instance* avs) : Configurable_Effect(avs), ftw(0) {}
 E_Scatter::~E_Scatter() {}
 
 int E_Scatter::render(char[2][2][576],
@@ -107,5 +107,5 @@ int E_Scatter::render(char[2][2][576],
 }
 
 Effect_Info* create_Scatter_Info() { return new Scatter_Info(); }
-Effect* create_Scatter() { return new E_Scatter(); }
+Effect* create_Scatter(AVS_Instance* avs) { return new E_Scatter(avs); }
 void set_Scatter_desc(char* desc) { E_Scatter::set_desc(desc); }

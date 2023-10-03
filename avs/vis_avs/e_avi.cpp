@@ -62,8 +62,12 @@ const char* const* AVI_Info::video_files(int64_t* length_out) {
     return E_AVI::c_filenames;
 }
 
-E_AVI::E_AVI()
-    : loaded(false), frame_index(0), last_time(0), video_file_lock(lock_init()) {
+E_AVI::E_AVI(AVS_Instance* avs)
+    : Configurable_Effect(avs),
+      loaded(false),
+      frame_index(0),
+      last_time(0),
+      video_file_lock(lock_init()) {
     this->find_video_files();
 }
 
@@ -275,5 +279,5 @@ int E_AVI::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_AVI_Info() { return new AVI_Info(); }
-Effect* create_AVI() { return new E_AVI(); }
+Effect* create_AVI(AVS_Instance* avs) { return new E_AVI(avs); }
 void set_AVI_desc(char* desc) { E_AVI::set_desc(desc); }

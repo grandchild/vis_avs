@@ -166,3 +166,7 @@ int E_ColorClip::save_legacy(unsigned char* data) {
     pos += 4;
     return pos;
 }
+
+Effect_Info* create_ColorClip_Info() { return new ColorClip_Info(); }
+Effect* create_ColorClip(AVS_Instance* avs) { return new E_ColorClip(avs); }
+void set_ColorClip_desc(char* desc) { E_ColorClip::set_desc(desc); }

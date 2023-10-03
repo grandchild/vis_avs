@@ -61,7 +61,7 @@ struct BlitterFeedback_Info : public Effect_Info {
 class E_BlitterFeedback
     : public Configurable_Effect<BlitterFeedback_Info, BlitterFeedback_Config> {
    public:
-    E_BlitterFeedback();
+    E_BlitterFeedback(AVS_Instance* avs);
     virtual ~E_BlitterFeedback() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

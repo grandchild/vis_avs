@@ -60,7 +60,7 @@ void E_MultiDelay::set_frame_delay(int64_t buffer_index) {
         (buffer.use_beats ? this->global->config.frames_per_beat : buffer.delay) + 1;
 }
 
-E_MultiDelay::E_MultiDelay(AVS_Handle avs)
+E_MultiDelay::E_MultiDelay(AVS_Instance* avs)
     : Configurable_Effect(avs), is_first_instance(this->global->instances.size() == 1) {
     this->enabled = false;
 }
@@ -285,5 +285,5 @@ int E_MultiDelay::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_MultiDelay_Info() { return new MultiDelay_Info(); }
-Effect* create_MultiDelay() { return new E_MultiDelay(0); }
+Effect* create_MultiDelay(AVS_Instance* avs) { return new E_MultiDelay(avs); }
 void set_MultiDelay_desc(char* desc) { E_MultiDelay::set_desc(desc); }

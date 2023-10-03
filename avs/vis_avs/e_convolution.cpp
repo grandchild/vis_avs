@@ -68,8 +68,9 @@ void Convolution_Info::kernel_load(Effect* component,
     ((E_Convolution*)component)->kernel_load();
 }
 
-E_Convolution::E_Convolution()
-    : draw(nullptr),
+E_Convolution::E_Convolution(AVS_Instance* avs)
+    : Configurable_Effect(avs),
+      draw(nullptr),
       m64_farray(),
       m64_bias(),
       width(0),
@@ -1125,5 +1126,5 @@ int E_Convolution::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Convolution_Info() { return new Convolution_Info(); }
-Effect* create_Convolution() { return new E_Convolution(); }
+Effect* create_Convolution(AVS_Instance* avs) { return new E_Convolution(avs); }
 void set_Convolution_desc(char* desc) { E_Convolution::set_desc(desc); }

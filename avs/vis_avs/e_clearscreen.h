@@ -51,7 +51,7 @@ struct ClearScreen_Info : public Effect_Info {
 
 class E_ClearScreen : public Configurable_Effect<ClearScreen_Info, ClearScreen_Config> {
    public:
-    E_ClearScreen();
+    E_ClearScreen(AVS_Instance* avs);
     virtual ~E_ClearScreen() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

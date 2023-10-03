@@ -73,8 +73,9 @@ void VideoDelay_Info::on_delay_change(Effect* component,
     }
 }
 
-E_VideoDelay::E_VideoDelay()
-    : buffersize(1),
+E_VideoDelay::E_VideoDelay(AVS_Instance* avs)
+    : Configurable_Effect(avs),
+      buffersize(1),
       virtual_buffersize(1),
       old_virtual_buffersize(1),
       buffer(calloc(this->buffersize, 1)),
@@ -237,5 +238,5 @@ int E_VideoDelay::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_VideoDelay_Info() { return new VideoDelay_Info(); }
-Effect* create_VideoDelay() { return new E_VideoDelay(); }
+Effect* create_VideoDelay(AVS_Instance* avs) { return new E_VideoDelay(avs); }
 void set_VideoDelay_desc(char* desc) { E_VideoDelay::set_desc(desc); }

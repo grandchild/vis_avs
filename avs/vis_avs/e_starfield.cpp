@@ -74,8 +74,9 @@ void Starfield_Info::set_cur_speed(Effect* component,
     ((E_Starfield*)component)->set_cur_speed();
 }
 
-E_Starfield::E_Starfield()
-    : abs_stars(350),
+E_Starfield::E_Starfield(AVS_Instance* avs)
+    : Configurable_Effect(avs),
+      abs_stars(350),
       x_off(0),
       y_off(0),
       z_off(255),
@@ -255,5 +256,5 @@ int E_Starfield::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Starfield_Info() { return new Starfield_Info(); }
-Effect* create_Starfield() { return new E_Starfield(); }
+Effect* create_Starfield(AVS_Instance* avs) { return new E_Starfield(avs); }
 void set_Starfield_desc(char* desc) { E_Starfield::set_desc(desc); }

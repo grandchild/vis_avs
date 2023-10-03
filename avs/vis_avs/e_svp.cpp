@@ -62,7 +62,8 @@ const char* const* SVP_Info::library_files(int64_t* length_out) {
     return E_SVP::c_filenames;
 }
 
-E_SVP::E_SVP() : library(0), library_lock(lock_init()), vi(NULL) {
+E_SVP::E_SVP(AVS_Instance* avs)
+    : Configurable_Effect(avs), library(0), library_lock(lock_init()), vi(NULL) {
     this->find_library_files();
 }
 
@@ -200,5 +201,5 @@ int E_SVP::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_SVP_Info() { return new SVP_Info(); }
-Effect* create_SVP() { return new E_SVP(); }
+Effect* create_SVP(AVS_Instance* avs) { return new E_SVP(avs); }
 void set_SVP_desc(char* desc) { E_SVP::set_desc(desc); }

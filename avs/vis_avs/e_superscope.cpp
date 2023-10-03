@@ -77,7 +77,9 @@ void SuperScope_Info::load_example(Effect* component,
     ssc->need_full_recompile();
 }
 
-E_SuperScope::E_SuperScope() { this->need_full_recompile(); }
+E_SuperScope::E_SuperScope(AVS_Instance* avs) : Programmable_Effect(avs) {
+    this->need_full_recompile();
+}
 E_SuperScope::~E_SuperScope() {}
 
 static inline int makeint(double t) {
@@ -338,5 +340,5 @@ int E_SuperScope::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_SuperScope_Info() { return new SuperScope_Info(); }
-Effect* create_SuperScope() { return new E_SuperScope(); }
+Effect* create_SuperScope(AVS_Instance* avs) { return new E_SuperScope(avs); }
 void set_SuperScope_desc(char* desc) { E_SuperScope::set_desc(desc); }

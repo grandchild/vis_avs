@@ -143,8 +143,8 @@ void DynamicDistanceModifier_Info::recompile(Effect* component,
     ddm->recompile_if_needed();
 }
 
-E_DynamicDistanceModifier::E_DynamicDistanceModifier()
-    : m_lastw(0), m_lasth(0), m_wmul(NULL), m_tab(NULL) {
+E_DynamicDistanceModifier::E_DynamicDistanceModifier(AVS_Instance* avs)
+    : Programmable_Effect(avs), m_lastw(0), m_lasth(0), m_wmul(NULL), m_tab(NULL) {
     this->need_full_recompile();
 }
 
@@ -421,7 +421,9 @@ int E_DynamicDistanceModifier::save_legacy(unsigned char* data) {
 Effect_Info* create_DynamicDistanceModifier_Info() {
     return new DynamicDistanceModifier_Info();
 }
-Effect* create_DynamicDistanceModifier() { return new E_DynamicDistanceModifier(); }
+Effect* create_DynamicDistanceModifier(AVS_Instance* avs) {
+    return new E_DynamicDistanceModifier(avs);
+}
 void set_DynamicDistanceModifier_desc(char* desc) {
     E_DynamicDistanceModifier::set_desc(desc);
 }

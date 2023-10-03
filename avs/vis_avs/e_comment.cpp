@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 constexpr Parameter Comment_Info::parameters[];
 
-E_Comment::E_Comment() {}
+E_Comment::E_Comment(AVS_Instance* avs) : Configurable_Effect(avs) {}
 E_Comment::~E_Comment() {}
 
 int E_Comment::render(char[2][2][576], int, int*, int*, int, int) { return 0; }
@@ -50,5 +50,5 @@ int E_Comment::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Comment_Info() { return new Comment_Info(); }
-Effect* create_Comment() { return new E_Comment(); }
+Effect* create_Comment(AVS_Instance* avs) { return new E_Comment(avs); }
 void set_Comment_desc(char* desc) { E_Comment::set_desc(desc); }

@@ -56,7 +56,7 @@ void RotoBlitter_Info::on_zoom_change(Effect* component,
     rotoblitter->current_zoom = rotoblitter->config.zoom;
 }
 
-E_RotoBlitter::E_RotoBlitter() {
+E_RotoBlitter::E_RotoBlitter(AVS_Instance* avs) : Configurable_Effect(avs) {
     this->current_zoom = this->config.zoom;
     this->direction = 1;
     this->current_rotation = 1.0;
@@ -281,5 +281,5 @@ int E_RotoBlitter::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_RotoBlitter_Info() { return new RotoBlitter_Info(); }
-Effect* create_RotoBlitter() { return new E_RotoBlitter(); }
+Effect* create_RotoBlitter(AVS_Instance* avs) { return new E_RotoBlitter(avs); }
 void set_RotoBlitter_desc(char* desc) { E_RotoBlitter::set_desc(desc); }

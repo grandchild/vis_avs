@@ -17,7 +17,7 @@ struct Invert_Info : public Effect_Info {
 
 class E_Invert : public Configurable_Effect<Invert_Info, Invert_Config> {
    public:
-    E_Invert();
+    E_Invert(AVS_Instance* avs);
     virtual ~E_Invert();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

@@ -42,7 +42,7 @@ class E_EelTrans : public Configurable_Effect<EelTrans_Info,
                                               EelTrans_Config,
                                               EelTrans_Global_Config> {
    public:
-    E_EelTrans(AVS_Handle avs = 0);
+    E_EelTrans(AVS_Instance* avs);
     virtual ~E_EelTrans();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

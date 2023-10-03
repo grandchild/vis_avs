@@ -50,8 +50,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 constexpr Parameter OscilloscopeStar_Info::color_params[];
 constexpr Parameter OscilloscopeStar_Info::parameters[];
 
-E_OscilloscopeStar::E_OscilloscopeStar()
-    : current_color_pos(0), current_rotation(0.0) {}
+E_OscilloscopeStar::E_OscilloscopeStar(AVS_Instance* avs)
+    : Configurable_Effect(avs), current_color_pos(0), current_rotation(0.0) {}
 
 int E_OscilloscopeStar::render(char visdata[2][2][576],
                                int is_beat,
@@ -233,5 +233,7 @@ int E_OscilloscopeStar::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_OscilloscopeStar_Info() { return new OscilloscopeStar_Info(); }
-Effect* create_OscilloscopeStar() { return new E_OscilloscopeStar(); }
+Effect* create_OscilloscopeStar(AVS_Instance* avs) {
+    return new E_OscilloscopeStar(avs);
+}
 void set_OscilloscopeStar_desc(char* desc) { E_OscilloscopeStar::set_desc(desc); }

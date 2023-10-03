@@ -46,7 +46,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 constexpr Parameter Mosaic_Info::parameters[];
 
-E_Mosaic::E_Mosaic() : on_beat_cooldown(0), cur_size((int32_t)this->config.size) {}
+E_Mosaic::E_Mosaic(AVS_Instance* avs)
+    : Configurable_Effect(avs),
+      on_beat_cooldown(0),
+      cur_size((int32_t)this->config.size) {}
 
 int E_Mosaic::render(char[2][2][576],
                      int is_beat,
@@ -207,5 +210,5 @@ int E_Mosaic::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Mosaic_Info() { return new Mosaic_Info(); }
-Effect* create_Mosaic() { return new E_Mosaic(); }
+Effect* create_Mosaic(AVS_Instance* avs) { return new E_Mosaic(avs); }
 void set_Mosaic_desc(char* desc) { E_Mosaic::set_desc(desc); }

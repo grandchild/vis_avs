@@ -13,8 +13,8 @@ void update_time_diff(Effect* component,
     frameratelimiter->update_time_diff();
 }
 
-E_FramerateLimiter::E_FramerateLimiter()
-    : time_diff(1000 / 30), last_time(this->now()) {}
+E_FramerateLimiter::E_FramerateLimiter(AVS_Instance* avs)
+    : Configurable_Effect(avs), time_diff(1000 / 30), last_time(this->now()) {}
 
 E_FramerateLimiter::~E_FramerateLimiter() {}
 
@@ -68,5 +68,7 @@ int E_FramerateLimiter::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_FramerateLimiter_Info() { return new FramerateLimiter_Info(); }
-Effect* create_FramerateLimiter() { return new E_FramerateLimiter(); }
+Effect* create_FramerateLimiter(AVS_Instance* avs) {
+    return new E_FramerateLimiter(avs);
+}
 void set_FramerateLimiter_desc(char* desc) { E_FramerateLimiter::set_desc(desc); }

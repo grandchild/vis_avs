@@ -35,7 +35,7 @@ struct SetRenderMode_Info : public Effect_Info {
 class E_SetRenderMode
     : public Configurable_Effect<SetRenderMode_Info, SetRenderMode_Config> {
    public:
-    E_SetRenderMode() = default;
+    E_SetRenderMode(AVS_Instance* avs) : Configurable_Effect(avs){};
     virtual ~E_SetRenderMode() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

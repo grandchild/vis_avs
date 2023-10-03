@@ -34,7 +34,7 @@ void E_EelTrans::on_enable(bool enabled) {
     }
 }
 
-E_EelTrans::E_EelTrans(AVS_Handle avs) : Configurable_Effect(avs) {
+E_EelTrans::E_EelTrans(AVS_Instance* avs) : Configurable_Effect(avs) {
     if (this->global->config.need_new_first_instance) {
         this->is_first_instance = true;
         this->global->config.need_new_first_instance = false;
@@ -192,5 +192,5 @@ int E_EelTrans::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_EelTrans_Info() { return new EelTrans_Info(); }
-Effect* create_EelTrans() { return new E_EelTrans(); }
+Effect* create_EelTrans(AVS_Instance* avs) { return new E_EelTrans(avs); }
 void set_EelTrans_desc(char* desc) { E_EelTrans::set_desc(desc); }

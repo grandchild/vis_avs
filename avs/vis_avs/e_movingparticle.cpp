@@ -56,8 +56,9 @@ void MovingParticle_Info::on_size_change(Effect* component,
     particle->set_current_size(particle->get_int(parameter->handle));
 }
 
-E_MovingParticle::E_MovingParticle()
-    : cur_size((int32_t)this->config.size),
+E_MovingParticle::E_MovingParticle(AVS_Instance* avs)
+    : Configurable_Effect(avs),
+      cur_size((int32_t)this->config.size),
       c{0.0, 0.0},
       v{-0.01551, 0.0},
       p{-0.6, 0.3} {}
@@ -214,5 +215,5 @@ int E_MovingParticle::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_MovingParticle_Info() { return new MovingParticle_Info(); }
-Effect* create_MovingParticle() { return new E_MovingParticle(); }
+Effect* create_MovingParticle(AVS_Instance* avs) { return new E_MovingParticle(avs); }
 void set_MovingParticle_desc(char* desc) { E_MovingParticle::set_desc(desc); }

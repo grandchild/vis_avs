@@ -62,7 +62,7 @@ struct Interleave_Info : public Effect_Info {
 
 class E_Interleave : public Configurable_Effect<Interleave_Info, Interleave_Config> {
    public:
-    E_Interleave();
+    E_Interleave(AVS_Instance* avs);
 
     virtual ~E_Interleave();
 

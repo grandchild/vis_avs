@@ -39,7 +39,7 @@ struct Grain_Info : public Effect_Info {
 
 class E_Grain : public Configurable_Effect<Grain_Info, Grain_Config> {
    public:
-    E_Grain();
+    E_Grain(AVS_Instance* avs);
     virtual ~E_Grain();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

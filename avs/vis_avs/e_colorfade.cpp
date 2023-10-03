@@ -119,8 +119,9 @@ void E_Colorfade::make_channel_fader_switch_tab() {
     }
 }
 
-E_Colorfade::E_Colorfade()
-    : cur_max(this->config.fader_max),
+E_Colorfade::E_Colorfade(AVS_Instance* avs)
+    : Configurable_Effect(avs),
+      cur_max(this->config.fader_max),
       cur_2nd(this->config.fader_2nd),
       cur_3rd_gray(this->config.fader_3rd_gray) {
     this->make_channel_fader_switch_tab();
@@ -376,5 +377,5 @@ int E_Colorfade::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Colorfade_Info() { return new Colorfade_Info(); }
-Effect* create_Colorfade() { return new E_Colorfade(); }
+Effect* create_Colorfade(AVS_Instance* avs) { return new E_Colorfade(avs); }
 void set_Colorfade_desc(char* desc) { E_Colorfade::set_desc(desc); }

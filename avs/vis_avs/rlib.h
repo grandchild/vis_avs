@@ -43,7 +43,7 @@ class C_RLibrary {
         bool is_legacy;
         C_RBASE* (*create_legacy)(char* desc);
         Effect_Info* (*create_info)(void);
-        Effect* (*create)(void);
+        Effect* (*create)(AVS_Instance*);
         void (*set_legacy_desc)(char*);
     } rfStruct;
     rfStruct* RetrFuncs;
@@ -54,7 +54,7 @@ class C_RLibrary {
         char* idstring;
         C_RBASE* (*create_legacy)(char* desc);
         Effect_Info* (*create_info)(void);
-        Effect* (*create)(void);
+        Effect* (*create)(AVS_Instance*);
         void (*set_legacy_desc)(char*);
     } DLLInfo;
     DLLInfo* DLLFuncs;
@@ -62,7 +62,7 @@ class C_RLibrary {
 
     void add_dofx(void* rf,
                   Effect_Info* (*create_info)(void),
-                  Effect* (*create)(void),
+                  Effect* (*create)(AVS_Instance*),
                   void (*set_legacy_desc)(char*));
     void initfx(void);
     void initbuiltinape(void);
@@ -78,6 +78,6 @@ class C_RLibrary {
     void add_dll(C_RBASE* (*create_legacy)(char*),
                  char* ape_id,
                  Effect_Info* (*create_info)(void),
-                 Effect* (*create)(void),
+                 Effect* (*create)(AVS_Instance*),
                  void (*set_legacy_desc)(char*));
 };

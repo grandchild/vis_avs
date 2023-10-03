@@ -54,7 +54,10 @@ void UniqueTone_Info::on_color_change(Effect* component,
     ((E_UniqueTone*)component)->rebuild_table();
 }
 
-E_UniqueTone::E_UniqueTone() : table_r{}, table_g{}, table_b{} { rebuild_table(); }
+E_UniqueTone::E_UniqueTone(AVS_Instance* avs)
+    : Configurable_Effect(avs), table_r{}, table_g{}, table_b{} {
+    rebuild_table();
+}
 
 int __inline E_UniqueTone::depth_of(int c) {
     int r = max(max((c & 0xFF), ((c & 0xFF00) >> 8)), (c & 0xFF0000) >> 16);
@@ -164,5 +167,5 @@ int E_UniqueTone::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_UniqueTone_Info() { return new UniqueTone_Info(); }
-Effect* create_UniqueTone() { return new E_UniqueTone(); }
+Effect* create_UniqueTone(AVS_Instance* avs) { return new E_UniqueTone(avs); }
 void set_UniqueTone_desc(char* desc) { E_UniqueTone::set_desc(desc); }

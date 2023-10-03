@@ -50,7 +50,7 @@ struct Multiplier_Info : public Effect_Info {
 
 class E_Multiplier : public Configurable_Effect<Multiplier_Info, Multiplier_Config> {
    public:
-    E_Multiplier();
+    E_Multiplier(AVS_Instance* avs);
     virtual ~E_Multiplier();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

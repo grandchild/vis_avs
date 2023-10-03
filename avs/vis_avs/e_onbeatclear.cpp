@@ -46,7 +46,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 constexpr Parameter OnBeatClear_Info::parameters[];
 
-E_OnBeatClear::E_OnBeatClear() : beat_counter(0) {}
+E_OnBeatClear::E_OnBeatClear(AVS_Instance* avs)
+    : Configurable_Effect(avs), beat_counter(0) {}
 
 int E_OnBeatClear::render(char[2][2][576],
                           int is_beat,
@@ -189,5 +190,5 @@ int E_OnBeatClear::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_OnBeatClear_Info() { return new OnBeatClear_Info(); }
-Effect* create_OnBeatClear() { return new E_OnBeatClear(); }
+Effect* create_OnBeatClear(AVS_Instance* avs) { return new E_OnBeatClear(avs); }
 void set_OnBeatClear_desc(char* desc) { E_OnBeatClear::set_desc(desc); }

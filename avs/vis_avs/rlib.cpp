@@ -78,7 +78,7 @@ void C_RBASE::save_string(unsigned char* data, int& pos, std::string& text) {
 
 void C_RLibrary::add_dofx(void* rf,
                           Effect_Info* (*create_info)(void) = NULL,
-                          Effect* (*create)(void) = NULL,
+                          Effect* (*create)(AVS_Instance*) = NULL,
                           void (*set_legacy_desc)(char*) = NULL) {
     if ((NumRetrFuncs & 7) == 0 || !RetrFuncs) {
         void* newdl = (void*)malloc(sizeof(rfStruct) * (NumRetrFuncs + 8));
@@ -106,10 +106,10 @@ void C_RLibrary::add_dofx(void* rf,
     extern C_RBASE*(name)(char* desc); \
     add_dofx((void*)name);
 // effect-api-capable effects
-#define DECLARE_EFFECT_NEW(name)                \
-    extern Effect_Info* create_##name##_Info(); \
-    extern Effect* create_##name();             \
-    extern void set_##name##_desc(char*);       \
+#define DECLARE_EFFECT_NEW(name)                 \
+    extern Effect_Info* create_##name##_Info();  \
+    extern Effect* create_##name(AVS_Instance*); \
+    extern void set_##name##_desc(char*);        \
     add_dofx(NULL, create_##name##_Info, create_##name, set_##name##_desc);
 
 void C_RLibrary::initfx(void) {
@@ -182,7 +182,7 @@ typedef C_RBASE* (*create_legacy_func)(char*);
 void C_RLibrary::add_dll(create_legacy_func create_legacy,
                          char* ape_id,
                          Effect_Info* (*create_info)(void) = NULL,
-                         Effect* (*create)(void) = NULL,
+                         Effect* (*create)(AVS_Instance*) = NULL,
                          void (*set_legacy_desc)(char*) = NULL) {
     if ((NumDLLFuncs & 7) == 0 || !DLLFuncs) {
         DLLInfo* newdl = (DLLInfo*)malloc(sizeof(DLLInfo) * (NumDLLFuncs + 8));
@@ -210,10 +210,10 @@ void C_RLibrary::initbuiltinape(void) {
 #define ADD(name, ape_id)             \
     extern C_RBASE* name(char* desc); \
     this->add_dll(name, ape_id)
-#define ADD_NEW(name, ape_id)                   \
-    extern Effect_Info* create_##name##_Info(); \
-    extern Effect* create_##name();             \
-    extern void set_##name##_desc(char*);       \
+#define ADD_NEW(name, ape_id)                    \
+    extern Effect_Info* create_##name##_Info();  \
+    extern Effect* create_##name(AVS_Instance*); \
+    extern void set_##name##_desc(char*);        \
     this->add_dll(NULL, ape_id, create_##name##_Info, create_##name, set_##name##_desc)
 
     ADD_NEW(ChannelShift, "Channel Shift");
@@ -266,12 +266,12 @@ Legacy_Effect_Proxy C_RLibrary::CreateRenderer(int* which) {
             return Legacy_Effect_Proxy(
                 RetrFuncs[*which].create_legacy(NULL), NULL, *which);
         } else {
-            return Legacy_Effect_Proxy(NULL, RetrFuncs[*which].create(), *which);
+            return Legacy_Effect_Proxy(NULL, RetrFuncs[*which].create(NULL), *which);
         }
     }
 
     if (*which == LIST_ID) {
-        return Legacy_Effect_Proxy(NULL, new E_EffectList(), *which);
+        return Legacy_Effect_Proxy(NULL, new E_EffectList(NULL), *which);
     }
 
     if (*which >= DLLRENDERBASE) {
@@ -288,7 +288,8 @@ Legacy_Effect_Proxy C_RLibrary::CreateRenderer(int* which) {
                         return Legacy_Effect_Proxy(
                             DLLFuncs[x].create_legacy(NULL), NULL, *which);
                     } else {
-                        return Legacy_Effect_Proxy(NULL, DLLFuncs[x].create(), *which);
+                        return Legacy_Effect_Proxy(
+                            NULL, DLLFuncs[x].create(NULL), *which);
                     }
                 }
             }
@@ -303,13 +304,13 @@ Legacy_Effect_Proxy C_RLibrary::CreateRenderer(int* which) {
                         RetrFuncs[*which].create_legacy(NULL), NULL, *which);
                 } else {
                     return Legacy_Effect_Proxy(
-                        NULL, RetrFuncs[*which].create(), *which);
+                        NULL, RetrFuncs[*which].create(NULL), *which);
                 }
             }
         }
     }
     int r = *which;
-    auto p = new E_Unknown();
+    auto p = new E_Unknown(NULL);
     *which = E_Unknown::info.legacy_id;
     p->set_id(r, (r >= DLLRENDERBASE) ? (char*)r : (char*)"");
     return Legacy_Effect_Proxy(NULL, p, *which);

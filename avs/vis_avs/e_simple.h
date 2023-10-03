@@ -52,7 +52,7 @@ struct Simple_Info : public Effect_Info {
 
 class E_Simple : public Configurable_Effect<Simple_Info, Simple_Config> {
    public:
-    E_Simple();
+    E_Simple(AVS_Instance* avs);
     virtual ~E_Simple();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

@@ -62,7 +62,8 @@ void Mirror_Info::on_random_change(Effect* component,
     ((E_Mirror*)component)->on_random_change();
 }
 
-E_Mirror::E_Mirror() : transition_stepper(0) {
+E_Mirror::E_Mirror(AVS_Instance* avs)
+    : Configurable_Effect(avs), transition_stepper(0) {
     this->cur_top_to_bottom = this->config.top_to_bottom * BLEND_DIVISOR_MAX;
     this->cur_bottom_to_top = this->config.bottom_to_top * BLEND_DIVISOR_MAX;
     this->cur_left_to_right = this->config.left_to_right * BLEND_DIVISOR_MAX;
@@ -417,5 +418,5 @@ int E_Mirror::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Mirror_Info() { return new Mirror_Info(); }
-Effect* create_Mirror() { return new E_Mirror(); }
+Effect* create_Mirror(AVS_Instance* avs) { return new E_Mirror(avs); }
 void set_Mirror_desc(char* desc) { E_Mirror::set_desc(desc); }

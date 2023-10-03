@@ -202,7 +202,7 @@ class E_DynamicMovement : public Programmable_Effect<DynamicMovement_Info,
                                                      DynamicMovement_Config,
                                                      DynamicMovement_Vars> {
    public:
-    E_DynamicMovement();
+    E_DynamicMovement(AVS_Instance* avs);
     virtual ~E_DynamicMovement();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

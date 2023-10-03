@@ -17,7 +17,7 @@
 
 constexpr Parameter Root_Info::parameters[];
 
-E_Root::E_Root() : buffers_saved(false) {}
+E_Root::E_Root(AVS_Instance* avs) : Configurable_Effect(avs), buffers_saved(false) {}
 E_Root::~E_Root() {
     for (int i = 0; i < NBUF; i++) {
         free(this->buffers[i]);
@@ -109,7 +109,7 @@ void E_Root::load_legacy(unsigned char* data, int len) {
         }
 
         Effect* new_effect =
-            component_factory_legacy(legacy_effect_id, legacy_effect_ape_id);
+            component_factory_legacy(legacy_effect_id, legacy_effect_ape_id, this->avs);
         new_effect->load_legacy(data + pos, l_len);
         pos += l_len;
         this->insert(new_effect, this, INSERT_CHILD);
@@ -161,5 +161,5 @@ int E_Root::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Root_Info() { return new Root_Info(); }
-Effect* create_Root() { return new E_Root(); }
+Effect* create_Root(AVS_Instance* avs) { return new E_Root(avs); }
 void set_Root_desc(char* desc) { E_Root::set_desc(desc); }

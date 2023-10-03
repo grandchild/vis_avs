@@ -110,7 +110,7 @@ int E_Fadeout::save_legacy(unsigned char* data) {
     return pos;
 }
 
-E_Fadeout::E_Fadeout() {
+E_Fadeout::E_Fadeout(AVS_Instance* avs) : Configurable_Effect(avs) {
     this->config.color = 0;
     this->config.fadelen = 16;
     maketab();
@@ -271,5 +271,5 @@ int E_Fadeout::render(char[2][2][576],
 }
 
 Effect_Info* create_Fadeout_Info() { return new Fadeout_Info(); }
-Effect* create_Fadeout() { return new E_Fadeout(); }
+Effect* create_Fadeout(AVS_Instance* avs) { return new E_Fadeout(avs); }
 void set_Fadeout_desc(char* desc) { E_Fadeout::set_desc(desc); }

@@ -183,7 +183,7 @@ AVS_Component_Handle avs_component_create(AVS_Handle avs,
         return 0;
     }
 
-    Effect* component = component_factory(_effect, avs);
+    Effect* component = component_factory(_effect, instance);
     if (component == NULL) {
         instance->error = "Failed to find internal component class";
         return 0;

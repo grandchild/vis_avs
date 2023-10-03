@@ -175,7 +175,7 @@ struct EffectList_Vars : public Variables {
 class E_EffectList
     : public Programmable_Effect<EffectList_Info, EffectList_Config, EffectList_Vars> {
    public:
-    E_EffectList();
+    E_EffectList(AVS_Instance* avs);
     virtual ~E_EffectList() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

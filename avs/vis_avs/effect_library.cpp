@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-typedef Effect* (*effect_component_factory)();
+typedef Effect* (*effect_component_factory)(AVS_Instance*);
 
 std::unordered_map<AVS_Effect_Handle, Effect_Info*> g_effect_lib;
 std::unordered_map<int32_t, AVS_Effect_Handle> g_legacy_builtin_effect_lib;
@@ -38,7 +38,7 @@ static std::vector<std::string> find_duplicate_effect_names(
 
 #define MAKE_EFFECT_LIB_ENTRY(NAME)                                                \
     extern Effect_Info* create_##NAME##_Info(void);                                \
-    extern Effect* create_##NAME();                                                \
+    extern Effect* create_##NAME(AVS_Instance*);                                   \
     auto NAME##_info = create_##NAME##_Info();                                     \
     auto NAME##_handle = NAME##_info->get_handle();                                \
     g_effect_lib[NAME##_handle] = NAME##_info;                                     \
@@ -136,13 +136,13 @@ bool make_effect_lib() {
     return true;
 }
 
-Effect* component_factory(const Effect_Info* effect, AVS_Handle avs) {
+Effect* component_factory(const Effect_Info* effect, AVS_Instance* avs) {
     for (auto const& factory : g_component_factories) {
         if (factory.first->get_handle() == effect->get_handle()) {
             if (!effect->is_createable_by_user()) {
                 log_warn("%s is not user-creatable", effect->get_name());
             } else {
-                return factory.second(/*avs*/);
+                return factory.second(avs);
             }
         }
     }
@@ -151,7 +151,7 @@ Effect* component_factory(const Effect_Info* effect, AVS_Handle avs) {
 
 Effect* component_factory_legacy(int legacy_effect_id,
                                  char* legacy_effect_ape_id,
-                                 AVS_Handle avs) {
+                                 AVS_Instance* avs) {
     Effect* new_effect = nullptr;
     auto builtin_it = g_legacy_builtin_effect_lib.find(legacy_effect_id);
     if (builtin_it != g_legacy_builtin_effect_lib.end()) {
@@ -166,8 +166,8 @@ Effect* component_factory_legacy(int legacy_effect_id,
         log_warn("component_factory: unknown effect %d/%s",
                  legacy_effect_id,
                  legacy_effect_ape_id);
-        extern Effect*(create_Unknown)();
-        new_effect = create_Unknown(/*avs*/);
+        extern Effect*(create_Unknown)(AVS_Instance*);
+        new_effect = create_Unknown(avs);
         ((E_Unknown*)new_effect)->set_id(legacy_effect_id, legacy_effect_ape_id);
     }
     return new_effect;

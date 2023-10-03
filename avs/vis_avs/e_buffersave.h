@@ -87,7 +87,7 @@ struct BufferSave_Info : public Effect_Info {
 
 class E_BufferSave : public Configurable_Effect<BufferSave_Info, BufferSave_Config> {
    public:
-    E_BufferSave();
+    E_BufferSave(AVS_Instance* avs);
     virtual ~E_BufferSave() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

@@ -229,7 +229,7 @@ struct ColorMap_Info : public Effect_Info {
 
 class E_ColorMap : public Configurable_Effect<ColorMap_Info, ColorMap_Config> {
    public:
-    E_ColorMap();
+    E_ColorMap(AVS_Instance* avs);
 
     /* APE interface */
     virtual int render(char visdata[2][2][576],

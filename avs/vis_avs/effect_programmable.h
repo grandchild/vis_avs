@@ -122,7 +122,7 @@ class Programmable_Effect
     Code_Section code_point;
     bool need_init;
 
-    Programmable_Effect(AVS_Handle avs = 0)
+    Programmable_Effect(AVS_Instance* avs)
         : Configurable_Effect<Info_T, Config_T, Global_Config_T>(avs),
           vm_context(NULL),
           code_lock(lock_init()),

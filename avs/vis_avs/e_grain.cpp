@@ -46,7 +46,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 constexpr Parameter Grain_Info::parameters[];
 
-E_Grain::E_Grain() : old_x(0), old_y(0), depth_buffer(NULL) {
+E_Grain::E_Grain(AVS_Instance* avs)
+    : Configurable_Effect(avs), old_x(0), old_y(0), depth_buffer(NULL) {
     unsigned int x;
     for (x = 0; x < sizeof(this->randtab); x++) {
         this->randtab[x] = rand() & 255;
@@ -329,5 +330,5 @@ int E_Grain::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Grain_Info() { return new Grain_Info(); }
-Effect* create_Grain() { return new E_Grain(); }
+Effect* create_Grain(AVS_Instance* avs) { return new E_Grain(avs); }
 void set_Grain_desc(char* desc) { E_Grain::set_desc(desc); }

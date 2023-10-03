@@ -50,8 +50,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 constexpr Parameter BassSpin_Info::parameters[];
 
-E_BassSpin::E_BassSpin()
-    : last_a(0),
+E_BassSpin::E_BassSpin(AVS_Instance* avs)
+    : Configurable_Effect(avs),
+      last_a(0),
       lx{{0, 0}, {0, 0}},
       ly{{0, 0}, {0, 0}},
       r_v{3.14159, 0.0},
@@ -278,5 +279,5 @@ int E_BassSpin::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_BassSpin_Info() { return new BassSpin_Info(); }
-Effect* create_BassSpin() { return new E_BassSpin(); }
+Effect* create_BassSpin(AVS_Instance* avs) { return new E_BassSpin(avs); }
 void set_BassSpin_desc(char* desc) { E_BassSpin::set_desc(desc); }

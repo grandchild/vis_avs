@@ -61,7 +61,8 @@ void DotGrid_Info::zero_speed_y(Effect* component,
     ((E_DotGrid*)component)->zero_speed_y();
 }
 
-E_DotGrid::E_DotGrid() : current_color_pos(0), xp(0), yp(0) {}
+E_DotGrid::E_DotGrid(AVS_Instance* avs)
+    : Configurable_Effect(avs), current_color_pos(0), xp(0), yp(0) {}
 
 void E_DotGrid::zero_speed_x() { this->config.speed_x = 0; }
 void E_DotGrid::zero_speed_y() { this->config.speed_y = 0; }
@@ -199,5 +200,5 @@ int E_DotGrid::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_DotGrid_Info() { return new DotGrid_Info(); }
-Effect* create_DotGrid() { return new E_DotGrid(); }
+Effect* create_DotGrid(AVS_Instance* avs) { return new E_DotGrid(avs); }
 void set_DotGrid_desc(char* desc) { E_DotGrid::set_desc(desc); }

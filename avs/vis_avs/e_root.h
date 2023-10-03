@@ -34,7 +34,7 @@ struct Root_Info : public Effect_Info {
 
 class E_Root : public Configurable_Effect<Root_Info, Root_Config> {
    public:
-    E_Root();
+    E_Root(AVS_Instance* avs);
     virtual ~E_Root();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

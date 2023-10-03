@@ -12,6 +12,8 @@ AVS_Instance::AVS_Instance(AVS_Audio_Source audio_source, AVS_Beat_Source beat_s
       audio_source(audio_source),
       beat_source(beat_source),
       error(""),
+      root(this),
+      root_secondary(this),
       render_lock(lock_init()) {
     for (auto& pixel_format : this->buffers_pixel_format) {
         pixel_format = AVS_PIXEL_RGB0_8;
@@ -81,7 +83,7 @@ bool AVS_Instance::preset_load_legacy(uint8_t* preset,
                                       bool with_transition) {
     E_Root& load_root = with_transition ? this->root_secondary : this->root;
     lock_lock(this->render_lock);
-    load_root = E_Root();
+    load_root = E_Root(this);
     load_root.load_legacy(preset, (int)(preset_length));
     lock_unlock(this->render_lock);
     return true;
@@ -131,8 +133,8 @@ size_t AVS_Instance::preset_save_legacy(uint8_t* data, bool secondary) {
     return pos;
 }
 
-void AVS_Instance::clear() { this->root = E_Root(); }
-void AVS_Instance::clear_secondary() { this->root_secondary = E_Root(); }
+void AVS_Instance::clear() { this->root = E_Root(this); }
+void AVS_Instance::clear_secondary() { this->root_secondary = E_Root(this); }
 
 const char* AVS_Instance::error_str() { return this->error; }
 

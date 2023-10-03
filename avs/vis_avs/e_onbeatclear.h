@@ -40,7 +40,7 @@ struct OnBeatClear_Info : public Effect_Info {
 
 class E_OnBeatClear : public Configurable_Effect<OnBeatClear_Info, OnBeatClear_Config> {
    public:
-    E_OnBeatClear();
+    E_OnBeatClear(AVS_Instance* avs);
     virtual ~E_OnBeatClear() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

@@ -73,7 +73,8 @@ void Brightness_Info::on_separate_toggle(Effect* component,
 }
 
 E_Brightness::~E_Brightness() {}
-E_Brightness::E_Brightness() : need_tab_init(true) {}
+E_Brightness::E_Brightness(AVS_Instance* avs)
+    : Configurable_Effect(avs), need_tab_init(true) {}
 
 static inline int iabs(int v) { return (v < 0) ? -v : v; }
 
@@ -342,5 +343,5 @@ int E_Brightness::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_Brightness_Info() { return new Brightness_Info(); }
-Effect* create_Brightness() { return new E_Brightness(); }
+Effect* create_Brightness(AVS_Instance* avs) { return new E_Brightness(avs); }
 void set_Brightness_desc(char* desc) { E_Brightness::set_desc(desc); }

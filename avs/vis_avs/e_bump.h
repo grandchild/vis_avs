@@ -82,7 +82,7 @@ struct Bump_Vars : public Variables {
 
 class E_Bump : public Programmable_Effect<Bump_Info, Bump_Config, Bump_Vars> {
    public:
-    E_Bump();
+    E_Bump(AVS_Instance* avs);
     virtual ~E_Bump();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

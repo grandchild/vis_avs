@@ -44,7 +44,7 @@ struct MultiFilter_Info : public Effect_Info {
 
 class E_MultiFilter : public Configurable_Effect<MultiFilter_Info, MultiFilter_Config> {
    public:
-    E_MultiFilter();
+    E_MultiFilter(AVS_Instance* avs);
     virtual ~E_MultiFilter() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

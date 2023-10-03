@@ -51,7 +51,7 @@ struct Timescope_Info : public Effect_Info {
 
 class E_Timescope : public Configurable_Effect<Timescope_Info, Timescope_Config> {
    public:
-    E_Timescope();
+    E_Timescope(AVS_Instance* avs);
     virtual ~E_Timescope() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,

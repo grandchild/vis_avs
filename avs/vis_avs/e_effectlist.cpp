@@ -69,8 +69,14 @@ void EffectList_Info::recompile(Effect* component,
     effectlist->recompile_if_needed();
 }
 
-E_EffectList::E_EffectList()
-    : list_framebuffer(nullptr), last_w(0), last_h(0), on_beat_frames_cooldown(0) {}
+E_EffectList::E_EffectList(AVS_Instance* avs)
+    : Programmable_Effect(avs),
+      list_framebuffer(nullptr),
+      last_w(0),
+      last_h(0),
+      on_beat_frames_cooldown(0) {
+    this->enabled = true;
+}
 
 void E_EffectList::smp_cleanup_threads() {
     if (E_EffectList::smp.num_threads > 0) {
@@ -866,8 +872,8 @@ void E_EffectList::load_legacy(unsigned char* data, int len) {
             pos += Effect::string_load_legacy(
                 &str[pos], this->config.frame, effect_end - pos);
         } else {
-            auto effect =
-                component_factory_legacy(legacy_effect_id, legacy_effect_ape_id);
+            auto effect = component_factory_legacy(
+                legacy_effect_id, legacy_effect_ape_id, this->avs);
             effect->load_legacy(data + pos, l_len);
             pos += l_len;
             this->insert(effect, this, INSERT_CHILD);
@@ -970,5 +976,5 @@ int E_EffectList::save_legacy(unsigned char* data) {
 }
 
 Effect_Info* create_EffectList_Info() { return new EffectList_Info(); }
-Effect* create_EffectList() { return new E_EffectList(); }
+Effect* create_EffectList(AVS_Instance* avs) { return new E_EffectList(avs); }
 void set_EffectList_desc(char* desc) { E_EffectList::set_desc(desc); }

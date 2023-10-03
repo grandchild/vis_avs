@@ -43,7 +43,7 @@ struct Texer_Info : public Effect_Info {
 
 class E_Texer : public Configurable_Effect<Texer_Info, Texer_Config> {
    public:
-    E_Texer();
+    E_Texer(AVS_Instance* avs);
     virtual ~E_Texer();
     virtual int render(char visdata[2][2][576],
                        int is_beat,

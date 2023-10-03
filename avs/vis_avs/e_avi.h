@@ -73,7 +73,7 @@ struct AVI_Info : public Effect_Info {
 
 class E_AVI : public Configurable_Effect<AVI_Info, AVI_Config> {
    public:
-    E_AVI();
+    E_AVI(AVS_Instance* avs);
     virtual ~E_AVI();
     virtual int render(char visdata[2][2][576],
                        int is_beat,
