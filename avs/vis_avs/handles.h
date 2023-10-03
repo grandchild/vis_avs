@@ -11,7 +11,7 @@ class Handles {
 
    public:
     Handles() { this->state = 1000; };
-    uint32_t get() { return this->state++; };
+    AVS_Handle get() { return this->state++; };
 
     /**
      * Generate a handle at compile time. Needs an input string that it will hash into a
@@ -23,7 +23,7 @@ class Handles {
      *
      * Thanks to https://notes.underscorediscovery.com/constexpr-fnv1a/ for the idea.
      */
-    static inline constexpr uint32_t comptime_get(const char* const input) {
+    static inline constexpr AVS_Handle comptime_get(const char* const input) {
         return Handles::_fnv1a(input) % 0xfffffffe + 1;
     };
 
