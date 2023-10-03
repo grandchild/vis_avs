@@ -1,13 +1,15 @@
 #include "e_root.h"
 
 #include "effect_library.h"
+#include "handles.h"
 #include "instance.h"
 #include "pixel_format.h"
 
 #include <cstdio>
 
 AVS_Instance::AVS_Instance(AVS_Audio_Source audio_source, AVS_Beat_Source beat_source)
-    : audio_source(audio_source),
+    : handle(h_instances.get()),
+      audio_source(audio_source),
       beat_source(beat_source),
       error(""),
       render_lock(lock_init()) {

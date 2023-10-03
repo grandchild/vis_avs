@@ -35,14 +35,14 @@ AVS_Instance* get_instance_from_handle(AVS_Handle avs) {
 AVS_API
 AVS_Handle avs_init(AVS_Audio_Source audio_source, AVS_Beat_Source beat_source) {
     make_effect_lib();
-    AVS_Handle new_handle = h_instances.get();
-    if (new_handle == 0) {
+    auto new_instance = new AVS_Instance(audio_source, beat_source);
+    if (new_instance->handle == 0) {
         g_error = "AVS handles exhausted (try unloading the library and reloading it)";
         return 0;
     }
-    g_instances[new_handle] = new AVS_Instance(audio_source, beat_source);
+    g_instances[new_instance->handle] = new_instance;
     g_error = NULL;
-    return new_handle;
+    return new_instance->handle;
 }
 
 AVS_API

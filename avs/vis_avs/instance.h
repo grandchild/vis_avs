@@ -56,6 +56,8 @@ class AVS_Instance {
                      int32_t buffer_num,
                      bool allocate_if_needed = false);
 
+    AVS_Handle handle;
+
     AVS_Audio_Source audio_source;
     AVS_Beat_Source beat_source;
     const char* error;
