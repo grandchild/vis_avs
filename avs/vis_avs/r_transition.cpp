@@ -117,7 +117,7 @@ int Transition::load_preset(char* file, int which, C_UndoItem* item) {
         this->enabled = false;
     }
 
-    int r = 0;
+    bool load_success = true;
 
     if (item) {
         if (item->size() < MAX_LEGACY_PRESET_FILESIZE_BYTES) {
@@ -132,11 +132,11 @@ int Transition::load_preset(char* file, int which, C_UndoItem* item) {
     } else {
         lstrcpyn(last_file, file, sizeof(last_file));
         if (file[0]) {
-            r = g_single_instance->preset_load_file(file);
+            load_success = g_single_instance->preset_load_file(file);
         } else {
             g_single_instance->clear_secondary();
         }
-        if (!r && l_w && l_h && (cfg_transitions2 & which)
+        if (load_success && l_w && l_h && (cfg_transitions2 & which)
             && ((cfg_transitions2 & 128) || DDraw_IsFullScreen())) {
             DWORD id;
             this->last_which = which;
@@ -149,7 +149,7 @@ int Transition::load_preset(char* file, int which, C_UndoItem* item) {
             this->do_transition_flag = 2;
         }
 
-        if (r) {
+        if (!load_success) {
             char s[MAX_PATH * 2];
             wsprintf(s,
                      "error loading: %s",
@@ -162,7 +162,7 @@ int Transition::load_preset(char* file, int which, C_UndoItem* item) {
         C_UndoStack::clear_dirty();
     }
 
-    return !!r;
+    return load_success;
 }
 
 void Transition::clean_prev_renders_if_needed() {

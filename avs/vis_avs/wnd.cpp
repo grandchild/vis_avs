@@ -161,9 +161,10 @@ HWND GetWinampHwnd(void) { return hwnd_WinampParent; }
 int LoadPreset(int preset) {
     char temp[MAX_PATH];
     wsprintf(temp, "%s\\PRESET%02d.APH", g_path, preset);
-    if (g_render_transition->load_preset(temp, 1)) {
+    if (!g_single_instance->preset_load_file(temp)) {
         return 0;
     }
+    PostMessage(g_hwndDlg, WM_USER + 20, 0, 0);
     if (preset < 12) {
         wsprintf(last_preset, "\\F%d.aph", preset + 1);
     } else if (preset < 22) {
@@ -1038,8 +1039,9 @@ void next_preset(HWND hwnd) {
         find_preset(i_path, 1, last_preset, dirmask, &state);
 
         if (dirmask[0] && stricmp(last_preset, dirmask)) {
-            if (g_render_transition->load_preset(dirmask, 2) != 2) {
+            if (g_single_instance->preset_load_file(dirmask)) {
                 lstrcpyn(last_preset, dirmask, sizeof(last_preset));
+                PostMessage(g_hwndDlg, WM_USER + 20, 0, 0);
             }
         }
     }
@@ -1062,8 +1064,9 @@ void random_preset(HWND hwnd) {
         find_preset(i_path, 0, NULL, dirmask, &state);
 
         if (dirmask[0] && g_render_transition) {
-            if (g_render_transition->load_preset(dirmask, 4) != 2) {
+            if (g_single_instance->preset_load_file(dirmask)) {
                 lstrcpyn(last_preset, dirmask, sizeof(last_preset));
+                PostMessage(g_hwndDlg, WM_USER + 20, 0, 0);
             }
         }
     }
@@ -1086,8 +1089,9 @@ void previous_preset(HWND hwnd) {
         find_preset(i_path, -1, last_preset, dirmask, &state);
 
         if (dirmask[0] && stricmp(last_preset, dirmask)) {
-            if (g_render_transition->load_preset(dirmask, 2) != 2) {
+            if (g_single_instance->preset_load_file(dirmask)) {
                 lstrcpyn(last_preset, dirmask, sizeof(last_preset));
+                PostMessage(g_hwndDlg, WM_USER + 20, 0, 0);
             }
         }
     }
@@ -1222,8 +1226,9 @@ void DoPopupMenu() {
                 if (findInMenu(presetTreeMenu, 0, x, buf, 2048)) {
                     char temp[4096];
                     wsprintf(temp, "%s%s.avs", g_path, buf);
-                    if (g_render_transition->load_preset(temp, 1) != 2) {
+                    if (g_single_instance->preset_load_file(temp)) {
                         lstrcpyn(last_preset, temp, sizeof(last_preset));
+                        PostMessage(g_hwndDlg, WM_USER + 20, 0, 0);
                     }
                 } else {
                     //            g_render_transition->load_preset
@@ -1586,8 +1591,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
             DragQueryFile(hdrop, 0, temp, sizeof(temp));
             if (readyToLoadPreset(hwnd, 0)) {
                 if (!stricmp(extension(temp), "avs")) {
-                    if (g_render_transition->load_preset(temp, 1) != 2) {
+                    if (g_single_instance->preset_load_file(temp)) {
                         lstrcpyn(last_preset, temp, sizeof(last_preset));
+                        PostMessage(g_hwndDlg, WM_USER + 20, 0, 0);
                     }
                 }
             }
