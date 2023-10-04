@@ -61,8 +61,8 @@ struct EffectList_Config : public Effect_Config {
     bool on_beat = false;
     int64_t on_beat_frames = 1;
     bool clear_every_frame = false;
-    int64_t input_blend_mode = 0;
-    int64_t output_blend_mode = 0;
+    int64_t input_blend_mode = LIST_BLEND_IGNORE;
+    int64_t output_blend_mode = LIST_BLEND_REPLACE;
     int64_t input_blend_adjustable = 128;
     int64_t output_blend_adjustable = 128;
     int64_t input_blend_buffer = 0;

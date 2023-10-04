@@ -781,7 +781,7 @@ void E_EffectList::load_legacy(unsigned char* data, int len) {
     if (pos < len) {
         first_mode_byte = data[pos++];
         this->config.clear_every_frame = first_mode_byte & 0b01;
-        this->enabled = (first_mode_byte & 0b10) >> 1;
+        this->enabled = !(first_mode_byte & 0b10);
     }
     uint8_t mode[4] = {0, 0, 0, 0};
     if (first_mode_byte & 0x80) {  // true for 99.99% of known legacy preset files.
@@ -897,7 +897,7 @@ uint32_t E_EffectList::legacy_save_code_section_size() {
 int E_EffectList::save_legacy(unsigned char* data) {
     uint32_t pos = 0;
     uint8_t first_mode_byte =
-        (this->config.clear_every_frame & 0x01) | ((!this->enabled) & 0x02);
+        (this->config.clear_every_frame & 0x01) | (!this->enabled ? 0x02 : 0x00);
     data[pos++] = first_mode_byte | 0x80;
     data[pos++] = first_mode_byte;
     data[pos++] = this->config.input_blend_mode & 0xff;
