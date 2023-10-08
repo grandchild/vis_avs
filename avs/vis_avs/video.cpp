@@ -558,7 +558,7 @@ bool AVS_Video::set_video_stream(size_t stream_index) {
 
 int64_t AVS_Video::wrap_frame_index(int64_t frame_index) {
     // The else branch makes the negative modulo behave like a downward continuation of
-    // positive modulo. Consider, with length 2:
+    // positive modulo. Consider, with length 3:
     //   input:  -3 -2 -1  0  1  2  3
     //   output:  0  1  2  0  1  2  0
     return frame_index >= 0 ? frame_index % this->length
