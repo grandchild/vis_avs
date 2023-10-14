@@ -46,7 +46,7 @@ class C_UndoItem {
     C_UndoItem& operator=(const C_UndoItem& T);
     bool operator==(const C_UndoItem& T) const;
 
-    void set(void* data, int length, bool isdirty);
+    void set(const void* data, int length, bool isdirty);
     void* get() const { return data; }
     int size() const { return length; }
 

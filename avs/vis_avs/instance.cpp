@@ -93,44 +93,49 @@ void AVS_Instance::preset_save_file(const char* file_path, bool indent) {}
 
 int AVS_Instance::preset_save_file_legacy(const char* file_path) {
     int result = -1;
-    auto data = (uint8_t*)calloc(MAX_LEGACY_PRESET_FILESIZE_BYTES, 1);
-    if (data) {
-        auto file_magic_length = strlen(AVS_Instance::legacy_file_magic);
-        memcpy(data, AVS_Instance::legacy_file_magic, file_magic_length);
-        size_t size = this->preset_save_legacy(data + file_magic_length);
-        size += file_magic_length;
-        if (size < MAX_LEGACY_PRESET_FILESIZE_BYTES) {
-            FILE* fp = fopen(file_path, "wb");
-            if (fp != nullptr) {
-                result = 0;
-                fwrite(data, 1, size, fp);
-                fclose(fp);
-            } else {
-                result = 2;
-            }
+    size_t size = 0;
+    auto data = this->preset_save_legacy(&size);
+    if (size < MAX_LEGACY_PRESET_FILESIZE_BYTES) {
+        FILE* fp = fopen(file_path, "wb");
+        if (fp != nullptr) {
+            result = 0;
+            fwrite(data, 1, size, fp);
+            fclose(fp);
         } else {
-            result = 1;
+            result = 2;
         }
-        free(data);
+    } else {
+        result = 1;
     }
     return result;
 }
 
 const char* AVS_Instance::preset_save() { return ""; }
 
-size_t AVS_Instance::preset_save_legacy(uint8_t* data, bool secondary) {
-    int success = -1;
+const uint8_t* AVS_Instance::preset_save_legacy(size_t* preset_length_out,
+                                                bool secondary) {
+    if (this->preset_legacy_save_buffer == nullptr) {
+        this->preset_legacy_save_buffer =
+            (uint8_t*)calloc(MAX_LEGACY_PRESET_FILESIZE_BYTES, sizeof(uint8_t));
+    }
     size_t pos = 0;
-    if (data) {
+    if (this->preset_legacy_save_buffer != nullptr && preset_length_out != nullptr) {
+        auto file_magic_length = strlen(AVS_Instance::legacy_file_magic);
+        memcpy(this->preset_legacy_save_buffer,
+               AVS_Instance::legacy_file_magic,
+               file_magic_length);
+        auto legacy_preset_content =
+            this->preset_legacy_save_buffer + file_magic_length;
         lock_lock(this->render_lock);
         if (secondary) {
-            pos += this->root_secondary.save_legacy(data);
+            pos += this->root_secondary.save_legacy(legacy_preset_content);
         } else {
-            pos += this->root.save_legacy(data);
+            pos += this->root.save_legacy(legacy_preset_content);
         }
+        lock_unlock(this->render_lock);
     }
-    lock_unlock(this->render_lock);
-    return pos;
+    *preset_length_out = pos;
+    return this->preset_legacy_save_buffer;
 }
 
 void AVS_Instance::clear() { this->root = E_Root(this); }

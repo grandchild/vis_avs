@@ -40,7 +40,8 @@ class AVS_Instance {
     void preset_save_file(const char* file_path, bool indent);
     int preset_save_file_legacy(const char* file_path);
     /** Allocate 1 MiB of memory at `data`. Return value is the actual size. */
-    size_t preset_save_legacy(uint8_t* data, bool secondary = false);
+    const uint8_t* preset_save_legacy(size_t* preset_length_out,
+                                      bool secondary = false);
     const char* preset_save();
     void clear();
     void clear_secondary();
@@ -77,4 +78,5 @@ class AVS_Instance {
     size_t buffers_w[num_buffers];
     size_t buffers_h[num_buffers];
     AVS_Pixel_Format buffers_pixel_format[num_buffers];
+    uint8_t* preset_legacy_save_buffer = nullptr;
 };

@@ -75,7 +75,7 @@ bool C_UndoItem::operator==(const C_UndoItem& T) const {
     return retval;
 }
 
-void C_UndoItem::set(void* _data, int _length, bool _isdirty) {
+void C_UndoItem::set(const void* _data, int _length, bool _isdirty) {
     length = _length;
     isdirty = _isdirty;
     if (data) {
@@ -90,11 +90,10 @@ void C_UndoStack::save_undo(bool save_secondary) {
     C_UndoItem* item = new C_UndoItem;
     C_UndoItem* old = list[list_pos];
 
-    uint8_t* data = (uint8_t*)calloc(MAX_LEGACY_PRESET_FILESIZE_BYTES, 1);
-    size_t size =
-        g_single_instance->preset_save_legacy(data, /*secondary*/ save_secondary);
+    size_t size = 0;
+    auto data =
+        g_single_instance->preset_save_legacy(&size, /*secondary*/ save_secondary);
     item->set(data, (int)size, false);
-    free(data);
 
     // Only add it to the stack if it has changed.
     if (!old || !(*old == *item)) {
