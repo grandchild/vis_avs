@@ -74,7 +74,11 @@ void NSEEL_set_compile_hooks(char* (*precompile_hook)(NSEEL_VMCTX ctx,
                              void (*postcompile_hook)(void));
 void NSEEL_unset_compile_hooks();
 
+#ifdef _WIN32
 #define NAKED __declspec(naked)
+#else
+#define NAKED __attribute__((naked))
+#endif
 
 // configuration:
 
