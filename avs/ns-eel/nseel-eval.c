@@ -31,7 +31,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "ns-eel-int.h"
 
-#include <windows.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define NSEEL_VARS_PER_BLOCK        64
 #define NSEEL_VARS_MALLOC_CHUNKSIZE 8
@@ -46,6 +48,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define HEXCONST 3
 #define VARIABLE 4
 #define OTHER    5
+
+static int strnicmp_(const char* a, const char* b, size_t len) {
+    int ca;
+    int cb;
+    size_t i = 0;
+    do {
+        ca = (unsigned char)*a++;
+        cb = (unsigned char)*b++;
+        ca = tolower(toupper(ca));
+        cb = tolower(toupper(cb));
+        i++;
+    } while (ca == cb && ca != '\0' && i < len);
+    return ca - cb;
+}
 
 double nseel_globalregs[100];
 
@@ -73,9 +89,9 @@ static int register_var(compileContext* ctx, char* name, double** ptr) {
         int namepos = 0;
         for (ti = 0; ti < NSEEL_VARS_PER_BLOCK; ti++) {
             if (!ctx->varTable_Names[wb][namepos]
-                || !strnicmp(ctx->varTable_Names[wb] + namepos,
-                             name,
-                             NSEEL_MAX_VARIABLE_NAMELEN)) {
+                || !strnicmp_(ctx->varTable_Names[wb] + namepos,
+                              name,
+                              NSEEL_MAX_VARIABLE_NAMELEN)) {
                 break;
             }
             namepos += NSEEL_MAX_VARIABLE_NAMELEN;
@@ -122,7 +138,7 @@ int nseel_setVar(compileContext* ctx, int varNum) {
     if (varNum < 0)  // adding new var
     {
         char* var = ctx->lastVar;
-        if (!strnicmp(var, "reg", 3) && strlen(var) == 5 && isdigit(var[3])
+        if (!strnicmp_(var, "reg", 3) && strlen(var) == 5 && isdigit(var[3])
             && isdigit(var[4])) {
             int i, x = atoi(var + 3);
             if (x < 0 || x > 99) {
@@ -182,7 +198,7 @@ double* NSEEL_VM_regvar(NSEEL_VMCTX _ctx, char* var) {
         return 0;
     }
 
-    if (!strnicmp(var, "reg", 3) && strlen(var) == 5 && isdigit(var[3])
+    if (!strnicmp_(var, "reg", 3) && strlen(var) == 5 && isdigit(var[3])
         && isdigit(var[4])) {
         int x = atoi(var + 3);
         if (x < 0 || x > 99) {
@@ -234,7 +250,7 @@ int nseel_lookup(compileContext* ctx, int* typeOfObject) {
     int i;
     nseel_gettoken(ctx, ctx->yytext, sizeof(ctx->yytext));
 
-    if (!strnicmp(ctx->yytext, "reg", 3) && strlen(ctx->yytext) == 5
+    if (!strnicmp_(ctx->yytext, "reg", 3) && strlen(ctx->yytext) == 5
         && isdigit(ctx->yytext[3]) && isdigit(ctx->yytext[4])
         && (i = atoi(ctx->yytext + 3)) >= 0 && i < 100) {
         *typeOfObject = IDENTIFIER;
@@ -252,9 +268,9 @@ int nseel_lookup(compileContext* ctx, int* typeOfObject) {
                     break;
                 }
 
-                if (!strnicmp(ctx->varTable_Names[wb] + namepos,
-                              ctx->yytext,
-                              NSEEL_MAX_VARIABLE_NAMELEN)) {
+                if (!strnicmp_(ctx->varTable_Names[wb] + namepos,
+                               ctx->yytext,
+                               NSEEL_MAX_VARIABLE_NAMELEN)) {
                     *typeOfObject = IDENTIFIER;
                     return i;
                 }
@@ -270,7 +286,7 @@ int nseel_lookup(compileContext* ctx, int* typeOfObject) {
 
     for (i = 0; nseel_getFunctionFromTable(i); i++) {
         functionType* f = nseel_getFunctionFromTable(i);
-        if (!strcmpi(f->name, ctx->yytext)) {
+        if (!strnicmp_(f->name, ctx->yytext, NSEEL_MAX_VARIABLE_NAMELEN)) {
             switch (f->nParams) {
                 case 1: *typeOfObject = FUNCTION1; break;
                 case 2: *typeOfObject = FUNCTION2; break;

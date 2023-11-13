@@ -31,7 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "r_defs.h"
 
-#include <windows.h>
 #include <math.h>
 
 #define SWAP(x, y, temp) \

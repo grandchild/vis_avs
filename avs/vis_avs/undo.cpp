@@ -33,8 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "render.h"
 
-#include <windows.h>
-
 unsigned int C_UndoStack::list_pos;
 C_UndoItem* C_UndoStack::list[256];
 

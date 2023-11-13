@@ -34,12 +34,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "r_defs.h"
 
 #include "cfgwin.h"
-#include "draw.h"
 #include "render.h"
 
 #include <windows.h>
 #include <math.h>
-#include <process.h>
 #include <stdio.h>
 extern char* scanstr_back(char* str, char* toscan, char* defval);
 

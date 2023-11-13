@@ -34,7 +34,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../platform.h"
 
-#include <windows.h>
 #include <math.h>
 
 // these are used by our assembly code
