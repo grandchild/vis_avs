@@ -124,14 +124,15 @@ void E_SVP::set_library() {
     this->vi = NULL;
     this->library = library_load(library_path.c_str());
     if (this->library) {
-        VisInfo* (*qm)(void);
-        *(void**)&qm = library_get(this->library, "QueryModule");
-        if (!qm) {
-            *(void**)&qm =
-                library_get(this->library, "?QueryModule@@YAPAUUltraVisInfo@@XZ");
+        VisInfo* (*query_module)(void);
+        query_module =
+            (decltype(query_module))library_get(this->library, "QueryModule");
+        if (!query_module) {
+            query_module = (decltype(query_module))library_get(
+                this->library, "?QueryModule@@YAPAUUltraVisInfo@@XZ");
         }
 
-        if (!qm || !(this->vi = qm())) {
+        if (!query_module || !(this->vi = query_module())) {
             this->vi = NULL;
             library_unload(this->library);
             this->library = NULL;

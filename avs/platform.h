@@ -89,12 +89,14 @@ void lock_destroy(lock_t* lock_obj);
  * Returns NULL on error.
  */
 dlib_t* library_load(const char* path);
+
+typedef void (*func_t)();
 /**
  * Get a pointer to a named function in the library.
  * Use `FORCE_FUNCTION_CAST()` to cast the function type to the correct one.
  * Returns NULL on error.
  */
-void* library_get(dlib_t* library, const char* func_name);
+func_t library_get(dlib_t* library, const char* func_name);
 /**
  * Unmap the given library from memory and destroy the library object.
  */
