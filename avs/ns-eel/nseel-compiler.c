@@ -243,26 +243,10 @@ static void* __newBlock(llBlock** start, int size) {
     }
     // grab bigger block if absolutely necessary (heh)
     llb = (llBlock*)malloc(alloc_size);
+
     // TODO [bug]: make memory read-write-executable -- apparently not needed atm in
     // wine
-    /* // ripped from EEL2:
-    #ifdef _WIN32
-      DWORD ov;
-      int offs = ((UINT_PTR)llb) & ~4095;
-      int eoffs = ((UINT_PTR)llb + alloc_size + 4095) & ~4095;
-      VirtualProtect((void*)offs, eoffs-offs, PAGE_EXECUTE_READWRITE, &ov);
-    #else
-      static int pagesize = 0;
-      if (!pagesize) {
-        pagesize=sysconf(_SC_PAGESIZE);
-        if (!pagesize) pagesize = 4096;
-      }
-      unsigned int* offs, eoffs;
-      offs = ((unsigned int*)llb) & ~(pagesize - 1);
-      eoffs = ((unsigned int*)llb + alloc_size + pagesize - 1) & ~(pagesize - 1);
-      mprotect((void*)offs, eoffs-offs, PROT_WRITE | PROT_READ | PROT_EXEC);
-    #endif
-    */
+    mem_mark_rwx(llb, alloc_size);
     llb->sizeused = size;
     llb->next = *start;
     *start = llb;

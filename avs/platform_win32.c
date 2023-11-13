@@ -160,3 +160,13 @@ void library_unload(dlib_t* library) {
 /* mkdir */
 
 int create_directory(const char* path) { return CreateDirectory(path, NULL); }
+
+/* memory read-write-exec */
+
+void mem_mark_rwx(void* block, size_t length) {
+    unsigned int alignment_mask = ~4095;
+    void* block_aligned = (void*)((unsigned int)block & alignment_mask);
+    size_t length_aligned = (((unsigned int)block + length + 4095) & alignment_mask)
+                            - (unsigned int)block_aligned;
+    VirtualProtect(block_aligned, length_aligned, PAGE_EXECUTE_READWRITE, NULL);
+}

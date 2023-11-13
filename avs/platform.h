@@ -205,6 +205,10 @@ void log_warn(const char* fmt, ...);
  */
 void log_err(const char* fmt, ...);
 
+/* memory read-write-exec */
+
+void mem_mark_rwx(void* block, size_t length);
+
 #ifdef __cplusplus
 }
 #endif
