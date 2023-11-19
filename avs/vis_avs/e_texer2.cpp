@@ -321,7 +321,7 @@ void E_Texer2::DrawParticle(int* framebuffer,
 
             switch (g_line_blend_mode & 0xFF) {
                 case BLEND_REPLACE: {
-                    __int64 mmxxor = 0x00FF00FF00FF00FF;
+                    int64_t mmxxor = 0x00FF00FF00FF00FF;
                     int tot = r2.right - r2.left;
                     int* outp = &framebuffer[r2.top * (w + 1) + r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -343,7 +343,7 @@ void E_Texer2::DrawParticle(int* framebuffer,
                 }
 
                 case BLEND_ADDITIVE: {
-                    __int64 mmxxor = 0x00FF00FF00FF00FF;
+                    int64_t mmxxor = 0x00FF00FF00FF00FF;
                     int tot = r2.right - r2.left;
                     int* outp = &framebuffer[r2.top * (w + 1) + r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -371,7 +371,7 @@ void E_Texer2::DrawParticle(int* framebuffer,
                 case BLEND_MAXIMUM: {
                     int signmask = 0x808080;
                     T2_SCALE_MINMAX_SIGNMASK
-                    __int64 mmxxor = 0x00FF00FF00FF00FF;
+                    int64_t mmxxor = 0x00FF00FF00FF00FF;
                     int tot = r2.right - r2.left;
                     int* outp = &framebuffer[r2.top * (w + 1) + r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -427,7 +427,7 @@ void E_Texer2::DrawParticle(int* framebuffer,
                 }
 
                 case BLEND_5050: {
-                    __int64 mmxxor = 0x00FF00FF00FF00FF;
+                    int64_t mmxxor = 0x00FF00FF00FF00FF;
                     int tot = r2.right - r2.left;
                     int* outp = &framebuffer[r2.top * (w + 1) + r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -459,7 +459,7 @@ void E_Texer2::DrawParticle(int* framebuffer,
                 }
 
                 case BLEND_SUB1: {
-                    __int64 mmxxor = 0x00FF00FF00FF00FF;
+                    int64_t mmxxor = 0x00FF00FF00FF00FF;
                     int tot = r2.right - r2.left;
                     int* outp = &framebuffer[r2.top * (w + 1) + r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -491,7 +491,7 @@ void E_Texer2::DrawParticle(int* framebuffer,
                 }
 
                 case BLEND_SUB2: {
-                    __int64 mmxxor = 0x00FF00FF00FF00FF;
+                    int64_t mmxxor = 0x00FF00FF00FF00FF;
                     int tot = r2.right - r2.left;
                     int* outp = &framebuffer[r2.top * (w + 1) + r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -519,7 +519,7 @@ void E_Texer2::DrawParticle(int* framebuffer,
                 }
 
                 case BLEND_MULTIPLY: {
-                    __int64 mmxxor = 0x00FF00FF00FF00FF;
+                    int64_t mmxxor = 0x00FF00FF00FF00FF;
                     int tot = r2.right - r2.left;
                     int* outp = &framebuffer[r2.top * (w + 1) + r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -555,10 +555,10 @@ void E_Texer2::DrawParticle(int* framebuffer,
                 }
 
                 case BLEND_ADJUSTABLE: {
-                    __int64 alphavalue = 0x0;
-                    __int64* alpha = &alphavalue;
+                    int64_t alphavalue = 0x0;
+                    int64_t* alpha = &alphavalue;
                     int t = (g_line_blend_mode & 0xFF00) >> 8;
-                    __int64 mmxxor = 0x00FF00FF00FF00FF;
+                    int64_t mmxxor = 0x00FF00FF00FF00FF;
                     T2_SCALE_BLEND_AND_STORE_ALPHA
                     int tot = r2.right - r2.left;
                     int* outp = &framebuffer[r2.top * (w + 1) + r2.left];
@@ -601,7 +601,7 @@ void E_Texer2::DrawParticle(int* framebuffer,
                 }
 
                 case BLEND_XOR: {
-                    __int64 mmxxor = 0x00FF00FF00FF00FF;
+                    int64_t mmxxor = 0x00FF00FF00FF00FF;
                     int tot = r2.right - r2.left;
                     int* outp = &framebuffer[r2.top * (w + 1) + r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -626,7 +626,7 @@ void E_Texer2::DrawParticle(int* framebuffer,
 
                 case BLEND_MINIMUM: {
                     int signmask = 0x808080;
-                    __int64 mmxxor = 0x00FF00FF00FF00FF;
+                    int64_t mmxxor = 0x00FF00FF00FF00FF;
                     int tot = r2.right - r2.left;
                     int* outp = &framebuffer[r2.top * (w + 1) + r2.left];
                     for (int y = r2.top; y <= r2.bottom; ++y) {
@@ -1033,12 +1033,12 @@ void E_Texer2::DrawParticle(int* framebuffer,
                 }
 
                 case BLEND_ADJUSTABLE: {
-                    __int64 alphavalue = 0x0;
-                    __int64* alpha = &alphavalue;
+                    int64_t alphavalue = 0x0;
+                    int64_t* alpha = &alphavalue;
                     // TODO [bugfix]: shouldn't salpha be 255, not 256?
                     // it's used to calculate 256 - alpha, and if max_alpha = 255,
                     // then...
-                    __int64 salpha = 0x0100010001000100;
+                    int64_t salpha = 0x0100010001000100;
                     int t = (g_line_blend_mode & 0xFF00) >> 8;
                     T2_NONSCALE_BLEND_AND_STORE_ALPHA
                     T2_NONSCALE_PUSH_ESI_EDI
@@ -1413,12 +1413,12 @@ void E_Texer2::DrawParticle(int* framebuffer,
                 }
 
                 case BLEND_ADJUSTABLE: {
-                    __int64 alphavalue = 0x0;
-                    __int64* alpha = &alphavalue;
+                    int64_t alphavalue = 0x0;
+                    int64_t* alpha = &alphavalue;
                     // TODO [bugfix]: shouldn't salpha be 255, not 256?
                     // it's used to calculate 256 - alpha, and if max_alpha = 255,
                     // then...
-                    __int64 salpha = 0x0100010001000100;
+                    int64_t salpha = 0x0100010001000100;
                     int t = (g_line_blend_mode & 0xFF00) >> 8;
                     T2_NONSCALE_BLEND_AND_STORE_ALPHA
                     T2_NONSCALE_PUSH_ESI_EDI

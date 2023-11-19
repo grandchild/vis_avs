@@ -151,7 +151,7 @@ void E_Blur::smp_render(int this_thread,
         {
             int y = outh - at_top - at_bottom;
             unsigned int adj_tl1 = 0, adj_tl2 = 0;
-            unsigned __int64 adj2 = 0;
+            uint64_t adj2 = 0;
             if (this->config.round == BLUR_ROUND_UP) {
                 adj_tl1 = 0x04040404;
                 adj_tl2 = 0x05050505;
@@ -483,7 +483,7 @@ mmx_light_blur_loop:
         {
             int y = outh - at_top - at_bottom;
             int adj_tl1 = 0, adj_tl2 = 0;
-            unsigned __int64 adj2 = 0;
+            uint64_t adj2 = 0;
             if (this->config.round == BLUR_ROUND_UP) {
                 adj_tl1 = 0x02020202;
                 adj_tl2 = 0x03030303;
@@ -777,7 +777,7 @@ mmx_heavy_blur_loop:
         {
             int y = outh - at_top - at_bottom;
             int adj_tl1 = 0, adj_tl2 = 0;
-            unsigned __int64 adj2 = 0;
+            uint64_t adj2 = 0;
             if (this->config.round == BLUR_ROUND_UP) {
                 adj_tl1 = 0x03030303;
                 adj_tl2 = 0x04040404;

@@ -170,7 +170,8 @@ int E_BlitterFeedback::blitter_normal(int* framebuffer,
             }
 #else
             {
-                __int64 mem5, mem7;
+                int64_t mem5 = 0;
+                int64_t mem7 = 0;
 #ifdef _MSC_VER  // MSVC asm
                 __asm {
             mov edi, fbout

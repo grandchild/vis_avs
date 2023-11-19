@@ -50,7 +50,7 @@ int E_Multiplier::render(char[2][2][576],
     }
 
     int /*b,*/ c;  // TODO [cleanup]: see below
-    __int64 mask;
+    int64_t mask;
 
     c = w * h;
     switch (config.multiply) {
