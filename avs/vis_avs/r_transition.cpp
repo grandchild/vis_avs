@@ -54,40 +54,18 @@ Transition::Transition()
 }
 
 Transition::~Transition() {
-    if (initThread) {
-        WaitForSingleObject(initThread, INFINITE);
-        CloseHandle(initThread);
-        initThread = nullptr;
-    }
-    for (auto& fb : this->fbs) {
-        free(fb);
-        fb = nullptr;
+    if (this->initThread) {
+        thread_join(this->initThread, 100 /*ms*/);
+        thread_destroy(this->initThread);
+        this->initThread = nullptr;
     }
 }
 
-unsigned int WINAPI Transition::m_initThread(LPVOID p) {
+unsigned int Transition::m_initThread(void* p) {
     auto transition = (Transition*)p;
-    FILETIME ft;
-    GetSystemTimeAsFileTime(&ft);
-    srand(ft.dwLowDateTime | (ft.dwHighDateTime ^ GetCurrentThreadId()));
+    srand(timer_us());
     if (cfg_transitions2 & 32) {
-        extern HANDLE g_hThread;
-
-        int d = GetThreadPriority(g_hThread);
-        if (d == THREAD_PRIORITY_TIME_CRITICAL) {
-            d = THREAD_PRIORITY_HIGHEST;
-        } else if (d == THREAD_PRIORITY_HIGHEST) {
-            d = THREAD_PRIORITY_ABOVE_NORMAL;
-        } else if (d == THREAD_PRIORITY_ABOVE_NORMAL) {
-            d = THREAD_PRIORITY_NORMAL;
-        } else if (d == THREAD_PRIORITY_NORMAL) {
-            d = THREAD_PRIORITY_BELOW_NORMAL;
-        } else if (d == THREAD_PRIORITY_BELOW_NORMAL) {
-            d = THREAD_PRIORITY_LOWEST;
-        } else if (d == THREAD_PRIORITY_LOWEST) {
-            d = THREAD_PRIORITY_IDLE;
-        }
-        SetThreadPriority(GetCurrentThread(), d);
+        thread_decrease_priority(thread_current());
     }
     int* fb = (int*)calloc(transition->l_w * transition->l_h, sizeof(int));
     char last_visdata[2][2][576] = {{{0}}};
@@ -97,17 +75,16 @@ unsigned int WINAPI Transition::m_initThread(LPVOID p) {
 
     transition->do_transition_flag = 2;
 
-    _endthreadex(0);
     return 0;
 }
 
 int Transition::load_preset(char* file, int which, C_UndoItem* item) {
     if (this->initThread) {
-        if (WaitForSingleObject(this->initThread, 0) == WAIT_TIMEOUT) {
-            DDraw_SetStatusText("loading [wait]...", 1000 * 100);
+        if (!thread_join(this->initThread, 0)) {
+            // DDraw_SetStatusText("loading [wait]...", 1000 * 100);
             return 2;
         }
-        CloseHandle(this->initThread);
+        thread_destroy(this->initThread);
         this->initThread = nullptr;
     }
 
@@ -135,13 +112,12 @@ int Transition::load_preset(char* file, int which, C_UndoItem* item) {
             g_single_instance->clear_secondary();
         }
         if (load_success && l_w && l_h && (cfg_transitions2 & which)
-            && ((cfg_transitions2 & 128) || DDraw_IsFullScreen())) {
+            && ((cfg_transitions2 & 128) /*|| DDraw_IsFullScreen()*/)) {
             DWORD id;
             this->last_which = which;
             this->do_transition_flag = 1;
-            this->initThread = (HANDLE)_beginthreadex(
-                nullptr, 0, m_initThread, (LPVOID)this, 0, (unsigned int*)&id);
-            DDraw_SetStatusText("loading...", 1000 * 100);
+            this->initThread = thread_create(Transition::m_initThread, this);
+            // DDraw_SetStatusText("loading...", 1000 * 100);
         } else {
             this->last_which = which;
             this->do_transition_flag = 2;
@@ -152,7 +128,7 @@ int Transition::load_preset(char* file, int which, C_UndoItem* item) {
             wsprintf(s,
                      "error loading: %s",
                      scanstr_back(last_file, "\\", last_file - 1) + 1);
-            DDraw_SetStatusText(s);
+            // DDraw_SetStatusText(s);
             this->do_transition_flag = 3;
         }
         C_UndoStack::clear();
@@ -216,7 +192,7 @@ int Transition::render(char visdata[2][2][576],
             buf[510] = 0;
             scanstr_back(buf, ".", buf + strlen(buf))[0] = 0;
             strcat(buf, " ");
-            DDraw_SetStatusText(buf);
+            // DDraw_SetStatusText(buf);
         }
     }
 

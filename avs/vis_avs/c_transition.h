@@ -51,7 +51,7 @@ class Transition {
     bool prev_renders_need_cleanup;
 
    public:
-    static unsigned int __stdcall m_initThread(void* p);
+    static unsigned int m_initThread(void* p);
 
     int load_preset(char* file, int which, C_UndoItem* item = 0);  // 0 on success
     void clean_prev_renders_if_needed();
