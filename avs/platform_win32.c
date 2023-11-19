@@ -107,6 +107,8 @@ thread_t* thread_create(uint32_t (*func)(void* data), void* data) {
     return CreateThread(NULL, 0, (win32_threadproc_type)func, data, 0, NULL);
 }
 
+thread_t* thread_current() { return GetCurrentThread(); }
+
 bool thread_join(thread_t* thread, int32_t wait_ms) {
     uint32_t wait = wait_ms == WAIT_INFINITE ? INFINITE : (uint32_t)wait_ms;
     return WaitForSingleObject(thread, wait) == WAIT_OBJECT_0;
@@ -116,6 +118,25 @@ bool thread_join_all(thread_t** threads, uint32_t num_threads, int32_t wait_ms) 
     uint32_t wait = wait_ms == WAIT_INFINITE ? INFINITE : (uint32_t)wait_ms;
     uint32_t wait_result = WaitForMultipleObjects(num_threads, threads, true, wait);
     return wait_result < WAIT_ABANDONED_0 && wait_result < num_threads;
+}
+
+bool thread_decrease_priority(thread_t* thread) {
+    if (thread == NULL) {
+        return false;
+    }
+    int cur_prio = GetThreadPriority(thread);
+    if (cur_prio == THREAD_PRIORITY_ERROR_RETURN || cur_prio == THREAD_PRIORITY_IDLE) {
+        return false;
+    }
+    int lower_prio = cur_prio;
+    if (cur_prio == THREAD_PRIORITY_TIME_CRITICAL) {
+        lower_prio = THREAD_PRIORITY_HIGHEST;
+    } else if (cur_prio == THREAD_PRIORITY_LOWEST) {
+        lower_prio = THREAD_PRIORITY_IDLE;
+    } else {
+        lower_prio -= 1;
+    }
+    return (bool)SetThreadPriority(thread, lower_prio);
 }
 
 void thread_destroy(thread_t* thread) { CloseHandle(thread); }

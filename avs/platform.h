@@ -145,6 +145,10 @@ void signal_destroy(signal_t* signal);
  */
 thread_t* thread_create(uint32_t (*func)(void* data), void* data);
 /**
+ * Get the current thread.
+ */
+thread_t* thread_current();
+/**
  * Wait for a thread to finish, at most `wait_ms`.
  * Pass `WAIT_INFINITE` to `wait_ms` to wait forever.
  * Returns false if timeout was hit or other error occurred.
@@ -156,6 +160,19 @@ bool thread_join(thread_t* thread, int32_t wait_ms);
  * Returns false if timeout was hit or other error occurred.
  */
 bool thread_join_all(thread_t** threads, uint32_t num_threads, int32_t wait_ms);
+/**
+ * Decrease the priority of the thread. Return true when successful. Possible reasons
+ * for error are:
+ * - `thread` is NULL,
+ * - the thread is already running at the lowest priority,
+ * - failure to get the thread's current priority
+ * - failure to set the thread's new priority (permissions, etc.)
+ *
+ * Note: Only superusers can raise a thread's priority after it has been lowered (on
+ * both Windows and Linux). So there's only this method, and no "increase priority"
+ * method.
+ */
+bool thread_decrease_priority(thread_t* thread);
 /**
  * Destroy the given thread object.
  */
