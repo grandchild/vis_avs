@@ -211,6 +211,11 @@ void log_err(const char* fmt, ...);
 
 void mem_mark_rwx(void* block, size_t length);
 
+/**
+ * Print the last OS API error message.
+ */
+void print_last_system_error();
+
 #ifdef __cplusplus
 }
 #endif

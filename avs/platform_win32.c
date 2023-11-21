@@ -2,6 +2,7 @@
 
 #include <windows.h>
 #include <commctrl.h>
+#include <stdio.h>
 #include <windowsx.h>
 
 /* timers */
@@ -169,4 +170,22 @@ void mem_mark_rwx(void* block, size_t length) {
     size_t length_aligned = (((unsigned int)block + length + 4095) & alignment_mask)
                             - (unsigned int)block_aligned;
     VirtualProtect(block_aligned, length_aligned, PAGE_EXECUTE_READWRITE, NULL);
+}
+
+/* errors */
+
+void print_last_system_error() {
+    const size_t buffer_size = 1024;
+    char buffer[buffer_size];
+    if (!FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+                       0,
+                       GetLastError(),
+                       0,
+                       buffer,
+                       buffer_size,
+                       NULL)) {
+        printf("Format message failed with 0x%lx\n", GetLastError());
+        return;
+    }
+    printf("!! %s", buffer);
 }
