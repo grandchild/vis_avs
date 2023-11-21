@@ -38,7 +38,7 @@ AVS_Video::AVS_Video(const char* filename,
       playback_lock(lock_init()) {
     if (!this->av->loaded) {
         this->error =
-            this->av->load_error != NULL ? this->av->load_error : "libav not loaded";
+            LibAV::load_error != NULL ? LibAV::load_error : "libav not loaded";
         return;
     }
     if (!this->init(filename)) {
@@ -64,12 +64,12 @@ bool AVS_Video::init(const char* filename) {
     if (this->av->demuxer != NULL) {
         this->close();
     }
-    this->av->demuxer = this->av->avformat_alloc_context();
+    this->av->demuxer = LibAV::alloc_context();
     if (!this->av->demuxer) {
         this->error = "demuxer context alloc failed";
         return false;
     }
-    if (this->av->avformat_open_input(&this->av->demuxer, filename, NULL, NULL) != 0) {
+    if (LibAV::open_input(&this->av->demuxer, filename, NULL, NULL) != 0) {
         this->error = "open input failed";
         return false;
     }
@@ -85,8 +85,8 @@ bool AVS_Video::init(const char* filename) {
         this->error = "no video stream found";
         return false;
     }
-    this->video_stream = this->av->av_find_best_stream(
-        this->av->demuxer, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
+    this->video_stream =
+        LibAV::find_best_stream(this->av->demuxer, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
     if (this->video_stream < 0) {
         this->error = "select best video stream failed (this shouldn't occur)";
         return false;
@@ -103,35 +103,33 @@ bool AVS_Video::init_codec() {
     this->cache.video_length = this->length;
     this->duration_ms = ((double)1000.0) * stream->duration * stream->time_base.num
                         / stream->time_base.den;
-    this->av->codec = this->av->avcodec_find_decoder(
+    this->av->codec = LibAV::find_decoder(
         this->av->demuxer->streams[this->video_stream]->codecpar->codec_id);
     if (this->av->codec == NULL) {
         this->error = "no decoder for video codec";
         return false;
     }
 
-    this->av->decoder = this->av->avcodec_alloc_context3(this->av->codec);
+    this->av->decoder = LibAV::alloc_context3(this->av->codec);
     if (!this->av->decoder) {
         this->error = "decoder context alloc failed";
         return false;
     }
-    if (this->av->avcodec_parameters_to_context(this->av->decoder,
-                                                this->av->codec_params)
-        < 0) {
+    if (LibAV::parameters_to_context(this->av->decoder, this->av->codec_params) < 0) {
         this->error = "decoder context init failed";
         return false;
     }
-    if (this->av->avcodec_open2(this->av->decoder, this->av->codec, NULL) < 0) {
+    if (LibAV::open2(this->av->decoder, this->av->codec, NULL) < 0) {
         this->error = "decoder open failed";
         return false;
     }
 
-    this->av->packet = this->av->av_packet_alloc();
+    this->av->packet = LibAV::packet_alloc();
     if (!this->av->packet) {
         this->error = "cannot allocate decoder packet";
         return false;
     }
-    this->av->frame = this->av->av_frame_alloc();
+    this->av->frame = LibAV::frame_alloc();
     if (!this->av->frame) {
         this->error = "cannot allocate decoder frame";
         return false;
@@ -141,14 +139,14 @@ bool AVS_Video::init_codec() {
 
 void AVS_Video::close() {
     this->close_codec();
-    this->av->avformat_close_input(&this->av->demuxer);  // also frees the context
+    LibAV::close_input(&this->av->demuxer);  // also frees the context
     this->av->demuxer = NULL;
 }
 
 void AVS_Video::close_codec() {
-    this->av->avcodec_free_context(&this->av->decoder);
-    this->av->av_frame_free(&this->av->frame);
-    this->av->av_packet_free(&this->av->packet);
+    LibAV::free_context(&this->av->decoder);
+    LibAV::frame_free(&this->av->frame);
+    LibAV::packet_free(&this->av->packet);
     this->av->decoder = NULL;
     this->av->frame = NULL;
     this->av->packet = NULL;
@@ -278,21 +276,19 @@ bool AVS_Video::next_frame() {
     bool success = false;
     if (this->pf_status == PF_STATUS_HAVE_FRAME) {
         success = this->frame_from_packet();
-        this->av->av_packet_unref(this->av->packet);
+        LibAV::packet_unref(this->av->packet);
         if (this->pf_status != PF_STATUS_NEXT_PACKET) {
             return success;
         }
     }
     while (true) {
-        int read_frame_result =
-            this->av->av_read_frame(this->av->demuxer, this->av->packet);
+        int read_frame_result = LibAV::read_frame(this->av->demuxer, this->av->packet);
         if (read_frame_result == AVERROR_EOF || this->pf_status == PF_STATUS_EOF) {
-            this->av->av_seek_frame(this->av->demuxer, -1, 0, 0);
+            LibAV::seek_frame(this->av->demuxer, -1, 0, 0);
             continue;
         }
         if (this->av->packet->stream_index == this->video_stream) {
-            response =
-                this->av->avcodec_send_packet(this->av->decoder, this->av->packet);
+            response = LibAV::send_packet(this->av->decoder, this->av->packet);
             if (response < 0) {
                 this->error = "packet decode failed (send)";
                 this->pf_status = PF_STATUS_ERROR;
@@ -306,7 +302,7 @@ bool AVS_Video::next_frame() {
         } else {
             this->pf_status = PF_STATUS_NEXT_PACKET;
         }
-        this->av->av_packet_unref(this->av->packet);
+        LibAV::packet_unref(this->av->packet);
         if (this->pf_status != PF_STATUS_NEXT_PACKET) {
             break;
         }
@@ -317,7 +313,7 @@ bool AVS_Video::next_frame() {
 bool AVS_Video::frame_from_packet() {
     int response = 0;
     while (response >= 0) {
-        response = this->av->avcodec_receive_frame(this->av->decoder, this->av->frame);
+        response = LibAV::receive_frame(this->av->decoder, this->av->frame);
         if (response == AVERROR_EOF) {
             this->pf_status = PF_STATUS_EOF;
             return false;
@@ -333,7 +329,7 @@ bool AVS_Video::frame_from_packet() {
         if (!this->resample_and_cache_frame()) {
             return false;
         }
-        this->av->av_frame_unref(this->av->frame);
+        LibAV::frame_unref(this->av->frame);
         return true;
     }
     return false;
@@ -358,13 +354,13 @@ bool AVS_Video::resample_and_cache_frame() {
     auto dest_linesize = this->resampler.dest.width
                          * (int32_t)pixel_size(this->resampler.dest.pixel_format);
     const int dest_linesizes[4] = {dest_linesize, 0, 0, 0};
-    this->av->sws_scale(this->av->scaler,
-                        this->av->frame->data,
-                        this->av->frame->linesize,
-                        0,
-                        this->av->frame->height,
-                        dest_bufs,
-                        dest_linesizes);
+    LibAV::scale(this->av->scaler,
+                 this->av->frame->data,
+                 this->av->frame->linesize,
+                 0,
+                 this->av->frame->height,
+                 dest_bufs,
+                 dest_linesizes);
     return true;
 }
 
@@ -415,17 +411,17 @@ bool AVS_Video::recreate_resampler_if_needed() {
             case AVS_Video::SCALE_BICUBIC: scaling = SWS_BICUBIC; break;
             case AVS_Video::SCALE_SPLINE: scaling = SWS_SPLINE; break;
         }
-        this->av->sws_freeContext(this->av->scaler);
-        this->av->scaler = this->av->sws_getContext(this->resampler.src_width,
-                                                    this->resampler.src_height,
-                                                    src_pixel_format,
-                                                    this->resampler.dest.width,
-                                                    this->resampler.dest.height,
-                                                    dest_pixel_format,
-                                                    scaling,
-                                                    NULL,
-                                                    NULL,
-                                                    0);
+        LibAV::freeContext(this->av->scaler);
+        this->av->scaler = LibAV::getContext(this->resampler.src_width,
+                                             this->resampler.src_height,
+                                             src_pixel_format,
+                                             this->resampler.dest.width,
+                                             this->resampler.dest.height,
+                                             dest_pixel_format,
+                                             scaling,
+                                             NULL,
+                                             NULL,
+                                             0);
         if (this->av->scaler == NULL) {
             this->error = "scaler context alloc failed";
             return false;
@@ -533,10 +529,10 @@ bool AVS_Video::seek(int64_t frame_index) {
     frame_index = max(0, frame_index);
     auto stream = this->av->demuxer->streams[this->video_stream];
     auto result =
-        this->av->av_seek_frame(this->av->demuxer,
-                                this->video_stream,
-                                (double)frame_index * stream->duration / this->length,
-                                0);
+        LibAV::seek_frame(this->av->demuxer,
+                          this->video_stream,
+                          (double)frame_index * stream->duration / this->length,
+                          0);
     return result >= 0;
 }
 
