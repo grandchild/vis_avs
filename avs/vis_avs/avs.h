@@ -291,7 +291,7 @@ bool avs_preset_set_legacy(AVS_Handle avs, const uint8_t* preset, size_t preset_
  *
  * Returns `NULL` if `preset_length_out` is NULL or serialization fails for some reason.
  */
-uint8_t* avs_preset_get_legacy(AVS_Handle avs, size_t* preset_length_out);
+const uint8_t* avs_preset_get_legacy(AVS_Handle avs, size_t* preset_length_out);
 
 /**
  * Save the currently loaded preset in legacy binary format to the given file path. Note
