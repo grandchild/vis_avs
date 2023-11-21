@@ -77,10 +77,10 @@ extern "C" {
 
 typedef uint32_t AVS_Handle;
 
-enum AVS_Pixel_Format { AVS_PIXEL_RGB0_8 = 0 };  // To be expanded.
+typedef enum { AVS_PIXEL_RGB0_8 = 0 } AVS_Pixel_Format;  // To be expanded.
 
-enum AVS_Audio_Source { AVS_AUDIO_INTERNAL = 0, AVS_AUDIO_EXTERNAL = 1 };
-enum AVS_Beat_Source { AVS_BEAT_INTERNAL = 0, AVS_BEAT_EXTERNAL = 1 };
+typedef enum { AVS_AUDIO_INTERNAL = 0, AVS_AUDIO_EXTERNAL = 1 } AVS_Audio_Source;
+typedef enum { AVS_BEAT_INTERNAL = 0, AVS_BEAT_EXTERNAL = 1 } AVS_Beat_Source;
 
 /**
  * Initialize an AVS instance. If initialization fails for some reason, the returned

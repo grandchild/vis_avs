@@ -40,7 +40,7 @@ typedef uint32_t AVS_Parameter_Handle;
 /**
  * Possible types of a parameter's value.
  */
-enum AVS_Parameter_Type {
+typedef enum {
     /**
      * Uninitialized or otherwise invalid parameters may have this type. Indicates an
      * error.
@@ -105,13 +105,13 @@ enum AVS_Parameter_Type {
      * `avs_parameter_get_color_array()`.
      */
     AVS_PARAM_COLOR_ARRAY = 102,
-};
+} AVS_Parameter_Type;
 
 /**
  * The position to choose when creating/moving components. Always in relation to a
  * reference component, e.g. the currently selected one.
  */
-enum AVS_Component_Position {
+typedef enum {
     /**
      * The position in relation to the reference component is not important. Use this
      * to document no-preference in _your_ code. Currently, this has the same behavior
@@ -128,7 +128,7 @@ enum AVS_Component_Position {
      * placed at the end of the list of children.
      */
     AVS_COMPONENT_POSITION_CHILD = 2,
-};
+} AVS_Component_Position;
 
 /**
  * Metadata for an effect.
