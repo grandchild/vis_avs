@@ -141,7 +141,7 @@ void C_RLibrary::initfx(void) {
     DECLARE_EFFECT_NEW(ClearScreen);
     DECLARE_EFFECT_NEW(Mirror);
     DECLARE_EFFECT_NEW(Starfield);
-    DECLARE_EFFECT_LEGACY(R_Text);
+    // DECLARE_EFFECT_LEGACY(R_Text);
     DECLARE_EFFECT_NEW(Bump);
     DECLARE_EFFECT_NEW(Mosaic);
     DECLARE_EFFECT_NEW(WaterBump);
