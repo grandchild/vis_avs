@@ -16,7 +16,9 @@
 
 class AVS_Instance {
    public:
-    AVS_Instance(AVS_Audio_Source audio_source, AVS_Beat_Source beat_source);
+    AVS_Instance(const char* base_path,
+                 AVS_Audio_Source audio_source,
+                 AVS_Beat_Source beat_source);
     ~AVS_Instance() = default;
 
     bool render_frame(void* framebuffer,
@@ -59,6 +61,7 @@ class AVS_Instance {
 
     AVS_Handle handle;
 
+    std::string base_path;
     AVS_Audio_Source audio_source;
     AVS_Beat_Source beat_source;
     const char* error;

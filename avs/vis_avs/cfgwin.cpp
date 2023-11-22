@@ -1613,8 +1613,8 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
                                 char temp[4096];
                                 wsprintf(temp, "%s%s.avs", g_path, buf);
-                                AVS_Instance loader(AVS_AUDIO_EXTERNAL,
-                                                    AVS_BEAT_EXTERNAL);
+                                AVS_Instance loader(
+                                    g_path, AVS_AUDIO_EXTERNAL, AVS_BEAT_EXTERNAL);
                                 if (loader.preset_load_file(temp)) {
                                     new_component->children =
                                         std::move(loader.root.children);

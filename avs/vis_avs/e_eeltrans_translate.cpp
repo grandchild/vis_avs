@@ -38,6 +38,7 @@ class Translator {
     TranslateMode mode;
     bool trans_first;
     std::vector<Replacement> replacements;
+    const std::string& avs_base_path;
 
     void do_replacements(std::string& input);
     void command_split(std::vector<std::string>& output, std::string input);
@@ -48,9 +49,11 @@ class Translator {
     std::string handle_preprocessor(std::string input);
 
    public:
-    Translator(TranslateMode mode, bool translate_firstlevel)
-        : mode(mode), trans_first(translate_firstlevel){};
-    std::string translate(std::string prefix_code, std::string input);
+    Translator(TranslateMode mode,
+               bool translate_firstlevel,
+               const std::string& avs_base_path)
+        : mode(mode), trans_first(translate_firstlevel), avs_base_path(avs_base_path){};
+    std::string translate(const std::string& prefix_code, std::string input);
 };
 
 static void strtolower(std::string& input) {
@@ -458,8 +461,7 @@ std::string Translator::handle_preprocessor(std::string input) {
             return "";
         } else if (tmp[0] == "include") {
             if (tmp.size() >= 2) {
-                std::string filename = g_path + '\\' + input.substr(8);
-
+                std::string filename = this->avs_base_path + '\\' + input.substr(8);
                 std::ifstream incifstr(filename.c_str());
                 if (incifstr) {
                     std::ostringstream incstrstr;
@@ -582,7 +584,7 @@ void Translator::read_settings_from_comments(std::string& input) {
     string_replace(input, EELTRANS_TMP_PLACEHOLDER_STR, "/");
 }
 
-std::string Translator::translate(std::string prefix_code, std::string input) {
+std::string Translator::translate(const std::string& prefix_code, std::string input) {
     std::string translate_output;
     std::string translate_input = prefix_code + NEWLINE + input;
 
@@ -598,9 +600,10 @@ std::string Translator::translate(std::string prefix_code, std::string input) {
     return translate_output;
 }
 
-std::string translate(std::string prefix_code,
+std::string translate(const std::string& prefix_code,
                       char const* input,
-                      bool translate_firstlevel) {
-    Translator translator(MODE_EXEC, translate_firstlevel);
+                      bool translate_firstlevel,
+                      const std::string& avs_base_path) {
+    Translator translator(MODE_EXEC, translate_firstlevel, avs_base_path);
     return translator.translate(prefix_code, input);
 }

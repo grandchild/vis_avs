@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "files.h"
 #include "image.h"
+#include "instance.h"
 #include "math.h"
 
 // #include "../platform.h"
@@ -78,7 +79,7 @@ E_Picture::E_Picture(AVS_Instance* avs)
       image_data(nullptr),
       image_lock(lock_init()) {
     if (E_Picture::file_list.empty()) {
-        E_Picture::find_image_files();
+        this->find_image_files();
     }
 }
 
@@ -100,7 +101,7 @@ void E_Picture::find_image_files() {
     E_Picture::clear_image_files();
     const size_t num_extensions = 5;
     const char* extensions[num_extensions] = {".bmp", ".png", ".jpg", ".jpeg", ".gif"};
-    find_files_by_extensions(g_path,
+    find_files_by_extensions(this->avs->base_path.c_str(),
                              extensions,
                              num_extensions,
                              add_file_callback,
@@ -122,7 +123,11 @@ void E_Picture::load_image() {
         return;
     }
     char file_path[MAX_PATH];
-    snprintf(file_path, MAX_PATH, "%s\\%s", g_path, this->config.image.c_str());
+    snprintf(file_path,
+             MAX_PATH,
+             "%s\\%s",
+             this->avs->base_path.c_str(),
+             this->config.image.c_str());
     AVS_Image* tmp_image = image_load(file_path);
     if (tmp_image->data == nullptr || tmp_image->w == 0 || tmp_image->h == 0
         || tmp_image->error != nullptr) {

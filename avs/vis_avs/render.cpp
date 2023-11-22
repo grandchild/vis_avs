@@ -94,7 +94,7 @@ void Render_Init() {
     }
 
     g_render_library = new C_RLibrary();
-    g_single_instance = new AVS_Instance(AVS_AUDIO_INTERNAL, AVS_BEAT_INTERNAL);
+    g_single_instance = new AVS_Instance(g_path, AVS_AUDIO_INTERNAL, AVS_BEAT_INTERNAL);
     g_render_transition = new Transition();
 
     char INI_FILE[MAX_PATH];

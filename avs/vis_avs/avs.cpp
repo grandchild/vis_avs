@@ -33,9 +33,11 @@ AVS_Instance* get_instance_from_handle(AVS_Handle avs) {
 }
 
 AVS_API
-AVS_Handle avs_init(AVS_Audio_Source audio_source, AVS_Beat_Source beat_source) {
+AVS_Handle avs_init(const char* base_path,
+                    AVS_Audio_Source audio_source,
+                    AVS_Beat_Source beat_source) {
     make_effect_lib();
-    auto new_instance = new AVS_Instance(audio_source, beat_source);
+    auto new_instance = new AVS_Instance(base_path, audio_source, beat_source);
     if (new_instance->handle == 0) {
         g_error = "AVS handles exhausted (try unloading the library and reloading it)";
         return 0;

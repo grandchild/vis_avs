@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "e_svp.h"
 
 #include "files.h"
+#include "instance.h"
 
 #define PUT_INT(y)                   \
     data[pos] = (y)&255;             \
@@ -89,7 +90,7 @@ void E_SVP::find_library_files() {
     this->clear_library_files();
     const int num_extensions = 2;
     const char* extensions[num_extensions] = {".SVP", ".UVS"};
-    find_files_by_extensions(g_path,
+    find_files_by_extensions(this->avs->base_path.c_str(),
                              extensions,
                              num_extensions,
                              add_file_callback,
@@ -117,7 +118,7 @@ void E_SVP::set_library() {
         return;
     }
 
-    std::string library_path = g_path;
+    std::string library_path = this->avs->base_path.c_str();
     library_path += "\\";
     library_path += this->config.library;
 

@@ -79,7 +79,7 @@ class E_Picture : public Configurable_Effect<Picture_Info, Picture_Config> {
     void load_image();
 
    private:
-    static void find_image_files();
+    void find_image_files();
     static void clear_image_files();
 
     int32_t width;

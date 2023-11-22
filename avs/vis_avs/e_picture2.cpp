@@ -4,6 +4,7 @@
 
 #include "files.h"
 #include "image.h"
+#include "instance.h"
 #include "pixel_format.h"
 
 #include "../platform.h"
@@ -39,7 +40,7 @@ E_Picture2::E_Picture2(AVS_Instance* avs)
       wih(0),
       need_image_refresh(true) {
     if (E_Picture2::file_list.empty()) {
-        E_Picture2::find_image_files();
+        this->find_image_files();
     }
 }
 
@@ -64,7 +65,7 @@ void E_Picture2::find_image_files() {
     E_Picture2::clear_image_files();
     const int num_extensions = 5;
     const char* extensions[num_extensions] = {".bmp", ".png", ".jpg", ".jpeg", ".gif"};
-    find_files_by_extensions(g_path,
+    find_files_by_extensions(this->avs->base_path.c_str(),
                              extensions,
                              num_extensions,
                              add_file_callback,
@@ -87,7 +88,11 @@ bool E_Picture2::load_image() {
     }
     lock_lock(this->image_lock);
     char filename[MAX_PATH];
-    snprintf(filename, MAX_PATH, "%s\\%s", g_path, this->config.image.c_str());
+    snprintf(filename,
+             MAX_PATH,
+             "%s\\%s",
+             this->avs->base_path.c_str(),
+             this->config.image.c_str());
     AVS_Image* tmp_image = image_load(filename);
     if (tmp_image->data == nullptr) {
         this->image = nullptr;

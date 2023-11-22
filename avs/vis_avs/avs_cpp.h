@@ -186,11 +186,12 @@ class AVS {
     std::vector<Effect> effects_library;
     std::map<std::string, Effect*> effects_by_name;
 
-    AVS(AVS_Audio_Source audio = AVS_AUDIO_INTERNAL,
+    AVS(const std::string& base_path = "",
+        AVS_Audio_Source audio = AVS_AUDIO_INTERNAL,
         AVS_Beat_Source beat = AVS_BEAT_INTERNAL)
-        : handle(avs_init(audio, beat)) {
+        : handle(avs_init(base_path.c_str(), audio, beat)) {
         if (this->handle == 0) {
-            this->_error = this->global_error_str();
+            this->_error = AVS::global_error_str();
             return;
         }
         uint32_t effects_length;

@@ -15,6 +15,7 @@ struct EelTrans_Global_Config : public Effect_Config {
     bool translate_firstlevel = false;
     bool read_comment_codes = true;
     bool need_new_first_instance = true;
+    std::string avs_base_path;  // not exposed through info
 };
 
 struct EelTrans_Info : public Effect_Info {

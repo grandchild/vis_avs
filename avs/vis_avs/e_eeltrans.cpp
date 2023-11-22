@@ -3,6 +3,8 @@
 
 #include "r_defs.h"
 
+#include "instance.h"
+
 #include "../ns-eel/ns-eel.h"
 
 #include <stdio.h>  // for logging
@@ -38,9 +40,10 @@ E_EelTrans::E_EelTrans(AVS_Instance* avs) : Configurable_Effect(avs) {
     if (this->global->config.need_new_first_instance) {
         this->is_first_instance = true;
         this->global->config.need_new_first_instance = false;
+        this->global->config.avs_base_path = this->avs->base_path;
         this->enabled = this->global->config.translate_enabled;
 
-        std::string filename = std::string(g_path) + "\\eeltrans.ini";
+        std::string filename = this->avs->base_path + "\\eeltrans.ini";
         FILE* ini = fopen(filename.c_str(), "r");
         if (ini) {
             char* tmp = new char[2048];
@@ -58,7 +61,7 @@ E_EelTrans::E_EelTrans(AVS_Instance* avs) : Configurable_Effect(avs) {
 E_EelTrans::~E_EelTrans() {
     if (this->is_first_instance) {
         this->global->config.need_new_first_instance = true;
-        std::string filename = std::string(g_path) + "\\eeltrans.ini";
+        std::string filename = this->avs->base_path + "\\eeltrans.ini";
         FILE* ini = fopen(filename.c_str(), "w");
         if (ini) {
             fprintf(ini, "%s", this->global->config.log_path.c_str());
@@ -122,8 +125,10 @@ char* E_EelTrans::pre_compile_hook(void* ctx, char* expression) {
             all_code += it->config.code;
             all_code += "\r\n";
         }
-        std::string tmp =
-            translate(all_code, expression, g->config.translate_firstlevel);
+        std::string tmp = translate(all_code,
+                                    expression,
+                                    g->config.translate_firstlevel,
+                                    g->config.avs_base_path);
         newbuf = new char[tmp.size() + 1];
         strcpy(newbuf, tmp.c_str());
         return newbuf;

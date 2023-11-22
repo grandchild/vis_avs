@@ -107,7 +107,9 @@ typedef enum { AVS_BEAT_INTERNAL = 0, AVS_BEAT_EXTERNAL = 1 } AVS_Beat_Source;
  * combinations are valid. (Having internal audio and external beat detection makes
  * little sense though, although you could disable beat detection this way.)
  */
-AVS_Handle avs_init(AVS_Audio_Source audio_source, AVS_Beat_Source beat_source);
+AVS_Handle avs_init(const char* base_path,
+                    AVS_Audio_Source audio_source,
+                    AVS_Beat_Source beat_source);
 
 /**
  * Render a single frame of the loaded preset. If rendering fails due to invalid

@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "r_defs.h"
 
 #include "files.h"
+#include "instance.h"
 
 #include "../util.h"
 
@@ -92,7 +93,7 @@ void E_AVI::find_video_files() {
         ".m2ts",
         ".wmv",
     };
-    find_files_by_extensions(g_path,
+    find_files_by_extensions(this->avs->base_path.c_str(),
                              extensions,
                              num_extensions,
                              add_file_callback,
@@ -112,7 +113,10 @@ void E_AVI::load_file() {
         close_file();
     }
 
-    sprintf(pathfile, "%s\\%s", g_path, this->config.filename.c_str());
+    sprintf(pathfile,
+            "%s\\%s",
+            this->avs->base_path.c_str(),
+            this->config.filename.c_str());
 
     this->video = new AVS_Video(pathfile, 32, 0);
     if (this->video != NULL && this->video->error == NULL) {

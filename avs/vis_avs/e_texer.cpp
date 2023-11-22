@@ -1,9 +1,8 @@
 #include "e_texer.h"
 
-#include "r_defs.h"  // g_path
-
 #include "files.h"
 #include "image.h"
+#include "instance.h"
 #include "pixel_format.h"
 
 #include "../util.h"  // ssizeof32()
@@ -63,7 +62,7 @@ void E_Texer::find_image_files() {
     this->filenames.push_back("(default image)");
     const int num_extensions = 5;
     char* extensions[num_extensions] = {".bmp", ".png", ".jpg", ".jpeg", ".gif"};
-    find_files_by_extensions(g_path,
+    find_files_by_extensions(this->avs->base_path.c_str(),
                              extensions,
                              num_extensions,
                              add_file_callback,
@@ -80,8 +79,11 @@ bool E_Texer::load_image() {
         return true;
     }
     char filename[MAX_PATH];
-    int printed =
-        snprintf(filename, MAX_PATH, "%s\\%s", g_path, this->config.image.c_str());
+    int printed = snprintf(filename,
+                           MAX_PATH,
+                           "%s\\%s",
+                           this->avs->base_path.c_str(),
+                           this->config.image.c_str());
     if (printed >= MAX_PATH) {
         filename[MAX_PATH - 1] = '\0';
     }

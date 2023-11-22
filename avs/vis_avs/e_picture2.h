@@ -107,7 +107,7 @@ class E_Picture2 : public Configurable_Effect<Picture2_Info, Picture2_Config> {
 
    private:
     void refresh_image(uint32_t w, uint32_t h);
-    static void find_image_files();
+    void find_image_files();
     static void clear_image_files();
 
     lock_t* image_lock;
