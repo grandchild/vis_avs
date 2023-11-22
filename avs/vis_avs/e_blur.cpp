@@ -441,8 +441,8 @@ mmx_light_blur_loop:
             f++;
             f2++;
         }
-    } else if (this->config.level == 3)  // more blur
-    {
+    } else if (this->config.level == BLUR_HEAVY) {
+        // more blur
         // top line
         if (at_top) {
             unsigned int* f2 = f + w;
