@@ -131,7 +131,6 @@ void GetClientRect_adj(HWND hwnd, RECT* r) {
 HWND g_hwnd;
 
 HWND hwnd_WinampParent;
-extern HWND g_hwndDlg;
 extern char last_preset[2048];
 
 HWND GetWinampHwnd(void) { return hwnd_WinampParent; }
