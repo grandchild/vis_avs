@@ -39,7 +39,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <windows.h>
 #include <math.h>
 #include <stdio.h>
-extern char* scanstr_back(char* str, char* toscan, char* defval);
 
 Transition::Transition()
     : l_w(0),
@@ -76,6 +75,37 @@ unsigned int Transition::m_initThread(void* p) {
     transition->do_transition_flag = 2;
 
     return 0;
+}
+
+/* Replaces win32's CharPrev(), but only for ANSI mode! */
+static char* prev_char(char* str, char* cur) {
+    if (str >= cur) {
+        return str;
+    }
+    return cur--;
+}
+
+static char* scanstr_back(char* str, char* toscan, char* defval) {
+    char* s = str + strlen(str) - 1;
+    if (strlen(str) < 1) {
+        return defval;
+    }
+    if (strlen(toscan) < 1) {
+        return defval;
+    }
+    while (1) {
+        char* t = toscan;
+        while (*t) {
+            if (*t++ == *s) {
+                return s;
+            }
+        }
+        t = prev_char(str, s);
+        if (t == s) {
+            return defval;
+        }
+        s = t;
+    }
 }
 
 int Transition::load_preset(char* file, int which, C_UndoItem* item) {

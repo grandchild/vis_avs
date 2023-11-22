@@ -133,28 +133,6 @@ HWND g_hwnd;
 HWND hwnd_WinampParent;
 extern HWND g_hwndDlg;
 extern char last_preset[2048];
-char* scanstr_back(char* str, char* toscan, char* defval) {
-    char* s = str + strlen(str) - 1;
-    if (strlen(str) < 1) {
-        return defval;
-    }
-    if (strlen(toscan) < 1) {
-        return defval;
-    }
-    while (1) {
-        char* t = toscan;
-        while (*t) {
-            if (*t++ == *s) {
-                return s;
-            }
-        }
-        t = CharPrev(str, s);
-        if (t == s) {
-            return defval;
-        }
-        s = t;
-    }
-}
 
 HWND GetWinampHwnd(void) { return hwnd_WinampParent; }
 
