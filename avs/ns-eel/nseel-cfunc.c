@@ -466,7 +466,7 @@ NAKED void nseel_asm_assign(void) {
         "fstp qword ptr [%%ebx]\n"
         :
         :
-        : "eax", "ebx");
+        :);
 #endif
     _MARK_FUNCTION_END
 }
