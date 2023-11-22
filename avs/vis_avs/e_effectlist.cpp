@@ -51,8 +51,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
 
-int g_config_seh = 1;
-extern int g_config_smp_mt, g_config_smp;
+// TODO [feature]: Make these globally configurable again.
+int config_seh = 1;
+int config_smp_mt = 8;
+int config_smp = 1;
+int config_reuseonresize = 1;
 
 constexpr Parameter EffectList_Info::parameters[];
 
@@ -179,8 +182,8 @@ int E_EffectList::render(char visdata[2][2][576],
             int t = 0;
             int smp_max_threads;
 
-            if (g_config_smp && child->can_multithread() && g_config_smp_mt > 1) {
-                smp_max_threads = g_config_smp;
+            if (config_smp && child->can_multithread() && config_smp_mt > 1) {
+                smp_max_threads = config_smp;
                 if (smp_max_threads > MAX_SMP_THREADS) {
                     smp_max_threads = MAX_SMP_THREADS;
                 }
@@ -217,7 +220,7 @@ int E_EffectList::render(char visdata[2][2][576],
                 }
 
             } else {
-                if (g_config_seh && child->get_legacy_id() != LIST_ID) {
+                if (config_seh && child->get_legacy_id() != LIST_ID) {
                     try {
                         t = child->render(visdata,
                                           is_beat,
@@ -270,7 +273,6 @@ int E_EffectList::render(char visdata[2][2][576],
 
     // handle resize
     if (this->last_w != w || this->last_h != h || !this->list_framebuffer) {
-        extern int config_reuseonresize;
         int do_resize = config_reuseonresize && !!this->list_framebuffer && this->last_w
                         && this->last_h && !clear_this_frame;
 
@@ -423,8 +425,8 @@ int E_EffectList::render(char visdata[2][2][576],
 
         int smp_max_threads;
 
-        if (g_config_smp && child->can_multithread() && g_config_smp_mt > 1) {
-            smp_max_threads = g_config_smp_mt;
+        if (config_smp && child->can_multithread() && config_smp_mt > 1) {
+            smp_max_threads = config_smp_mt;
             if (smp_max_threads > MAX_SMP_THREADS) {
                 smp_max_threads = MAX_SMP_THREADS;
             }
@@ -460,7 +462,7 @@ int E_EffectList::render(char visdata[2][2][576],
                                       h);
             }
 
-        } else if (g_config_seh && child->get_legacy_id() != LIST_ID) {
+        } else if (config_seh && child->get_legacy_id() != LIST_ID) {
             try {
                 t = child->render(visdata,
                                   is_beat,

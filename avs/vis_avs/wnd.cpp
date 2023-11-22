@@ -72,7 +72,7 @@ char g_title[2048];
 
 struct winampVisModule* g_mod;
 extern volatile int g_ThreadQuit;
-extern int /*g_preset_dirty,*/ config_prompt_save_preset, config_reuseonresize;
+extern int /*g_preset_dirty,*/ config_prompt_save_preset, g_config_reuseonresize;
 int g_saved_preset_dirty;
 extern int cfg_cancelfs_on_deactivate;
 
@@ -103,7 +103,7 @@ HWND last_parent;
 #endif
 
 extern int cfg_fs_use_overlay;
-extern int g_config_seh;
+int g_config_seh;
 
 void toggleWharfAmpDock(HWND hwnd);
 
@@ -566,8 +566,8 @@ int Wnd_Init(struct winampVisModule* this_mod) {
             AVS_SECTION, "g_preset_dirty", C_UndoStack::is_dirty(), INI_FILE);
         config_prompt_save_preset = GetPrivateProfileInt(
             AVS_SECTION, "cfg_prompt_save_preset", config_prompt_save_preset, INI_FILE);
-        config_reuseonresize = GetPrivateProfileInt(
-            AVS_SECTION, "cfg_reuseonresize", config_reuseonresize, INI_FILE);
+        g_config_reuseonresize = GetPrivateProfileInt(
+            AVS_SECTION, "cfg_reuseonresize", g_config_reuseonresize, INI_FILE);
         g_log_errors =
             GetPrivateProfileInt(AVS_SECTION, "cfg_log_errors", g_log_errors, INI_FILE);
         g_reset_vars_on_recompile = GetPrivateProfileInt(
@@ -761,7 +761,7 @@ void Wnd_Quit(void) {
         WriteInt("cfg_prompt_save_preset", config_prompt_save_preset);
         WritePrivateProfileString(
             AVS_SECTION, "last_preset_name", last_preset, INI_FILE);
-        WriteInt("cfg_reuseonresize", config_reuseonresize);
+        WriteInt("cfg_reuseonresize", g_config_reuseonresize);
         WriteInt("cfg_log_errors", g_log_errors);
         WriteInt("cfg_reset_vars", g_reset_vars_on_recompile);
         WriteInt("cfg_seh", g_config_seh);

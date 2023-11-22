@@ -69,7 +69,8 @@ char g_noeffectstr[] = "No effect/setting selected";
 // extern char *verstr;
 static HWND cur_hwnd;
 int is_aux_wnd = 0;
-int config_prompt_save_preset = 1, config_reuseonresize = 1;
+int config_prompt_save_preset = 1;
+int g_config_reuseonresize = 1;
 // int g_preset_dirty;
 
 extern BOOL CALLBACK aboutProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -360,7 +361,7 @@ static BOOL CALLBACK DlgProc_Disp(HWND hwndDlg,
             //			CheckDlgButton(hwndDlg,IDC_DONT_MIN_AVS,cfg_dont_min_avs?BST_CHECKED:BST_UNCHECKED);
             CheckDlgButton(hwndDlg,
                            IDC_CHECK2,
-                           config_reuseonresize ? BST_CHECKED : BST_UNCHECKED);
+                           g_config_reuseonresize ? BST_CHECKED : BST_UNCHECKED);
             CheckDlgButton(hwndDlg,
                            IDC_BKGND_RENDER,
                            (cfg_bkgnd_render & 1) ? BST_CHECKED : BST_UNCHECKED);
@@ -443,7 +444,7 @@ static BOOL CALLBACK DlgProc_Disp(HWND hwndDlg,
                     cfg_fs_fps |= IsDlgButtonChecked(hwndDlg, IDC_CHECK5) ? 4 : 0;
                     return 0;
                 case IDC_CHECK2:
-                    config_reuseonresize = !!IsDlgButtonChecked(hwndDlg, IDC_CHECK2);
+                    g_config_reuseonresize = !!IsDlgButtonChecked(hwndDlg, IDC_CHECK2);
                     return 0;
                     // case IDC_DONT_MIN_AVS:
                     // cfg_dont_min_avs=IsDlgButtonChecked(hwndDlg,IDC_DONT_MIN_AVS)?1:0;
