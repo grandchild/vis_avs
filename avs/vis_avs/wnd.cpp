@@ -629,7 +629,7 @@ int Wnd_Init(struct winampVisModule* this_mod) {
 #else
     int styles =
         WS_VISIBLE | WS_CHILDWINDOW | WS_OVERLAPPED | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
-    HWND (*e)(embedWindowState * v);
+    HWND (*e)(embedWindowState* v);
     *(void**)&e =
         (void*)SendMessage(this_mod->hwndParent, WM_WA_IPC, (LPARAM)0, IPC_GET_EMBEDIF);
     HWND par = 0;
