@@ -64,7 +64,7 @@ void E_Unknown::load_legacy(unsigned char* data, int len) {
     } else {
         char buf[8];
         memset(buf, 0, sizeof(buf));
-        itoa(this->legacy_id, buf, 10);
+        snprintf(buf, 8, "%d", this->legacy_id);
         this->config.id = buf;
     }
     this->config.config = std::string((char*)data, len);
