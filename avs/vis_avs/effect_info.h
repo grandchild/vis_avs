@@ -798,13 +798,13 @@ bool operator!=(const Effect_Info& a, const Effect_Info* b);
  */
 // Use this first one only for effects that have no parameters, i.e. only "enable".
 // Use EFFECT_INFO_GETTERS for all other effects.
-#define EFFECT_INFO_GETTERS_NO_PARAMETERS                                    \
-    static constexpr AVS_Effect_Handle handle = Handles::comptime_get(name); \
-    virtual uint32_t get_handle() const { return this->handle; };            \
-    virtual const char* get_group() const { return this->group; };           \
-    virtual const char* get_name() const { return this->name; };             \
-    virtual const char* get_help() const { return this->help; };             \
-    virtual int32_t get_legacy_id() const { return this->legacy_id; };       \
+#define EFFECT_INFO_GETTERS_NO_PARAMETERS                              \
+    static constexpr AVS_Effect_Handle handle = COMPTIME_HANDLE;       \
+    virtual uint32_t get_handle() const { return this->handle; };      \
+    virtual const char* get_group() const { return this->group; };     \
+    virtual const char* get_name() const { return this->name; };       \
+    virtual const char* get_help() const { return this->help; };       \
+    virtual int32_t get_legacy_id() const { return this->legacy_id; }; \
     virtual const char* get_legacy_ape_id() const { return this->legacy_ape_id; };
 
 #define EFFECT_INFO_GETTERS                                                           \

@@ -38,8 +38,18 @@ class Handles {
     };
 };
 
+// The stringification of __LINE__ would normally make it evaluate early, i.e. to the
+// line of the macro. With the double indirect below, __LINE__ is expanded at the
+// location where COMPTIME_HANDLE is used.
+#define HANDLE_MACRO_INDIRECT_2(f, l, ...) f #l __VA_ARGS__
+#define HANDLE_MACRO_INDIRECT_1(f, l, ...) HANDLE_MACRO_INDIRECT_2(f, l, __VA_ARGS__)
+/** Create a handle at compile time based on the filename and the linenumber. */
+#define COMPTIME_HANDLE \
+    Handles::comptime_get(HANDLE_MACRO_INDIRECT_1(__FILE__, __LINE__))
+#define COMPTIME_HANDLE_FROM(x) \
+    Handles::comptime_get(HANDLE_MACRO_INDIRECT_1(__FILE__, __LINE__, x))
+
 extern Handles h_instances;
 extern Handles h_components;
-extern Handles h_effects;
 extern std::map<AVS_Parameter_Handle, std::vector<AVS_Parameter_Handle>>
     h_parameter_children;
