@@ -104,6 +104,7 @@ class E_MultiDelay : public Configurable_Effect<MultiDelay_Info,
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_MultiDelay* clone() { return new E_MultiDelay(*this); }
     void set_frame_delay(int64_t buffer_index);
     inline void manage_buffers(bool is_beat, int64_t frame_size);
 

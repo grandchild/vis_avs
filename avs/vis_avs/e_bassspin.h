@@ -56,6 +56,7 @@ class E_BassSpin : public Configurable_Effect<BassSpin_Info, BassSpin_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_BassSpin* clone() { return new E_BassSpin(*this); }
 
     static void render_triangle(int32_t* fb,
                                 int32_t points[6],

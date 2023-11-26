@@ -59,6 +59,7 @@ class E_ChannelShift
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_ChannelShift* clone() { return new E_ChannelShift(*this); }
 
    private:
     void shift(int* framebuffer, int l);

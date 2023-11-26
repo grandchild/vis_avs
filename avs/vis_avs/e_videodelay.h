@@ -49,6 +49,7 @@ class E_VideoDelay : public Configurable_Effect<VideoDelay_Info, VideoDelay_Conf
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_VideoDelay* clone() { return new E_VideoDelay(*this); }
 
     unsigned long buffersize;
     unsigned long virtual_buffersize;

@@ -34,6 +34,7 @@ class E_Comment : public Configurable_Effect<Comment_Info, Comment_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Comment* clone() { return new E_Comment(*this); }
 
     std::string comment;
 };

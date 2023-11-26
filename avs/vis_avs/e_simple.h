@@ -62,6 +62,7 @@ class E_Simple : public Configurable_Effect<Simple_Info, Simple_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Simple* clone() { return new E_Simple(*this); }
 
     uint32_t color_pos;
 };

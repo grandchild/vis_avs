@@ -63,6 +63,7 @@ class E_OscilloscopeStar
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_OscilloscopeStar* clone() { return new E_OscilloscopeStar(*this); }
 
    private:
     uint32_t current_color_pos;

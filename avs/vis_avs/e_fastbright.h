@@ -45,6 +45,7 @@ class E_FastBright : public Configurable_Effect<FastBright_Info, FastBright_Conf
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_FastBright* clone() { return new E_FastBright(*this); }
 
 #ifdef NO_MMX
     int tab[3][256];

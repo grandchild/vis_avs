@@ -74,6 +74,7 @@ class E_Picture : public Configurable_Effect<Picture_Info, Picture_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Picture* clone() { return new E_Picture(*this); }
 
     static std::vector<const char*> file_list;
     void load_image();

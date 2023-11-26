@@ -61,4 +61,5 @@ class E_ColorReduction
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_ColorReduction* clone() { return new E_ColorReduction(*this); }
 };

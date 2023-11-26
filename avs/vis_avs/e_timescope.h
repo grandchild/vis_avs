@@ -61,6 +61,7 @@ class E_Timescope : public Configurable_Effect<Timescope_Info, Timescope_Config>
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Timescope* clone() { return new E_Timescope(*this); }
 
    private:
     uint32_t position;

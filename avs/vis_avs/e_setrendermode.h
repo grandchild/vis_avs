@@ -45,6 +45,7 @@ class E_SetRenderMode
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_SetRenderMode* clone() { return new E_SetRenderMode(*this); }
 
    private:
     uint32_t pack_mode();

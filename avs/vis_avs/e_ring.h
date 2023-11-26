@@ -60,6 +60,7 @@ class E_Ring : public Configurable_Effect<Ring_Info, Ring_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Ring* clone() { return new E_Ring(*this); }
 
     uint32_t current_color_pos;
 };

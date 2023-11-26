@@ -58,15 +58,16 @@ struct Colorfade_Info : public Effect_Info {
 class E_Colorfade : public Configurable_Effect<Colorfade_Info, Colorfade_Config> {
    public:
     E_Colorfade(AVS_Instance* avs);
-    ~E_Colorfade() override = default;
-    int render(char visdata[2][2][576],
-               int is_beat,
-               int* framebuffer,
-               int* fbout,
-               int w,
-               int h) override;
-    void load_legacy(unsigned char* data, int len) override;
-    int save_legacy(unsigned char* data) override;
+    virtual ~E_Colorfade() override = default;
+    virtual int render(char visdata[2][2][576],
+                       int is_beat,
+                       int* framebuffer,
+                       int* fbout,
+                       int w,
+                       int h) override;
+    virtual void load_legacy(unsigned char* data, int len) override;
+    virtual int save_legacy(unsigned char* data) override;
+    virtual E_Colorfade* clone() { return new E_Colorfade(*this); }
 
     bool can_multithread() override { return true; };
     int smp_begin(int max_threads,

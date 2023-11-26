@@ -27,6 +27,7 @@ class E_Scatter : public Configurable_Effect<Scatter_Info, Scatter_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Scatter* clone() { return new E_Scatter(*this); }
 
     int fudgetable[512];
     int ftw;

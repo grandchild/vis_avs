@@ -49,6 +49,7 @@ class E_Grain : public Configurable_Effect<Grain_Info, Grain_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Grain* clone() { return new E_Grain(*this); }
 
     unsigned char inline fastrandbyte(void);
     void reinit(int w, int h);

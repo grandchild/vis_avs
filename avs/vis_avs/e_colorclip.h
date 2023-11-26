@@ -60,6 +60,7 @@ class E_ColorClip : public Configurable_Effect<ColorClip_Info, ColorClip_Config>
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_ColorClip* clone() { return new E_ColorClip(*this); }
 
     void copy_in_to_out();
 };

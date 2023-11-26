@@ -92,6 +92,7 @@ class E_Bump : public Programmable_Effect<Bump_Info, Bump_Config, Bump_Vars> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Bump* clone() { return new E_Bump(*this); }
 
     int cur_depth;
     int on_beat_fadeout;

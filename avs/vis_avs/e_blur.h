@@ -67,6 +67,7 @@ class E_Blur : public Configurable_Effect<Blur_Info, Blur_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Blur* clone() { return new E_Blur(*this); }
 
     virtual bool can_multithread() { return true; };
     virtual int smp_begin(int max_threads,

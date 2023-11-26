@@ -36,4 +36,5 @@ class E_AddBorders : public Configurable_Effect<AddBorders_Info, AddBorders_Conf
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_AddBorders* clone() { return new E_AddBorders(*this); }
 };

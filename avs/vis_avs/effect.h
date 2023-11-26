@@ -31,6 +31,10 @@ class Effect {
     AVS_Component_Handle* child_handles_for_api = nullptr;
     Effect(AVS_Instance* avs) : handle(h_components.get()), avs(avs), enabled(true){};
     virtual ~Effect();
+    Effect(const Effect&);
+    Effect& operator=(const Effect&);
+    Effect(Effect&&) noexcept;
+    Effect& operator=(Effect&&) noexcept;
     Effect* insert(Effect* to_insert, Effect* relative_to, Insert_Direction direction);
     Effect* lift(Effect* to_lift);
     Effect* move(Effect* to_move,
@@ -157,8 +161,8 @@ class Effect {
 
     void print_tree(std::string indent = "");
 
-   protected:
-    Effect* duplicate_with_children();
+   private:
+    void swap(Effect&);
 };
 
 bool operator==(const Effect& a, const Effect_Info& b);
@@ -179,12 +183,22 @@ class Configurable_Effect : public Effect {
         this->prune_empty_globals();
         this->init_global_config(this->avs);
     }
-
     ~Configurable_Effect() { this->remove_from_global_instances(); }
-    Effect* clone() {
-        auto cloned = new Configurable_Effect(*this);
-        cloned->handle = h_components.get();
-        return cloned;
+    Configurable_Effect(const Configurable_Effect& other)
+        : Effect(other), config(other.config){};
+    Configurable_Effect& operator=(const Configurable_Effect& other) {
+        Effect::operator=(other);
+        this->config = other.config;
+        return *this;
+    }
+    Configurable_Effect(Configurable_Effect&& other) noexcept
+        : Effect(std::move(other)) {
+        std::swap(this->config, other.config);
+    }
+    Configurable_Effect& operator=(Configurable_Effect&& other) noexcept {
+        Effect::operator=(std::move(other));
+        std::swap(this->config, other.config);
+        return *this;
     }
     bool can_have_child_components() { return this->info.can_have_child_components(); }
     Effect_Info* get_info() const { return &this->info; }

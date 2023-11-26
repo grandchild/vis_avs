@@ -77,6 +77,7 @@ class E_Starfield : public Configurable_Effect<Starfield_Info, Starfield_Config>
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Starfield* clone() { return new E_Starfield(*this); }
     void initialize_stars();
     void set_cur_speed();
 

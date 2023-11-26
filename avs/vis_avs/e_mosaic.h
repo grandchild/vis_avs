@@ -43,6 +43,7 @@ class E_Mosaic : public Configurable_Effect<Mosaic_Info, Mosaic_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Mosaic* clone() { return new E_Mosaic(*this); }
 
     int32_t on_beat_cooldown;
     int32_t cur_size;

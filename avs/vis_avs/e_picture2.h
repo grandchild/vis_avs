@@ -101,6 +101,7 @@ class E_Picture2 : public Configurable_Effect<Picture2_Info, Picture2_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Picture2* clone() { return new E_Picture2(*this); }
 
     static std::vector<const char*> file_list;
     bool load_image();

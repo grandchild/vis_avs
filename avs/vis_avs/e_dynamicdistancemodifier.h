@@ -99,6 +99,7 @@ class E_DynamicDistanceModifier
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_DynamicDistanceModifier* clone() { return new E_DynamicDistanceModifier(*this); }
 
     int m_lastw, m_lasth;
     int* m_wmul;

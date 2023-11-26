@@ -46,6 +46,7 @@ class E_Fadeout : public Configurable_Effect<Fadeout_Info, Fadeout_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Fadeout* clone() { return new E_Fadeout(*this); }
 
     void maketab(void);
 

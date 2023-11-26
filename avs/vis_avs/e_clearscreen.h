@@ -61,6 +61,7 @@ class E_ClearScreen : public Configurable_Effect<ClearScreen_Info, ClearScreen_C
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_ClearScreen* clone() { return new E_ClearScreen(*this); }
 
     void reset_fcounter_on_only_first();
 

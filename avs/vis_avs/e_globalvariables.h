@@ -134,6 +134,7 @@ class E_GlobalVariables : public Programmable_Effect<GlobalVariables_Info,
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_GlobalVariables* clone() { return new E_GlobalVariables(*this); }
 
    private:
     bool is_first_frame;

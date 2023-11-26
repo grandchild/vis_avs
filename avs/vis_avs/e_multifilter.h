@@ -54,6 +54,7 @@ class E_MultiFilter : public Configurable_Effect<MultiFilter_Info, MultiFilter_C
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_MultiFilter* clone() { return new E_MultiFilter(*this); }
 
    private:
     void chrome(int* framebuffer, unsigned int fb_length);

@@ -50,6 +50,7 @@ class E_WaterBump : public Configurable_Effect<WaterBump_Info, WaterBump_Config>
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_WaterBump* clone() { return new E_WaterBump(*this); }
 
     void SineBlob(int x, int y, int radius, int height, int page);
     void CalcWater(int npage, int fluidity);

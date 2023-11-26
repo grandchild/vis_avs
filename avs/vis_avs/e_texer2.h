@@ -271,6 +271,7 @@ class E_Texer2 : public Programmable_Effect<Texer2_Info, Texer2_Config, Texer2_V
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Texer2* clone() { return new E_Texer2(*this); }
 
     void find_image_files();
     void clear_image_files();

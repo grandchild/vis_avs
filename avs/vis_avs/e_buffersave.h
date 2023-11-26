@@ -97,6 +97,7 @@ class E_BufferSave : public Configurable_Effect<BufferSave_Info, BufferSave_Conf
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_BufferSave* clone() { return new E_BufferSave(*this); }
 
     void clear_buffer();
     void nudge_parity();

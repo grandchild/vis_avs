@@ -341,6 +341,7 @@ class E_Movement
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Movement* clone() { return new E_Movement(*this); }
 
     virtual bool can_multithread() { return true; };
     virtual int smp_begin(int max_threads,

@@ -47,6 +47,7 @@ class E_SVP : public Configurable_Effect<SVP_Info, SVP_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_SVP* clone() { return new E_SVP(*this); }
 
     void find_library_files();
     void clear_library_files();

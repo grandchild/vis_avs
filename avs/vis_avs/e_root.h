@@ -44,6 +44,7 @@ class E_Root : public Configurable_Effect<Root_Info, Root_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Root* clone() { return new E_Root(*this); }
     int64_t get_num_renders() { return this->children.size(); };
     void start_buffer_context();
     void end_buffer_context();

@@ -27,4 +27,5 @@ class E_Invert : public Configurable_Effect<Invert_Info, Invert_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Invert* clone() { return new E_Invert(*this); }
 };

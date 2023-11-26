@@ -74,6 +74,7 @@ class E_Brightness : public Configurable_Effect<Brightness_Info, Brightness_Conf
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Brightness* clone() { return new E_Brightness(*this); }
 
     virtual bool can_multithread() { return true; };
     virtual int smp_begin(int max_threads,

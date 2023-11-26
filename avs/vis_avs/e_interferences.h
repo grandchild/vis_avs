@@ -86,6 +86,7 @@ class E_Interferences
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Interferences* clone() { return new E_Interferences(*this); }
 
     int cur_rotation;
     double on_beat_fadeout;

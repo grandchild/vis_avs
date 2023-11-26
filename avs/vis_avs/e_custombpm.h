@@ -66,6 +66,7 @@ class E_CustomBPM : public Configurable_Effect<CustomBPM_Info, CustomBPM_Config>
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_CustomBPM* clone() { return new E_CustomBPM(*this); }
 
    private:
     uint64_t fixed_bpm_last_time;

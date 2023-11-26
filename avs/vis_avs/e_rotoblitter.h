@@ -72,6 +72,7 @@ class E_RotoBlitter : public Configurable_Effect<RotoBlitter_Info, RotoBlitter_C
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_RotoBlitter* clone() { return new E_RotoBlitter(*this); }
 
    private:
     int64_t current_zoom;

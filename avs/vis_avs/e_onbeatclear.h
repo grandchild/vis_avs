@@ -50,6 +50,7 @@ class E_OnBeatClear : public Configurable_Effect<OnBeatClear_Info, OnBeatClear_C
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_OnBeatClear* clone() { return new E_OnBeatClear(*this); }
 
    private:
     int32_t beat_counter;

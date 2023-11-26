@@ -70,6 +70,7 @@ class E_Unknown : public Configurable_Effect<Unknown_Info, Unknown_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Unknown* clone() { return new E_Unknown(*this); }
     virtual void set_id(int builtin_id, const char* ape_id);
 
     int legacy_id;

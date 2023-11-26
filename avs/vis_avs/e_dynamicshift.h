@@ -77,6 +77,7 @@ class E_DynamicShift : public Programmable_Effect<DynamicShift_Info,
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_DynamicShift* clone() { return new E_DynamicShift(*this); }
 
     int32_t m_lastw;
     int32_t m_lasth;

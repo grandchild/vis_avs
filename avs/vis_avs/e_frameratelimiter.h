@@ -42,6 +42,7 @@ class E_FramerateLimiter
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_FramerateLimiter* clone() { return new E_FramerateLimiter(*this); }
 
     void update_time_diff();
 

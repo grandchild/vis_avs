@@ -185,6 +185,7 @@ class E_EffectList
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_EffectList* clone() { return new E_EffectList(*this); }
     int64_t get_num_renders() { return this->children.size(); };
 
     virtual bool can_multithread() { return true; };

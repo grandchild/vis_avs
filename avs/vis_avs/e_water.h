@@ -27,6 +27,7 @@ class E_Water : public Configurable_Effect<Water_Info, Water_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Water* clone() { return new E_Water(*this); }
 
     virtual bool can_multithread() { return true; };
     virtual int smp_begin(int max_threads,

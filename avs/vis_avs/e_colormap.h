@@ -240,6 +240,7 @@ class E_ColorMap : public Configurable_Effect<ColorMap_Info, ColorMap_Config> {
                        int);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_ColorMap* clone() { return new E_ColorMap(*this); }
 
     /* Other utilities */
     void flip_map(size_t map_index);

@@ -82,6 +82,7 @@ class E_DotPlane : public Configurable_Effect<DotPlane_Info, DotPlane_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_DotPlane* clone() { return new E_DotPlane(*this); }
 
     void init_color_map();
 

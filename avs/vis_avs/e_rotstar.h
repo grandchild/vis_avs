@@ -51,6 +51,7 @@ class E_RotStar : public Configurable_Effect<RotStar_Info, RotStar_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_RotStar* clone() { return new E_RotStar(*this); }
 
     uint32_t color_pos;
     double r;

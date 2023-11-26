@@ -10,6 +10,42 @@ Effect::~Effect() {
     }
     delete[] this->child_handles_for_api;
 }
+Effect::Effect(const Effect& other)
+    : handle(h_components.get()),
+      avs(other.avs),
+      enabled(other.enabled),
+      children(other.children),
+      child_handles_for_api(nullptr) {}
+Effect& Effect::operator=(const Effect& other) {
+    if (this != &other) {
+        this->handle = h_components.get();
+        this->avs = other.avs;
+        this->enabled = other.enabled;
+        this->children = other.children;
+        this->child_handles_for_api = nullptr;
+    }
+    return *this;
+}
+Effect::Effect(Effect&& other) noexcept : handle(0), avs(nullptr), enabled(false) {
+    this->swap(other);
+}
+Effect& Effect::operator=(Effect&& other) noexcept {
+    this->swap(other);
+    return *this;
+}
+
+// A C++ idiom for move-c'tor & move-assignment deduplication: Define them in terms of a
+// swap of the members.
+// We can't use swap() for the copy-assignment as well, because Effect is an abstract
+// class, so we can't construct the necessary temporary object that's needed then.
+// https://stackoverflow.com/a/3279550
+void Effect::swap(Effect& other) {
+    std::swap(this->handle, other.handle);
+    std::swap(this->avs, other.avs);
+    std::swap(this->enabled, other.enabled);
+    std::swap(this->children, other.children);
+    std::swap(this->child_handles_for_api, other.child_handles_for_api);
+}
 
 Effect* Effect::insert(Effect* to_insert,
                        Effect* relative_to,
@@ -106,7 +142,7 @@ Effect* Effect::duplicate(Effect* to_duplicate) {
     }
     for (auto child = this->children.begin(); child != this->children.end(); child++) {
         if (*child == to_duplicate) {
-            Effect* duplicate_ = to_duplicate->duplicate_with_children();
+            Effect* duplicate_ = (*child)->clone();
             this->children.insert(++child, duplicate_);
             return duplicate_;
         }
@@ -116,13 +152,6 @@ Effect* Effect::duplicate(Effect* to_duplicate) {
         }
     }
     return NULL;
-}
-Effect* Effect::duplicate_with_children() {
-    Effect* duplicate_ = this->clone();
-    for (auto child : this->children) {
-        this->children.push_back(child->duplicate_with_children());
-    }
-    return duplicate_;
 }
 
 bool Effect::is_ancestor_of(Effect* descendent) {

@@ -67,6 +67,7 @@ class E_Mirror : public Configurable_Effect<Mirror_Info, Mirror_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Mirror* clone() { return new E_Mirror(*this); }
     void on_mode_change(const Parameter* param);
     void on_random_change();
 

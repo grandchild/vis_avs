@@ -53,6 +53,7 @@ class E_Texer : public Configurable_Effect<Texer_Info, Texer_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Texer* clone() { return new E_Texer(*this); }
 
     void find_image_files();
     void clear_image_files();

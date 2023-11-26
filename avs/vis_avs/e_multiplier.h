@@ -60,4 +60,5 @@ class E_Multiplier : public Configurable_Effect<Multiplier_Info, Multiplier_Conf
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Multiplier* clone() { return new E_Multiplier(*this); }
 };

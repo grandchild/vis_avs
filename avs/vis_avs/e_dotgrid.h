@@ -84,6 +84,7 @@ class E_DotGrid : public Configurable_Effect<DotGrid_Info, DotGrid_Config> {
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_DotGrid* clone() { return new E_DotGrid(*this); }
 
     void zero_speed_x();
     void zero_speed_y();

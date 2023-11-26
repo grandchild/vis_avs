@@ -27,6 +27,7 @@ class E_Normalise : public Configurable_Effect<Normalise_Info, Normalise_Config>
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Normalise* clone() { return new E_Normalise(*this); }
 
    protected:
     int scan_min_max(int* framebuffer,

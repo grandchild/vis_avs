@@ -129,6 +129,7 @@ class E_Convolution : public Configurable_Effect<Convolution_Info, Convolution_C
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_Convolution* clone() { return new E_Convolution(*this); }
 
     void create_draw_func();
     inline void delete_draw_func();

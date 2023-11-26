@@ -170,6 +170,7 @@ class E_ColorModifier : public Programmable_Effect<ColorModifier_Info,
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_ColorModifier* clone() { return new E_ColorModifier(*this); }
 
     bool channel_table_valid;
     unsigned char channel_table[256 * 3];

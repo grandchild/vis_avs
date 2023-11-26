@@ -63,19 +63,16 @@ struct Interleave_Info : public Effect_Info {
 class E_Interleave : public Configurable_Effect<Interleave_Info, Interleave_Config> {
    public:
     E_Interleave(AVS_Instance* avs);
-
     virtual ~E_Interleave();
-
     virtual int render(char visdata[2][2][576],
                        int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,
                        int h);
-
     virtual void load_legacy(unsigned char* data, int len);
-
     virtual int save_legacy(unsigned char* data);
+    virtual E_Interleave* clone() { return new E_Interleave(*this); }
 
     double cur_x, cur_y;
 };

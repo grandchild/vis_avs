@@ -78,6 +78,7 @@ class E_MovingParticle
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_MovingParticle* clone() { return new E_MovingParticle(*this); }
 
     void set_current_size(int64_t size);
 

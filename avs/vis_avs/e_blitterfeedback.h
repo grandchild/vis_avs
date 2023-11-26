@@ -71,6 +71,7 @@ class E_BlitterFeedback
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_BlitterFeedback* clone() { return new E_BlitterFeedback(*this); }
     void set_current_zoom(int32_t zoom);
 
    private:

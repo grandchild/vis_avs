@@ -97,6 +97,7 @@ class E_DotFountain : public Configurable_Effect<DotFountain_Info, DotFountain_C
                        int h);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
+    virtual E_DotFountain* clone() { return new E_DotFountain(*this); }
     void init_color_map();
 
    private:
