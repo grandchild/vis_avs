@@ -200,7 +200,9 @@ class Configurable_Effect : public Effect {
         std::swap(this->config, other.config);
         return *this;
     }
-    bool can_have_child_components() { return this->info.can_have_child_components(); }
+    virtual bool can_have_child_components() {
+        return Configurable_Effect::info.can_have_child_components();
+    }
     Effect_Info* get_info() const { return &this->info; }
     static void set_desc(char* desc) {
         Configurable_Effect::_set_desc();
