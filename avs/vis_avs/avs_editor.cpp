@@ -280,6 +280,10 @@ AVS_Component_Handle avs_component_duplicate(AVS_Handle avs,
     if (!resolve_handles(avs, 0, component, 0, &instance, NULL, &_component)) {
         return 0;
     }
+    if (_component == &instance->root) {
+        instance->error = "Cannot duplicate root component";
+        return 0;
+    }
     Effect* duplicate = instance->root.duplicate(_component);
     if (duplicate == NULL) {
         instance->error = "Cannot copy component";
