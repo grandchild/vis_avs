@@ -7,6 +7,7 @@
 #include "avs_editor.h"
 #include "effect.h"
 #include "effect_info.h"
+#include "render_context.h"
 
 #include "../platform.h"
 
@@ -35,8 +36,8 @@ class AVS_Instance {
     const char* const* audio_device_names();
     void audio_device_set(int32_t device);
     bool preset_load_file(const char* file_path, bool with_transition = false);
-    bool preset_load(std::string& preset, bool with_transition = false);
-    bool preset_load_legacy(uint8_t* preset,
+    bool preset_load(const std::string& preset, bool with_transition = false);
+    bool preset_load_legacy(const uint8_t* preset,
                             size_t preset_length,
                             bool with_transition = false);
     void preset_save_file(const char* file_path, bool indent);
@@ -58,6 +59,9 @@ class AVS_Instance {
                      size_t h,
                      int32_t buffer_num,
                      bool allocate_if_needed = false);
+    void init_global_buffers_if_needed(size_t width,
+                                       size_t height,
+                                       AVS_Pixel_Format pixel_format);
 
     AVS_Handle handle;
 
@@ -71,15 +75,13 @@ class AVS_Instance {
     /** Used for transitioning between presets. */
     E_Root root_secondary;
     std::vector<Effect*> scrap;
+    Transition transition;
 
     lock_t* render_lock;
 
    private:
     static constexpr char const* legacy_file_magic = "Nullsoft AVS Preset 0.2\x1a";
-    static constexpr size_t num_buffers = 8;
-    void* buffers[num_buffers];
-    size_t buffers_w[num_buffers];
-    size_t buffers_h[num_buffers];
-    AVS_Pixel_Format buffers_pixel_format[num_buffers];
+    static constexpr size_t num_global_buffers = 8;
+    std::array<Buffer, num_global_buffers>* global_buffers = nullptr;
     uint8_t* preset_legacy_save_buffer = nullptr;
 };

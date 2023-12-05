@@ -55,13 +55,15 @@ C_UndoItem::~C_UndoItem() {
 }
 
 C_UndoItem& C_UndoItem::operator=(const C_UndoItem& T) {
-    length = T.length;
-    isdirty = T.isdirty;
-    if (data) {
-        free(data);
+    if (this != &T) {
+        length = T.length;
+        isdirty = T.isdirty;
+        if (data) {
+            free(data);
+        }
+        data = calloc(length, 1);
+        memcpy(data, T.data, length);
     }
-    data = calloc(length, 1);
-    memcpy(data, T.data, length);
     return *this;
 }
 
@@ -74,23 +76,22 @@ bool C_UndoItem::operator==(const C_UndoItem& T) const {
 }
 
 void C_UndoItem::set(const void* _data, int _length, bool _isdirty) {
-    length = _length;
-    isdirty = _isdirty;
-    if (data) {
+    if (this->length < _length || data == nullptr) {
         free(data);
+        data = calloc(_length, sizeof(uint8_t));
     }
-    data = calloc(length, 1);
-    memcpy(data, _data, length);
+    this->length = _length;
+    this->isdirty = _isdirty;
+    memcpy(this->data, _data, this->length);
 }
 
-void C_UndoStack::save_undo(bool save_secondary) {
+void C_UndoStack::save_undo(AVS_Instance* avs, bool save_secondary) {
     // Save to the undo buffer (sets the dirty bit for this item)
-    C_UndoItem* item = new C_UndoItem;
+    auto item = new C_UndoItem;
     C_UndoItem* old = list[list_pos];
 
     size_t size = 0;
-    auto data =
-        g_single_instance->preset_save_legacy(&size, /*secondary*/ save_secondary);
+    auto data = avs->preset_save_legacy(&size, /*secondary*/ save_secondary);
     item->set(data, (int)size, false);
 
     // Only add it to the stack if it has changed.
@@ -109,7 +110,7 @@ void C_UndoStack::save_undo(bool save_secondary) {
 void C_UndoStack::clear_dirty() {
     // If we're clearing the dirty bit, we only clear it on the current item.
     if (list_pos < sizeof(list) / sizeof(list[0]) && list[list_pos]) {
-        list[list_pos]->isdirty = 0;
+        list[list_pos]->isdirty = false;
     }
 }
 
@@ -126,15 +127,15 @@ int C_UndoStack::can_redo() {
     return list_pos < sizeof(list) / sizeof(list[0]) - 1 && list[list_pos + 1];
 }
 
-void C_UndoStack::undo() {
+void C_UndoStack::undo(AVS_Instance* avs) {
     if (list_pos > 0 && list[list_pos - 1]) {
-        g_render_transition->load_preset(nullptr, 0, list[--list_pos]);
+        avs->transition.load_preset(nullptr, TRANSITION_SWITCH_LOAD, list[--list_pos]);
     }
 }
 
-void C_UndoStack::redo() {
+void C_UndoStack::redo(AVS_Instance* avs) {
     if (list_pos < sizeof(list) / sizeof(list[0]) - 1 && list[list_pos + 1]) {
-        g_render_transition->load_preset(nullptr, 0, list[++list_pos]);
+        avs->transition.load_preset(nullptr, TRANSITION_SWITCH_LOAD, list[++list_pos]);
     }
 }
 

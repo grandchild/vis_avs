@@ -56,14 +56,16 @@ class C_UndoItem {
     bool isdirty;
 };
 
+class AVS_Instance;
+
 class C_UndoStack {
    public:
-    static void save_undo(bool save_secondary = false);
+    static void save_undo(AVS_Instance* avs, bool save_secondary = false);
     static void clear_dirty();
     static bool is_dirty();
 
-    static void undo();
-    static void redo();
+    static void undo(AVS_Instance* avs);
+    static void redo(AVS_Instance* avs);
 
     static int can_undo();
     static int can_redo();

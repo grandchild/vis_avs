@@ -1,9 +1,11 @@
 #include "e_root.h"
 
+#include "avs.h"
 #include "effect_library.h"
 #include "handles.h"
 #include "instance.h"
 #include "pixel_format.h"
+#include "render_context.h"
 
 #include <cstdio>
 
@@ -17,10 +19,8 @@ AVS_Instance::AVS_Instance(const char* base_path,
       error(""),
       root(this),
       root_secondary(this),
+      transition(this),
       render_lock(lock_init()) {
-    for (auto& pixel_format : this->buffers_pixel_format) {
-        pixel_format = AVS_PIXEL_RGB0_8;
-    }
     make_effect_lib();
 }
 
@@ -30,7 +30,40 @@ bool AVS_Instance::render_frame(void* framebuffer,
                                 size_t width,
                                 size_t height,
                                 AVS_Pixel_Format pixel_format) {
+    this->init_global_buffers_if_needed(width, height, pixel_format);
+
+    auto render_context =
+        RenderContext(pixel_format, width, height, *this->global_buffers, framebuffer);
+    this->root.render_with_context(render_context);
+
+    // char visdata[2][2][AUDIO_BUFFER_LEN];
+    // this->root.render(
+    //     visdata, is_beat, (int*)framebuffer, (int*)framebuffer, width, height);
+
     return true;
+}
+
+void AVS_Instance::init_global_buffers_if_needed(size_t width,
+                                                 size_t height,
+                                                 AVS_Pixel_Format pixel_format) {
+    if (this->global_buffers != nullptr
+        && ((*this->global_buffers)[0].w != width
+            || (*this->global_buffers)[0].h != height
+            || (*this->global_buffers)[0].pixel_format != pixel_format)) {
+        delete this->global_buffers;
+        this->global_buffers = nullptr;
+    }
+    if (this->global_buffers == nullptr) {
+        this->global_buffers = new std::array<Buffer, AVS_Instance::num_global_buffers>{
+            Buffer(width, height, pixel_format),
+            Buffer(width, height, pixel_format),
+            Buffer(width, height, pixel_format),
+            Buffer(width, height, pixel_format),
+            Buffer(width, height, pixel_format),
+            Buffer(width, height, pixel_format),
+            Buffer(width, height, pixel_format),
+            Buffer(width, height, pixel_format)};
+    }
 }
 
 bool AVS_Instance::audio_set(int16_t* audio_left,
@@ -61,15 +94,9 @@ bool AVS_Instance::preset_load_file(const char* file_path, bool with_transition)
             len = 0;
         }
         fclose(fp);
-        auto file_magic_length = strlen(AVS_Instance::legacy_file_magic);
-        if (len > file_magic_length + 2
-            && !memcmp(data, AVS_Instance::legacy_file_magic, file_magic_length - 2)
-            && data[file_magic_length - 2] >= '1' && data[file_magic_length - 2] <= '2'
-            && data[file_magic_length - 1] == '\x1a') {
-            success = this->preset_load_legacy(
-                data + file_magic_length, len - file_magic_length, with_transition);
-        } else {
-            auto preset_string = std::string((char*)data, len);
+        success = this->preset_load_legacy(data, len, with_transition);
+        if (!success) {
+            std::string preset_string((char*)data, len);
             success = this->preset_load(preset_string, with_transition);
         }
         free(data);
@@ -77,18 +104,27 @@ bool AVS_Instance::preset_load_file(const char* file_path, bool with_transition)
     return success;
 }
 
-bool AVS_Instance::preset_load(std::string& preset, bool with_transition) {
+bool AVS_Instance::preset_load(const std::string& preset, bool with_transition) {
     return true;
 }
 
-bool AVS_Instance::preset_load_legacy(uint8_t* preset,
+bool AVS_Instance::preset_load_legacy(const uint8_t* preset,
                                       size_t preset_length,
                                       bool with_transition) {
     E_Root& load_root = with_transition ? this->root_secondary : this->root;
-    lock_lock(this->render_lock);
     load_root = E_Root(this);
-    load_root.load_legacy(preset, (int)(preset_length));
-    lock_unlock(this->render_lock);
+    auto file_magic_length = strlen(AVS_Instance::legacy_file_magic);
+    if (preset_length > file_magic_length + 2
+        && !memcmp(preset, AVS_Instance::legacy_file_magic, file_magic_length - 2)
+        && preset[file_magic_length - 2] >= '1' && preset[file_magic_length - 2] <= '2'
+        && preset[file_magic_length - 1] == '\x1a') {
+        lock_lock(this->render_lock);
+        //                    trustmebro! (i.e. TODO: make load_legacy take const)
+        load_root.load_legacy((unsigned char*)preset + file_magic_length,
+                              (int)(preset_length - file_magic_length));
+        lock_unlock(this->render_lock);
+    }
+    this->root.print_tree();
     return true;
 }
 
@@ -153,33 +189,9 @@ Effect* AVS_Instance::get_component_from_handle(AVS_Component_Handle component) 
     return this->root.find_by_handle(component);
 }
 
-void* AVS_Instance::get_buffer(size_t w,
-                               size_t h,
-                               int32_t buffer_num,
-                               bool allocate_if_needed) {
-    if (buffer_num < 0 || buffer_num >= NBUF) {
-        return nullptr;
+void* AVS_Instance::get_buffer(size_t, size_t, int32_t buffer_num, bool) {
+    if (buffer_num >= 0 && (uint32_t)buffer_num <= AVS_Instance::num_global_buffers) {
+        return (*this->global_buffers)[buffer_num].data;
     }
-    if (w == 0 || h == 0) {
-        return nullptr;
-    }
-    void*& buffer = this->buffers[buffer_num];
-    size_t& buffer_w = this->buffers_w[buffer_num];
-    size_t& buffer_h = this->buffers_h[buffer_num];
-    if (buffer == nullptr || buffer_w < w || buffer_h < h) {
-        if (buffer != nullptr) {
-            free(buffer);
-        }
-        if (allocate_if_needed) {
-            buffer = calloc(w * h, pixel_size(this->buffers_pixel_format[buffer_num]));
-            buffer_w = w;
-            buffer_h = h;
-        } else {
-            buffer = nullptr;
-            buffer_w = 0;
-            buffer_h = 0;
-        }
-        return buffer;
-    }
-    return buffer;
+    return nullptr;
 }

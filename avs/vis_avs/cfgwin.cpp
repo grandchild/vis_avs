@@ -29,6 +29,7 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+#include "c_transition.h"
 #include "e_effectlist.h"
 #include "e_unknown.h"
 
@@ -63,7 +64,7 @@ extern int cfg_cancelfs_on_deactivate;
 
 HWND g_debugwnd;
 
-C_GLibrary* g_ui_library;
+C_GLibrary* g_ui_library = nullptr;
 
 char g_noeffectstr[] = "No effect/setting selected";
 // extern char *verstr;
@@ -91,10 +92,6 @@ int cfg_fs_w = 0, cfg_fs_h = 0, cfg_fs_d = 2, cfg_fs_bpp = 0, cfg_fs_fps = 0,
     cfg_fs_rnd_time = 10, cfg_fs_use_overlay = 0;
 int cfg_trans = 0, cfg_trans_amount = 128;
 int cfg_dont_min_avs = 0;
-int cfg_transitions = 4;
-int cfg_transitions2 = 4 | 32;
-int cfg_transitions_speed = 8;
-int cfg_transition_mode = 0x8001;
 int cfg_bkgnd_render = 0, cfg_bkgnd_render_color = 0x1F000F;
 int cfg_render_prio = 0;
 
@@ -1013,7 +1010,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             return 0;
         case WM_USER + 20:
             CfgWnd_Unpopulate();
-            g_render_transition->clean_prev_renders_if_needed();
+            g_single_instance->transition.clean_prev_renders_if_needed();
             CfgWnd_Populate();
             return 0;
         case WM_CLOSE:
@@ -1099,7 +1096,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             }
             if (wParam == 69) {
                 KillTimer(hwndDlg, 69);
-                C_UndoStack::save_undo();
+                C_UndoStack::save_undo(g_single_instance);
             }
             return false;
         case WM_MOUSEMOVE:
@@ -1681,9 +1678,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                             }
 
                             lock_lock(g_single_instance->render_lock);
-                            auto res = parent->insert(new_component,
-                                                      selected ? selected : parent,
-                                                      Effect::INSERT_CHILD);
+                            parent->insert(new_component,
+                                           selected ? selected : parent,
+                                           Effect::INSERT_CHILD);
                             lock_unlock(g_single_instance->render_lock);
                             TV_INSERTSTRUCT is = {};
                             is.hParent = h_parent;
@@ -1723,7 +1720,9 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 }
                 case IDC_CLEAR:
                     if (readyToLoadPreset(hwndDlg, 1)) {
-                        if (g_render_transition->load_preset("", 0) != 2) {
+                        if (g_single_instance->transition.load_preset(
+                                "", TRANSITION_SWITCH_LOAD)
+                            != 2) {
                             last_preset[0] = 0;
                         }
                     }
@@ -1845,7 +1844,8 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     l.lpstrDefExt = "AVS";
                     l.Flags = OFN_HIDEREADONLY | OFN_EXPLORER;
                     if (readyToLoadPreset(hwndDlg, 0) && GetOpenFileName(&l)) {
-                        int x = g_render_transition->load_preset(temp, 0);
+                        int x = g_single_instance->transition.load_preset(
+                            temp, TRANSITION_SWITCH_LOAD);
                         if (x == 2) {
                             MessageBox(hwndDlg,
                                        "Still initializing previous preset",
@@ -1859,8 +1859,8 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     return 0;
                 }
                 case IDC_SAVE: dosavePreset(hwndDlg); return 0;
-                case IDM_UNDO: C_UndoStack::undo(); return 0;
-                case IDM_REDO: C_UndoStack::redo(); return 0;
+                case IDM_UNDO: C_UndoStack::undo(g_single_instance); return 0;
+                case IDM_REDO: C_UndoStack::redo(g_single_instance); return 0;
             }
             return 0;
     }

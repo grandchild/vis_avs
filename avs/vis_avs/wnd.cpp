@@ -111,7 +111,7 @@ void toggleWharfAmpDock(HWND hwnd);
 
 int g_in_destroy = 0, g_minimized = 0, g_fakeinit = 0;
 
-int g_rnd_cnt;
+extern int g_rnd_cnt;
 char g_skin_name[MAX_PATH];
 
 int debug_reg[8];
@@ -548,14 +548,17 @@ int Wnd_Init(struct winampVisModule* this_mod) {
                                 last_preset,
                                 sizeof(last_preset),
                                 INI_FILE);
-        cfg_transitions = GetPrivateProfileInt(
-            AVS_SECTION, "cfg_transitions_en", cfg_transitions, INI_FILE);
-        cfg_transitions2 = GetPrivateProfileInt(
-            AVS_SECTION, "cfg_transitions_preinit", cfg_transitions2, INI_FILE);
-        cfg_transitions_speed = GetPrivateProfileInt(
-            AVS_SECTION, "cfg_transitions_speed", cfg_transitions_speed, INI_FILE);
-        cfg_transition_mode = GetPrivateProfileInt(
-            AVS_SECTION, "cfg_transitions_mode", cfg_transition_mode, INI_FILE);
+        // g_single_instance->transition.apply_legacy_config(
+        //     // default: cross-dissolve & not-fullscreen
+        //     GetPrivateProfileInt(AVS_SECTION, "cfg_transitions_mode", 0x8001,
+        //     INI_FILE),
+        //     // default: on-random
+        //     GetPrivateProfileInt(AVS_SECTION, "cfg_transitions_en", 4, INI_FILE),
+        //     // default: preinit on-random & with low priority
+        //     GetPrivateProfileInt(AVS_SECTION, "cfg_transitions_preinit", 36,
+        //     INI_FILE),
+        //     // default: 2 seconds
+        //     GetPrivateProfileInt(AVS_SECTION, "cfg_transitions_speed", 8, INI_FILE));
         cfg_bkgnd_render = GetPrivateProfileInt(
             AVS_SECTION, "cfg_bkgnd_render", cfg_bkgnd_render, INI_FILE);
         cfg_bkgnd_render_color = GetPrivateProfileInt(
@@ -750,10 +753,19 @@ void Wnd_Quit(void) {
         WriteInt("cfg_smartbeatsticky", cfg_smartbeatsticky);
         WriteInt("cfg_smartbeatresetnewsong", cfg_smartbeatresetnewsong);
         WriteInt("cfg_smartbeatonlysticky", cfg_smartbeatonlysticky);
-        WriteInt("cfg_transitions_en", cfg_transitions);
-        WriteInt("cfg_transitions_preinit", cfg_transitions2);
-        WriteInt("cfg_transitions_speed", cfg_transitions_speed);
-        WriteInt("cfg_transitions_mode", cfg_transition_mode);
+        int32_t cfg_transition_switch;
+        int32_t cfg_transition_preinit;
+        int32_t cfg_transition_time;
+        int32_t cfg_transition_effect_and_keep_rendering;
+        g_single_instance->transition.make_legacy_config(
+            cfg_transition_effect_and_keep_rendering,
+            cfg_transition_switch,
+            cfg_transition_preinit,
+            cfg_transition_time);
+        WriteInt("cfg_transitions_en", cfg_transition_switch);
+        WriteInt("cfg_transitions_preinit", cfg_transition_preinit);
+        WriteInt("cfg_transitions_speed", cfg_transition_time);
+        WriteInt("cfg_transitions_mode", cfg_transition_effect_and_keep_rendering);
         WriteInt("cfg_bkgnd_render", cfg_bkgnd_render);
         WriteInt("cfg_bkgnd_render_color", cfg_bkgnd_render_color);
         WriteInt("cfg_render_prio", cfg_render_prio);
@@ -1040,7 +1052,8 @@ void random_preset(HWND hwnd) {
         int state = 0;
         find_preset(i_path, 0, NULL, dirmask, &state);
 
-        if (dirmask[0] && g_render_transition) {
+        if (dirmask[0] && g_single_instance) {
+            // TODO[feature]: Reenable transitioning
             if (g_single_instance->preset_load_file(dirmask)) {
                 lstrcpyn(last_preset, dirmask, sizeof(last_preset));
                 PostMessage(g_hwndDlg, WM_USER + 20, 0, 0);
@@ -1208,8 +1221,8 @@ void DoPopupMenu() {
                         PostMessage(g_hwndDlg, WM_USER + 20, 0, 0);
                     }
                 } else {
-                    //            g_render_transition->load_preset
-                    //          wsprintf(temp,"%s\\%s",g_path,curfilename);
+                    // g_single_instance->transition.load_preset
+                    // wsprintf(temp,"%s\\%s",g_path,curfilename);
                 }
             }
         }

@@ -143,6 +143,7 @@ static void config(struct winampVisModule* this_mod) {
 
 static int g_is_beat;
 char g_path[1024];
+AVS_Instance* g_single_instance;
 
 int beat_peak1, beat_peak2, beat_cnt, beat_peak1_peak;
 
@@ -218,6 +219,8 @@ static int init(struct winampVisModule* this_mod) {
 #endif
     g_ThreadQuit = 0;
     g_visdata_pstat = 1;
+
+    g_single_instance = new AVS_Instance(g_path, AVS_AUDIO_INTERNAL, AVS_BEAT_INTERNAL);
 
     AVS_EEL_IF_init();
 
@@ -367,6 +370,9 @@ static void quit(struct winampVisModule*) {
   if (hRich) FreeLibrary(hRich);
   hRich=0;
 #endif
+
+    delete g_single_instance;
+    g_single_instance = NULL;
 }
 
 #ifdef WA3_COMPONENT
@@ -475,7 +481,9 @@ static unsigned int WINAPI RenderThread(LPVOID) {
                 extern int g_dlg_w, g_dlg_h, g_dlg_fps;
 
                 lock_lock(g_single_instance->render_lock);
-                int t = g_render_transition->render(
+                g_single_instance->init_global_buffers_if_needed(
+                    w, h, AVS_PIXEL_RGB0_8);
+                int t = g_single_instance->transition.render(
                     vis_data, beat, s ? fb2 : fb, s ? fb : fb2, w, h);
                 lock_unlock(g_single_instance->render_lock);
                 if (t & 1) {

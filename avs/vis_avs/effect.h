@@ -2,6 +2,7 @@
 
 #include "avs_editor.h"
 #include "effect_info.h"
+#include "render_context.h"
 
 #include "../platform.h"
 

@@ -70,15 +70,38 @@ int E_Root::render(char visdata[2][2][576],
     }
     this->start_buffer_context();
     for (auto& effect : this->children) {
-        if (effect) {
-            effect->render(visdata, is_beat, framebuffer, fbout, w, h);
-        } else {
-            log_warn("NULL effect child in Root (%d children). This shouldn't happen.",
-                     this->children.size());
+        bool swap = effect->render(visdata, is_beat, framebuffer, fbout, w, h);
+        if (swap) {
+            auto tmp = framebuffer;
+            framebuffer = fbout;
+            fbout = tmp;
         }
     }
     this->end_buffer_context();
     return 0;
+}
+
+void E_Root::render_with_context(RenderContext& ctx) {
+    if (this->config.clear) {
+        memset(ctx.framebuffers[0].data, 0, ctx.w * ctx.h * sizeof(pixel_rgb0_8));
+    }
+    this->start_buffer_context();
+    char visdata[2][2][576];
+    ctx.audio.to_legacy_visdata(visdata);
+    for (auto& effect : this->children) {
+        log_info("child: %d (%p)", i++, effect);
+        bool swap = effect->render(visdata,
+                                   ctx.audio.is_beat,
+                                   (int32_t*)ctx.framebuffers[0].data,
+                                   (int32_t*)ctx.framebuffers[1].data,
+                                   ctx.w,
+                                   ctx.h);
+        if (swap) {
+            ctx.swap_framebuffers();
+        }
+    }
+    ctx.copy_secondary_to_output_framebuffer_if_needed();
+    this->end_buffer_context();
 }
 
 void E_Root::load_legacy(unsigned char* data, int len) {

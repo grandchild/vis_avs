@@ -42,6 +42,7 @@ class E_Root : public Configurable_Effect<Root_Info, Root_Config> {
                        int* fbout,
                        int w,
                        int h);
+    virtual void render_with_context(RenderContext& ctx);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
     virtual E_Root* clone() { return new E_Root(*this); }
@@ -50,6 +51,7 @@ class E_Root : public Configurable_Effect<Root_Info, Root_Config> {
     void end_buffer_context();
 
    private:
+#define NBUF 8
     // these are our framebuffers (formerly nb_save)
     int buffers_w[NBUF] = {};
     int buffers_h[NBUF] = {};
