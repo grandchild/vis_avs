@@ -53,8 +53,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // TODO [feature]: Make these globally configurable again.
 int config_seh = 1;
-int config_smp_mt = 8;
-int config_smp = 1;
+int config_smp_mt = 1;
+int config_smp = 0;
 int config_reuseonresize = 1;
 
 constexpr Parameter EffectList_Info::parameters[];
