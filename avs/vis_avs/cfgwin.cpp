@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "avs_editor.h"
 #include "avs_eelif.h"
 #include "bpm.h"
+#include "c__defs.h"
 #include "cfgwin.h"
 #include "draw.h"
 #include "effect_library.h"

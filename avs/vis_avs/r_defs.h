@@ -32,12 +32,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _R_DEFS_H_
 #define _R_DEFS_H_
 
-#include "c__base.h"
-#include "c__defs.h"
-
 #include "../platform.h"
 
 #include <string.h>  // Many if not all components need strcpy or memcpy.
+
+#define M_PI 3.14159265358979323846
+#define NBUF 8
 
 // 64k is the maximum component size in AVS
 #define MAX_CODE_LEN         (1 << 16)

@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "r_defs.h"
 #include "g__defs.h"
 
+#include "c__defs.h"
 #include "resource.h"
 
 #include <windows.h>

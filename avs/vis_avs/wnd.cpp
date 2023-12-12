@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "r_defs.h"
 
 #include "avs_eelif.h"
+#include "c__defs.h"
 #include "cfgwin.h"
 #include "draw.h"
 #include "render.h"
