@@ -66,20 +66,42 @@ struct Variables {
 class Code_Section {
    private:
     void*& vm_context;
-    void* code;
+    void* code = nullptr;
     std::string& code_str;
-    lock_t* code_lock;
+    lock_t* code_lock = nullptr;
 
    public:
-    bool need_recompile;
+    bool need_recompile = false;
 
     Code_Section(void*& vm_context, std::string& code_str, lock_t* code_lock)
-        : vm_context(vm_context),
-          code(NULL),
-          code_str(code_str),
-          code_lock(code_lock),
-          need_recompile(false){};
+        : vm_context(vm_context), code_str(code_str), code_lock(code_lock){};
     ~Code_Section() { NSEEL_code_free(this->code); };
+    Code_Section(const Code_Section& other)
+        : vm_context(other.vm_context),
+          code_str(other.code_str),
+          code_lock(other.code_lock),
+          need_recompile(other.need_recompile){};
+    Code_Section& operator=(const Code_Section& other) {
+        Code_Section tmp(other);
+        this->swap(tmp);
+        return *this;
+    }
+    Code_Section(Code_Section&& other) noexcept
+        : vm_context(other.vm_context), code_str(other.code_str) {
+        this->swap(other);
+    }
+
+    Code_Section& operator=(Code_Section&& other) noexcept {
+        this->swap(other);
+        return *this;
+    }
+    void swap(Code_Section& other) noexcept {
+        std::swap(this->vm_context, other.vm_context);
+        std::swap(this->code, other.code);
+        std::swap(this->code_str, other.code_str);
+        std::swap(this->code_lock, other.code_lock);
+        std::swap(this->need_recompile, other.need_recompile);
+    }
 
     bool recompile_if_needed() {
         if (!this->need_recompile) {
@@ -108,8 +130,10 @@ template <class Info_T,
           class Global_Config_T = Effect_Config>
 class Programmable_Effect
     : public Configurable_Effect<Info_T, Config_T, Global_Config_T> {
+    typedef Configurable_Effect<Info_T, Config_T, Global_Config_T> Super;
+
    protected:
-    void* vm_context;
+    void* vm_context = nullptr;
 
    private:
     lock_t* code_lock;
@@ -120,11 +144,10 @@ class Programmable_Effect
     Code_Section code_frame;
     Code_Section code_beat;
     Code_Section code_point;
-    bool need_init;
+    bool need_init = true;
 
-    Programmable_Effect(AVS_Instance* avs)
-        : Configurable_Effect<Info_T, Config_T, Global_Config_T>(avs),
-          vm_context(NULL),
+    explicit Programmable_Effect(AVS_Instance* avs)
+        : Super(avs),
           code_lock(lock_init()),
           code_init(this->vm_context, this->config.init, this->code_lock),
           code_frame(this->vm_context, this->config.frame, this->code_lock),
@@ -134,6 +157,27 @@ class Programmable_Effect
         AVS_EEL_IF_VM_free(this->vm_context);
         lock_destroy(this->code_lock);
     };
+    Programmable_Effect(const Programmable_Effect& other)
+        : Super(other),
+          code_lock(lock_init()),
+          code_init(this->vm_context, this->config.init, this->code_lock),
+          code_frame(this->vm_context, this->config.init, this->code_lock),
+          code_beat(this->vm_context, this->config.init, this->code_lock),
+          code_point(this->vm_context, this->config.init, this->code_lock) {}
+    Programmable_Effect& operator=(const Programmable_Effect& other) {
+        Programmable_Effect tmp(other);
+        this->swap(tmp);
+        return *this;
+    }
+    Programmable_Effect(Programmable_Effect&& other) noexcept
+        : Super(std::move(other)) {
+        this->swap(other);
+    }
+    Programmable_Effect& operator=(Programmable_Effect&& other) noexcept {
+        Super::operator=(std::move(other));
+        std::swap(this->config, other.config);
+        return *this;
+    }
 
     void need_full_recompile() {
         this->code_init.need_recompile = true;
@@ -177,4 +221,15 @@ class Programmable_Effect
         this->vars.init(w, h, is_beat, extra_args);
         va_end(extra_args);
     };
+
+   protected:
+    void swap(Programmable_Effect& other) {
+        std::swap(this->vm_context, other.vm_context);
+        std::swap(this->code_lock, other.code_lock);
+        std::swap(this->code_init, other.code_init);
+        std::swap(this->code_frame, other.code_frame);
+        std::swap(this->code_beat, other.code_beat);
+        std::swap(this->code_point, other.code_point);
+        std::swap(this->need_init, other.need_init);
+    }
 };
