@@ -103,6 +103,7 @@ class Effect {
         (void)visdata, (void)is_beat, (void)framebuffer, (void)fbout, (void)w, (void)h;
         return 0;  // returns 1 if fbout has dest
     };
+    virtual void render_with_context(RenderContext&){};
     virtual char* get_desc() = 0;
     virtual int32_t get_legacy_id() { return -1; }
     virtual const char* get_legacy_ape_id() { return nullptr; }
