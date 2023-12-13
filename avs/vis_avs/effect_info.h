@@ -669,14 +669,16 @@ struct Effect_Info {
     virtual int32_t get_legacy_id() const = 0;
     virtual const char* get_legacy_ape_id() const = 0;
     static constexpr uint32_t num_parameters = 0;
-    static constexpr Parameter* parameters = NULL;
+    static constexpr Parameter* parameters = nullptr;
     virtual uint32_t get_num_parameters() const { return 0; };
-    virtual const Parameter* get_parameters() const { return NULL; };
-    virtual const AVS_Parameter_Handle* get_parameters_for_api() const { return NULL; };
+    virtual const Parameter* get_parameters() const { return nullptr; };
+    virtual const AVS_Parameter_Handle* get_parameters_for_api() const {
+        return nullptr;
+    };
     virtual bool can_have_child_components() const { return false; };
     virtual bool is_createable_by_user() const { return true; };
     const Parameter* get_parameter_from_handle(AVS_Parameter_Handle to_find) {
-        return this->_get_parameter_from_handle(
+        return Effect_Info::_get_parameter_from_handle(
             this->get_num_parameters(), this->get_parameters(), to_find);
     }
     static const Parameter* _get_parameter_from_handle(uint32_t num_parameters,
@@ -692,12 +694,12 @@ struct Effect_Info {
                         parameters[i].num_child_parameters,
                         parameters[i].child_parameters,
                         to_find);
-                if (subtree_result != NULL) {
+                if (subtree_result != nullptr) {
                     return subtree_result;
                 }
             }
         }
-        return NULL;
+        return nullptr;
     }
     /**
      * This is the heart of ugliness around parameter introspection. It makes use of
@@ -807,14 +809,14 @@ bool operator!=(const Effect_Info& a, const Effect_Info* b);
     virtual int32_t get_legacy_id() const { return this->legacy_id; }; \
     virtual const char* get_legacy_ape_id() const { return this->legacy_ape_id; };
 
-#define EFFECT_INFO_GETTERS                                                           \
-    EFFECT_INFO_GETTERS_NO_PARAMETERS                                                 \
-    virtual uint32_t get_num_parameters() const { return this->num_parameters; };     \
-    virtual const Parameter* get_parameters() const { return this->parameters; };     \
-    virtual const AVS_Parameter_Handle* get_parameters_for_api() const {              \
-        static Parameter_Handle_List<this->num_parameters> parameter_handles_for_api( \
-            this->parameters);                                                        \
-        return parameter_handles_for_api.handles;                                     \
+#define EFFECT_INFO_GETTERS                                                       \
+    EFFECT_INFO_GETTERS_NO_PARAMETERS                                             \
+    virtual uint32_t get_num_parameters() const { return this->num_parameters; }; \
+    virtual const Parameter* get_parameters() const { return this->parameters; }; \
+    virtual const AVS_Parameter_Handle* get_parameters_for_api() const {          \
+        static Parameter_Handle_List<num_parameters> parameter_handles_for_api(   \
+            parameters);                                                          \
+        return parameter_handles_for_api.handles;                                 \
     }
 
 /**
