@@ -1,6 +1,7 @@
 #include "avs.h"
 
 #include "avs_editor.h"
+#include "avs_eelif.h"
 #include "avs_internal.h"
 #include "effect_library.h"
 #include "handles.h"
@@ -19,6 +20,7 @@
 
 std::unordered_map<AVS_Handle, AVS_Instance*> g_instances;
 const char* g_error = "";
+unsigned char g_blendtable[256][256];
 
 AVS_Instance* get_instance_from_handle(AVS_Handle avs) {
     if (avs > 0) {
@@ -36,7 +38,13 @@ AVS_API
 AVS_Handle avs_init(const char* base_path,
                     AVS_Audio_Source audio_source,
                     AVS_Beat_Source beat_source) {
+    AVS_EEL_IF_init();
     make_effect_lib();
+    for (int j = 0; j < 256; j++) {
+        for (int i = 0; i < 256; i++) {
+            g_blendtable[i][j] = (unsigned char)((i / 255.0) * (float)j);
+        }
+    }
     auto new_instance = new AVS_Instance(base_path, audio_source, beat_source);
     if (new_instance->handle == 0) {
         g_error = "AVS handles exhausted (try unloading the library and reloading it)";
@@ -55,7 +63,12 @@ bool avs_render_frame(AVS_Handle avs,
                       uint64_t time_ms,
                       bool is_beat,
                       AVS_Pixel_Format pixel_format) {
-    return true;
+    AVS_Instance* instance = get_instance_from_handle(avs);
+    if (instance == NULL) {
+        return false;
+    }
+    return instance->render_frame(
+        framebuffer, time_ms, is_beat, width, height, pixel_format);
 }
 
 AVS_API
@@ -75,27 +88,74 @@ AVS_API
 bool avs_audio_device_set(AVS_Handle avs, int32_t device) { return false; }
 
 AVS_API
-bool avs_preset_load(AVS_Handle avs, const char* file_path) { return false; }
-AVS_API
-bool avs_preset_set(AVS_Handle avs, const char* preset) { return false; }
-AVS_API
-bool avs_preset_save(AVS_Handle avs, const char* file_path, bool indent) {
-    return false;
+bool avs_preset_load(AVS_Handle avs, const char* file_path) {
+    AVS_Instance* instance = get_instance_from_handle(avs);
+    if (instance == nullptr) {
+        return false;
+    }
+    // TODO [feature]: with transition
+    return instance->preset_load_file(file_path);
 }
 AVS_API
-const char* avs_preset_get(AVS_Handle avs) { return NULL; }
+bool avs_preset_set(AVS_Handle avs, const char* preset) {
+    AVS_Instance* instance = get_instance_from_handle(avs);
+    if (instance == nullptr) {
+        return false;
+    }
+    // TODO [feature]: with transition
+    return instance->preset_load(preset, false);
+}
+AVS_API
+bool avs_preset_save(AVS_Handle avs, const char* file_path, bool indent) {
+    AVS_Instance* instance = get_instance_from_handle(avs);
+    if (instance == nullptr) {
+        return false;
+    }
+    return instance->preset_save_file(file_path, indent);
+}
+AVS_API
+const char* avs_preset_get(AVS_Handle avs) {
+    AVS_Instance* instance = get_instance_from_handle(avs);
+    if (instance == nullptr) {
+        return nullptr;
+    }
+    return instance->preset_save();
+}
 AVS_API
 bool avs_preset_set_legacy(AVS_Handle avs,
                            const uint8_t* preset,
                            size_t preset_length) {
-    return false;
+    AVS_Instance* instance = get_instance_from_handle(avs);
+    if (instance == nullptr) {
+        return false;
+    }
+    // TODO [feature]: with transition
+    return instance->preset_load_legacy(preset, preset_length, false);
 }
 AVS_API
 const uint8_t* avs_preset_get_legacy(AVS_Handle avs, size_t* preset_length_out) {
-    return NULL;
+    AVS_Instance* instance = get_instance_from_handle(avs);
+    if (instance == nullptr) {
+        return nullptr;
+    }
+    return instance->preset_save_legacy(preset_length_out);
 }
 AVS_API
-bool avs_preset_save_legacy(AVS_Handle avs, const char* file_path) { return false; }
+bool avs_preset_save_legacy(AVS_Handle avs, const char* file_path) {
+    AVS_Instance* instance = get_instance_from_handle(avs);
+    if (instance == nullptr) {
+        return false;
+    }
+    auto result = instance->preset_save_file_legacy(file_path);
+    if (result == 1) {
+        g_error = "Preset too large to save in legacy format";
+    } else if (result == 2) {
+        g_error = "Failed to open legacy preset file";
+    } else if (result == -1) {
+        g_error = "Unknown error during legacy file save";
+    }
+    return result == 0;
+}
 
 AVS_API
 const char* avs_error_str(AVS_Handle avs) {

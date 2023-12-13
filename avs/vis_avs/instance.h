@@ -40,7 +40,7 @@ class AVS_Instance {
     bool preset_load_legacy(const uint8_t* preset,
                             size_t preset_length,
                             bool with_transition = false);
-    void preset_save_file(const char* file_path, bool indent);
+    bool preset_save_file(const char* file_path, bool indent);
     int preset_save_file_legacy(const char* file_path);
     /** Allocate 1 MiB of memory at `data`. Return value is the actual size. */
     const uint8_t* preset_save_legacy(size_t* preset_length_out,

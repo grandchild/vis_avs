@@ -128,7 +128,9 @@ bool AVS_Instance::preset_load_legacy(const uint8_t* preset,
     return true;
 }
 
-void AVS_Instance::preset_save_file(const char* file_path, bool indent) {}
+bool AVS_Instance::preset_save_file(const char* file_path, bool indent) {
+    return false;
+}
 
 int AVS_Instance::preset_save_file_legacy(const char* file_path) {
     int result = -1;
