@@ -33,6 +33,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "r_defs.h"
 
+#include "instance.h"
+
 #include <math.h>
 #include <mmintrin.h>
 
@@ -278,7 +280,7 @@ void E_DynamicMovement::smp_render(int this_thread,
 
     int* fbin = this->config.buffer == 0
                     ? framebuffer
-                    : (int*)getGlobalBuffer(w, h, this->config.buffer - 1, 0);
+                    : (int*)this->avs->get_buffer(w, h, this->config.buffer - 1, false);
     if (!fbin) {
         return;
     }

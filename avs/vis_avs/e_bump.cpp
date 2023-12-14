@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "r_defs.h"
 
 #include "avs_eelif.h"
+#include "instance.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -111,7 +112,7 @@ int E_Bump::render(char visdata[2][2][576],
     int* src_buffer =
         !this->config.depth_buffer
             ? framebuffer
-            : (int*)getGlobalBuffer(w, h, this->config.depth_buffer - 1, 0);
+            : (int*)this->avs->get_buffer(w, h, this->config.depth_buffer - 1, false);
     if (!src_buffer) {
         return 0;
     }

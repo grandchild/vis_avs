@@ -29,38 +29,6 @@ E_Root::~E_Root() {
     }
 }
 
-extern int g_buffers_w[NBUF], g_buffers_h[NBUF];
-extern void* g_buffers[NBUF];
-
-void E_Root::start_buffer_context() {
-    if (this->buffers_saved) {
-        return;
-    }
-    this->buffers_saved = true;
-    memcpy(this->buffers_temp_w, g_buffers_w, sizeof(this->buffers_temp_w));
-    memcpy(this->buffers_temp_h, g_buffers_h, sizeof(this->buffers_temp_h));
-    memcpy(this->buffers_temp, g_buffers, sizeof(this->buffers_temp));
-
-    memcpy(g_buffers_w, this->buffers_w, sizeof(this->buffers_w));
-    memcpy(g_buffers_h, this->buffers_h, sizeof(this->buffers_h));
-    memcpy(g_buffers, this->buffers, sizeof(this->buffers));
-}
-
-void E_Root::end_buffer_context() {
-    if (!this->buffers_saved) {
-        return;
-    }
-    this->buffers_saved = false;
-
-    memcpy(this->buffers_w, g_buffers_w, sizeof(this->buffers_w));
-    memcpy(this->buffers_h, g_buffers_h, sizeof(this->buffers_h));
-    memcpy(this->buffers, g_buffers, sizeof(this->buffers));
-
-    memcpy(g_buffers_w, this->buffers_temp_w, sizeof(this->buffers_temp_w));
-    memcpy(g_buffers_h, this->buffers_temp_h, sizeof(this->buffers_temp_h));
-    memcpy(g_buffers, this->buffers_temp, sizeof(this->buffers_temp));
-}
-
 int E_Root::render(char visdata[2][2][576],
                    int is_beat,
                    int* framebuffer,
@@ -70,7 +38,6 @@ int E_Root::render(char visdata[2][2][576],
     if (this->config.clear) {
         memset(framebuffer, 0, w * h * sizeof(pixel_rgb0_8));
     }
-    this->start_buffer_context();
     for (auto& effect : this->children) {
         bool swap = effect->render(visdata, is_beat, framebuffer, fbout, w, h);
         if (swap) {
@@ -79,7 +46,6 @@ int E_Root::render(char visdata[2][2][576],
             fbout = tmp;
         }
     }
-    this->end_buffer_context();
     return 0;
 }
 
@@ -87,7 +53,6 @@ void E_Root::render_with_context(RenderContext& ctx) {
     if (this->config.clear) {
         memset(ctx.framebuffers[0].data, 0, ctx.w * ctx.h * sizeof(pixel_rgb0_8));
     }
-    this->start_buffer_context();
     char visdata[2][2][576];
     ctx.audio.to_legacy_visdata(visdata);
     for (auto& effect : this->children) {
@@ -102,7 +67,6 @@ void E_Root::render_with_context(RenderContext& ctx) {
         }
     }
     ctx.copy_secondary_to_output_framebuffer_if_needed();
-    this->end_buffer_context();
 }
 
 void E_Root::load_legacy(unsigned char* data, int len) {

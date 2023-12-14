@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "avs_eelif.h"
 #include "effect_library.h"
+#include "instance.h"
 #include "render.h"
 #include "undo.h"
 
@@ -387,8 +388,8 @@ int E_EffectList::render(char visdata[2][2][576],
                 break;
             default: break;
             case LIST_BLEND_BUFFER: {
-                int* buf =
-                    (int*)getGlobalBuffer(w, h, this->config.input_blend_buffer, 0);
+                int* buf = (int*)this->avs->get_buffer(
+                    w, h, this->config.input_blend_buffer, false);
                 if (!buf) {
                     break;
                 }
@@ -585,8 +586,8 @@ int E_EffectList::render(char visdata[2][2][576],
                 }
                 break;
             case LIST_BLEND_BUFFER: {
-                int* buf =
-                    (int*)getGlobalBuffer(w, h, this->config.output_blend_buffer, 0);
+                int* buf = (int*)this->avs->get_buffer(
+                    w, h, this->config.output_blend_buffer, false);
                 if (!buf) {
                     break;
                 }
