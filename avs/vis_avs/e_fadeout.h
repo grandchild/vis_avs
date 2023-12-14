@@ -1,6 +1,5 @@
 #pragma once
 
-#include "c__base.h"
 #include "effect.h"
 #include "effect_info.h"
 

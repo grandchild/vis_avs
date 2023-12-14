@@ -859,13 +859,3 @@ int C_THISCLASS::render(char[2][2][576],
 
     return 0;
 }
-
-C_RBASE* R_Text(char* desc)  // creates a new effect object if desc is NULL, otherwise
-                             // fills in desc with description
-{
-    if (desc) {
-        strcpy(desc, MOD_NAME);
-        return NULL;
-    }
-    return (C_RBASE*)new C_THISCLASS();
-}

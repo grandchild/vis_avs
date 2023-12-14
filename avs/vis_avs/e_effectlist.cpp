@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "undo.h"
 
 #include "../platform.h"
+#include "../util.h"
 
 #include <stdio.h>
 
@@ -221,7 +222,8 @@ int E_EffectList::render(char visdata[2][2][576],
                 }
 
             } else {
-                if (config_seh && child->get_legacy_id() != LIST_ID) {
+                if (config_seh
+                    && child->get_legacy_id() != EffectList_Info::legacy_id) {
                     try {
                         t = child->render(visdata,
                                           is_beat,
@@ -463,7 +465,7 @@ int E_EffectList::render(char visdata[2][2][576],
                                       h);
             }
 
-        } else if (config_seh && child->get_legacy_id() != LIST_ID) {
+        } else if (config_seh && child->get_legacy_id() != EffectList_Info::legacy_id) {
             try {
                 t = child->render(visdata,
                                   is_beat,

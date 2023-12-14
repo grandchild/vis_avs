@@ -46,7 +46,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "effect_library.h"
 #include "render.h"
 #include "resource.h"
-#include "rlib.h"
 #include "undo.h"
 #include "vis.h"
 #include "wnd.h"

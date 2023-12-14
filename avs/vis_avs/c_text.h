@@ -1,13 +1,11 @@
 #pragma once
 
-#include "c__base.h"
-
 #include <windows.h>
 
 #define MOD_NAME    "Render / Text"
 #define C_THISCLASS C_TextClass
 
-class C_THISCLASS : public C_RBASE {
+class C_THISCLASS {
    protected:
    public:
     C_THISCLASS();

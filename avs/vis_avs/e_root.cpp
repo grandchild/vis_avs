@@ -3,9 +3,9 @@
 
 #include "effect_library.h"
 #include "pixel_format.h"
-#include "rlib.h"
 
 #include "../platform.h"
+#include "../util.h"
 
 #include <iostream>
 

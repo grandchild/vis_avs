@@ -34,7 +34,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "r_defs.h"
 
 #include "instance.h"
-#include "rlib.h"
 
 #include "../platform.h"
 
@@ -43,4 +42,3 @@ void Render_Quit();
 
 extern AVS_Instance* g_single_instance;
 extern Transition* g_render_transition;
-extern C_RLibrary* g_render_library;
