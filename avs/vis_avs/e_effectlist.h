@@ -65,8 +65,8 @@ struct EffectList_Config : public Effect_Config {
     int64_t output_blend_mode = LIST_BLEND_REPLACE;
     int64_t input_blend_adjustable = 128;
     int64_t output_blend_adjustable = 128;
-    int64_t input_blend_buffer = 0;
-    int64_t output_blend_buffer = 0;
+    int64_t input_blend_buffer = 1;
+    int64_t output_blend_buffer = 1;
     bool input_blend_buffer_invert = false;
     bool output_blend_buffer_invert = false;
     bool use_code = false;
