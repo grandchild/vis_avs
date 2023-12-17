@@ -187,6 +187,7 @@ static void DD_RestoreBkgndSettings() {
     }
 }
 
+// fsh is the height to use (not screen res)
 void DD_CreateSurfaces(int w,
                        int h,
                        int fsh,
@@ -194,8 +195,7 @@ void DD_CreateSurfaces(int w,
                        int fsbpp,
                        int flip,
                        int dbl,
-                       int fsovl)  // fsh is the height to use (not screen res)
-{
+                       int fsovl) {
     int resize_h = 8, resize_w = 8;
 #ifdef RESIZE_ONRESIZE
     int fb_save[64 * 65 + 1];
