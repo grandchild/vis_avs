@@ -126,17 +126,15 @@ be sure to preserve edi, too.
 #define CALL2_PFASTCALL(FUNC) _CALL(2, FASTCALL, FUNC)
 #define CALL3_PFASTCALL(FUNC) _CALL(3, FASTCALL, FUNC)
 
-#define _CALL(NARGS, CALLTYPE, FUNC) \
-    __asm__ __volatile__(            \
-                                     \
-        _ARGS##_##NARGS##_##CALLTYPE \
-        "mov  %%eax, %[func_]\n\t"   \
-        "call %%eax\n\t"             \
-                                     \
-        _LEAVE                       \
-        :                            \
-        : [func_] "i"(&FUNC)         \
-        : "esi", "eax")
+#define _CALL(NARGS, CALLTYPE, FUNC)                  \
+    __asm__ __volatile__(_ARGS##_##NARGS##_##CALLTYPE \
+                                                      \
+                         "call %[func_]\n\t"          \
+                                                      \
+                         _LEAVE                       \
+                         :                            \
+                         : [func_] "r"(&FUNC)         \
+                         : "esi")
 
 #define _ARGS_1_STDCALL                                                              \
     /* new stack frame */                                                            \

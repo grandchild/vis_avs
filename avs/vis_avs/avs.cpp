@@ -22,6 +22,12 @@ std::unordered_map<AVS_Handle, AVS_Instance*> g_instances;
 const char* g_error = "";
 unsigned char g_blendtable[256][256];
 
+uint64_t const mmx_blend4_revn = 0x00ff00ff00ff00ff;
+// {0x1000100,0x1000100}; <<- this is actually more correct, but we're going for
+// consistency vs. the non-mmx ver-jf
+uint64_t const mmx_blendadj_mask = 0x00ff00ff00ff00ff;
+int const mmx_blend4_zero = 0;
+
 AVS_Instance* get_instance_from_handle(AVS_Handle avs) {
     if (avs > 0) {
         auto search = g_instances.find(avs);

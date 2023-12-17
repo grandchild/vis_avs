@@ -129,7 +129,7 @@ NAKED void _asm_megabuf(void) {
         "call %%eax\n\t"              // call megabuf(blocks, index)
         "mov  %%esp, %%ebp\n\t"       // pop stack frame
         :
-        : [megabuf] "i"(megabuf)
+        : [megabuf] "r"(megabuf)
         : "eax");
 #endif
 }

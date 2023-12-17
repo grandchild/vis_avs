@@ -285,9 +285,9 @@ static __inline void BLEND_LINE(int* fb, int color) {
         default: *fb = color; break;
     }
 }
-extern unsigned int const mmx_blend4_revn[2];
+extern uint64_t const mmx_blend4_revn;
 extern int const mmx_blend4_zero;
-extern int const mmx_blendadj_mask[2];
+extern uint64_t const mmx_blendadj_mask;
 // NOTE. WHEN USING THIS FUNCTION, BE SURE TO DO 'if (g_mmx_available) __asm emms;'
 // before calling any fpu code, or before returning.
 
@@ -332,11 +332,11 @@ static unsigned int __inline BLEND_ADJ(unsigned int a, unsigned int b, int v) {
         "packuswb  %%mm3, %%mm3\n\t"
         "movd      %%mm1, [%[b]]\n\t"
         "punpcklwd %%mm3, %%mm3\n\t"
-        "movq      %%mm4, [%[mmx_blend4_revn]]\n\t"
+        "movq      %%mm4, %[mmx_blend4_revn]\n\t"
         "punpckldq %%mm3, %%mm3\n\t"
-        "punpcklbw %%mm0, [%[mmx_blend4_zero]]\n\t"
-        "pand      %%mm3, [%[mmx_blendadj_mask]]\n\t"
-        "punpcklbw %%mm1, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm0, %[mmx_blend4_zero]\n\t"
+        "pand      %%mm3, %[mmx_blendadj_mask]\n\t"
+        "punpcklbw %%mm1, %[mmx_blend4_zero]\n\t"
         "psubw     %%mm4, %%mm3\n\t"
         "pmullw    %%mm0, %%mm3      \n\t"
         "pmullw    %%mm1, %%mm4\n\t"
@@ -461,14 +461,14 @@ static __inline unsigned int BLEND4(unsigned int* p1, unsigned int w, int xp, in
         "movd      %%mm1, [%%eax + 4]\n\t"
         "punpckldq %%mm7,%%mm7\n\t"
         "movd      %%mm2, [%%eax + %%esi * 4]\n\t"
-        "punpcklbw %%mm0, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm0, %[mmx_blend4_zero]\n\t"
         "movd      %%mm3, [%%eax + %%esi * 4 + 4]\n\t"
         "psubw     %%mm4, %%mm6\n\t"
-        "punpcklbw %%mm1, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm1, %[mmx_blend4_zero]\n\t"
         "pmullw    %%mm0, %%mm4\n\t"
-        "punpcklbw %%mm2, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm2, %[mmx_blend4_zero]\n\t"
         "pmullw    %%mm1, %%mm6\n\t"
-        "punpcklbw %%mm3, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm3, %[mmx_blend4_zero]\n\t"
         "psubw     %%mm5, %%mm7\n\t"
         "pmullw    %%mm2, %%mm4\n\t"
         "pmullw    %%mm3, %%mm6\n\t"
@@ -610,13 +610,13 @@ static __inline unsigned int BLEND4_16(unsigned int* p1,
         "punpckldq %%mm6,%%mm6\n\t"
         "movd      %%mm3, [%%eax + %%esi * 4 + 4]\n\t"
         "punpckldq %%mm7,%%mm7\n\t"
-        "punpcklbw %%mm0, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm0, %[mmx_blend4_zero]\n\t"
         "psubw     %%mm4, %%mm6\n\t"
-        "punpcklbw %%mm1, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm1, %[mmx_blend4_zero]\n\t"
         "pmullw    %%mm0, %%mm4\n\t"
-        "punpcklbw %%mm2, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm2, %[mmx_blend4_zero]\n\t"
         "pmullw    %%mm1, %%mm6\n\t"
-        "punpcklbw %%mm3, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm3, %[mmx_blend4_zero]\n\t"
         "psubw     %%mm5, %%mm7\n\t"
         "pmullw    %%mm2, %%mm4\n\t"
         "pmullw    %%mm3, %%mm6\n\t"
@@ -845,12 +845,12 @@ mmx_mulblend_loop:
         "movd      %%mm0, [%%eax]\n\t"
         "movd      %%mm1, [%%edi]\n\t"
         "movd      %%mm2, [%%eax + 4]\n\t"
-        "punpcklbw %%mm0, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm0, %[mmx_blend4_zero]\n\t"
         "movd      %%mm3, [%%edi+4]\n\t"
-        "punpcklbw %%mm1, [%[mmx_blend4_zero]]\n\t"
-        "punpcklbw %%mm2, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm1, %[mmx_blend4_zero]\n\t"
+        "punpcklbw %%mm2, %[mmx_blend4_zero]\n\t"
         "pmullw    %%mm0, %%mm1\n\t"
-        "punpcklbw %%mm3, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm3, %[mmx_blend4_zero]\n\t"
         "psrlw     %%mm0, 8\n\t"
         "pmullw    %%mm2, %%mm3\n\t"
         "packuswb  %%mm0, %%mm0\n\t"
@@ -945,15 +945,16 @@ _mmx_adjblend_loop:
 #else            // _MSC_VER, GCC asm
     /* See remark before GCC asm block in mmx_avgblend_block() above. */
     __asm__ __volatile__(
-        "movd      %%mm3, [%[v]]\n\t"
+        "push      %%edi\n\t"
+        "movd      %%mm3, %[v]\n\t"
         "mov       %%ecx, %[len]\n\t"
         "packuswb  %%mm3, %%mm3\n\t"
         "mov       %%edx, %[o]\n\t"
         "punpcklwd %%mm3, %%mm3\n\t"
         "mov       %%esi, %[in1]\n\t"
-        "movq      %%mm4, [%[mmx_blend4_revn]]\n\t"
+        "movq      %%mm4, %[mmx_blend4_revn]\n\t"
         "punpckldq %%mm3, %%mm3\n\t"
-        "pand      %%mm3, [%[mmx_blendadj_mask]]\n\t"
+        "pand      %%mm3, %[mmx_blendadj_mask]\n\t"
         "mov       %%edi, %[in2]\n\t"
         "shr       %%ecx, 1\n\t"
         "psubw     %%mm4, %%mm3\n\t"
@@ -961,13 +962,13 @@ _mmx_adjblend_loop:
         "_mmx_adjblend_loop%=:\n\t"
         "movd      %%mm0, [%%esi]\n\t"
         "movd      %%mm1, [%%edi]\n\t"
-        "punpcklbw %%mm0, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm0, %[mmx_blend4_zero]\n\t"
         "movd      %%mm6, [%%esi + 4]\n\t"
-        "punpcklbw %%mm1, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm1, %[mmx_blend4_zero]\n\t"
         "movd      %%mm7, [%%edi + 4]\n\t"
-        "punpcklbw %%mm6, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm6, %[mmx_blend4_zero]\n\t"
         "pmullw    %%mm0, %%mm3\n\t"
-        "punpcklbw %%mm7, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm7, %[mmx_blend4_zero]\n\t"
         "pmullw    %%mm1, %%mm4\n\t"
         "pmullw    %%mm6, %%mm3\n\t"
         "pmullw    %%mm7, %%mm4\n\t"
@@ -984,6 +985,7 @@ _mmx_adjblend_loop:
         "add       %%edx, 8\n\t"
         "dec       %%ecx\n\t"
         "jnz       _mmx_adjblend_loop%=\n\t"
+        "pop       %%edi\n\t"
         "emms     \n\t"
         : /* no outputs */
         : [v] "m"(v),
@@ -994,7 +996,7 @@ _mmx_adjblend_loop:
           [mmx_blend4_revn] "m"(mmx_blend4_revn),
           [mmx_blendadj_mask] "m"(mmx_blendadj_mask),
           [mmx_blend4_zero] "m"(mmx_blend4_zero)
-        : "ecx", "edx", "esi", "edi");
+        : "ecx", "edx", "esi");
 #endif           // _MSC_VER
 #endif
 }

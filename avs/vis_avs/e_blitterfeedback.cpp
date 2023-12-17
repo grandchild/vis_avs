@@ -60,7 +60,7 @@ void BlitterFeedback_Info::on_zoom_change(Effect* component,
 // {0x1000100,0x1000100}; <<- this is actually more correct, but we're going for
 // consistency vs. the non-mmx ver
 // -jf
-static const uint32_t revn[2] = {0xff00ff, 0xff00ff};
+static const uint64_t revn = 0x00ff00ff00ff00ff;
 static const int zero = 0;
 
 E_BlitterFeedback::E_BlitterFeedback(AVS_Instance* avs)
@@ -324,16 +324,17 @@ int E_BlitterFeedback::blitter_normal(int* framebuffer,
                 }
 #else            // _MSC_VER, GCC asm
                 __asm__ __volatile__(
+                    "push      %%edi\n\t"
                     "mov       %%edi, %[fbout]\n\t"
                     "mov       %%esi, %[w]\n\t"
                     "movd      %%mm7, %[ypart]\n\t"
                     "punpcklwd %%mm7, %%mm7\n\t"
-                    "movq      %%mm5, %[revn]\n\t"
+                    "movq      %%mm5, [%[revn]]\n\t"
                     "punpckldq %%mm7, %%mm7\n\t"
                     "psubw     %%mm5, %%mm7\n\t"
                     "mov       %%ecx, %%esi\n\t"
-                    "movq      %[mem5], %%mm5\n\t"
-                    "movq      %[mem7], %%mm7\n\t"
+                    "movq      [%[mem5]], %%mm5\n\t"
+                    "movq      [%[mem7]], %%mm7\n\t"
                     "shr       %%ecx, 1\n\t"
                     "mov       %%edx, %[s_x]\n\t"
                     ".align    16\n"
@@ -347,22 +348,22 @@ int E_BlitterFeedback::blitter_normal(int* framebuffer,
                     "add       %%eax, %[src]\n\t"
                     "and       %%ebx, 0xff\n\t"
                     "movd      %%mm6, %%ebx\n\t"
-                    "movq      %%mm4, %[revn]\n\t"
+                    "movq      %%mm4, [%[revn]]\n\t"
                     "punpcklwd %%mm6, %%mm6\n\t"
                     "movd      %%mm0, [%%eax]\n\t"
                     "punpckldq %%mm6, %%mm6\n\t"
                     "movd      %%mm1, [%%eax+4]\n\t"
                     "psubw     %%mm4, %%mm6\n\t"
                     "movd      %%mm2, [%%eax + %%esi * 4]\n\t"
-                    "punpcklbw %%mm0, [%[zero]]\n\t"
+                    "punpcklbw %%mm0, %[zero]\n\t"
                     "movd      %%mm3, [%%eax + %%esi * 4 + 4]\n\t"
                     "pmullw    %%mm0, %%mm4\n\t"
-                    "punpcklbw %%mm1, [%[zero]]\n\t"
+                    "punpcklbw %%mm1, %[zero]\n\t"
                     "mov       %%eax, %%edx\n\t"
                     "pmullw    %%mm1, %%mm6\n\t"
-                    "punpcklbw %%mm2, [%[zero]]\n\t"
+                    "punpcklbw %%mm2, %[zero]\n\t"
                     "pmullw    %%mm2, %%mm4\n\t"
-                    "punpcklbw %%mm3, [%[zero]]\n\t"
+                    "punpcklbw %%mm3, %[zero]\n\t"
                     "pmullw    %%mm3, %%mm6\n\t"
                     "shr       %%eax, 14\n\t"
                     "mov       %%ebx, %%edx\n\t"
@@ -378,7 +379,7 @@ int E_BlitterFeedback::blitter_normal(int* framebuffer,
                     "pmullw    %%mm2, %[mem7]\n\t"
                     "add       %%edx, %[ds_x]\n\t"
                     "movd      %%mm6, %%ebx\n\t"
-                    "movq      %%mm4, %[revn]\n\t"
+                    "movq      %%mm4, [%[revn]]\n\t"
                     "punpcklwd %%mm6, %%mm6\n\t"
                     "movd      %%mm1, [%%eax+4]\n\t"
                     "movd      %%mm7, [%%eax + %%esi * 4]\n\t"
@@ -389,13 +390,13 @@ int E_BlitterFeedback::blitter_normal(int* framebuffer,
                     "packuswb  %%mm0, %%mm0\n\t"
                     "movd      [%%edi], %%mm0\n\t"
                     "punpckldq %%mm6, %%mm6\n\t"
-                    "punpcklbw %%mm5, [%[zero]]\n\t"
+                    "punpcklbw %%mm5, %[zero]\n\t"
                     "psubw     %%mm4, %%mm6\n\t"
-                    "punpcklbw %%mm1, [%[zero]]\n\t"
+                    "punpcklbw %%mm1, %[zero]\n\t"
                     "pmullw    %%mm5, %%mm4\n\t"
-                    "punpcklbw %%mm7, [%[zero]]\n\t"
+                    "punpcklbw %%mm7, %[zero]\n\t"
                     "pmullw    %%mm1, %%mm6\n\t"
-                    "punpcklbw %%mm3, [%[zero]]\n\t"
+                    "punpcklbw %%mm3, %[zero]\n\t"
                     "pmullw    %%mm7, %%mm4\n\t"
                     "paddw     %%mm5, %%mm1\n\t"
                     "pmullw    %%mm3, %%mm6\n\t"
@@ -412,18 +413,17 @@ int E_BlitterFeedback::blitter_normal(int* framebuffer,
                     "movd      [%%edi - 4], %%mm5\n\t"
                     "jnz       mmx_scale_loop1\n\t"
                     "mov       %[fbout], %%edi\n\t"
+                    "pop       %%edi\n\t"
                     "emms\n\t"
-                    : [fbout] "+m"(fbout)
+                    : [fbout] "+m"(fbout), [mem5] "+m"(mem5), [mem7] "+m"(mem7)
                     : [w] "m"(w),
-                      [ypart] "m"(ypart),
+                      [ypart] "rm"(ypart),
                       [revn] "m"(revn),
-                      [s_x] "m"(s_x),
-                      [ds_x] "m"(ds_x),
+                      [s_x] "rm"(s_x),
+                      [ds_x] "rm"(ds_x),
                       [src] "m"(src),
-                      [zero] "m"(zero),
-                      [mem5] "m"(mem5),
-                      [mem7] "m"(mem7)
-                    : "eax", "ebx", "ecx", "edx", "esi", "edi");
+                      [zero] "m"(zero)
+                    : "eax", "ebx", "ecx", "edx", "esi");  //, "edi");
 #endif           // _MSC_VER
             }  // end mmx
 #endif

@@ -68,15 +68,6 @@ int is_mmx(void) {
     return (retval2 & 0x800000) ? 1 : 0;
 }
 
-unsigned int const mmx_blend4_revn[2] = {0xff00ff, 0xff00ff};  //{0x1000100,0x1000100};
-                                                               //<<- this is actually
-                                                               // more correct, but
-                                                               // we're going for
-                                                               // consistency vs. the
-                                                               // non-mmx ver-jf
-int const mmx_blendadj_mask[2] = {0xff00ff, 0xff00ff};
-int const mmx_blend4_zero = 0;
-
 void Render_Init() {
     timingInit();
 
