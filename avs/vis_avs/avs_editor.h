@@ -165,8 +165,9 @@ typedef struct {
     /**
      * Is `true` if the effect can be added to a preset by the user. A few effects are
      * only ever created by AVS internally:
-     * - "Root", the root of the preset tree &
-     * - "Unknown Effect", when a preset is loaded with an effect not known to AVS.
+     * - "Root", the root of the preset tree,
+     * - "Unknown Effect", when a preset is loaded with an effect not known to AVS,
+     * - "Transition", for animating the switch to another preset.
      * This flag is helpful if you want to filter for effects that users can actually
      * add to a preset.
      */
