@@ -467,7 +467,7 @@ constexpr Parameter P_IRANGE(size_t offset,
                              int64_t int_max = 0,
                              const char* description = NULL,
                              value_change_handler on_value_change = NULL,
-                             bool is_saved = false) {
+                             bool is_saved = true) {
     Parameter _param =
         PARAM(offset, AVS_PARAM_INT, name, description, on_value_change, is_saved);
     _param.int_min = int_min;
@@ -480,7 +480,7 @@ constexpr Parameter P_IRANGE_G(size_t offset,
                                int64_t int_max = 0,
                                const char* description = NULL,
                                value_change_handler on_value_change = NULL,
-                               bool is_saved = false) {
+                               bool is_saved = true) {
     Parameter _param = P_IRANGE(
         offset, name, int_min, int_max, description, on_value_change, is_saved);
     _param.is_global = true;
