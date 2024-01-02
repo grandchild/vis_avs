@@ -84,7 +84,6 @@ struct Buffer {
         this->w = other.w;
         this->h = other.h;
         this->pixel_format = other.pixel_format;
-        this->owns_data = other.owns_data;
         return *this;
     }
     Buffer(Buffer&& other) noexcept : data(nullptr) { this->swap(other); }
