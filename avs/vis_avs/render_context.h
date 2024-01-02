@@ -143,10 +143,13 @@ struct RenderContext {
         if (this->needs_final_fb_copy) {
             // In the swapped state the final effect rendered to the secondary buffer,
             // so the output pointer is in framebuffers[1], the other one.
-            // Copy the contents of the last-used buffer to the one with the output
-            // pointer.
-            this->framebuffers[1] = this->framebuffers[0];
-            this->needs_final_fb_copy = false;
+            // Swap the buffers one last time & then copy the contents of the last-used
+            // buffer to the one with the output pointer. The final swap is needed so
+            // that the output pointer is in framebuffers[0] again. For the next frame
+            // the previous contents of the secondary buffer are never considered and
+            // can be left as-is.
+            this->swap_framebuffers();
+            this->framebuffers[0] = this->framebuffers[1];
         }
     }
 };
