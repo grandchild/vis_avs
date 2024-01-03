@@ -165,6 +165,7 @@ const uint8_t* AVS_Instance::preset_save_legacy(size_t* preset_length_out,
         memcpy(this->preset_legacy_save_buffer,
                AVS_Instance::legacy_file_magic,
                file_magic_length);
+        pos += file_magic_length;
         auto legacy_preset_content =
             this->preset_legacy_save_buffer + file_magic_length;
         lock_lock(this->render_lock);
