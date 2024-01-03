@@ -38,13 +38,18 @@ int E_Root::render(char visdata[2][2][576],
     if (this->config.clear) {
         memset(framebuffer, 0, w * h * sizeof(pixel_rgb0_8));
     }
+    bool swap_parity = false;
     for (auto& effect : this->children) {
         bool swap = effect->render(visdata, is_beat, framebuffer, fbout, w, h);
         if (swap) {
             auto tmp = framebuffer;
             framebuffer = fbout;
             fbout = tmp;
+            swap_parity = !swap_parity;
         }
+    }
+    if (swap_parity) {
+        memcpy(fbout, framebuffer, w * h * sizeof(pixel_rgb0_8));
     }
     return 0;
 }
