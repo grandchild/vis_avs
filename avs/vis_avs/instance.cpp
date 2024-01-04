@@ -133,6 +133,13 @@ bool AVS_Instance::preset_load_legacy(const uint8_t* preset,
 }
 
 bool AVS_Instance::preset_save_file(const char* file_path, bool indent) {
+    auto preset_str = this->preset_save(indent);
+    FILE* fp = fopen(file_path, "wb");
+    if (fp != nullptr) {
+        fwrite(preset_str, 1, strlen(preset_str), fp);
+        fclose(fp);
+        return true;
+    }
     return false;
 }
 
@@ -155,7 +162,15 @@ int AVS_Instance::preset_save_file_legacy(const char* file_path) {
     return result;
 }
 
-const char* AVS_Instance::preset_save() { return ""; }
+const char* AVS_Instance::preset_save(bool indent) {
+    json j;
+    j["preset format version"] = "0";
+    j["avs version"] = "2.81.4";
+    j.update(this->root.save());
+    j.erase("effect");
+    this->preset_save_buffer = j.dump(4) + "\n";
+    return this->preset_save_buffer.c_str();
+}
 
 const uint8_t* AVS_Instance::preset_save_legacy(size_t* preset_length_out,
                                                 bool secondary) {

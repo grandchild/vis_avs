@@ -104,6 +104,8 @@ class Effect {
         return 0;  // returns 1 if fbout has dest
     };
     virtual void render_with_context(RenderContext&){};
+    virtual void load(json&){};
+    virtual json save() { return nullptr; };
     virtual char* get_desc() = 0;
     virtual int32_t get_legacy_id() { return -1; }
     virtual const char* get_legacy_ape_id() { return nullptr; }
@@ -455,6 +457,24 @@ class Configurable_Effect : public Effect {
     GET_ARRAY_PARAMETER(int, int64_t)
     GET_ARRAY_PARAMETER(float, double)
     GET_ARRAY_PARAMETER(color, uint64_t)
+
+    virtual json save() {
+        json save_data;
+        save_data["effect"] = this->info.get_name();
+        save_data["enabled"] = this->enabled;
+        auto save_config = this->info.save_config(&this->config, &this->global->config);
+        if (!save_config.is_null()) {
+            save_data["config"] = save_config;
+        }
+        if (this->can_have_child_components()) {
+            json child_data;
+            for (auto& child : this->children) {
+                child_data += child->save();
+            }
+            save_data["components"] = child_data;
+        }
+        return save_data;
+    }
 
     virtual int32_t get_legacy_id() { return this->info.legacy_id; }
     virtual const char* get_legacy_ape_id() { return this->info.legacy_ape_id; }

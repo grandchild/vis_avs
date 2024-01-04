@@ -3,6 +3,8 @@
 #include "avs_editor.h"
 #include "handles.h"
 
+#include "../3rdparty/json.h"
+
 #include <algorithm>  // std::move() for list_move
 #include <iomanip>
 #include <sstream>
@@ -11,6 +13,8 @@
 #include <stdlib.h>
 #include <string>
 #include <vector>
+
+using json = nlohmann::ordered_json;
 
 /**
  * This file encapsulates most of the dirty parts around component- and parameter
@@ -90,6 +94,8 @@ struct Parameter {
     list_edit_handler on_list_add = NULL;
     list_edit_handler on_list_move = NULL;
     list_edit_handler on_list_remove = NULL;
+
+    json to_json(const Effect_Config* config) const;
 };
 
 template <typename T>
@@ -546,6 +552,9 @@ struct Effect_Info {
         }
         return h_parameter_children[parameter->handle].data();
     };
+
+    json save_config(const Effect_Config* config,
+                     const Effect_Config* global_config) const;
 };
 
 /**
