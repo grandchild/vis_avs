@@ -855,7 +855,7 @@ struct parameter_dispatch;
 
 template <>
 struct parameter_dispatch<bool> {
-    static bool get(uint8_t* config_data) { return *(bool*)config_data; };
+    static bool get(const uint8_t* config_data) { return *(bool*)config_data; };
     static void set(const Parameter*, uint8_t* addr, bool value) {
         *(bool*)addr = value;
     }
@@ -873,7 +873,7 @@ struct parameter_dispatch<bool> {
 
 template <>
 struct parameter_dispatch<int64_t> {
-    static int64_t get(uint8_t* config_data) { return *((int64_t*)config_data); };
+    static int64_t get(const uint8_t* config_data) { return *((int64_t*)config_data); };
     static void set(const Parameter* parameter, uint8_t* addr, int64_t value) {
         auto _min = parameter->int_min;
         auto _max = parameter->int_max;
@@ -882,7 +882,7 @@ struct parameter_dispatch<int64_t> {
         }
         *(int64_t*)addr = value;
     }
-    static std::vector<int64_t>& get_array(uint8_t* config_data) {
+    static std::vector<int64_t>& get_array(const uint8_t* config_data) {
         return *(std::vector<int64_t>*)config_data;
     };
     static int64_t zero() { return 0; };
@@ -919,7 +919,7 @@ struct parameter_dispatch<int64_t> {
 
 template <>
 struct parameter_dispatch<double> {
-    static double get(uint8_t* config_data) { return *(double*)config_data; };
+    static double get(const uint8_t* config_data) { return *(double*)config_data; };
     static void set(const Parameter* parameter, uint8_t* addr, double value) {
         auto _min = parameter->float_min;
         auto _max = parameter->float_max;
@@ -928,7 +928,7 @@ struct parameter_dispatch<double> {
         }
         *(double*)addr = value;
     }
-    static std::vector<double>& get_array(uint8_t* config_data) {
+    static std::vector<double>& get_array(const uint8_t* config_data) {
         return *(std::vector<double>*)config_data;
     };
     static double zero() { return 0.0; };
@@ -947,11 +947,13 @@ struct parameter_dispatch<double> {
 
 template <>
 struct parameter_dispatch<uint64_t> {
-    static uint64_t get(uint8_t* config_data) { return *((uint64_t*)config_data); };
+    static uint64_t get(const uint8_t* config_data) {
+        return *((uint64_t*)config_data);
+    };
     static void set(const Parameter*, uint8_t* addr, uint64_t value) {
         *(uint64_t*)addr = value;
     }
-    static std::vector<uint64_t>& get_array(uint8_t* config_data) {
+    static std::vector<uint64_t>& get_array(const uint8_t* config_data) {
         return *(std::vector<uint64_t>*)config_data;
     };
     static uint64_t zero() { return 0; };
@@ -969,7 +971,7 @@ struct parameter_dispatch<uint64_t> {
 
 template <>
 struct parameter_dispatch<const char*> {
-    static const char* get(uint8_t* config_data) {
+    static const char* get(const uint8_t* config_data) {
         return ((std::string*)config_data)->c_str();
     };
     static void set(const Parameter* parameter, uint8_t* addr, const char* value) {
