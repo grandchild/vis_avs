@@ -95,6 +95,7 @@ struct Parameter {
     list_edit_handler on_list_move = NULL;
     list_edit_handler on_list_remove = NULL;
 
+    void from_json(const json& config_json, Effect_Config* config) const;
     json to_json(const Effect_Config* config) const;
 };
 
@@ -552,6 +553,10 @@ struct Effect_Info {
         }
         return h_parameter_children[parameter->handle].data();
     };
+
+    void load_config(Effect_Config* config,
+                     Effect_Config* global_config,
+                     const json& config_json) const;
 
     json save_config(const Effect_Config* config,
                      const Effect_Config* global_config) const;

@@ -27,6 +27,52 @@ static std::string serialize_color(uint64_t color,
     return color_str.str();
 }
 
+static void deserialize_color(const std::string& color_str,
+                              uint64_t* color_out,
+                              AVS_Pixel_Format* pixel_format_out) {
+    std::string pixel_format_str;
+    static const size_t num_channels = 4;
+    std::string channel_strs[num_channels] = {"0", "0", "0", "0"};
+    // parsing state machine:
+    //   0        parse color format
+    //   1,2,3,4  parse color channels
+    size_t state = 0;
+    for (auto& c : color_str) {
+        if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+            continue;
+        }
+        if (state == 0) {
+            if (c == 'r' || c == 'g' || c == 'b' || c == '0' || c == '_' || c == '8') {
+                pixel_format_str += c;
+            } else if (c == '(') {
+                state = 1;
+                continue;
+            } else {
+                break;
+            }
+        }
+        if (state >= 1 && state <= num_channels) {
+            if (c >= '0' && c <= '9') {
+                channel_strs[state - 1] += c;
+            } else if (c == ',') {
+                state += 1;
+            } else {
+                break;
+            }
+        }
+    }
+    if (pixel_format_str == "rgb0_8") {
+        *pixel_format_out = AVS_PIXEL_RGB0_8;
+        *color_out = ((uint64_t)std::stoi(channel_strs[0]) << 16)
+                     | ((uint64_t)std::stoi(channel_strs[1]) << 8)
+                     | ((uint64_t)std::stoi(channel_strs[2]));
+    } else {
+        // A silly fallback, but since it's the only pixel format at the moment...
+        *pixel_format_out = AVS_PIXEL_RGB0_8;
+        *color_out = 0;
+    }
+}
+
 static std::string& replace_crlf_newlines_with_lf(std::string& str) {
     for (auto i = str.size(); i >= 2; i--) {
         if (str[i - 2] == '\r') {
@@ -48,6 +94,76 @@ static std::string& replace_lf_newlines_with_crlf_for_winamp_ui(std::string& str
         }
     }
     return str;
+}
+
+void Parameter::from_json(const json& config_json, Effect_Config* config) const {
+    uint8_t* addr = &((uint8_t*)config)[this->offset];
+    switch (this->type) {
+        case AVS_PARAM_BOOL:
+            parameter_dispatch<bool>::set(this, addr, config_json);
+            break;
+        case AVS_PARAM_INT:
+            parameter_dispatch<int64_t>::set(this, addr, config_json);
+            break;
+        case AVS_PARAM_FLOAT:
+            parameter_dispatch<double>::set(this, addr, config_json);
+            break;
+        case AVS_PARAM_STRING: {
+            parameter_dispatch<const char*>::set(
+                this, addr, config_json.get<std::string>().c_str());
+            break;
+        }
+        case AVS_PARAM_RESOURCE:
+            parameter_dispatch<const char*>::set(
+                this, addr, config_json.get<std::string>().c_str());
+            break;
+        case AVS_PARAM_COLOR: {
+            uint64_t color;
+            AVS_Pixel_Format pixel_format;
+            deserialize_color(config_json, &color, &pixel_format);
+            parameter_dispatch<uint64_t>::set(this, addr, color);
+            break;
+        }
+        case AVS_PARAM_SELECT: {
+            int64_t num_options = 0;
+            const char* const* options = this->get_options(&num_options);
+            int64_t selection = -1;
+            for (int64_t i = 0; i < num_options; i++) {
+                if (options[i] == config_json) {
+                    selection = i;
+                    break;
+                }
+            }
+            parameter_dispatch<int64_t>::set(this, addr, selection);
+            break;
+        }
+        case AVS_PARAM_LIST: {
+            this->list_clear(addr);
+            for (auto& json_child_config : config_json) {
+                int64_t at_end = INT64_MAX;
+                if (!this->list_add(addr, UINT32_MAX, &at_end)) {
+                    break;
+                }
+                auto new_item_addr = this->list_item_addr(addr, at_end);
+                for (size_t j = 0; j < this->num_child_parameters; j++) {
+                    auto child_param = this->child_parameters[j];
+                    if (json_child_config.contains(child_param.name)) {
+                        child_param.from_json(json_child_config[child_param.name],
+                                              new_item_addr);
+                    }
+                }
+            }
+            break;
+        }
+        // TODO [feature]: Loadable array parameters. Currently no effect _saves_ these,
+        //                 so _loading_ is not needed.
+        case AVS_PARAM_INT_ARRAY:
+        case AVS_PARAM_FLOAT_ARRAY:
+        case AVS_PARAM_COLOR_ARRAY:
+        case AVS_PARAM_ACTION:
+        case AVS_PARAM_INVALID: [[fallthrough]];
+        default: break;
+    }
 }
 
 json Parameter::to_json(const Effect_Config* config) const {
@@ -110,6 +226,36 @@ json Parameter::to_json(const Effect_Config* config) const {
         case AVS_PARAM_ACTION: [[fallthrough]];
         case AVS_PARAM_INVALID:
         default: return {};
+    }
+}
+
+void Effect_Info::load_config(Effect_Config* config,
+                              Effect_Config* global_config,
+                              const json& config_json) const {
+    for (size_t i = 0; i < this->get_num_parameters(); i++) {
+        auto parameter = this->get_parameters()[i];
+        if (parameter.type == AVS_PARAM_INVALID) {
+            log_warn(
+                "Invalid parameter in %s:"
+                "Check its Info struct's `parameters` list length vs `num_parameters`.",
+                this->get_name());
+            continue;
+        }
+        if (parameter.is_saved) {
+            auto local_or_global_config = parameter.is_global ? global_config : config;
+            if (!config_json.contains(parameter.name)) {
+                continue;
+            }
+            try {
+                parameter.from_json(config_json[parameter.name],
+                                    local_or_global_config);
+            } catch (std::exception& e) {
+                log_err("Exception while loading config for %s/%s: %s\n",
+                        this->get_name(),
+                        parameter.name,
+                        e.what());
+            }
+        }
     }
 }
 

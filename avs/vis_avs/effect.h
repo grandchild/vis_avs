@@ -2,6 +2,7 @@
 
 #include "avs_editor.h"
 #include "effect_info.h"
+#include "effect_library.h"
 #include "render_context.h"
 
 #include "../platform.h"
@@ -457,6 +458,37 @@ class Configurable_Effect : public Effect {
     GET_ARRAY_PARAMETER(int, int64_t)
     GET_ARRAY_PARAMETER(float, double)
     GET_ARRAY_PARAMETER(color, uint64_t)
+
+    virtual void load(json& data) {
+        if (data.is_null()) {
+            return;
+        }
+        this->enabled = data.value("enabled", true);
+        this->info.load_config(
+            &this->config, &this->global->config, data.value("config", json::object()));
+        if (this->can_have_child_components()) {
+            auto children_data = data.value("components", json::array());
+            if (children_data.is_array()) {
+                for (auto& child_data : children_data) {
+                    Effect* child_effect = nullptr;
+                    if (!child_data.contains("effect")) {
+                        log_warn("effect without 'effect' key, preset file corrupt.");
+                    } else {
+                        child_effect =
+                            component_factory_by_name(child_data["effect"], this->avs);
+                    }
+                    if (child_effect == nullptr) {
+                        child_effect = component_factory_by_name("Unknown", this->avs);
+                    }
+                    child_effect->load(child_data);
+                    this->insert(child_effect, this, INSERT_CHILD);
+                }
+            }
+        }
+        this->on_load();
+    }
+
+    virtual void on_load() {}
 
     virtual json save() {
         json save_data;
