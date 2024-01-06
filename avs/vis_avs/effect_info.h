@@ -287,6 +287,7 @@ typedef bool (*list_mover)(uint8_t* list_address, int64_t* from, int64_t* to);
 typedef bool (*list_remover)(uint8_t* list_address,
                              uint32_t length_min,
                              int64_t* to_remove);
+typedef bool (*list_clearer)(uint8_t* list_address);
 typedef void (*list_edit_handler)(Effect* component,
                                   const Parameter* parameter,
                                   const std::vector<int64_t>& parameter_path,
@@ -320,6 +321,7 @@ struct Parameter {
     list_adder list_add = NULL;
     list_mover list_move = NULL;
     list_remover list_remove = NULL;
+    list_clearer list_clear = NULL;
     list_edit_handler on_list_add = NULL;
     list_edit_handler on_list_move = NULL;
     list_edit_handler on_list_remove = NULL;
@@ -399,6 +401,12 @@ bool list_remove(uint8_t* list_address, uint32_t length_min, int64_t* to_remove)
         return false;
     }
     list->erase(std::next(list->begin(), *to_remove));
+    return true;
+}
+template <typename T>
+bool list_clear(uint8_t* list_address) {
+    auto list = (std::vector<T>*)list_address;
+    list->clear();
     return true;
 }
 
@@ -622,6 +630,7 @@ constexpr Parameter P_LIST(size_t offset,
     _param.list_add = list_add<Subtype>;
     _param.list_move = list_move<Subtype>;
     _param.list_remove = list_remove<Subtype>;
+    _param.list_clear = list_clear<Subtype>;
     _param.on_list_add = on_add;
     _param.on_list_move = on_move;
     _param.on_list_remove = on_remove;
