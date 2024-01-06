@@ -178,7 +178,7 @@ struct ColorMap_Info : public Effect_Info {
     static constexpr uint32_t num_map_params = 9;
     static constexpr Parameter map_params[num_map_params] = {
         P_BOOL(offsetof(ColorMap_Map, enabled), "Enabled"),
-        P_INT(offsetof(ColorMap_Map, map_id), "Map ID"),
+        P_INT_X(offsetof(ColorMap_Map, map_id), "Map ID"),
         P_STRING(offsetof(ColorMap_Map, filepath), "File Path"),
         P_LIST<ColorMap_Map_Color>(offsetof(ColorMap_Map, colors),
                                    "Colors",
