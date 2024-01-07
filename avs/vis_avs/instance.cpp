@@ -111,21 +111,25 @@ bool AVS_Instance::preset_load(const std::string& preset, bool with_transition) 
 bool AVS_Instance::preset_load_legacy(const uint8_t* preset,
                                       size_t preset_length,
                                       bool with_transition) {
-    E_Root& load_root = with_transition ? this->root_secondary : this->root;
-    load_root = E_Root(this);
     auto file_magic_length = strlen(AVS_Instance::legacy_file_magic);
     if (preset_length > file_magic_length + 2
         && !memcmp(preset, AVS_Instance::legacy_file_magic, file_magic_length - 2)
         && preset[file_magic_length - 2] >= '1' && preset[file_magic_length - 2] <= '2'
         && preset[file_magic_length - 1] == '\x1a') {
+        //                               trustmebro! (i.e. TODO: make data param const)
+        this->root_secondary.load_legacy((unsigned char*)preset + file_magic_length,
+                                         (int)(preset_length - file_magic_length));
+        if (with_transition) {
+            // unimplemented!
+            // this->transition.do_transition();
+        }
         lock_lock(this->render_lock);
-        //                    trustmebro! (i.e. TODO: make load_legacy take const)
-        load_root.load_legacy((unsigned char*)preset + file_magic_length,
-                              (int)(preset_length - file_magic_length));
+        std::swap(this->root, this->root_secondary);
         lock_unlock(this->render_lock);
+        this->root.print_tree();
+        return true;
     }
-    this->root.print_tree();
-    return true;
+    return false;
 }
 
 bool AVS_Instance::preset_save_file(const char* file_path, bool indent) {
