@@ -165,6 +165,7 @@ class Effect {
     };
 
     void print_tree(std::string indent = "");
+    virtual void print_config(const std::string& indent) = 0;
 
    private:
     void swap(Effect&);
@@ -585,6 +586,101 @@ class Configurable_Effect : public Effect {
                                              this->info.parameters,
                                              parameter_path,
                                              0);
+    }
+
+    virtual void print_config(const std::string& indent) {
+        printf("%s    enabled: %s\n", indent.c_str(), this->enabled ? "true" : "false");
+        std::vector<int64_t> parameter_path = {};
+        this->print_config(
+            indent, this->info.parameters, this->info.num_parameters, parameter_path);
+    }
+    virtual void print_config(const std::string& indent,
+                              const Parameter* parameters,
+                              size_t num_parameters,
+                              std::vector<int64_t>& parameter_path) {
+        for (size_t i = 0; i < num_parameters; i++) {
+            auto param = parameters[i];
+            if (param.type == AVS_PARAM_ACTION) {
+                continue;
+            }
+            const char* global_or_not = param.is_global ? "G" : " ";
+            printf("%s  %s %s: ", indent.c_str(), global_or_not, param.name);
+            switch (param.type) {
+                case AVS_PARAM_BOOL: {
+                    auto value = this->get_bool(param.handle, parameter_path);
+                    printf("%s\n", value ? "true" : "false");
+                    break;
+                }
+                case AVS_PARAM_INT:
+                    printf("%lld\n", this->get_int(param.handle, parameter_path));
+                    break;
+                case AVS_PARAM_FLOAT:
+                    printf("%f\n", this->get_float(param.handle, parameter_path));
+                    break;
+                case AVS_PARAM_RESOURCE: [[fallthrough]];
+                case AVS_PARAM_STRING: {
+                    std::string str = this->get_string(param.handle, parameter_path);
+                    // if string contains newlines replace them with escaped newlines
+                    if (str.find('\n') != std::string::npos) {
+                        std::string::size_type pos = 0;
+                        while ((pos = str.find('\n', pos)) != std::string::npos) {
+                            str.replace(pos, 1, "\\n");
+                            pos += 2;
+                        }
+                    }
+                    if (str.find('\r') != std::string::npos) {
+                        std::string::size_type pos = 0;
+                        while ((pos = str.find('\r', pos)) != std::string::npos) {
+                            str.replace(pos, 1, "\\r");
+                            pos += 2;
+                        }
+                    }
+                    if (str.length() > 13) {
+                        printf("%s...\n", str.substr(0, 10).c_str());
+                    } else {
+                        printf("%s\n", str.c_str());
+                    }
+                    break;
+                }
+                case AVS_PARAM_COLOR:
+                    printf("%08llx\n", this->get_color(param.handle, parameter_path));
+                    break;
+                case AVS_PARAM_SELECT: {
+                    int64_t num_options = 0;
+                    auto options = param.get_options(&num_options);
+                    auto selection = this->get_int(param.handle, parameter_path);
+                    if (options == nullptr) {
+                        printf("<no options> (selected %lld)\n", selection);
+                        break;
+                    }
+                    if (selection < 0 || selection >= num_options) {
+                        printf("<invalid selection> (selected %lld)\n", selection);
+                        break;
+                    }
+                    printf("%s\n", options[selection]);
+                    break;
+                }
+                case AVS_PARAM_LIST: {
+                    auto list_length = param.list_length(
+                        this->get_config_address(&param, parameter_path));
+                    printf("list (%u entries)\n", list_length);
+                    for (size_t i = 0; i < list_length; i++) {
+                        std::vector<int64_t> new_parameter_path = parameter_path;
+                        new_parameter_path.push_back(i);
+                        this->print_config(indent + "  ",
+                                           param.child_parameters,
+                                           param.num_child_parameters,
+                                           new_parameter_path);
+                    }
+                    break;
+                }
+                case AVS_PARAM_ACTION: printf("action\n"); break;
+                case AVS_PARAM_INT_ARRAY: printf("int array\n"); break;
+                case AVS_PARAM_FLOAT_ARRAY: printf("float array\n"); break;
+                case AVS_PARAM_COLOR_ARRAY: printf("color array\n"); break;
+                default: printf("<unknown type>\n"); break;
+            }
+        }
     }
 };
 

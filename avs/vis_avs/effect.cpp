@@ -282,6 +282,7 @@ void Effect::print_tree(std::string indent) {
         printf("(children: %d)", this->children.size());
     }
     printf("\n");
+    this->print_config(indent + " ");
     for (auto child : this->children) {
         child->print_tree(indent + "  ");
     }
