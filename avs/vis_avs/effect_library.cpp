@@ -149,6 +149,19 @@ Effect* component_factory(const Effect_Info* effect, AVS_Instance* avs) {
     return nullptr;
 }
 
+Effect* component_factory_by_name(const std::string& name, AVS_Instance* avs) {
+    for (auto const& entry : g_component_factories) {
+        if (entry.first->get_name() == name) {
+            if (!entry.first->is_createable_by_user()) {
+                log_warn("%s is not user-creatable", name.c_str());
+            } else {
+                return entry.second(avs);
+            }
+        }
+    }
+    return nullptr;
+}
+
 Effect* component_factory_legacy(int legacy_effect_id,
                                  char* legacy_effect_ape_id,
                                  AVS_Instance* avs) {
