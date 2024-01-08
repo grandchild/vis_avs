@@ -40,6 +40,9 @@ int E_Root::render(char visdata[2][2][576],
     }
     bool swap_parity = false;
     for (auto& effect : this->children) {
+        if (!effect->enabled) {
+            continue;
+        }
         bool swap = effect->render(visdata, is_beat, framebuffer, fbout, w, h);
         if (swap) {
             auto tmp = framebuffer;
@@ -61,6 +64,9 @@ void E_Root::render_with_context(RenderContext& ctx) {
     char visdata[2][2][576];
     ctx.audio.to_legacy_visdata(visdata);
     for (auto& effect : this->children) {
+        if (!effect->enabled) {
+            continue;
+        }
         bool swap = effect->render(visdata,
                                    ctx.audio.is_beat,
                                    (int32_t*)ctx.framebuffers[0].data,
