@@ -282,6 +282,7 @@ typedef void (*value_change_handler)(Effect* component,
                                      const std::vector<int64_t>& parameter_path);
 typedef const char* const* (*options_getter)(int64_t* length_out);
 typedef size_t (*list_length_getter)(uint8_t* list_address);
+typedef Effect_Config* (*list_item_addr_getter)(uint8_t* list_address, int64_t index);
 typedef bool (*list_adder)(uint8_t* list_address, uint32_t length_max, int64_t* before);
 typedef bool (*list_mover)(uint8_t* list_address, int64_t* from, int64_t* to);
 typedef bool (*list_remover)(uint8_t* list_address,
@@ -318,6 +319,7 @@ struct Parameter {
     size_t sizeof_child = 1;
 
     list_length_getter list_length = NULL;
+    list_item_addr_getter list_item_addr = NULL;
     list_adder list_add = NULL;
     list_mover list_move = NULL;
     list_remover list_remove = NULL;
@@ -331,6 +333,17 @@ template <typename T>
 size_t list_length(uint8_t* list_address) {
     auto list = (std::vector<T>*)list_address;
     return list->size();
+}
+template <typename T>
+Effect_Config* list_item_addr(uint8_t* list_address, int64_t index) {
+    auto list = (std::vector<T>*)list_address;
+    if (index < 0) {
+        index = list->size() + index;
+    }
+    if (index < 0 || (size_t)index >= list->size()) {
+        return NULL;
+    }
+    return &(*list)[index];
 }
 template <typename T>
 bool list_add(uint8_t* list_address, uint32_t length_max, int64_t* before) {
@@ -627,6 +640,7 @@ constexpr Parameter P_LIST(size_t offset,
     _param.child_parameters = list;
     _param.sizeof_child = sizeof(Subtype);
     _param.list_length = list_length<Subtype>;
+    _param.list_item_addr = list_item_addr<Subtype>;
     _param.list_add = list_add<Subtype>;
     _param.list_move = list_move<Subtype>;
     _param.list_remove = list_remove<Subtype>;
@@ -726,25 +740,8 @@ struct Effect_Info {
             uint8_t* parameter_address = &config_data[param_list[i].offset];
             if (param_list[i].type == AVS_PARAM_LIST
                 && cur_depth < parameter_path.size()) {
-                auto list = (std::vector<Effect_Config>*)parameter_address;
-                size_t list_size =
-                    list->size() * sizeof(Effect_Config) / param_list[i].sizeof_child;
-                int64_t clamped_size =
-#if SIZE_MAX > INT64_MAX
-                    (list_size > INT64_MAX ? INT64_MAX : (int64_t)list_size);
-#else
-                    (int64_t)list_size;
-#endif
-                int64_t list_index = parameter_path[cur_depth];
-                if (list_index < 0) {
-                    // wrap -1, -2, etc. around to offset-from-back
-                    list_index += list_size;
-                }
-                if (list_index < 0 || list_index >= clamped_size) {
-                    continue;
-                }
-                auto child_config =
-                    (list->data() + list_index * param_list[i].sizeof_child);
+                auto child_config = param_list[i].list_item_addr(
+                    parameter_address, parameter_path[cur_depth]);
                 auto subtree_result =
                     Effect_Info::get_config_address(child_config,
                                                     parameter,
