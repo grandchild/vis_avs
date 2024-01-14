@@ -6,22 +6,20 @@
 
 #define AUDIO_BUFFER_LEN 576
 
-template <typename T>
 struct AudioChannels {
-    T left[AUDIO_BUFFER_LEN];
-    T right[AUDIO_BUFFER_LEN];
-    T center[AUDIO_BUFFER_LEN];
-    static T avg(T l, T r);
+    float left[AUDIO_BUFFER_LEN];
+    float right[AUDIO_BUFFER_LEN];
+    float center[AUDIO_BUFFER_LEN];
     void average_center() {
         for (int i = 0; i < AUDIO_BUFFER_LEN; ++i) {
-            this->center[i] = avg(this->left[i], this->right[i]);
+            this->center[i] = (this->left[i] + this->right[i]) / 2.0f;
         }
     }
 };
 
 struct AudioData {
-    AudioChannels<int16_t> osc{};
-    AudioChannels<uint16_t> spec{};
+    AudioChannels osc{};
+    AudioChannels spec{};
     bool is_beat = false;
     void to_legacy_visdata(char visdata[2][2][AUDIO_BUFFER_LEN]);
 };

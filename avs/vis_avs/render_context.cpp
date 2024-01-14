@@ -4,25 +4,18 @@
 #include <cstdlib>
 #include <cstring>
 
-template <>
-int16_t AudioChannels<int16_t>::avg(int16_t l, int16_t r) {
-    return (int16_t)(((int32_t)l + (int32_t)r) / 2);
-}
-
-template <>
-uint16_t AudioChannels<uint16_t>::avg(uint16_t l, uint16_t r) {
-    return (uint16_t)(((uint32_t)l + (uint32_t)r) / 2);
-}
-
 void AudioData::to_legacy_visdata(char visdata[2][2][AUDIO_BUFFER_LEN]) {
     for (int i = 0; i < AUDIO_BUFFER_LEN; ++i) {
-        //                         .-- high 8bits of sample --.
-        visdata[1 /*osc*/][0][i] = ((int8_t*)(&osc.left[i]))[1];
-        visdata[1 /*osc*/][1][i] = ((int8_t*)(&osc.right[i]))[1];
+        auto ileft = (int8_t)(this->osc.left[i] * 127.0f);
+        auto iright = (int8_t)(this->osc.right[i] * 127.0f);
+        visdata[1 /*osc*/][0][i] = ileft;
+        visdata[1 /*osc*/][1][i] = iright;
     }
     for (int i = 0; i < AUDIO_BUFFER_LEN; ++i) {
-        visdata[0 /*spec*/][0][i] = ((int8_t*)(&spec.left[i]))[1];
-        visdata[0 /*spec*/][1][i] = ((int8_t*)(&spec.right[i]))[1];
+        auto ileft = (uint8_t)(this->spec.left[i] * 255.0f);
+        auto iright = (uint8_t)(this->spec.right[i] * 255.0f);
+        visdata[0 /*spec*/][0][i] = (int8_t)ileft;
+        visdata[0 /*spec*/][1][i] = (int8_t)iright;
     }
 }
 

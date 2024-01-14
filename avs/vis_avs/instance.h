@@ -28,8 +28,8 @@ class AVS_Instance {
                       size_t width,
                       size_t height,
                       AVS_Pixel_Format pixel_format);
-    bool audio_set(int16_t* audio_left,
-                   int16_t* audio_right,
+    bool audio_set(const float* audio_left,
+                   const float* audio_right,
                    size_t audio_length,
                    size_t samples_per_second);
     int32_t audio_device_count();

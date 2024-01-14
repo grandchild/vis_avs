@@ -170,8 +170,8 @@ bool avs_render_frame(AVS_Handle avs,
                       AVS_Pixel_Format pixel_format);
 
 /**
- * Fill AVS' audio wave data ring buffer with new data. Audio data should be in 16 bps
- * resolution, in stereo. AVS will calculate the FFT of the audio for frequencies
+ * Fill AVS' audio wave data ring buffer with new data. Audio data should be in 32-bit
+ * float format, in stereo. AVS will calculate the FFT of the audio for frequencies
  * internally.
  *
  * If the audio buffer overflows (too much total data for the ring buffer to hold), the
@@ -194,8 +194,8 @@ bool avs_render_frame(AVS_Handle avs,
  * was initialized with `audio_source=AVS_AUDIO_INTERNAL`.
  */
 int32_t avs_audio_set(AVS_Handle avs,
-                      const int16_t* audio_left,
-                      const int16_t* audio_right,
+                      const float* audio_left,
+                      const float* audio_right,
                       size_t audio_length,
                       size_t samples_per_second);
 

@@ -79,8 +79,8 @@ bool avs_render_frame(AVS_Handle avs,
 
 AVS_API
 int32_t avs_audio_set(AVS_Handle avs,
-                      const int16_t* left,
-                      const int16_t* right,
+                      const float* left,
+                      const float* right,
                       size_t audio_length,
                       size_t samples_per_second) {
     return -1;
