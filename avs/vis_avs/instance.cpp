@@ -22,6 +22,21 @@ AVS_Instance::AVS_Instance(const char* base_path,
       transition(this),
       render_lock(lock_init()) {
     make_effect_lib();
+    if (this->audio_source == AVS_AUDIO_INTERNAL) {
+        this->audio.audio_in_start();
+    }
+}
+
+AVS_Instance::~AVS_Instance() {
+    if (this->audio_source == AVS_AUDIO_INTERNAL) {
+        this->audio.audio_in_stop();
+    }
+    for (auto& effect : this->scrap) {
+        delete effect;
+    }
+    lock_destroy(this->render_lock);
+    delete this->global_buffers;
+    free(this->preset_legacy_save_buffer);
 }
 
 bool AVS_Instance::render_frame(void* framebuffer,
@@ -31,9 +46,9 @@ bool AVS_Instance::render_frame(void* framebuffer,
                                 size_t height,
                                 AVS_Pixel_Format pixel_format) {
     this->init_global_buffers_if_needed(width, height, pixel_format);
-
     auto render_context =
         RenderContext(pixel_format, width, height, *this->global_buffers, framebuffer);
+    this->audio.get(render_context.audio);
     this->root.render_with_context(render_context);
 
     // char visdata[2][2][AUDIO_BUFFER_LEN];

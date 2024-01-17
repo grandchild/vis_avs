@@ -3,6 +3,7 @@
 #include "c_transition.h"
 #include "e_root.h"
 
+#include "audio.h"
 #include "avs.h"
 #include "avs_editor.h"
 #include "effect.h"
@@ -20,7 +21,7 @@ class AVS_Instance {
     AVS_Instance(const char* base_path,
                  AVS_Audio_Source audio_source,
                  AVS_Beat_Source beat_source);
-    ~AVS_Instance() = default;
+    ~AVS_Instance();
 
     bool render_frame(void* framebuffer,
                       uint64_t time_ms,
@@ -69,6 +70,7 @@ class AVS_Instance {
     std::string base_path;
     AVS_Audio_Source audio_source;
     AVS_Beat_Source beat_source;
+    Audio audio;
     const char* error;
     const char* audio_devices[1] = {""};
 
