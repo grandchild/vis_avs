@@ -197,7 +197,8 @@ int32_t avs_audio_set(AVS_Handle avs,
                       const float* audio_left,
                       const float* audio_right,
                       size_t audio_length,
-                      size_t samples_per_second);
+                      size_t samples_per_second,
+                      int64_t start_time_in_samples);
 
 /**
  * Returns the number of audio input devices AVS has detected.

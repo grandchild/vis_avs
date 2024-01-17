@@ -82,8 +82,14 @@ int32_t avs_audio_set(AVS_Handle avs,
                       const float* left,
                       const float* right,
                       size_t audio_length,
-                      size_t samples_per_second) {
-    return -1;
+                      size_t samples_per_second,
+                      int64_t end_time_samples) {
+    AVS_Instance* instance = get_instance_from_handle(avs);
+    if (instance == nullptr) {
+        return -1;
+    }
+    return instance->audio_set(
+        left, right, audio_length, samples_per_second, end_time_samples);
 }
 
 AVS_API

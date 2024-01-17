@@ -66,11 +66,17 @@ void AVS_Instance::init_global_buffers_if_needed(size_t width,
     }
 }
 
-bool AVS_Instance::audio_set(int16_t* audio_left,
-                             int16_t* audio_right,
-                             size_t audio_length,
-                             size_t samples_per_second) {
-    return this->audio_source == AVS_AUDIO_EXTERNAL;
+int32_t AVS_Instance::audio_set(const float* audio_left,
+                                const float* audio_right,
+                                size_t audio_length,
+                                size_t samples_per_second,
+                                int64_t end_time_samples) {
+    if (this->audio_source == AVS_AUDIO_INTERNAL) {
+        this->error = "audio_set() is not supported with AVS_AUDIO_INTERNAL";
+        return -1;
+    }
+    return this->audio.set(
+        audio_left, audio_right, audio_length, samples_per_second, end_time_samples);
 }
 
 int32_t AVS_Instance::audio_device_count() { return 1; }
