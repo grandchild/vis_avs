@@ -46,7 +46,7 @@
  *                    framebuffer,
  *                    width,
  *                    height,
- *                    0,                // zero for realtime rendering
+ *                    -1,               // <0 for realtime rendering
  *                    false,            // ignored, since AVS_BEAT_INTERNAL
  *                    AVS_PIXEL_RGB0_8  // the only valid pixel format
  *             )) {
@@ -132,22 +132,33 @@ AVS_Handle avs_init(const char* base_path,
  *   `height`
  *       Height of the framebuffer. Must be > 0 and a multiple of 2.
  *
- *   `time_ms`
- *       May be between 0 and 1000 for realtime rendering or a value > 1000 for non-
- *       realtime rendering. In non-realtime mode, `time_ms` represents a monotonic time
- *       in milliseconds.
- *       If `time_ms` ≤ 1000, AVS will currently ignore the specific value and simply
- *       use the current monotonic system time. The values between 0 and 1000 are
- *       reserved for future use, so if you want non-realtime rendering, make sure your
- *       `time_ms` values are greater than 1000.
+ *   `time_in_ms`
+ *       AVS has two rendering modes: "realtime mode" and "video mode". For each of
+ *       those the concept of time and the handling of audio data is different.
  *
- *       In non-realtime mode, from the point of view of a preset, the time is
- *       guaranteed to always advance between frames, so if the `time_ms` parameter does
- *       not change or goes backwards between frames, it will be ignored and the
- *       internal time will increase by two(!) milliseconds each frame (i.e. 500 fps).
+ *       `time_in_ms` must be < 0 for realtime mode. It must be ≥ 0 for video mode.
+ *
+ *       In realtime mode the assumption is that frames are rendered as quickly as
+ *       possible and always use the latest available audio samples. The scenario is
+ *       generating visuals for audio playing at the same time. The passage of time
+ *       doesn't matter so much here (except for ensuring smoothness of animations).
+ *       Neither does exact time-matching the frame and the audio signal: Latency must
+ *       be minimal at all costs, and the latest audio is always the best.
+ *
+ *       In video mode frames are rendered at certain (usually equidistant) time
+ *       intervals. Resolutions will often be higher than in realtime mode, rendering
+ *       may happen at less-than-realtime speeds and you'll probably be recording frames
+ *       to be assembled into a video file for later playback. Matching timestamps
+ *       between frame and audio samples is crucial.
+ *
+ *       In video mode, `time_in_ms` represents a monotonic time in milliseconds. From
+ *       the point of view of a preset, the time is guaranteed to always advance between
+ *       frames, so if the `time_in_ms` parameter does not change or goes backwards
+ *       between frames, it will be ignored and the internal time will increase by
+ *       two(!) milliseconds each frame (i.e. 500 fps).
  *
  *       There's really no need to worry about overflow, since a millisecond-resolution
- *       64-bit counter will last for more than 580 million years.
+ *       63-bit counter will last for more than 290 million years.
  *
  *   `is_beat`
  *       If AVS was initialized with `beat_source=AVS_BEAT_EXTERNAL`, and `is_beat` is
@@ -165,7 +176,7 @@ bool avs_render_frame(AVS_Handle avs,
                       void* framebuffer,
                       size_t width,
                       size_t height,
-                      uint64_t time_ms,
+                      int64_t time_in_ms,
                       bool is_beat,
                       AVS_Pixel_Format pixel_format);
 
@@ -180,10 +191,10 @@ bool avs_render_frame(AVS_Handle avs,
  *
  * If the audio buffer underflows (too little data for too much time), AVS will fill in
  * silence. The return value will be negative. Make sure that your `audio_length`,
- * `samples_per_second` and `avs_render_frame()`'s `time_ms` parameters match up. They
- * should roughly satisfy the following relation:
+ * `samples_per_second` and `avs_render_frame()`'s `time_in_ms` parameters match up.
+ * They should roughly satisfy the following relation:
  *
- *   audio_length / samples_per_second = (time_ms - last_time_ms) * 1000
+ *   audio_length / samples_per_second = (time_in_ms - last_time_in_ms) * 1000
  *
  * Returns the number of milliseconds of audio available in the buffer right _before_
  * insertion. Note that you can inspect the state of the buffer by setting

@@ -66,7 +66,7 @@ bool avs_render_frame(AVS_Handle avs,
                       void* framebuffer,
                       size_t width,
                       size_t height,
-                      uint64_t time_ms,
+                      int64_t time_in_ms,
                       bool is_beat,
                       AVS_Pixel_Format pixel_format) {
     AVS_Instance* instance = get_instance_from_handle(avs);
@@ -74,7 +74,7 @@ bool avs_render_frame(AVS_Handle avs,
         return false;
     }
     return instance->render_frame(
-        framebuffer, time_ms, is_beat, width, height, pixel_format);
+        framebuffer, time_in_ms, is_beat, width, height, pixel_format);
 }
 
 AVS_API

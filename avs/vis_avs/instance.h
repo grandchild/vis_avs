@@ -24,7 +24,7 @@ class AVS_Instance {
     ~AVS_Instance();
 
     bool render_frame(void* framebuffer,
-                      uint64_t time_ms,
+                      int64_t time_in_ms,
                       bool is_beat,
                       size_t width,
                       size_t height,
