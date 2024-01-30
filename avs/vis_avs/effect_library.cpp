@@ -122,6 +122,8 @@ bool make_effect_lib() {
     MAKE_EFFECT_LIB_ENTRY(Picture2);
     MAKE_EFFECT_LIB_ENTRY(FramerateLimiter);
     MAKE_EFFECT_LIB_ENTRY(Texer);
+    /* Example */
+    // MAKE_EFFECT_LIB_ENTRY(Example);
 
     g_effect_lib_handles_for_api.clear();
     g_effect_lib_handles_for_api.reserve(g_effect_lib.size());
