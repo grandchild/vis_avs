@@ -616,6 +616,12 @@ int E_ColorMap::render(char[2][2][576],
     return 0;
 }
 
+void E_ColorMap::on_load() {
+    for (size_t map_index = 0; map_index < this->config.maps.size(); map_index++) {
+        this->bake_full_map(map_index);
+    }
+}
+
 void E_ColorMap::save_map(size_t map_index) {
     FILE* file = fopen(this->config.maps[map_index].filepath.c_str(), "wb");
     if (file == NULL) {
