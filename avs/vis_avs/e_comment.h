@@ -3,10 +3,6 @@
 #include "effect.h"
 #include "effect_info.h"
 
-struct Comment_Config : public Effect_Config {
-    std::string comment = "";
-};
-
 struct Comment_Info : public Effect_Info {
     static constexpr char const* group = "Misc";
     static constexpr char const* name = "Comment";
@@ -14,15 +10,10 @@ struct Comment_Info : public Effect_Info {
     static constexpr int32_t legacy_id = 21;
     static constexpr char* legacy_ape_id = NULL;
 
-    static constexpr uint32_t num_parameters = 1;
-    static constexpr Parameter parameters[num_parameters] = {
-        P_STRING(offsetof(Comment_Config, comment), "Comment"),
-    };
-
-    EFFECT_INFO_GETTERS;
+    EFFECT_INFO_GETTERS_NO_PARAMETERS;
 };
 
-class E_Comment : public Configurable_Effect<Comment_Info, Comment_Config> {
+class E_Comment : public Configurable_Effect<Comment_Info, Effect_Config> {
    public:
     E_Comment(AVS_Instance* avs);
     virtual ~E_Comment();

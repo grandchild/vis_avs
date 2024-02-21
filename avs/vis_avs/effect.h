@@ -29,6 +29,7 @@ class Effect {
     AVS_Instance* avs;
 
     bool enabled;
+    std::string comment;
     std::vector<Effect*> children;
     AVS_Component_Handle* child_handles_for_api = nullptr;
     Effect(AVS_Instance* avs) : handle(h_components.get()), avs(avs), enabled(true){};
@@ -465,6 +466,7 @@ class Configurable_Effect : public Effect {
             return;
         }
         this->enabled = data.value("enabled", true);
+        this->comment = data.value("comment", "");
         this->info.load_config(
             &this->config, &this->global->config, data.value("config", json::object()));
         if (this->can_have_child_components()) {
@@ -495,6 +497,7 @@ class Configurable_Effect : public Effect {
         json save_data;
         save_data["effect"] = this->info.get_name();
         save_data["enabled"] = this->enabled;
+        save_data["comment"] = this->comment;
         auto save_config = this->info.save_config(&this->config, &this->global->config);
         if (!save_config.is_null()) {
             save_data["config"] = save_config;
@@ -590,6 +593,9 @@ class Configurable_Effect : public Effect {
 
     virtual void print_config(const std::string& indent) {
         printf("%s    enabled: %s\n", indent.c_str(), this->enabled ? "true" : "false");
+        if (!this->comment.empty()) {
+            printf("%s    comment: %s\n", indent.c_str(), this->comment.c_str());
+        }
         std::vector<int64_t> parameter_path = {};
         this->print_config(
             indent, this->info.parameters, this->info.num_parameters, parameter_path);

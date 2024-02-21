@@ -34,19 +34,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "r_defs.h"
 
-constexpr Parameter Comment_Info::parameters[];
-
 E_Comment::E_Comment(AVS_Instance* avs) : Configurable_Effect(avs) {}
 E_Comment::~E_Comment() {}
 
 int E_Comment::render(char[2][2][576], int, int*, int*, int, int) { return 0; }
 
 void E_Comment::load_legacy(unsigned char* data, int) {
-    this->string_load_legacy((char*)data, this->config.comment, MAX_CODE_LEN);
+    this->string_load_legacy((char*)data, this->comment, MAX_CODE_LEN);
 }
 int E_Comment::save_legacy(unsigned char* data) {
     return this->string_save_legacy(
-        this->config.comment, (char*)data, MAX_CODE_LEN, /*with_nt*/ true);
+        this->comment, (char*)data, MAX_CODE_LEN, /*with_nt*/ true);
 }
 
 Effect_Info* create_Comment_Info() { return new Comment_Info(); }
