@@ -6,8 +6,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+struct Root_Author_Config : public Effect_Config {
+    std::string role = "author";
+    std::string name;
+};
+
 struct Root_Config : public Effect_Config {
     bool clear = false;
+    std::string name;
+    std::string date;
+    std::vector<Root_Author_Config> authors;
 };
 
 struct Root_Info : public Effect_Info {
@@ -19,11 +27,27 @@ struct Root_Info : public Effect_Info {
     static constexpr int32_t legacy_id = -4;
     static constexpr char const* legacy_ape_id = nullptr;
 
-    static constexpr uint32_t num_parameters = 1;
+    static constexpr uint32_t num_author_parameters = 2;
+    static constexpr Parameter author_parameters[num_author_parameters] = {
+        P_STRING(offsetof(Root_Author_Config, name), "Name", "Name of the author"),
+        P_STRING(offsetof(Root_Author_Config, role),
+                 "Role",
+                 "'author', 'remixer', 'editor', 'curator' - or anything else")};
+
+    static constexpr uint32_t num_parameters = 4;
     static constexpr Parameter parameters[num_parameters] = {
         P_BOOL(offsetof(Root_Config, clear),
                "Clear",
                "Clear the screen for every new frame"),
+        P_STRING(offsetof(Root_Config, name), "Name", "Name of the preset"),
+        P_STRING(offsetof(Root_Config, date), "Date", "Date of the preset"),
+        P_LIST<Root_Author_Config>(offsetof(Root_Config, authors),
+                                   "Authors",
+                                   author_parameters,
+                                   num_author_parameters,
+                                   0,
+                                   0,
+                                   "Authors of the preset"),
     };
 
     virtual bool can_have_child_components() const { return true; };

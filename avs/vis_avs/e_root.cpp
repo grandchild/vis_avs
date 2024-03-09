@@ -17,6 +17,7 @@
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
 
+constexpr Parameter Root_Info::author_parameters[];
 constexpr Parameter Root_Info::parameters[];
 
 E_Root::E_Root(AVS_Instance* avs) : Configurable_Effect(avs), buffers_saved(false) {}
