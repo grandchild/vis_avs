@@ -180,6 +180,9 @@ bool AVS_Instance::preset_save_file(const char* file_path, bool indent) {
         fwrite(preset_str, 1, strlen(preset_str), fp);
         fclose(fp);
         return true;
+    } else {
+        this->error = "cannot open file for writing: ";
+        this->error += file_path;
     }
     return false;
 }
