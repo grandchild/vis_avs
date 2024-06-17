@@ -88,9 +88,11 @@
 #include "avs.h"
 #include "avs_editor.h"
 
+#include <cstring>
 #include <map>
 #include <sstream>
 #include <string>
+#include <utility>  // std::move
 #include <vector>
 
 class AVS {
@@ -101,7 +103,7 @@ class AVS {
 
         AVS* avs;
         Effect* effect;
-        AVS_Parameter_Info info;
+        AVS_Parameter_Info info{};
 
        public:
         AVS_Parameter_Handle handle;
@@ -117,10 +119,10 @@ class AVS {
                 avs_parameter_info(
                     this->avs->handle, this->effect->handle, this->handle, &this->info);
             }
-        };
+        }
         AVS_Parameter_Type type() const { return this->info.type; };
-        const std::string name() const { return this->info.name; };
-        const std::string description() const { return this->info.description; };
+        std::string name() const { return this->info.name; };
+        std::string description() const { return this->info.description; };
         int64_t int_min() const { return this->info.int_min; };
         int64_t int_max() const { return this->info.int_max; };
         double float_min() const { return this->info.float_min; };
@@ -141,7 +143,7 @@ class AVS {
     };
     class Effect {
         AVS* avs;
-        AVS_Effect_Info info;
+        AVS_Effect_Info info{};
 
        public:
         AVS_Effect_Handle handle;
@@ -153,9 +155,9 @@ class AVS {
             avs_effect_info(this->avs->handle, this->handle, &this->info);
         };
 
-        std::string group() { return this->info.group; };
-        std::string name() { return this->info.name; };
-        std::string help() { return this->info.help; };
+        std::string group() const { return this->info.group; };
+        std::string name() const { return this->info.name; };
+        std::string help() const { return this->info.help; };
         std::vector<Parameter> children() {
             std::vector<Parameter> out;
             if (avs_effect_info(this->avs->handle, this->handle, &this->info)) {
@@ -185,9 +187,9 @@ class AVS {
     std::vector<Effect> effects_library;
     std::map<std::string, Effect*> effects_by_name;
 
-    AVS(const std::string& base_path = "",
-        AVS_Audio_Source audio = AVS_AUDIO_INTERNAL,
-        AVS_Beat_Source beat = AVS_BEAT_INTERNAL)
+    explicit AVS(const std::string& base_path = "",
+                 AVS_Audio_Source audio = AVS_AUDIO_INTERNAL,
+                 AVS_Beat_Source beat = AVS_BEAT_INTERNAL)
         : handle(avs_init(base_path.c_str(), audio, beat)) {
         if (this->handle == 0) {
             this->_error = AVS::global_error_str();
@@ -208,46 +210,56 @@ class AVS {
     bool render_frame(void* framebuffer,
                       size_t width,
                       size_t height,
-                      uint64_t time_ms = 0,
+                      int64_t time_in_ms = 0,
                       bool is_beat = false,
-                      AVS_Pixel_Format pixel_format = AVS_PIXEL_RGB0_8) {
-        return avs_render_frame(
-            this->handle, framebuffer, width, height, time_ms, is_beat, pixel_format);
+                      AVS_Pixel_Format pixel_format = AVS_PIXEL_RGB0_8) const {
+        return avs_render_frame(this->handle,
+                                framebuffer,
+                                width,
+                                height,
+                                time_in_ms,
+                                is_beat,
+                                pixel_format);
     }
-    int32_t audio_set(int16_t* left,
-                      int16_t* right,
+    int32_t audio_set(const float* left,
+                      const float* right,
                       size_t audio_length,
-                      size_t samples_per_second) {
-        return avs_audio_set(
-            this->handle, left, right, audio_length, samples_per_second);
+                      size_t samples_per_second,
+                      int64_t start_time_in_samples) const {
+        return avs_audio_set(this->handle,
+                             left,
+                             right,
+                             audio_length,
+                             samples_per_second,
+                             start_time_in_samples);
     }
-    bool load(const char* file_path) {
+    bool load(const char* file_path) const {
         return avs_preset_load(this->handle, file_path);
     }
-    bool set(const char* preset) { return avs_preset_set(this->handle, preset); }
-    void save(const char* file_path, bool indent) {
+    bool set(const char* preset) const { return avs_preset_set(this->handle, preset); }
+    void save(const char* file_path, bool indent) const {
         avs_preset_save(this->handle, file_path, indent);
     }
-    std::string get() { return avs_preset_get(this->handle); }
-    bool set_legacy(uint8_t* preset, size_t preset_length) {
+    std::string get(bool indent) const { return avs_preset_get(this->handle, indent); }
+    bool set_legacy(uint8_t* preset, size_t preset_length) const {
         return avs_preset_set_legacy(this->handle, preset, preset_length);
     }
-    std::vector<uint8_t> get_legacy() {
+    std::vector<uint8_t> get_legacy() const {
         size_t preset_length;
         auto preset = avs_preset_get_legacy(this->handle, &preset_length);
         return std::vector<uint8_t>(preset, preset + preset_length);
     }
-    void save_legacy(const char* file_path) {
+    void save_legacy(const char* file_path) const {
         avs_preset_save_legacy(this->handle, file_path);
     }
     std::string error() {
-        if (this->_error == "") {
+        if (this->_error.empty()) {
             return avs_error_str(this->handle);
         } else {
             return this->_error;
         }
     }
-    void set_error(std::string error_str) { this->_error = error_str; };
+    void set_error(std::string error_str) { this->_error = std::move(error_str); };
     void clear_error() { this->_error = ""; };
     static std::string global_error_str() { return avs_error_str(0); };
 
@@ -258,14 +270,14 @@ class AVS {
        protected:
         AVS* avs;
         Has_AVS_Ref() = delete;
-        Has_AVS_Ref(AVS* avs) : avs(avs){};
+        explicit Has_AVS_Ref(AVS* avs) : avs(avs){};
         AVS_Handle avs_handle() { return this->avs != NULL ? this->avs->handle : 0; };
         void clear_error() {
             if (this->avs != NULL) {
                 this->avs->clear_error();
             }
         };
-        void set_error(std::string error_msg) {
+        void set_error(const std::string& error_msg) {
             if (this->avs != NULL) {
                 this->avs->set_error(error_msg);
             }
@@ -367,11 +379,12 @@ class AVS {
             } else {
                 children = this->parameter.children();
             }
+            out.reserve(children.size());
             for (auto parameter : children) {
                 out.emplace_back(this, parameter, this->parameter_path, !this->is_set);
             }
             return out;
-        };
+        }
 
        public:
         Component_Parameter(AVS* avs, Effect* effect, AVS_Component_Handle component)
@@ -380,7 +393,7 @@ class AVS {
               component(component),
               parameter(NULL, NULL, 0),
               is_set(true),
-              is_config_root(true){};
+              is_config_root(true) {}
         Component_Parameter(Component_Parameter* parent,
                             Parameter parameter,
                             std::vector<int64_t> parameter_path = {},
@@ -389,17 +402,17 @@ class AVS {
               effect(parent->effect),
               component(parent->component),
               parameter(parameter),
-              parameter_path(parameter_path),
+              parameter_path(std::move(parameter_path)),
               is_set(is_set),
-              is_config_root(false){};
+              is_config_root(false) {}
 
-        AVS_Parameter_Type type() const { return this->parameter.type(); };
-        const std::string name() const { return this->parameter.name(); };
-        const std::string description() const { return this->parameter.description(); };
-        const std::vector<std::string> options() { return this->parameter.options(); };
+        AVS_Parameter_Type type() const { return this->parameter.type(); }
+        std::string name() const { return this->parameter.name(); }
+        std::string description() const { return this->parameter.description(); }
+        std::vector<std::string> options() { return this->parameter.options(); }
 
         bool add_child(int64_t before = -1,
-                       std::map<std::string, AVS_Value> values = {}) {
+                       const std::map<std::string, AVS_Value>& values = {}) {
             this->clear_error();
             if (this->is_set) {
                 this->set_error("Cannot use add_child() on a parameter set");
@@ -435,7 +448,7 @@ class AVS {
                                                   parameter_values.data(),
                                                   this->parameter_path.size(),
                                                   this->parameter_path.data());
-        };
+        }
         bool move_child(int64_t from, int64_t to) {
             this->clear_error();
             if (this->is_set) {
@@ -449,7 +462,7 @@ class AVS {
                                                    to,
                                                    this->parameter_path.size(),
                                                    this->parameter_path.data());
-        };
+        }
         bool remove_child(int64_t remove) {
             this->clear_error();
             if (this->is_set) {
@@ -462,7 +475,7 @@ class AVS {
                                                      remove,
                                                      this->parameter_path.size(),
                                                      this->parameter_path.data());
-        };
+        }
 
         bool run() {
             this->clear_error();
@@ -476,9 +489,9 @@ class AVS {
                 this->set_error("Cannot use run() on a parameter set");
                 return false;
             }
-        };
+        }
 
-        const std::vector<Component_Parameter> children() {
+        std::vector<Component_Parameter> children() {
             this->clear_error();
             if (this->is_set) {
                 return this->child_parameters();
@@ -498,9 +511,9 @@ class AVS {
                 }
                 return out;
             }
-        };
+        }
 
-        Component_Parameter operator[](std::string parameter_name) {
+        Component_Parameter operator[](const std::string& parameter_name) {
             this->clear_error();
             for (auto parameter : this->child_parameters()) {
                 if (parameter_name == parameter.name()) {
@@ -508,14 +521,14 @@ class AVS {
                 }
             }
             return Component_Parameter(this->avs, this->effect, this->component);
-        };
+        }
         Component_Parameter operator[](int index) {
             this->clear_error();
             std::vector<int64_t> new_parameter_path(this->parameter_path);
             new_parameter_path.push_back(index);
             return Component_Parameter(
                 this, this->parameter, new_parameter_path, !this->is_set);
-        };
+        }
 
         // See SPECIALIZE_PARAMETER_ASSIGN macro below.
         template <typename T>
@@ -583,9 +596,9 @@ class AVS {
             : Has_AVS_Ref(avs),
               effect(effect),
               handle(component),
-              config(this->avs, this->effect, component){};
+              config(this->avs, this->effect, component) {}
 
-        bool invalid() { return !(this->avs && this->effect && this->handle); };
+        bool invalid() { return !(this->avs && this->effect && this->handle); }
 
         bool move(Component& relative_to, AVS_Component_Position direction) {
             this->clear_error();
@@ -601,9 +614,9 @@ class AVS {
             return Component(this->avs,
                              this->effect,
                              avs_component_duplicate(this->avs->handle, this->handle));
-        };
+        }
 
-        bool remove() { return avs_component_delete(this->avs->handle, this->handle); };
+        bool remove() { return avs_component_delete(this->avs->handle, this->handle); }
 
         std::vector<Component> children() {
             this->clear_error();
@@ -615,10 +628,10 @@ class AVS {
                 out.emplace_back(this->avs, this->effect, children[i]);
             }
             return out;
-        };
-        Component& operator[](int64_t index) {
+        }
+        const Component& operator[](int64_t index) {
             this->clear_error();
-            auto children = this->children();
+            const auto& children = this->children();
             if (index < 0) {
                 return children[children.size() + index];
             } else {
@@ -635,14 +648,14 @@ class AVS {
         this->clear_error();
         return Component(
             this, this->effects_by_name["Root"], avs_component_root(this->handle));
-    };
+    }
 
     /**
      * Create AVS component by effect name.
      */
     Component create(
-        std::string effect_name,
-        Component relative_to = Component(NULL, NULL, 0),
+        const std::string& effect_name,
+        const Component& relative_to = Component(NULL, NULL, 0),
         AVS_Component_Position direction = AVS_COMPONENT_POSITION_DONTCARE) {
         this->clear_error();
         if (this->effects_by_name.find(effect_name) == this->effects_by_name.end()) {
@@ -653,14 +666,14 @@ class AVS {
         }
         auto effect = this->effects_by_name[effect_name];
         return this->create(effect, relative_to, direction);
-    };
+    }
 
     /**
      * Create AVS component from an effect.
      */
     Component create(
         Effect* effect,
-        Component relative_to = Component(NULL, NULL, 0),
+        const Component& relative_to = Component(NULL, NULL, 0),
         AVS_Component_Position direction = AVS_COMPONENT_POSITION_DONTCARE) {
         this->clear_error();
         return Component(
@@ -668,7 +681,7 @@ class AVS {
             effect,
             avs_component_create(
                 this->handle, effect->handle, relative_to.handle, direction));
-    };
+    }
 };
 
 SPECIALIZE_PARAMETER_ASSIGN(bool, bool);
