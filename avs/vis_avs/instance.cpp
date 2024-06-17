@@ -111,6 +111,12 @@ bool AVS_Instance::preset_load_file(const char* file_path, bool with_transition)
             len = MAX_LEGACY_PRESET_FILESIZE_BYTES;
         }
         auto data = (uint8_t*)calloc(len, 1);
+        if (data == nullptr) {
+            fclose(fp);
+            this->error = "out of memory while loading preset file: ";
+            this->error += file_path;
+            return success;
+        }
         if (!fread(data, 1, len, fp)) {
             len = 0;
         }
