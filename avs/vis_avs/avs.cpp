@@ -1,16 +1,13 @@
 #include "avs.h"
 
-#include "avs_editor.h"
 #include "avs_eelif.h"
 #include "avs_internal.h"
 #include "effect_library.h"
-#include "handles.h"
 #include "instance.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unordered_map>
-#include <vector>
 
 #ifdef __linux__
 #define AVS_API __attribute__((visibility("default")))
