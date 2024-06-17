@@ -76,6 +76,10 @@ bool avs_render_frame(AVS_Handle avs,
     if (instance == NULL) {
         return false;
     }
+    if (framebuffer == nullptr) {
+        instance->error = "Framebuffer must not be NULL";
+        return false;
+    }
     return instance->render_frame(
         framebuffer, time_in_ms, is_beat, width, height, pixel_format);
 }
