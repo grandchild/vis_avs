@@ -26,8 +26,8 @@ EXPORTS
     avs_component_move
     avs_component_duplicate
     avs_component_delete
-    avs_component_is_enabled
-    avs_component_set_enabled
+    avs_component_properties_get
+    avs_component_properties_set
     avs_parameter_info
     avs_parameter_get_bool
     avs_parameter_get_int

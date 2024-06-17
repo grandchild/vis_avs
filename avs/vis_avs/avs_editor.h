@@ -131,6 +131,16 @@ typedef enum {
 } AVS_Component_Position;
 
 /**
+ * The built-in properties of every component.
+ */
+typedef struct {
+    /** The effect is enabled for rendering or other processing. */
+    bool enabled;
+    /** A comment related to the component. May be NULL or empty to unset it. */
+    const char* comment;
+} AVS_Component_Properties;
+
+/**
  * Metadata for an effect.
  *
  * Populate this struct by calling `avs_effect_info()`.
@@ -335,21 +345,26 @@ AVS_Component_Handle avs_component_duplicate(AVS_Handle avs,
 bool avs_component_delete(AVS_Handle avs, AVS_Component_Handle component);
 
 /**
- * Each component has an `enabled` flag that determines whether it should take part in
- * the rendering or be skipped. Use the methods below to query and set the `enabled`
- * flag.
+ * Use `avs_component_properties_get()` to query a component's built-in properties,
+ * listed in `AVS_Component_Properties`.
  *
- * The return value of `avs_component_is_enabled()` indicates the state of the
- * component, but will also be `false` on error (e.g. the `component` wasn't found).
- * You have to check `avs_error_str()` to know whether an error occurred.
- *
- * The return value of `avs_component_set_enabled()` is `true` if the state was set
- * successfully, and `false` on error.
+ * The return value is `true` on success, and `false` on error (e.g. the `component`
+ * wasn't found). Use `avs_error_str()` to find out what went wrong.
  */
-bool avs_component_is_enabled(AVS_Handle avs, AVS_Component_Handle component);
-bool avs_component_set_enabled(AVS_Handle avs,
-                               AVS_Component_Handle component,
-                               bool enabled);
+bool avs_component_properties_get(AVS_Handle avs,
+                                  AVS_Component_Handle component,
+                                  AVS_Component_Properties* properties_out);
+
+/**
+ * Use `avs_component_properties_set()` to change a component's built-in properties,
+ * listed in `AVS_Component_Properties`.
+ *
+ * The return value is `true` if the state was set successfully, and `false` on error.
+ * Use `avs_error_str()` to find out what went wrong.
+ */
+bool avs_component_properties_set(AVS_Handle avs,
+                                  AVS_Component_Handle component,
+                                  AVS_Component_Properties properties);
 
 /**
  * Query information about an effect's parameters.

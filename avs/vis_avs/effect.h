@@ -466,7 +466,7 @@ class Configurable_Effect : public Effect {
             return;
         }
         this->enabled = data.value("enabled", true);
-        this->comment = data.value("comment", "");
+        this->comment = Effect_Info::load_string(data.value("comment", json::array()));
         this->info.load_config(
             &this->config, &this->global->config, data.value("config", json::object()));
         if (this->can_have_child_components()) {
@@ -497,7 +497,7 @@ class Configurable_Effect : public Effect {
         json save_data;
         save_data["effect"] = this->info.get_name();
         save_data["enabled"] = this->enabled;
-        save_data["comment"] = this->comment;
+        save_data["comment"] = Effect_Info::save_string(this->comment);
         auto save_config = this->info.save_config(&this->config, &this->global->config);
         if (!save_config.is_null()) {
             save_data["config"] = save_config;

@@ -309,24 +309,33 @@ bool avs_component_delete(AVS_Handle avs, AVS_Component_Handle component) {
 }
 
 AVS_EDITOR_API
-bool avs_component_is_enabled(AVS_Handle avs, AVS_Component_Handle component) {
+bool avs_component_properties_get(AVS_Handle avs,
+                                  AVS_Component_Handle component,
+                                  AVS_Component_Properties* properties_out) {
     AVS_Instance* instance;
     Effect* _component;
     if (!resolve_handles(avs, 0, component, 0, &instance, NULL, &_component)) {
         return false;
     }
-    return _component->enabled;
+    if (properties_out == NULL) {
+        instance->error = "Output component properties is NULL";
+        return false;
+    }
+    properties_out->enabled = _component->enabled;
+    properties_out->comment = _component->comment.c_str();
+    return true;
 }
 AVS_EDITOR_API
-bool avs_component_set_enabled(AVS_Handle avs,
-                               AVS_Component_Handle component,
-                               bool enabled) {
+bool avs_component_properties_set(AVS_Handle avs,
+                                  AVS_Component_Handle component,
+                                  AVS_Component_Properties properties) {
     AVS_Instance* instance;
     Effect* _component;
     if (!resolve_handles(avs, 0, component, 0, &instance, NULL, &_component)) {
         return false;
     }
-    _component->set_enabled(enabled);
+    _component->set_enabled(properties.enabled);
+    _component->comment = properties.comment;
     return true;
 }
 
