@@ -221,7 +221,6 @@ inline void E_ColorMap::animation_step() {
                             this->config.maps[this->config.current_map].baked_map[i],
                             this->change_animation_step);
     }
-    return;
 }
 
 inline void E_ColorMap::animation_step_sse2() {
@@ -233,7 +232,6 @@ inline void E_ColorMap::animation_step_sse2() {
         // __m128i blend_lerp = _mm_set1_epi8((uint8_t)this->change_animation_step);
         /* TODO */
     }
-    return;
 }
 
 inline void E_ColorMap::reset_tween_map() {
