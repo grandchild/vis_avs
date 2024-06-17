@@ -87,6 +87,26 @@ static std::string& replace_crlf_newlines_with_lf(std::string& str) {
     return str;
 }
 
+static json split_string_lines(const std::string& str) {
+    json lines = json::array();
+    std::string line;
+    for (auto& c : str) {
+        if (c == '\n') {
+            lines += line;
+            line.clear();
+        } else {
+            line += c;
+        }
+    }
+    if (!line.empty()) {
+        lines += line;
+    }
+    if (lines.empty() || lines.size() == 1) {
+        return str;
+    }
+    return lines;
+}
+
 static std::string& replace_lf_newlines_with_crlf_for_winamp_ui(std::string& str) {
     for (int64_t i = 0; i < str.size(); i++) {
         if (str[i] == '\n') {
@@ -94,6 +114,23 @@ static std::string& replace_lf_newlines_with_crlf_for_winamp_ui(std::string& str
         }
     }
     return str;
+}
+
+static std::string join_string_lines(const json& str, const char* nl = "\n") {
+    if (str.is_string()) {
+        return str;
+    }
+    std::string joined;
+    for (auto& line : str) {
+        joined += line.get<std::string>() + nl;
+    }
+    return joined + nl;
+}
+
+std::string Effect_Info::load_string(const json& str) { return join_string_lines(str); }
+json Effect_Info::save_string(const std::string& str) {
+    auto copy = str;
+    return split_string_lines(replace_crlf_newlines_with_lf(copy));
 }
 
 void Parameter::from_json(const json& config_json, Effect_Config* config) const {
@@ -110,13 +147,14 @@ void Parameter::from_json(const json& config_json, Effect_Config* config) const 
             break;
         case AVS_PARAM_STRING: {
             parameter_dispatch<const char*>::set(
-                this, addr, config_json.get<std::string>().c_str());
+                this, addr, Effect_Info::load_string(config_json).c_str());
             break;
         }
-        case AVS_PARAM_RESOURCE:
+        case AVS_PARAM_RESOURCE: {
             parameter_dispatch<const char*>::set(
-                this, addr, config_json.get<std::string>().c_str());
+                this, addr, Effect_Info::load_string(config_json).c_str());
             break;
+        }
         case AVS_PARAM_COLOR: {
             uint64_t color;
             AVS_Pixel_Format pixel_format;
@@ -174,7 +212,7 @@ json Parameter::to_json(const Effect_Config* config) const {
         case AVS_PARAM_FLOAT: return parameter_dispatch<double>::get(addr);
         case AVS_PARAM_STRING: {
             std::string str = parameter_dispatch<const char*>::get(addr);
-            return replace_crlf_newlines_with_lf(str);
+            return Effect_Info::save_string(str);
         }
         case AVS_PARAM_RESOURCE: return parameter_dispatch<const char*>::get(addr);
         case AVS_PARAM_COLOR: {

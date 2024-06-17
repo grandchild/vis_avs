@@ -560,6 +560,8 @@ struct Effect_Info {
 
     json save_config(const Effect_Config* config,
                      const Effect_Config* global_config) const;
+    static std::string load_string(const json& str);
+    static json save_string(const std::string& str);
 };
 
 /**
