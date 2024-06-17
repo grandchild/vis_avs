@@ -90,6 +90,10 @@ typedef enum { AVS_BEAT_INTERNAL = 0, AVS_BEAT_EXTERNAL = 1 } AVS_Beat_Source;
  * An empty preset is loaded at startup, so you can start calling `avs_render_frame()`
  * right away, if you want to.
  *
+ *   `base_path`
+ *       The path to the directory where AVS will look for resource files. If `NULL` or
+ *       empty, AVS will look in the current working directory.
+ *
  *   `audio_source`
  *       If `AVS_AUDIO_EXTERNAL`, AVS will depend on calls to `avs_audio_set()` to fill
  *       its audio buffer. If `avs_audio_set()` is not called, AVS will assume silence.

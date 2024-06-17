@@ -51,6 +51,9 @@ AVS_Handle avs_init(const char* base_path,
             g_blendtable[i][j] = (unsigned char)((i / 255.0) * (float)j);
         }
     }
+    if (base_path == nullptr) {
+        base_path = ".";
+    }
     auto new_instance = new AVS_Instance(base_path, audio_source, beat_source);
     if (new_instance->handle == 0) {
         g_error = "AVS handles exhausted (try unloading the library and reloading it)";
