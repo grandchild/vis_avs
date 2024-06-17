@@ -121,6 +121,9 @@ bool AVS_Instance::preset_load_file(const char* file_path, bool with_transition)
             success = this->preset_load(preset_string, with_transition);
         }
         free(data);
+    } else {
+        this->error = "Cannot open file for reading: ";
+        this->error += file_path;
     }
     return success;
 }
