@@ -1,4 +1,3 @@
-#include "e_root.h"
 #include "e_unknown.h"
 
 #include "effect_library.h"
