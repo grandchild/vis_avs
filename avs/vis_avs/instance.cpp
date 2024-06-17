@@ -203,9 +203,15 @@ const char* AVS_Instance::preset_save(bool indent) {
     json j;
     j["preset format version"] = "0";
     j["avs version"] = "2.81.4";
-    j.update(this->root.save());
-    j.erase("effect");
-    this->preset_save_buffer = j.dump(4) + "\n";
+    try {
+        j.update(this->root.save());
+        j.erase("effect");
+        this->preset_save_buffer =
+            j.dump(4, ' ', false, json::error_handler_t::replace) + "\n";
+    } catch (const std::exception& err) {
+        this->error = err.what();
+        return nullptr;
+    }
     return this->preset_save_buffer.c_str();
 }
 
