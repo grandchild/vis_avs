@@ -40,8 +40,8 @@ using json = nlohmann::ordered_json;
  */
 struct Effect_Config {};
 
-class Effect;      // declared in effect.h
-struct Parameter;  // declared below
+class Effect;      // defined in effect.h
+struct Parameter;  // defined below
 
 /* Function types for various Parameter fields. */
 typedef void (*value_change_handler)(Effect* component,
