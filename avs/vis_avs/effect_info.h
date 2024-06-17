@@ -5,7 +5,6 @@
 
 #include "../3rdparty/json.h"
 
-#include <algorithm>  // std::move() for list_move
 #include <iomanip>
 #include <sstream>
 #include <stdint.h>
