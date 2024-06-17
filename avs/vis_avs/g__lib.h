@@ -45,7 +45,7 @@ DECL_HANDLER(text);
 DECL_HANDLER(bump);
 DECL_HANDLER(mosaic);
 DECL_HANDLER(waterbump);
-DECL_HANDLER(avi);
+DECL_HANDLER(video);
 DECL_HANDLER(custombpm);
 DECL_HANDLER(picture);
 DECL_HANDLER(dynamicdistancemodifier);

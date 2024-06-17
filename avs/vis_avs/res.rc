@@ -964,7 +964,7 @@ BEGIN
     GROUPBOX        "Drop radius",-1,70,98,67,36
 END
 
-IDD_CFG_AVI DIALOG DISCARDABLE  0, 0, 233, 214
+IDD_CFG_VIDEO DIALOG DISCARDABLE  0, 0, 233, 214
 STYLE DS_CONTROL | WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -981,14 +981,14 @@ BEGIN
                     TBS_TOP | WS_TABSTOP,6,79,222,19
     CONTROL         "Slider1",IDC_SPEED,"msctls_trackbar32",TBS_AUTOTICKS | 
                     TBS_TOP | WS_TABSTOP,6,121,222,19
-    CONTROL         "Enable AVI stream",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Enable video stream",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,0,0,74,10
     GROUPBOX        "Beat persistance",IDC_PERSIST_TITLE,0,70,233,31
     GROUPBOX        "Speed",IDC_STATIC,0,102,233,43
     LTEXT           "Faster",IDC_STATIC,6,112,20,8
     LTEXT           "Slower",IDC_STATIC,206,112,22,8
     LTEXT           "Resampling",IDC_STATIC,0,150,40,8
-    COMBOBOX        IDC_AVI_RESAMPLE,0,160,233,72,CBS_DROPDOWNLIST | WS_VSCROLL |
+    COMBOBOX        IDC_VIDEO_RESAMPLE,0,160,233,72,CBS_DROPDOWNLIST | WS_VSCROLL |
                     WS_TABSTOP
 END
 
@@ -2083,7 +2083,7 @@ BEGIN
         BOTTOMMARGIN, 143
     END
 
-    IDD_CFG_AVI, DIALOG
+    IDD_CFG_VIDEO, DIALOG
     BEGIN
         RIGHTMARGIN, 137
         BOTTOMMARGIN, 157

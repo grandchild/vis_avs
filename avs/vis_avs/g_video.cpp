@@ -1,4 +1,4 @@
-#include "e_avi.h"
+#include "e_video.h"
 
 #include "g__defs.h"
 #include "g__lib.h"
@@ -8,14 +8,14 @@
 #include <windows.h>
 #include <commctrl.h>
 
-static void EnableWindows(HWND hwndDlg, E_AVI* g_this) {
-    bool enable = g_this->config.blend_mode == AVI_BLEND_FIFTY_FIFTY_ONBEAT_ADD;
+static void EnableWindows(HWND hwndDlg, E_Video* g_this) {
+    bool enable = g_this->config.blend_mode == VIDEO_BLEND_FIFTY_FIFTY_ONBEAT_ADD;
     EnableWindow(GetDlgItem(hwndDlg, IDC_PERSIST), enable);
     EnableWindow(GetDlgItem(hwndDlg, IDC_PERSIST_TITLE), enable);
 }
 
-int win32_dlgproc_avi(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
-    E_AVI* g_this = (E_AVI*)g_current_render;
+int win32_dlgproc_video(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
+    E_Video* g_this = (E_Video*)g_current_render;
     const Parameter& p_filename = g_this->info.parameters[0];
     const Parameter& p_blend_mode = g_this->info.parameters[1];
     const Parameter& p_on_beat_persist = g_this->info.parameters[2];
@@ -56,7 +56,7 @@ int win32_dlgproc_avi(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
             auto filename = g_this->get_string(p_filename.handle);
             init_resource(p_filename, filename, hwndDlg, OBJ_COMBO, MAX_PATH);
             auto resampling = g_this->get_int(p_resampling.handle);
-            init_select(p_resampling, resampling, hwndDlg, IDC_AVI_RESAMPLE);
+            init_select(p_resampling, resampling, hwndDlg, IDC_VIDEO_RESAMPLE);
 
             return 1;
         }
@@ -76,13 +76,13 @@ int win32_dlgproc_avi(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                 || (LOWORD(wParam) == IDC_5050)) {
                 g_this->set_enabled(IsDlgButtonChecked(hwndDlg, IDC_CHECK1));
                 if (IsDlgButtonChecked(hwndDlg, IDC_ADDITIVE)) {
-                    g_this->config.blend_mode = AVI_BLEND_ADD;
+                    g_this->config.blend_mode = VIDEO_BLEND_ADD;
                 } else if (IsDlgButtonChecked(hwndDlg, IDC_5050)) {
-                    g_this->config.blend_mode = AVI_BLEND_FIFTY_FIFTY;
+                    g_this->config.blend_mode = VIDEO_BLEND_FIFTY_FIFTY;
                 } else if (IsDlgButtonChecked(hwndDlg, IDC_ADAPT)) {
-                    g_this->config.blend_mode = AVI_BLEND_FIFTY_FIFTY_ONBEAT_ADD;
+                    g_this->config.blend_mode = VIDEO_BLEND_FIFTY_FIFTY_ONBEAT_ADD;
                 } else {
-                    g_this->config.blend_mode = AVI_BLEND_REPLACE;
+                    g_this->config.blend_mode = VIDEO_BLEND_REPLACE;
                 }
                 EnableWindows(hwndDlg, g_this);
             }
@@ -104,7 +104,7 @@ int win32_dlgproc_avi(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                         free(buf);
                         break;
                     }
-                    case IDC_AVI_RESAMPLE:
+                    case IDC_VIDEO_RESAMPLE:
                         g_this->set_int(p_resampling.handle, sel);
                         break;
                 }

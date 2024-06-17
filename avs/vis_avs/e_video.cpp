@@ -29,7 +29,7 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "e_avi.h"
+#include "e_video.h"
 
 #include "r_defs.h"
 
@@ -38,30 +38,30 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdlib.h>
 
-constexpr Parameter AVI_Info::parameters[];
-std::vector<std::string> E_AVI::filenames;
-const char** E_AVI::c_filenames;
+constexpr Parameter Video_Info::parameters[];
+std::vector<std::string> E_Video::filenames;
+const char** E_Video::c_filenames;
 
-void AVI_Info::on_file_change(Effect* component,
-                              const Parameter*,
-                              const std::vector<int64_t>&) {
-    E_AVI* avi = (E_AVI*)component;
-    avi->load_file();
+void Video_Info::on_file_change(Effect* component,
+                                const Parameter*,
+                                const std::vector<int64_t>&) {
+    E_Video* video = (E_Video*)component;
+    video->load_file();
 }
 
-const char* const* AVI_Info::video_files(int64_t* length_out) {
-    *length_out = E_AVI::filenames.size();
-    auto new_list = (const char**)malloc(E_AVI::filenames.size() * sizeof(char*));
-    for (size_t i = 0; i < E_AVI::filenames.size(); i++) {
-        new_list[i] = E_AVI::filenames[i].c_str();
+const char* const* Video_Info::video_files(int64_t* length_out) {
+    *length_out = E_Video::filenames.size();
+    auto new_list = (const char**)malloc(E_Video::filenames.size() * sizeof(char*));
+    for (size_t i = 0; i < E_Video::filenames.size(); i++) {
+        new_list[i] = E_Video::filenames[i].c_str();
     }
-    auto old_list = E_AVI::c_filenames;
-    E_AVI::c_filenames = new_list;
+    auto old_list = E_Video::c_filenames;
+    E_Video::c_filenames = new_list;
     free(old_list);
-    return E_AVI::c_filenames;
+    return E_Video::c_filenames;
 }
 
-E_AVI::E_AVI(AVS_Instance* avs)
+E_Video::E_Video(AVS_Instance* avs)
     : Configurable_Effect(avs),
       video(nullptr),
       loaded(false),
@@ -71,16 +71,16 @@ E_AVI::E_AVI(AVS_Instance* avs)
     this->find_video_files();
 }
 
-E_AVI::~E_AVI() { close_file(); }
+E_Video::~E_Video() { close_file(); }
 
 static void add_file_callback(const char* file, void* data) {
-    auto base_path_len = ((E_AVI*)data)->avs->base_path.size();
+    auto base_path_len = ((E_Video*)data)->avs->base_path.size();
     // remove base_path + "/" from the front of the filepath
-    E_AVI::filenames.emplace_back(file + base_path_len + 1);
+    E_Video::filenames.emplace_back(file + base_path_len + 1);
 }
 
-void E_AVI::find_video_files() {
-    E_AVI::clear_video_files();
+void E_Video::find_video_files() {
+    E_Video::clear_video_files();
     const int num_extensions = 10;
     const char* extensions[num_extensions] = {
         ".avi",
@@ -104,9 +104,9 @@ void E_AVI::find_video_files() {
                              /*background*/ false);
 }
 
-void E_AVI::clear_video_files() { E_AVI::filenames.clear(); }
+void E_Video::clear_video_files() { E_Video::filenames.clear(); }
 
-void E_AVI::load_file() {
+void E_Video::load_file() {
     if (this->config.filename.empty()) {
         return;
     }
@@ -127,7 +127,7 @@ void E_AVI::load_file() {
     lock_unlock(this->video_file_lock);
 }
 
-void E_AVI::close_file() {
+void E_Video::close_file() {
     if (this->loaded) {
         lock_lock(this->video_file_lock);
         this->loaded = false;
@@ -136,12 +136,12 @@ void E_AVI::close_file() {
     }
 }
 
-int E_AVI::render(char[2][2][576],
-                  int is_beat,
-                  int* framebuffer,
-                  int* fbout,
-                  int w,
-                  int h) {
+int E_Video::render(char[2][2][576],
+                    int is_beat,
+                    int* framebuffer,
+                    int* fbout,
+                    int w,
+                    int h) {
     int *p, *d;
     int i, j;
     int persist_count = 0;
@@ -181,8 +181,8 @@ int E_AVI::render(char[2][2][576],
 
     p = fbout;
     d = framebuffer + w * (h - 1);
-    if (this->config.blend_mode == AVI_BLEND_ADD
-        || (this->config.blend_mode == AVI_BLEND_FIFTY_FIFTY_ONBEAT_ADD
+    if (this->config.blend_mode == VIDEO_BLEND_ADD
+        || (this->config.blend_mode == VIDEO_BLEND_FIFTY_FIFTY_ONBEAT_ADD
             && (is_beat || persist_count > 0))) {
         for (i = 0; i < h; i++) {
             for (j = 0; j < w; j++) {
@@ -192,8 +192,8 @@ int E_AVI::render(char[2][2][576],
             }
             d -= w * 2;
         }
-    } else if (this->config.blend_mode == AVI_BLEND_FIFTY_FIFTY
-               || this->config.blend_mode == AVI_BLEND_FIFTY_FIFTY_ONBEAT_ADD) {
+    } else if (this->config.blend_mode == VIDEO_BLEND_FIFTY_FIFTY
+               || this->config.blend_mode == VIDEO_BLEND_FIFTY_FIFTY_ONBEAT_ADD) {
         for (i = 0; i < h; i++) {
             for (j = 0; j < w; j++) {
                 *d = BLEND_AVG(*p, *d);
@@ -202,7 +202,7 @@ int E_AVI::render(char[2][2][576],
             }
             d -= w * 2;
         }
-    } else {  // AVI_BLEND_REPLACE
+    } else {  // VIDEO_BLEND_REPLACE
         for (i = 0; i < h; i++) {
             memcpy(d, p, w * 4);
             p += w;
@@ -212,11 +212,11 @@ int E_AVI::render(char[2][2][576],
     return 0;
 }
 
-void E_AVI::on_load() { this->load_file(); }
+void E_Video::on_load() { this->load_file(); }
 
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
-void E_AVI::load_legacy(unsigned char* data, int len) {
+void E_Video::load_legacy(unsigned char* data, int len) {
     int32_t blend_add = 0;
     int32_t blend_5050 = 0;
     int32_t blend_5050_onbeat_add = 0;
@@ -241,13 +241,13 @@ void E_AVI::load_legacy(unsigned char* data, int len) {
         pos += 4;
     }
     if (blend_add > 0) {
-        this->config.blend_mode = AVI_BLEND_ADD;
+        this->config.blend_mode = VIDEO_BLEND_ADD;
     } else if (blend_5050_onbeat_add > 0) {
-        this->config.blend_mode = AVI_BLEND_FIFTY_FIFTY_ONBEAT_ADD;
+        this->config.blend_mode = VIDEO_BLEND_FIFTY_FIFTY_ONBEAT_ADD;
     } else if (blend_5050 > 0) {
-        this->config.blend_mode = AVI_BLEND_FIFTY_FIFTY;
+        this->config.blend_mode = VIDEO_BLEND_FIFTY_FIFTY;
     } else {
-        this->config.blend_mode = AVI_BLEND_REPLACE;
+        this->config.blend_mode = VIDEO_BLEND_REPLACE;
     }
     if (len - pos >= 4) {
         this->config.on_beat_persist = GET_INT();
@@ -266,18 +266,18 @@ void E_AVI::load_legacy(unsigned char* data, int len) {
     data[pos + 1] = (y >> 8) & 255;  \
     data[pos + 2] = (y >> 16) & 255; \
     data[pos + 3] = (y >> 24) & 255
-int E_AVI::save_legacy(unsigned char* data) {
+int E_Video::save_legacy(unsigned char* data) {
     int32_t pos = 0;
     PUT_INT(this->enabled);
     pos += 4;
-    PUT_INT(this->config.blend_mode == AVI_BLEND_ADD ? 1 : 0);
+    PUT_INT(this->config.blend_mode == VIDEO_BLEND_ADD ? 1 : 0);
     pos += 4;
-    PUT_INT(this->config.blend_mode == AVI_BLEND_FIFTY_FIFTY ? 1 : 0);
+    PUT_INT(this->config.blend_mode == VIDEO_BLEND_FIFTY_FIFTY ? 1 : 0);
     pos += 4;
     char* str_data = (char*)data;
     pos +=
         Effect::string_nt_save_legacy(this->config.filename, &str_data[pos], MAX_PATH);
-    PUT_INT(this->config.blend_mode == AVI_BLEND_FIFTY_FIFTY_ONBEAT_ADD ? 1 : 0);
+    PUT_INT(this->config.blend_mode == VIDEO_BLEND_FIFTY_FIFTY_ONBEAT_ADD ? 1 : 0);
     pos += 4;
     PUT_INT(this->config.on_beat_persist);
     pos += 4;
@@ -286,6 +286,6 @@ int E_AVI::save_legacy(unsigned char* data) {
     return pos;
 }
 
-Effect_Info* create_AVI_Info() { return new AVI_Info(); }
-Effect* create_AVI(AVS_Instance* avs) { return new E_AVI(avs); }
-void set_AVI_desc(char* desc) { E_AVI::set_desc(desc); }
+Effect_Info* create_Video_Info() { return new Video_Info(); }
+Effect* create_Video(AVS_Instance* avs) { return new E_Video(avs); }
+void set_Video_desc(char* desc) { E_Video::set_desc(desc); }

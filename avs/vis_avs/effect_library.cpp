@@ -90,7 +90,7 @@ bool make_effect_lib() {
     MAKE_EFFECT_LIB_ENTRY(Bump);
     MAKE_EFFECT_LIB_ENTRY(Mosaic);
     MAKE_EFFECT_LIB_ENTRY(WaterBump);
-    MAKE_EFFECT_LIB_ENTRY(AVI);
+    MAKE_EFFECT_LIB_ENTRY(Video);
     MAKE_EFFECT_LIB_ENTRY(CustomBPM);
     MAKE_EFFECT_LIB_ENTRY(Picture);
     MAKE_EFFECT_LIB_ENTRY(DynamicDistanceModifier);

@@ -67,7 +67,7 @@ C_GLibrary::C_GLibrary() {
     ADD_STANDARD_COMPONENT(29, BUMP,        bump);
     ADD_STANDARD_COMPONENT(30, MOSAIC,      mosaic);
     ADD_STANDARD_COMPONENT(31, WATERBUMP,   waterbump);
-    ADD_STANDARD_COMPONENT(32, AVI,         avi);
+    ADD_STANDARD_COMPONENT(32, VIDEO,       video);
     ADD_STANDARD_COMPONENT(33, BPM,         custombpm);
     ADD_STANDARD_COMPONENT(34, PICTURE,     picture);
     ADD_STANDARD_COMPONENT(35, DDM,         dynamicdistancemodifier);

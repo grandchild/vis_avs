@@ -46,7 +46,7 @@
 #define IDD_CFG_MOSAIC                  139
 #define IDD_CFG_WATERBUMP               140
 #define IDR_MENU1                       140
-#define IDD_CFG_AVI                     141
+#define IDD_CFG_VIDEO                   141
 #define IDD_CFG_UNKN                    142
 #define IDD_GCFG_TRANS                  143
 #define IDD_CFG_BPM                     144
@@ -159,7 +159,7 @@
 #define IDC_BBLUE                       1047
 #define IDC_SPEED                       1048
 #define IDC_DOTS                        1049
-#define IDC_AVI_RESAMPLE                1050
+#define IDC_VIDEO_RESAMPLE              1050
 #define IDC_DISTANCE                    1051
 #define IDC_METHOD_SLUDGE               1052
 #define IDC_PERSIST_TEXT1               1053

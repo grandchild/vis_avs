@@ -6,25 +6,25 @@
 
 #include "../platform.h"
 
-enum AVI_Blend_Modes {
-    AVI_BLEND_REPLACE = 0,
-    AVI_BLEND_ADD = 1,
-    AVI_BLEND_FIFTY_FIFTY = 2,
-    AVI_BLEND_FIFTY_FIFTY_ONBEAT_ADD = 3,
+enum Video_Blend_Modes {
+    VIDEO_BLEND_REPLACE = 0,
+    VIDEO_BLEND_ADD = 1,
+    VIDEO_BLEND_FIFTY_FIFTY = 2,
+    VIDEO_BLEND_FIFTY_FIFTY_ONBEAT_ADD = 3,
 };
 
-struct AVI_Config : public Effect_Config {
+struct Video_Config : public Effect_Config {
     std::string filename;
-    int64_t blend_mode = AVI_BLEND_FIFTY_FIFTY;
+    int64_t blend_mode = VIDEO_BLEND_FIFTY_FIFTY;
     int64_t on_beat_persist = 6;
     int64_t playback_speed = 0;
     int64_t resampling_mode = AVS_Video::SCALE_BILINEAR;
 };
 
-struct AVI_Info : public Effect_Info {
+struct Video_Info : public Effect_Info {
     static constexpr char const* group = "Render";
-    static constexpr char const* name = "AVI";
-    static constexpr char const* help = "";
+    static constexpr char const* name = "Video";
+    static constexpr char const* help = "This effect was formerly known as \"AVI\".";
     static constexpr int32_t legacy_id = 32;
     static constexpr char* legacy_ape_id = NULL;
 
@@ -55,15 +55,15 @@ struct AVI_Info : public Effect_Info {
 
     static constexpr uint32_t num_parameters = 5;
     static constexpr Parameter parameters[num_parameters] = {
-        P_RESOURCE(offsetof(AVI_Config, filename),
+        P_RESOURCE(offsetof(Video_Config, filename),
                    "Filename",
                    video_files,
                    NULL,
                    on_file_change),
-        P_SELECT(offsetof(AVI_Config, blend_mode), "Blend Mode", blend_modes),
-        P_IRANGE(offsetof(AVI_Config, on_beat_persist), "On-Beat Persistance", 0, 32),
-        P_IRANGE(offsetof(AVI_Config, playback_speed), "Playback Speed", 0, 1000),
-        P_SELECT(offsetof(AVI_Config, resampling_mode),
+        P_SELECT(offsetof(Video_Config, blend_mode), "Blend Mode", blend_modes),
+        P_IRANGE(offsetof(Video_Config, on_beat_persist), "On-Beat Persistance", 0, 32),
+        P_IRANGE(offsetof(Video_Config, playback_speed), "Playback Speed", 0, 1000),
+        P_SELECT(offsetof(Video_Config, resampling_mode),
                  "Resampling Mode",
                  resampling_modes),
     };
@@ -71,10 +71,10 @@ struct AVI_Info : public Effect_Info {
     EFFECT_INFO_GETTERS;
 };
 
-class E_AVI : public Configurable_Effect<AVI_Info, AVI_Config> {
+class E_Video : public Configurable_Effect<Video_Info, Video_Config> {
    public:
-    E_AVI(AVS_Instance* avs);
-    virtual ~E_AVI();
+    E_Video(AVS_Instance* avs);
+    virtual ~E_Video();
     virtual int render(char visdata[2][2][576],
                        int is_beat,
                        int* framebuffer,
@@ -84,7 +84,7 @@ class E_AVI : public Configurable_Effect<AVI_Info, AVI_Config> {
     virtual void on_load();
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
-    virtual E_AVI* clone() { return new E_AVI(*this); }
+    virtual E_Video* clone() { return new E_Video(*this); }
 
     void find_video_files();
     static void clear_video_files();
