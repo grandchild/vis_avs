@@ -136,21 +136,17 @@ bool AVS_Instance::preset_load_file(const char* file_path, bool with_transition)
 
 bool AVS_Instance::preset_load(const std::string& preset, bool with_transition) {
     try {
-        auto preset_root = json::parse(preset);
-        try {
-            this->root_secondary.load(preset_root);
-        } catch (const std::exception& e) {
-            log_err("error loading preset: %s", e.what());
-        }
-        lock_lock(this->render_lock);
-        std::swap(this->root, this->root_secondary);
-        lock_unlock(this->render_lock);
-        this->root.print_tree();
+        auto preset_root = json::parse(preset, nullptr, true, true);
+        this->root_secondary.load(preset_root);
     } catch (const std::exception& e) {
-        log_err("error loading: %s", e.what());
-        lock_unlock(this->render_lock);
+        log_err("error loading json preset: %s", e.what());
+        this->clear_secondary();
         return false;
     }
+    lock_lock(this->render_lock);
+    std::swap(this->root, this->root_secondary);
+    lock_unlock(this->render_lock);
+    // this->root.print_tree();
     return true;
 }
 
