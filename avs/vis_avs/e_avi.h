@@ -81,12 +81,13 @@ class E_AVI : public Configurable_Effect<AVI_Info, AVI_Config> {
                        int* fbout,
                        int w,
                        int h);
+    virtual void on_load();
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
     virtual E_AVI* clone() { return new E_AVI(*this); }
 
     void find_video_files();
-    void clear_video_files();
+    static void clear_video_files();
     void load_file();
     void close_file();
 

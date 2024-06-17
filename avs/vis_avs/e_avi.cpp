@@ -36,8 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "files.h"
 #include "instance.h"
 
-#include "../util.h"
-
 #include <stdlib.h>
 
 constexpr Parameter AVI_Info::parameters[];
@@ -65,6 +63,7 @@ const char* const* AVI_Info::video_files(int64_t* length_out) {
 
 E_AVI::E_AVI(AVS_Instance* avs)
     : Configurable_Effect(avs),
+      video(nullptr),
       loaded(false),
       frame_index(0),
       last_time(0),
@@ -75,11 +74,13 @@ E_AVI::E_AVI(AVS_Instance* avs)
 E_AVI::~E_AVI() { close_file(); }
 
 static void add_file_callback(const char* file, void* data) {
-    ((E_AVI*)data)->filenames.push_back(file);
+    auto base_path_len = ((E_AVI*)data)->avs->base_path.size();
+    // remove base_path + "/" from the front of the filepath
+    E_AVI::filenames.emplace_back(file + base_path_len + 1);
 }
 
 void E_AVI::find_video_files() {
-    this->clear_video_files();
+    E_AVI::clear_video_files();
     const int num_extensions = 10;
     const char* extensions[num_extensions] = {
         ".avi",
@@ -103,22 +104,23 @@ void E_AVI::find_video_files() {
                              /*background*/ false);
 }
 
-void E_AVI::clear_video_files() { this->filenames.clear(); }
+void E_AVI::clear_video_files() { E_AVI::filenames.clear(); }
 
 void E_AVI::load_file() {
-    char pathfile[MAX_PATH];
+    if (this->config.filename.empty()) {
+        return;
+    }
+    char filepath[MAX_PATH];
     lock_lock(this->video_file_lock);
 
     if (this->loaded) {
         close_file();
     }
 
-    sprintf(pathfile,
-            "%s\\%s",
-            this->avs->base_path.c_str(),
-            this->config.filename.c_str());
+    sprintf(
+        filepath, "%s/%s", this->avs->base_path.c_str(), this->config.filename.c_str());
 
-    this->video = new AVS_Video(pathfile, 32, 0);
+    this->video = new AVS_Video(filepath, 32, 0);
     if (this->video != NULL && this->video->error == NULL) {
         this->loaded = true;
     }
@@ -210,13 +212,15 @@ int E_AVI::render(char[2][2][576],
     return 0;
 }
 
+void E_AVI::on_load() { this->load_file(); }
+
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
 void E_AVI::load_legacy(unsigned char* data, int len) {
     int32_t blend_add = 0;
     int32_t blend_5050 = 0;
     int32_t blend_5050_onbeat_add = 0;
-    int pos = 0;
+    int32_t pos = 0;
     if (len - pos >= 4) {
         this->enabled = GET_INT();
         pos += 4;
@@ -230,7 +234,8 @@ void E_AVI::load_legacy(unsigned char* data, int len) {
         pos += 4;
     }
     char* str_data = (char*)data;
-    pos += string_nt_load_legacy(&str_data[pos], this->config.filename, MAX_PATH);
+    pos +=
+        Effect::string_nt_load_legacy(&str_data[pos], this->config.filename, MAX_PATH);
     if (len - pos >= 4) {
         blend_5050_onbeat_add = GET_INT();
         pos += 4;
@@ -253,18 +258,16 @@ void E_AVI::load_legacy(unsigned char* data, int len) {
         pos += 4;
     }
 
-    if (!this->config.filename.empty()) {
-        this->load_file();
-    }
+    this->load_file();
 }
 
 #define PUT_INT(y)                   \
-    data[pos] = (y)&255;             \
+    data[pos] = (y) & 255;           \
     data[pos + 1] = (y >> 8) & 255;  \
     data[pos + 2] = (y >> 16) & 255; \
     data[pos + 3] = (y >> 24) & 255
 int E_AVI::save_legacy(unsigned char* data) {
-    int pos = 0;
+    int32_t pos = 0;
     PUT_INT(this->enabled);
     pos += 4;
     PUT_INT(this->config.blend_mode == AVI_BLEND_ADD ? 1 : 0);
@@ -272,7 +275,8 @@ int E_AVI::save_legacy(unsigned char* data) {
     PUT_INT(this->config.blend_mode == AVI_BLEND_FIFTY_FIFTY ? 1 : 0);
     pos += 4;
     char* str_data = (char*)data;
-    pos += this->string_nt_save_legacy(this->config.filename, &str_data[pos], MAX_PATH);
+    pos +=
+        Effect::string_nt_save_legacy(this->config.filename, &str_data[pos], MAX_PATH);
     PUT_INT(this->config.blend_mode == AVI_BLEND_FIFTY_FIFTY_ONBEAT_ADD ? 1 : 0);
     pos += 4;
     PUT_INT(this->config.on_beat_persist);
