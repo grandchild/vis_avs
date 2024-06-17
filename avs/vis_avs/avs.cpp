@@ -129,12 +129,12 @@ bool avs_preset_save(AVS_Handle avs, const char* file_path, bool indent) {
     return instance->preset_save_file(file_path, indent);
 }
 AVS_API
-const char* avs_preset_get(AVS_Handle avs) {
+const char* avs_preset_get(AVS_Handle avs, bool indent) {
     AVS_Instance* instance = get_instance_from_handle(avs);
     if (instance == nullptr) {
         return nullptr;
     }
-    return instance->preset_save();
+    return instance->preset_save(indent);
 }
 AVS_API
 bool avs_preset_set_legacy(AVS_Handle avs,

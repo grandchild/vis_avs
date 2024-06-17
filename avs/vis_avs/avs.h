@@ -276,7 +276,8 @@ bool avs_preset_set(AVS_Handle avs, const char* preset);
 bool avs_preset_save(AVS_Handle avs, const char* file_path, bool indent);
 
 /**
- * Return the currently loaded preset's JSON string.
+ * Return the currently loaded preset's JSON string. If `indent` is `true`, the JSON
+ * will be indented with 4 spaces. Otherwise it will be a single line.
  *
  * This is also the method to convert legacy presets into JSON, by loading it with
  * `avs_preset_load()` or `avs_preset_set_legacy()` and returning JSON with this
@@ -287,7 +288,7 @@ bool avs_preset_save(AVS_Handle avs, const char* file_path, bool indent);
  *
  * Returns `NULL` on error.
  */
-const char* avs_preset_get(AVS_Handle avs);
+const char* avs_preset_get(AVS_Handle avs, bool indent);
 
 /**
  * Load a preset from a legacy binary buffer.
