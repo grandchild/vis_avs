@@ -260,7 +260,7 @@ bool avs_component_move(AVS_Handle avs,
     }
     Effect::Insert_Direction _direction = Effect::INSERT_AFTER;
     switch (direction) {
-        case AVS_COMPONENT_POSITION_BEFORE: _direction = Effect::INSERT_AFTER; break;
+        case AVS_COMPONENT_POSITION_BEFORE: _direction = Effect::INSERT_BEFORE; break;
         case AVS_COMPONENT_POSITION_DONTCARE:
         case AVS_COMPONENT_POSITION_AFTER: _direction = Effect::INSERT_AFTER; break;
         case AVS_COMPONENT_POSITION_CHILD: _direction = Effect::INSERT_CHILD; break;
