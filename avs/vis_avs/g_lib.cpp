@@ -30,9 +30,6 @@
     ADD_COMPONENT(-1, ID_STRING, RES_SUFFIX, HANDLER_AND_PREP_SUFFIX)
 
 C_GLibrary::C_GLibrary() {
-    this->components = (C_Win32GuiComponent*)calloc(UI_COMPONENT_LIST_ALLOC_LEN,
-                                                    sizeof(C_Win32GuiComponent));
-
     unsigned int i = 0;
     // clang-format off
     ADD_STANDARD_COMPONENT(0,  SIMPLE,      simple);
@@ -116,8 +113,6 @@ C_GLibrary::C_GLibrary() {
     this->root.dialog_resource_id = IDD_CFG_LISTROOT;
     this->root.ui_handler = (DLGPROC)win32_dlgproc_root;
 }
-
-C_GLibrary::~C_GLibrary() { free(this->components); }
 
 C_Win32GuiComponent* C_GLibrary::get(int id_or_idstring) {
     if (id_or_idstring == -1) {

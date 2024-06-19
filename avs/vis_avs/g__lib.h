@@ -78,32 +78,31 @@ DECL_HANDLER(picture2);
 DECL_HANDLER(frameratelimiter);
 DECL_HANDLER(texer);
 
-typedef struct {
+struct C_Win32GuiComponent {
     // This should match the render component id number. If component is an APE, which
     // are identified by strings, this is -1. Note that -2 is the special code for an
     // 2.81+ extended EL again. All other ids are positive.
-    int id;
+    int id = -1;
     // This should match the render component unique id string, if component is of APE
     // type (plugin or builtin). If it's a standard component, this is a NULL pointer.
-    char idstring[COMPONENT_IDSTRING_LEN];
+    char idstring[COMPONENT_IDSTRING_LEN]{};
     // A dialog resource id for the component config UI.
-    int dialog_resource_id;
+    int dialog_resource_id = 0;
     // Handler function for UI events.
-    DLGPROC ui_handler;
+    DLGPROC ui_handler = nullptr;
     // Optional preparation function, called before creating the dialog. Useful to
     // register custom UI classes.
-    void (*uiprep)(HINSTANCE) = NULL;
-} C_Win32GuiComponent;
+    void (*uiprep)(HINSTANCE) = nullptr;
+};
 
 class C_GLibrary {
    public:
     C_GLibrary();
-    ~C_GLibrary();
     C_Win32GuiComponent* get(int id_or_idstring);
 
    protected:
     C_Win32GuiComponent* get_by_idstring(char* idstring);
-    C_Win32GuiComponent* components;
+    C_Win32GuiComponent components[UI_COMPONENT_LIST_ALLOC_LEN]{};
     C_Win32GuiComponent unknown;
     C_Win32GuiComponent effectlist;
     C_Win32GuiComponent root;
