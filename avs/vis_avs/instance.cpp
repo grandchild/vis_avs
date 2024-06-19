@@ -16,7 +16,6 @@ AVS_Instance::AVS_Instance(const char* base_path,
       base_path(base_path),
       audio_source(audio_source),
       beat_source(beat_source),
-      error(""),
       root(this),
       root_secondary(this),
       transition(this),
@@ -250,7 +249,7 @@ const uint8_t* AVS_Instance::preset_save_legacy(size_t* preset_length_out,
 void AVS_Instance::clear() { this->root = E_Root(this); }
 void AVS_Instance::clear_secondary() { this->root_secondary = E_Root(this); }
 
-const char* AVS_Instance::error_str() { return this->error; }
+const char* AVS_Instance::error_str() { return this->error.c_str(); }
 
 bool AVS_Instance::undo() { return false; }
 bool AVS_Instance::redo() { return false; }

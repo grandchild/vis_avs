@@ -71,7 +71,7 @@ class AVS_Instance {
     AVS_Audio_Source audio_source;
     AVS_Beat_Source beat_source;
     Audio audio;
-    const char* error;
+    std::string error;
     const char* audio_devices[1] = {""};
 
     E_Root root;
