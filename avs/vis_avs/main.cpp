@@ -483,7 +483,7 @@ static unsigned int WINAPI RenderThread(LPVOID) {
                 lock_lock(g_single_instance->render_lock);
                 g_single_instance->init_global_buffers_if_needed(
                     w, h, AVS_PIXEL_RGB0_8);
-                int t = g_single_instance->transition.render(
+                int t = g_single_instance->root.render(
                     vis_data, beat, s ? fb2 : fb, s ? fb : fb2, w, h);
                 lock_unlock(g_single_instance->render_lock);
                 if (t & 1) {
