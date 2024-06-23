@@ -44,6 +44,7 @@ file(GLOB SRC_FILES_VIS_AVS
 if(WIN32)
     list(APPEND SRC_FILES_AVS_COMMON
         avs/platform_win32.c
+        avs/vis_avs/audio_in_windows_wasapi.cpp
     )
 elseif(LINUX)
     list(APPEND SRC_FILES_AVS_COMMON
