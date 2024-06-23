@@ -1,0 +1,20 @@
+[package]
+name = "avs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dlopen = "0.1"
+minifb = "0"
+linuxfb = "0"
+argh = "0"
+simple_logger = { version = "4.2.0", default-features = false }
+
+[dev-dependencies]
+png = "0"
+qoi = "0"
+
+
+[[bin]]
+name = "avs"
+path = "avs.rs"

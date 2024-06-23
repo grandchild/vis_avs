@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 project(vis_avs VERSION 2.82)
 
 include(CheckIncludeFiles)
+include(ExternalProject)
 
 file(GLOB SRC_FILES_NS_EEL
     avs/ns-eel/*.c
@@ -195,6 +196,21 @@ elseif(LINUX)
     target_link_options(libavs PUBLIC -Wl,-m elf_i386)
     set(AVS_DYLIB_EXTENSION "so")
 endif()
+
+ExternalProject_Add(avsrs
+    DEPENDS libavs
+    SOURCE_DIR "${CMAKE_SOURCE_DIR}"
+    CONFIGURE_COMMAND ""  # default configure looks for the toolchain file in parent dir
+    BINARY_DIR "${CMAKE_SOURCE_DIR}"
+    BUILD_COMMAND ${CMAKE_COMMAND} -E env
+        "RUSTFLAGS=-L${CMAKE_BINARY_DIR}"
+        LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}
+        cargo build --release --target-dir ${CMAKE_BINARY_DIR}
+    INSTALL_COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_BINARY_DIR}/i686-unknown-linux-gnu/release/avs
+        ${CMAKE_BINARY_DIR}/
+    LOG_BUILD ON
+)
 
 if(NOT MSVC)
     # # tests
