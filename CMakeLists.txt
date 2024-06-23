@@ -48,6 +48,7 @@ if(WIN32)
     )
 elseif(LINUX)
     list(APPEND SRC_FILES_AVS_COMMON
+        avs/vis_avs/audio_in_linux_pipewire.cpp
     )
 endif()
 
@@ -179,6 +180,10 @@ if(WIN32)
     endif()
     set(AVS_DYLIB_EXTENSION "dll")
 elseif(LINUX)
+    include(FindPkgConfig)
+    pkg_search_module(PIPEWIRE REQUIRED libpipewire-0.3)
+    target_include_directories(avs_common PUBLIC ${PIPEWIRE_INCLUDE_DIRS})
+    target_link_libraries(libavs ${PIPEWIRE_LIBRARIES})
     target_link_options(libavs PUBLIC -Wl,-m elf_i386)
     set(AVS_DYLIB_EXTENSION "so")
 endif()
