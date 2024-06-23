@@ -82,7 +82,8 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         -fcf-protection=return # Don't emit endbr32/-64 instructions at the beginning of
                                # functions. ("return" value means: not "branch".)
                                # We want clean naked functions.
-        # -flto               # Link-time optimization. No performance gain seen so far.
+        # -flto               # Link-time optimization. No performance gain, but halves
+                            # binary size.
         # -fprofile-generate  # Profile-guided optimization, pass 1
         # -fprofile-use       # Profile-guided optimization, pass 2
         -Wall -Wextra
