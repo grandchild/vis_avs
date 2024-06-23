@@ -49,6 +49,7 @@ if(WIN32)
 elseif(LINUX)
     list(APPEND SRC_FILES_AVS_COMMON
         avs/vis_avs/audio_in_linux_pipewire.cpp
+        avs/3rdparty/pevents.cpp
     )
 endif()
 
@@ -113,6 +114,7 @@ add_compile_definitions(
     # NO_MMX                # Use (usually slower) C equivalents for MMX assembly.
                             # (Initially enabled for quick porting but should be
                             # removed, now that all MMX sections are ported.)
+    WFMO                    # Enable `WaitForMultipleObjects()` in pevents.cpp.
 )
 
 set(CMAKE_SHARED_LIBRARY_PREFIX "")  # Remove "lib" prefix from output to get original
