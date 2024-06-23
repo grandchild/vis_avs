@@ -7,17 +7,48 @@ include(CheckIncludeFiles)
 file(GLOB SRC_FILES_NS_EEL
     avs/ns-eel/*.c
 )
-file(GLOB SRC_FILES_VIS_AVS
-    avs/vis_avs/*.cpp
+file(GLOB SRC_FILES_AVS_COMMON
+    avs/vis_avs/audio.cpp
+    avs/vis_avs/avs*.cpp
+    avs/vis_avs/e_*.cpp
+    avs/vis_avs/effect*.cpp
     avs/vis_avs/*.c
-    avs/vis_avs/*.rc
+    avs/vis_avs/files.cpp
+    avs/vis_avs/handles.cpp
+    avs/vis_avs/image.cpp
+    avs/vis_avs/instance.cpp
+    avs/vis_avs/linedraw.cpp
+    avs/vis_avs/matrix.cpp
+    avs/vis_avs/render_context.cpp
+    # avs/vis_avs/r_text.cpp
+    avs/vis_avs/r_transition.cpp
+    avs/vis_avs/text_win32.cpp
+    avs/vis_avs/video.cpp
+    avs/vis_avs/video_libav.cpp
     avs/platform.c
+    avs/3rdparty/md_fft.cpp
 )
-set(SRC_FILES_VIS_AVS_TARGET
-    avs/platform_win32.c
-    libavs.def # The function export list.
+
+file(GLOB SRC_FILES_VIS_AVS
+    avs/vis_avs/g_*.cpp
+    avs/vis_avs/bpm.cpp
+    avs/vis_avs/cfgwin.cpp
+    avs/vis_avs/draw.cpp
+    avs/vis_avs/main.cpp
+    avs/vis_avs/render.cpp
+    avs/vis_avs/undo.cpp
+    avs/vis_avs/util.cpp
+    avs/vis_avs/wnd.cpp
+    avs/vis_avs/*.rc
 )
-set(SRC_FILES_VIS_AVS_COMPILER)
+if(WIN32)
+    list(APPEND SRC_FILES_AVS_COMMON
+        avs/platform_win32.c
+    )
+elseif(LINUX)
+    list(APPEND SRC_FILES_AVS_COMMON
+    )
+endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(
@@ -40,6 +71,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(
         -g
         -O2
+        -m32                # Compile for 32-bit x86.
         -masm=intel         # Use Intel instead of AT&T inline assembly syntax.
         -march=native       # Convolution-Filter uses inlined mmintrin.h functions, and
                             # a pentium4 arch seems to be roughly the minimum for that.
@@ -70,20 +102,6 @@ else() # TODO: Clang option
     message(SEND_ERROR "unsupported compiler ${CMAKE_CXX_COMPILER_ID}")
 endif()
 
-if(WIN32)
-    add_compile_definitions(
-        _WIN32_WINNT=_WIN32_WINNT_VISTA     # Minimum WinNT version (needed for
-                                            # GetTickCount64()).
-        NOMINMAX                            # Don't define min()/max() in windows.h on
-                                            # MSVC. Use our own functions everywhere.
-    )
-    if(NOT MSVC)
-        # googletest here because it doesn't work for MSVC
-    endif()
-else()
-    # link_libraries(#[[...]])
-endif()
-
 add_compile_definitions(
     AVS_MEGABUF_SUPPORT     # No reason to not enable this. Remove #ifdefs eventually.
     NSEEL_LOOPFUNC_SUPPORT  # No reason to not enable this. Remove #ifdefs eventually.
@@ -97,17 +115,13 @@ add_compile_definitions(
 
 set(CMAKE_SHARED_LIBRARY_PREFIX "")  # Remove "lib" prefix from output to get original
                                      # filename "vis_avs.dll".
-add_library(vis_avs SHARED
+
+add_library(avs_common OBJECT
     ${SRC_FILES_NS_EEL}
-    ${SRC_FILES_VIS_AVS}
-    ${SRC_FILES_VIS_AVS_TARGET}
-    ${SRC_FILES_VIS_AVS_COMPILER}
+    ${SRC_FILES_AVS_COMMON}
 )
 
-target_link_libraries(vis_avs
-    ddraw  # draw.cpp includes ddraw.h
-           # https://docs.microsoft.com/en-us/windows/win32/api/ddraw/nf-ddraw-directdrawcreate
-)
+add_library(libavs SHARED $<TARGET_OBJECTS:avs_common>)
 
 check_include_files(
     "libavcodec/avcodec.h;libavformat/avformat.h;libswscale/swscale.h"
@@ -118,6 +132,24 @@ if(NOT HAVE_FFMPEG OR NO_FFMPEG)
 endif()
 
 if(WIN32)
+    target_sources(libavs PRIVATE libavs.def)  # The function export list.
+    add_compile_definitions(
+        _WIN32_WINNT=_WIN32_WINNT_VISTA     # Minimum WinNT version (needed for
+                                            # GetTickCount64()).
+        NOMINMAX                            # Don't define min()/max() in windows.h on
+                                            # MSVC. Use our own functions everywhere.
+    )
+    add_library(vis_avs SHARED
+        $<TARGET_OBJECTS:avs_common>
+        ${SRC_FILES_VIS_AVS}
+    )
+    target_compile_definitions(vis_avs PUBLIC CAN_TALK_TO_WINAMP)
+
+    target_link_libraries(vis_avs
+        ddraw  # draw.cpp includes ddraw.h
+               # https://docs.microsoft.com/en-us/windows/win32/api/ddraw/nf-ddraw-directdrawcreate
+    )
+
     get_filename_component(WINAMP_DIR "[HKEY_CURRENT_USER\\SOFTWARE\\Winamp]" ABSOLUTE)
     if(WINAMP_DIR STREQUAL "")
         set(WINAMP_DIR "" CACHE PATH "Winamp installation directory (contains winamp.exe)." FORCE)
@@ -130,17 +162,25 @@ if(WIN32)
     else()
         message(WARNING "Winamp installation directory ('${WINAMP_DIR}') not found or not set. Skipped creating debug task.")
     endif()
-endif()
 
-#[[
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    # These dependent DLLs are introduced by mingw32 and should be next to winamp.exe.
-    configure_file(${CROSS_CC_PREFIX}/bin/libgcc_s_dw2-1.dll    . COPYONLY)
-    configure_file(${CROSS_CC_PREFIX}/bin/libssp-0.dll          . COPYONLY)
-    configure_file(${CROSS_CC_PREFIX}/bin/libstdc++-6.dll       . COPYONLY)
-    configure_file(${CROSS_CC_PREFIX}/bin/libwinpthread-1.dll   . COPYONLY)
+    #[[
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        # These dependent DLLs are introduced by mingw32 and should be next to winamp.exe.
+        configure_file(${CROSS_CC_PREFIX}/bin/libgcc_s_dw2-1.dll    . COPYONLY)
+        configure_file(${CROSS_CC_PREFIX}/bin/libssp-0.dll          . COPYONLY)
+        configure_file(${CROSS_CC_PREFIX}/bin/libstdc++-6.dll       . COPYONLY)
+        configure_file(${CROSS_CC_PREFIX}/bin/libwinpthread-1.dll   . COPYONLY)
+    endif()
+    #]]#
+
+    if(NOT MSVC)
+        # googletest here because it doesn't work for MSVC
+    endif()
+    set(AVS_DYLIB_EXTENSION "dll")
+elseif(LINUX)
+    target_link_options(libavs PUBLIC -Wl,-m elf_i386)
+    set(AVS_DYLIB_EXTENSION "so")
 endif()
-#]]#
 
 if(NOT MSVC)
     # # tests

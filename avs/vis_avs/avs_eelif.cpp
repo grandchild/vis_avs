@@ -34,7 +34,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../ns-eel/ns-eel-addfuncs.h"
 #include "../platform.h"
 
+#include <stdlib.h>
+#include <string.h>
+
+#ifdef CAN_TALK_TO_WINAMP
 #include <windows.h>
+#endif
 
 #ifdef AVS_MEGABUF_SUPPORT
 #include "../ns-eel/megabuf.h"
@@ -116,6 +121,7 @@ static double getosc(double band, double bandw, double chan) {
 }
 
 static double gettime(double sc) {
+#ifdef CAN_TALK_TO_WINAMP
     int ispos;
     if ((ispos = (sc > -1.001 && sc < -0.999)) || (sc > -2.001 && sc < -1.999)) {
         int pos = 0;
@@ -137,8 +143,8 @@ static double gettime(double sc) {
         }
         return pos / 1000.0;
     }
-
-    return GetTickCount() / 1000.0 - sc;
+#endif  // CAN_TALK_TO_WINAMP
+    return timer_ms() / 1000.0 - sc;
 }
 
 static double setmousepos(double x, double y) {
@@ -147,11 +153,10 @@ static double setmousepos(double x, double y) {
     return 0.0;
 }
 
-extern double DDraw_translatePoint(POINT p, int isY);
-
 static double getmouse(double which) {
     int w = (int)(which + 0.5);
 
+#ifdef CAN_TALK_TO_WINAMP
     if (w > 5) {
         return (GetAsyncKeyState(w) & 0x8000) ? 1.0 : 0.0;
     }
@@ -159,6 +164,7 @@ static double getmouse(double which) {
     if (w == 1 || w == 2) {
         POINT p;
         GetCursorPos(&p);
+        extern double DDraw_translatePoint(POINT p, int isY);
         return DDraw_translatePoint(p, w == 2);
     }
     if (w == 3) {
@@ -170,6 +176,7 @@ static double getmouse(double which) {
     if (w == 5) {
         return (GetAsyncKeyState(MK_MBUTTON) & 0x8000) ? 1.0 : 0.0;
     }
+#endif  // CAN_TALK_TO_WINAMP
     return 0.0;
 }
 
