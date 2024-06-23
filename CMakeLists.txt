@@ -128,6 +128,8 @@ add_library(avs_common OBJECT
 )
 
 add_library(libavs SHARED $<TARGET_OBJECTS:avs_common>)
+add_executable(avs-cli avs/avs-cli.c)
+target_link_libraries(avs-cli libavs)
 
 check_include_files(
     "libavcodec/avcodec.h;libavformat/avformat.h;libswscale/swscale.h"
@@ -152,6 +154,7 @@ if(WIN32)
     )
     target_compile_definitions(vis_avs PUBLIC CAN_TALK_TO_WINAMP)
 
+    target_link_options(avs-cli PUBLIC -Wl,--disable-nxcompat)
     target_link_libraries(vis_avs
         ddraw  # draw.cpp includes ddraw.h
                # https://docs.microsoft.com/en-us/windows/win32/api/ddraw/nf-ddraw-directdrawcreate
