@@ -48,6 +48,7 @@ if(WIN32)
     )
 elseif(LINUX)
     list(APPEND SRC_FILES_AVS_COMMON
+        avs/platform_linux.c
         avs/vis_avs/audio_in_linux_pipewire.cpp
         avs/3rdparty/pevents.cpp
     )
