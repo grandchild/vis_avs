@@ -128,6 +128,38 @@ cp /usr/i686-w64-mingw32/bin/lib{gcc_s_dw2-1,ssp-0,stdc++-6,winpthread-1}.dll /m
 wine /my/path/to/Winamp/winamp.exe
 ```
 
+### Building & Running Linux native
+
+There's two slightly different test programs for Linux support. One in C, one in Rust.
+Both are built automatically with the current CMake setup.
+
+Prepare & build first:
+
+```sh
+# Install Rust 32bit linux toolchain
+rustup target add i686-unknown-linux-gnu
+
+# Compile
+cmake -B build_linux --toolchain CMake-Linux32cross-toolchain.txt
+cmake --build build_linux --parallel 15
+```
+
+Then run either the C version:
+
+```sh
+build_linux/avs-cli
+# prints a static image to the terminal,
+```
+
+or the Rust version:
+```sh
+RUSTFLAGS="-L build_linux" LD_LIBRARY_PATH=build_linux build_linux/avs video.avs-preset
+# opens a window if given a preset file as first parameter.
+```
+
+On Linux the Rust program also opens an audio input device, if the system uses Pipewire.
+
+
 ## Building & Running on Windows
 
 ### Build
