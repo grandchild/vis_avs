@@ -175,17 +175,18 @@ void mem_mark_rwx(void* block, size_t length) {
 /* errors */
 
 void print_last_system_error() {
-    const size_t buffer_size = 1024;
-    char buffer[buffer_size];
+#define SYSTEM_ERR_BUFFER_SIZE 1024
+    char buffer[SYSTEM_ERR_BUFFER_SIZE];
     if (!FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
                        0,
                        GetLastError(),
                        0,
                        buffer,
-                       buffer_size,
+                       SYSTEM_ERR_BUFFER_SIZE,
                        NULL)) {
         printf("Format message failed with 0x%lx\n", GetLastError());
         return;
     }
     printf("!! %s", buffer);
+#undef SYSTEM_ERR_BUFFER_SIZE
 }
