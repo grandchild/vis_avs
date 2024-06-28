@@ -3,11 +3,13 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#define sleep(x) Sleep(x * 1000)
+#elif __linux__
+#include <unistd.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 int main(int argc, char const* argv[]) {
 #ifdef _WIN32
