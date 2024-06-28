@@ -32,7 +32,7 @@ struct ClearScreen_Info : public Effect_Info {
             "Default",
         };
         return options;
-    };
+    }
 
     static void on_only_first(Effect*, const Parameter*, const std::vector<int64_t>&);
 

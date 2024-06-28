@@ -47,7 +47,7 @@ struct Convolution_Info : public Effect_Info {
             "Wrap",
         };
         return options;
-    };
+    }
 
     static void update_kernel(Effect*, const Parameter*, const std::vector<int64_t>&);
     static void on_wrap_or_absolute_change(Effect*,

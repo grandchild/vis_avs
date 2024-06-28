@@ -34,7 +34,7 @@ struct Timescope_Info : public Effect_Info {
             "Default",
         };
         return options;
-    };
+    }
 
     static constexpr uint32_t num_parameters = 4;
     static constexpr Parameter parameters[num_parameters] = {

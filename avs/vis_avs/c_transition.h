@@ -107,7 +107,7 @@ struct Transition_Info : public Effect_Info {
     static const char* const* effect_names(int64_t* length_out) {
         *length_out = num_effects;
         return effects;
-    };
+    }
 
     static constexpr uint32_t num_parameters = 11;
     static constexpr Parameter parameters[num_parameters] = {
@@ -128,8 +128,8 @@ struct Transition_Info : public Effect_Info {
                "Pre-Init Only in Fullscreen"),
     };
 
-    virtual bool can_have_child_components() const { return true; };
-    virtual bool is_createable_by_user() const { return false; };
+    virtual bool can_have_child_components() const { return true; }
+    virtual bool is_createable_by_user() const { return false; }
 
     EFFECT_INFO_GETTERS;
 };

@@ -34,7 +34,7 @@ struct Picture_Info : public Effect_Info {
         *length_out = 3;
         static const char* const options[3] = {"Stretch", "Fit Width", "Fit Height"};
         return options;
-    };
+    }
 
     static void on_file_change(Effect*, const Parameter*, const std::vector<int64_t>&);
     static void on_fit_change(Effect*, const Parameter*, const std::vector<int64_t>&);

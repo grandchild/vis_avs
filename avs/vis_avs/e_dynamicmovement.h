@@ -144,7 +144,7 @@ struct DynamicMovement_Info : public Effect_Info {
             "Cartesian",
         };
         return options;
-    };
+    }
 
     static const char* const* example_names(int64_t* length_out) {
         *length_out = 8;
@@ -159,7 +159,7 @@ struct DynamicMovement_Info : public Effect_Info {
             examples[7].name,
         };
         return options;
-    };
+    }
 
     static void recompile(Effect*, const Parameter*, const std::vector<int64_t>&);
     static void load_example(Effect*, const Parameter*, const std::vector<int64_t>&);
@@ -214,7 +214,7 @@ class E_DynamicMovement : public Programmable_Effect<DynamicMovement_Info,
     virtual int save_legacy(unsigned char* data);
     virtual E_DynamicMovement* clone() { return new E_DynamicMovement(*this); }
 
-    virtual bool can_multithread() { return true; };
+    virtual bool can_multithread() { return true; }
     virtual int smp_begin(int max_threads,
                           char visdata[2][2][576],
                           int is_beat,

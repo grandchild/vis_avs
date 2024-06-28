@@ -29,7 +29,7 @@ class E_Water : public Configurable_Effect<Water_Info, Water_Config> {
     virtual int save_legacy(unsigned char* data);
     virtual E_Water* clone() { return new E_Water(*this); }
 
-    virtual bool can_multithread() { return true; };
+    virtual bool can_multithread() { return true; }
     virtual int smp_begin(int max_threads,
                           char visdata[2][2][576],
                           int is_beat,

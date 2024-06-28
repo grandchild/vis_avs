@@ -39,7 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
 #define PUT_INT(y)                   \
-    data[pos] = (y)&255;             \
+    data[pos] = (y) & 255;           \
     data[pos + 1] = (y >> 8) & 255;  \
     data[pos + 2] = (y >> 16) & 255; \
     data[pos + 3] = (y >> 24) & 255
@@ -82,10 +82,10 @@ static inline int in_range(int color, int ref, int distance) {
     if (iabs((color & 0xFF) - (ref & 0xFF)) > distance) {
         return 0;
     }
-    if (iabs(((color)&0xFF00) - ((ref)&0xFF00)) > (distance << 8)) {
+    if (iabs(((color) & 0xFF00) - ((ref) & 0xFF00)) > (distance << 8)) {
         return 0;
     }
-    if (iabs(((color)&0xFF0000) - ((ref)&0xFF0000)) > (distance << 16)) {
+    if (iabs(((color) & 0xFF0000) - ((ref) & 0xFF0000)) > (distance << 16)) {
         return 0;
     }
     return 1;

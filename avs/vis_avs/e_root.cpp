@@ -10,7 +10,7 @@
 #include <iostream>
 
 #define PUT_INT(y)                   \
-    data[pos] = (y)&255;             \
+    data[pos] = (y) & 255;           \
     data[pos + 1] = (y >> 8) & 255;  \
     data[pos + 2] = (y >> 16) & 255; \
     data[pos + 3] = (y >> 24) & 255

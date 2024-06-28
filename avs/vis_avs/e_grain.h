@@ -25,7 +25,7 @@ struct Grain_Info : public Effect_Info {
             "Additive",
         };
         return options;
-    };
+    }
 
     static constexpr uint32_t num_parameters = 3;
     static constexpr Parameter parameters[num_parameters] = {

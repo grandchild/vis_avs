@@ -23,7 +23,7 @@ struct FastBright_Info : public Effect_Info {
         *length_out = 2;
         static const char* const options[3] = {"2", "0.5"};
         return options;
-    };
+    }
 
     static constexpr uint32_t num_parameters = 1;
     static constexpr Parameter parameters[num_parameters] = {

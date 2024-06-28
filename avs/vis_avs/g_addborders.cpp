@@ -9,7 +9,7 @@
 #include <commctrl.h>
 
 #define RGB_TO_BGR(color) \
-    (((color)&0xff0000) >> 16 | ((color)&0xff00) | ((color)&0xff) << 16)
+    (((color) & 0xff0000) >> 16 | ((color) & 0xff00) | ((color) & 0xff) << 16)
 #define BGR_TO_RGB(color) RGB_TO_BGR(color)  // is its own inverse
 
 static COLORREF g_cust_colors[16];

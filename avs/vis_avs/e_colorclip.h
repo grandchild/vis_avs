@@ -32,7 +32,7 @@ struct ColorClip_Info : public Effect_Info {
             "Near",
         };
         return options;
-    };
+    }
 
     static void copy_in_to_out(Effect*, const Parameter*, const std::vector<int64_t>&);
 

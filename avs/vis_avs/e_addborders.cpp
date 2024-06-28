@@ -77,7 +77,7 @@ void E_AddBorders::load_legacy(unsigned char* data, int len) {
 }
 
 #define PUT_INT(y)                     \
-    data[pos] = (y)&255;               \
+    data[pos] = (y) & 255;             \
     data[pos + 1] = ((y) >> 8) & 255;  \
     data[pos + 2] = ((y) >> 16) & 255; \
     data[pos + 3] = ((y) >> 24) & 255

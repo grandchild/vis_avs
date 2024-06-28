@@ -78,7 +78,7 @@ struct ColorMap_Map : public Effect_Config {
         this->colors.emplace_back(0, 0x000000);
         this->colors.emplace_back(255, 0xffffff);
         this->baked_map.assign(NUM_COLOR_VALUES, 0);
-    };
+    }
 };
 
 struct ColorMap_Config : public Effect_Config {
@@ -138,7 +138,7 @@ struct ColorMap_Info : public Effect_Info {
         static const char* const options[3] = {
             "None (single map)", "On-beat random", "On-beat sequential"};
         return options;
-    };
+    }
     static const char* const* color_keys(int64_t* length_out) {
         *length_out = 6;
         static const char* const options[6] = {"Red Channel",
@@ -148,7 +148,7 @@ struct ColorMap_Info : public Effect_Info {
                                                "Maximal Channel",
                                                "(R+G+B)/3"};
         return options;
-    };
+    }
     static const char* const* blendmodes(int64_t* length_out) {
         *length_out = 10;
         static const char* const options[10] = {"Replace",
@@ -162,7 +162,7 @@ struct ColorMap_Info : public Effect_Info {
                                                 "XOR",
                                                 "Adjustable"};
         return options;
-    };
+    }
 
     static constexpr uint32_t num_map_color_params = 3;
     static constexpr Parameter map_color_params[num_map_color_params] = {

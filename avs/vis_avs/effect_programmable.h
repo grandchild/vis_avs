@@ -60,7 +60,7 @@ struct Variables {
     // retrieve them with va_arg() like above.
     virtual void init(int w, int h, int is_beat, va_list) {
         (void)w, (void)h, (void)is_beat;
-    };
+    }
 };
 
 class Code_Section {
@@ -75,7 +75,7 @@ class Code_Section {
 
     Code_Section(void*& vm_context, std::string& code_str, lock_t* code_lock)
         : vm_context(vm_context), code_str(code_str), code_lock(code_lock){};
-    ~Code_Section() { NSEEL_code_free(this->code); };
+    ~Code_Section() { NSEEL_code_free(this->code); }
     Code_Section(const Code_Section& other)
         : vm_context(other.vm_context),
           code_str(other.code_str),
@@ -112,7 +112,7 @@ class Code_Section {
             NSEEL_code_compile(this->vm_context, (char*)this->code_str.c_str());
         this->need_recompile = false;
         return true;
-    };
+    }
     void exec(char visdata[2][2][576]) {
         if (this->code == NULL) {
             return;
@@ -120,8 +120,8 @@ class Code_Section {
         lock_lock(this->code_lock);
         AVS_EEL_IF_Execute(this->code, visdata);
         lock_unlock(this->code_lock);
-    };
-    bool is_valid() { return this->code != NULL; };
+    }
+    bool is_valid() { return this->code != NULL; }
 };
 
 template <class Info_T,
@@ -156,7 +156,7 @@ class Programmable_Effect
     ~Programmable_Effect() {
         AVS_EEL_IF_VM_free(this->vm_context);
         lock_destroy(this->code_lock);
-    };
+    }
     Programmable_Effect(const Programmable_Effect& other)
         : Super(other),
           code_lock(lock_init()),
@@ -184,7 +184,7 @@ class Programmable_Effect
         this->code_frame.need_recompile = true;
         this->code_beat.need_recompile = true;
         this->code_point.need_recompile = true;
-    };
+    }
 
     bool recompile_if_needed() {
         lock_lock(this->code_lock);
@@ -206,21 +206,21 @@ class Programmable_Effect
         any_recompiled |= this->code_point.recompile_if_needed();
         lock_unlock(this->code_lock);
         return any_recompiled;
-    };
+    }
 
     void reset_code_context() {
         lock_lock(this->code_lock);
         AVS_EEL_IF_VM_free(this->vm_context);
         this->vm_context = NULL;
         lock_unlock(this->code_lock);
-    };
+    }
 
     virtual void init_variables(int w, int h, int is_beat, ...) {
         va_list extra_args;
         va_start(extra_args, is_beat);
         this->vars.init(w, h, is_beat, extra_args);
         va_end(extra_args);
-    };
+    }
 
    protected:
     void swap(Programmable_Effect& other) {

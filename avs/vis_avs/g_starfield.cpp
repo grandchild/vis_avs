@@ -12,7 +12,7 @@
 #define ON_BEAT_SPEED_FACTOR 100.0
 
 #define RGB_TO_BGR(color) \
-    (((color)&0xff0000) >> 16 | ((color)&0xff00) | ((color)&0xff) << 16)
+    (((color) & 0xff0000) >> 16 | ((color) & 0xff00) | ((color) & 0xff) << 16)
 #define BGR_TO_RGB(color) RGB_TO_BGR(color)  // is its own inverse
 
 int win32_dlgproc_starfield(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {

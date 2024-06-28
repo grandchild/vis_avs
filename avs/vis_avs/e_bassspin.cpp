@@ -40,7 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define F16(x) ((x) << 16)
 
 #define PUT_INT(y)                   \
-    data[pos] = (y)&255;             \
+    data[pos] = (y) & 255;           \
     data[pos + 1] = (y >> 8) & 255;  \
     data[pos + 2] = (y >> 16) & 255; \
     data[pos + 3] = (y >> 24) & 255

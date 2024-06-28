@@ -35,7 +35,7 @@ struct Blur_Info : public Effect_Info {
             "Heavy",
         };
         return options;
-    };
+    }
 
     static const char* const* round_modes(int64_t* length_out) {
         *length_out = 2;
@@ -44,7 +44,7 @@ struct Blur_Info : public Effect_Info {
             "Up",
         };
         return options;
-    };
+    }
 
     static constexpr uint32_t num_parameters = 2;
     static constexpr Parameter parameters[num_parameters] = {
@@ -69,7 +69,7 @@ class E_Blur : public Configurable_Effect<Blur_Info, Blur_Config> {
     virtual int save_legacy(unsigned char* data);
     virtual E_Blur* clone() { return new E_Blur(*this); }
 
-    virtual bool can_multithread() { return true; };
+    virtual bool can_multithread() { return true; }
     virtual int smp_begin(int max_threads,
                           char visdata[2][2][576],
                           int is_beat,

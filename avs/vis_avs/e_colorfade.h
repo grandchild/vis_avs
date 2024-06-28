@@ -69,7 +69,7 @@ class E_Colorfade : public Configurable_Effect<Colorfade_Info, Colorfade_Config>
     virtual int save_legacy(unsigned char* data) override;
     virtual E_Colorfade* clone() { return new E_Colorfade(*this); }
 
-    bool can_multithread() override { return true; };
+    bool can_multithread() override { return true; }
     int smp_begin(int max_threads,
                   char visdata[2][2][576],
                   int is_beat,

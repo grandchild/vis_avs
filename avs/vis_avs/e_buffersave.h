@@ -48,7 +48,7 @@ struct BufferSave_Info : public Effect_Info {
             "Alternate Restore/Save",
         };
         return options;
-    };
+    }
 
     static const char* const* blend_modes(int64_t* length_out) {
         *length_out = 12;
@@ -67,7 +67,7 @@ struct BufferSave_Info : public Effect_Info {
             /* 5*/ "Every Other Line",
         };
         return options;
-    };
+    }
 
     static void clear_buffer(Effect*, const Parameter*, const std::vector<int64_t>&);
     static void nudge_parity(Effect*, const Parameter*, const std::vector<int64_t>&);

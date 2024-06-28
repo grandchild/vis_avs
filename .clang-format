@@ -117,7 +117,10 @@ InsertTrailingCommas: Wrapped
 InsertBraces: true
 
 # Ensure that all files have a trailing newline.
-#InsertNewlineAtEOF: true
+InsertNewlineAtEOF: true
+
+# Remove unneded semicolons after function definitions.
+RemoveSemicolon: true
 
 # For an AVS effect in r_foo.cpp the main #includes are c_foo.h and (sometimes) r_foo.h.
 # Make clang-format aware of these, so that it sorts them at the top. But clang-format

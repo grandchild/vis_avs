@@ -50,8 +50,8 @@ struct Root_Info : public Effect_Info {
                                    "Authors of the preset"),
     };
 
-    virtual bool can_have_child_components() const { return true; };
-    virtual bool is_createable_by_user() const { return false; };
+    virtual bool can_have_child_components() const { return true; }
+    virtual bool is_createable_by_user() const { return false; }
     EFFECT_INFO_GETTERS;
 };
 
@@ -69,7 +69,7 @@ class E_Root : public Configurable_Effect<Root_Info, Root_Config> {
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
     virtual E_Root* clone() { return new E_Root(*this); }
-    int64_t get_num_renders() { return this->children.size(); };
+    int64_t get_num_renders() { return this->children.size(); }
     void start_buffer_context();
     void end_buffer_context();
 

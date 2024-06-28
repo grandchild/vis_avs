@@ -35,7 +35,7 @@ struct MovingParticle_Info : public Effect_Info {
             "Default",
         };
         return options;
-    };
+    }
 
     static void on_size_change(Effect*, const Parameter*, const std::vector<int64_t>&);
 

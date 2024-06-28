@@ -76,7 +76,7 @@ class E_Brightness : public Configurable_Effect<Brightness_Info, Brightness_Conf
     virtual int save_legacy(unsigned char* data);
     virtual E_Brightness* clone() { return new E_Brightness(*this); }
 
-    virtual bool can_multithread() { return true; };
+    virtual bool can_multithread() { return true; }
     virtual int smp_begin(int max_threads,
                           char visdata[2][2][576],
                           int is_beat,

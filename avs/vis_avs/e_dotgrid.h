@@ -43,7 +43,7 @@ struct DotGrid_Info : public Effect_Info {
             "Default",
         };
         return options;
-    };
+    }
 
     static constexpr uint32_t num_color_params = 1;
     static constexpr Parameter color_params[num_color_params] = {

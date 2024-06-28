@@ -462,13 +462,13 @@ struct Effect_Info {
     virtual const char* get_legacy_ape_id() const = 0;
     static constexpr uint32_t num_parameters = 0;
     static constexpr Parameter* parameters = nullptr;
-    virtual uint32_t get_num_parameters() const { return 0; };
-    virtual const Parameter* get_parameters() const { return nullptr; };
+    virtual uint32_t get_num_parameters() const { return 0; }
+    virtual const Parameter* get_parameters() const { return nullptr; }
     virtual const AVS_Parameter_Handle* get_parameters_for_api() const {
         return nullptr;
-    };
-    virtual bool can_have_child_components() const { return false; };
-    virtual bool is_createable_by_user() const { return true; };
+    }
+    virtual bool can_have_child_components() const { return false; }
+    virtual bool is_createable_by_user() const { return true; }
     const Parameter* get_parameter_from_handle(AVS_Parameter_Handle to_find) {
         return Effect_Info::_get_parameter_from_handle(
             this->get_num_parameters(), this->get_parameters(), to_find);
@@ -527,7 +527,7 @@ struct Effect_Info {
             }
         }
         return NULL;
-    };
+    }
 
     /**
      * In the case of nested parameters, the child handles have to be returned as a
@@ -551,7 +551,7 @@ struct Effect_Info {
             }
         }
         return h_parameter_children[parameter->handle].data();
-    };
+    }
 
     void load_config(Effect_Config* config,
                      Effect_Config* global_config,
@@ -584,23 +584,23 @@ bool operator!=(const Effect_Info& a, const Effect_Info* b);
  */
 // Use this first one only for effects that have no parameters, i.e. only "enable".
 // Use EFFECT_INFO_GETTERS for all other effects.
-#define EFFECT_INFO_GETTERS_NO_PARAMETERS                              \
-    static constexpr AVS_Effect_Handle handle = COMPTIME_HANDLE;       \
-    virtual uint32_t get_handle() const { return this->handle; };      \
-    virtual const char* get_group() const { return this->group; };     \
-    virtual const char* get_name() const { return this->name; };       \
-    virtual const char* get_help() const { return this->help; };       \
-    virtual int32_t get_legacy_id() const { return this->legacy_id; }; \
-    virtual const char* get_legacy_ape_id() const { return this->legacy_ape_id; };
+#define EFFECT_INFO_GETTERS_NO_PARAMETERS                             \
+    static constexpr AVS_Effect_Handle handle = COMPTIME_HANDLE;      \
+    virtual uint32_t get_handle() const { return this->handle; }      \
+    virtual const char* get_group() const { return this->group; }     \
+    virtual const char* get_name() const { return this->name; }       \
+    virtual const char* get_help() const { return this->help; }       \
+    virtual int32_t get_legacy_id() const { return this->legacy_id; } \
+    virtual const char* get_legacy_ape_id() const { return this->legacy_ape_id; }
 
-#define EFFECT_INFO_GETTERS                                                       \
-    EFFECT_INFO_GETTERS_NO_PARAMETERS                                             \
-    virtual uint32_t get_num_parameters() const { return this->num_parameters; }; \
-    virtual const Parameter* get_parameters() const { return this->parameters; }; \
-    virtual const AVS_Parameter_Handle* get_parameters_for_api() const {          \
-        static Parameter_Handle_List<num_parameters> parameter_handles_for_api(   \
-            parameters);                                                          \
-        return parameter_handles_for_api.handles;                                 \
+#define EFFECT_INFO_GETTERS                                                      \
+    EFFECT_INFO_GETTERS_NO_PARAMETERS                                            \
+    virtual uint32_t get_num_parameters() const { return this->num_parameters; } \
+    virtual const Parameter* get_parameters() const { return this->parameters; } \
+    virtual const AVS_Parameter_Handle* get_parameters_for_api() const {         \
+        static Parameter_Handle_List<num_parameters> parameter_handles_for_api(  \
+            parameters);                                                         \
+        return parameter_handles_for_api.handles;                                \
     }
 
 /**
@@ -639,11 +639,11 @@ struct parameter_dispatch;
 
 template <>
 struct parameter_dispatch<bool> {
-    static bool get(const uint8_t* config_data) { return *(bool*)config_data; };
+    static bool get(const uint8_t* config_data) { return *(bool*)config_data; }
     static void set(const Parameter*, uint8_t* addr, bool value) {
         *(bool*)addr = value;
     }
-    static bool zero() { return false; };
+    static bool zero() { return false; }
     static std::string trace(const Parameter*, bool value, uint8_t* config_data) {
         std::stringstream output;
         output << "set to " << std::boolalpha << value;
@@ -657,7 +657,7 @@ struct parameter_dispatch<bool> {
 
 template <>
 struct parameter_dispatch<int64_t> {
-    static int64_t get(const uint8_t* config_data) { return *((int64_t*)config_data); };
+    static int64_t get(const uint8_t* config_data) { return *((int64_t*)config_data); }
     static void set(const Parameter* parameter, uint8_t* addr, int64_t value) {
         auto _min = parameter->int_min;
         auto _max = parameter->int_max;
@@ -668,8 +668,8 @@ struct parameter_dispatch<int64_t> {
     }
     static std::vector<int64_t>& get_array(const uint8_t* config_data) {
         return *(std::vector<int64_t>*)config_data;
-    };
-    static int64_t zero() { return 0; };
+    }
+    static int64_t zero() { return 0; }
     static std::string trace(const Parameter* parameter,
                              int64_t value,
                              uint8_t* config_data) {
@@ -703,7 +703,7 @@ struct parameter_dispatch<int64_t> {
 
 template <>
 struct parameter_dispatch<double> {
-    static double get(const uint8_t* config_data) { return *(double*)config_data; };
+    static double get(const uint8_t* config_data) { return *(double*)config_data; }
     static void set(const Parameter* parameter, uint8_t* addr, double value) {
         auto _min = parameter->float_min;
         auto _max = parameter->float_max;
@@ -714,8 +714,8 @@ struct parameter_dispatch<double> {
     }
     static std::vector<double>& get_array(const uint8_t* config_data) {
         return *(std::vector<double>*)config_data;
-    };
-    static double zero() { return 0.0; };
+    }
+    static double zero() { return 0.0; }
     static std::string trace(const Parameter*, double value, uint8_t* config_data) {
         // create output stream with fixed representation and 3 decimal precision
         std::stringstream output;
@@ -733,14 +733,14 @@ template <>
 struct parameter_dispatch<uint64_t> {
     static uint64_t get(const uint8_t* config_data) {
         return *((uint64_t*)config_data);
-    };
+    }
     static void set(const Parameter*, uint8_t* addr, uint64_t value) {
         *(uint64_t*)addr = value;
     }
     static std::vector<uint64_t>& get_array(const uint8_t* config_data) {
         return *(std::vector<uint64_t>*)config_data;
-    };
-    static uint64_t zero() { return 0; };
+    }
+    static uint64_t zero() { return 0; }
     static std::string trace(const Parameter*, uint64_t value, uint8_t* config_data) {
         std::stringstream output;
         output << "set to 0x" << std::hex << std::setfill('0') << std::setw(8) << value;
@@ -757,7 +757,7 @@ template <>
 struct parameter_dispatch<const char*> {
     static const char* get(const uint8_t* config_data) {
         return ((std::string*)config_data)->c_str();
-    };
+    }
     static void set(const Parameter* parameter, uint8_t* addr, const char* value) {
         if (parameter->type == AVS_PARAM_RESOURCE) {
             bool value_is_in_options = false;
@@ -786,9 +786,9 @@ struct parameter_dispatch<const char*> {
             }
         }
         *(std::string*)addr = value;
-    };
+    }
 
-    static const char* zero() { return ""; };
+    static const char* zero() { return ""; }
     static std::string trace(const Parameter*,
                              const char* value,
                              uint8_t* config_data) {

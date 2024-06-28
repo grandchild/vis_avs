@@ -80,7 +80,7 @@ struct GlobalVariables_Info : public Effect_Info {
             "Every Frame",
         };
         return options;
-    };
+    }
 
     static void check_ranges(Effect*, const Parameter*, const std::vector<int64_t>&);
     static void save_ranges(Effect*, const Parameter*, const std::vector<int64_t>&);

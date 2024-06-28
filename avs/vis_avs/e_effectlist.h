@@ -111,7 +111,7 @@ struct EffectList_Info : public Effect_Info {
             "Minimum",
         };
         return options;
-    };
+    }
 
     static void recompile(Effect*, const Parameter*, const std::vector<int64_t>&);
 
@@ -186,9 +186,9 @@ class E_EffectList
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
     virtual E_EffectList* clone() { return new E_EffectList(*this); }
-    int64_t get_num_renders() { return this->children.size(); };
+    int64_t get_num_renders() { return this->children.size(); }
 
-    virtual bool can_multithread() { return true; };
+    virtual bool can_multithread() { return true; }
     void smp_render_list(int min_threads,
                          Effect* component,
                          char visdata[2][2][576],

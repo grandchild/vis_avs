@@ -35,7 +35,7 @@ struct ChannelShift_Info : public Effect_Info {
             "GRB",
         };
         return options;
-    };
+    }
 
     static constexpr uint32_t num_parameters = 2;
     static constexpr Parameter parameters[num_parameters] = {

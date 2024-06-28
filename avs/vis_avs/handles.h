@@ -10,8 +10,8 @@ class Handles {
     uint32_t state;
 
    public:
-    Handles() { this->state = 1000; };
-    AVS_Handle get() { return this->state++; };
+    Handles() { this->state = 1000; }
+    AVS_Handle get() { return this->state++; }
 
     /**
      * Generate a handle at compile time. Needs an input string that it will hash into a
@@ -25,7 +25,7 @@ class Handles {
      */
     static inline constexpr AVS_Handle comptime_get(const char* const input) {
         return Handles::_fnv1a(input) % 0xfffffffe + 1;
-    };
+    }
 
    private:
     static constexpr uint32_t FNV1A_OFFSET = 0x811c9dc5;
@@ -35,7 +35,7 @@ class Handles {
         return (input[0] == '\0')
                    ? value
                    : Handles::_fnv1a(&input[1], (value ^ input[0]) * FNV1A_PRIME);
-    };
+    }
 };
 
 // The stringification of __LINE__ would normally make it evaluate early, i.e. to the

@@ -878,14 +878,14 @@ bool CopyRGBSurfaceToYUVSurface(LPDDSURFACEDESC pddsd1,
 
         for (unsigned int x = 0; x < w; x += 2) {
             color1 = pPixels1[offset1++];
-            B = (color1)&0xFF;
+            B = (color1) & 0xFF;
             G = (color1 >> 8) & 0xFF;
             R = (color1 >> 16) & 0xFF;
             yuv[i1] = (77 * R + 150 * G + 29 * B) >> 8;
             yuv[i2] = (32768 - 38 * R - 74 * G + 112 * B) >> 8;
 
             color1 = pPixels1[offset1++];
-            B = (color1)&0xFF;
+            B = (color1) & 0xFF;
             G = (color1 >> 8) & 0xFF;
             R = (color1 >> 16) & 0xFF;
             yuv[i3] = (77 * R + 150 * G + 29 * B) >> 8;

@@ -206,7 +206,7 @@ struct Texer2_Info : public Effect_Info {
             examples[3].name,
         };
         return options;
-    };
+    }
     static const char* const* image_files(int64_t* length_out);
 
     static void on_file_change(Effect*, const Parameter*, const std::vector<int64_t>&);

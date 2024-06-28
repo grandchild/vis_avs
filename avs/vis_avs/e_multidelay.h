@@ -29,7 +29,7 @@ struct MultiDelay_Global_Buffer : public Effect_Config {
     uint32_t frame_delay = 0;
     MultiDelay_Global_Buffer()
         : buffer(calloc(1, 1)), in_pos(this->buffer), out_pos(this->buffer){};
-    ~MultiDelay_Global_Buffer() { free(this->buffer); };
+    ~MultiDelay_Global_Buffer() { free(this->buffer); }
 };
 
 struct MultiDelay_Global_Config : public Effect_Config {
@@ -40,7 +40,7 @@ struct MultiDelay_Global_Config : public Effect_Config {
     uint32_t frame_mem_size = 1;
     uint32_t old_frame_mem_size = 1;
     uint32_t render_id = 0;
-    MultiDelay_Global_Config() { this->buffers.resize(MULTIDELAY_NUM_BUFFERS); };
+    MultiDelay_Global_Config() { this->buffers.resize(MULTIDELAY_NUM_BUFFERS); }
 };
 
 struct MultiDelay_Info : public Effect_Info {
@@ -57,7 +57,7 @@ struct MultiDelay_Info : public Effect_Info {
             "Output",
         };
         return options;
-    };
+    }
 
     static void on_delay(Effect*, const Parameter*, const std::vector<int64_t>&);
 

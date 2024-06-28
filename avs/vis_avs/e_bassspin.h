@@ -30,7 +30,7 @@ struct BassSpin_Info : public Effect_Info {
             "Filled",
         };
         return options;
-    };
+    }
 
     static constexpr uint32_t num_parameters = 5;
     static constexpr Parameter parameters[num_parameters] = {

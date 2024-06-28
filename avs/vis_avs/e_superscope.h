@@ -266,17 +266,17 @@ struct SuperScope_Info : public Effect_Info {
         *length_out = 2;
         static const char* const options[2] = {"Waveform", "Spectrum"};
         return options;
-    };
+    }
     static const char* const* channels(int64_t* length_out) {
         *length_out = 3;
         static const char* const options[3] = {"Center", "Left", "Right"};
         return options;
-    };
+    }
     static const char* const* drawmodes(int64_t* length_out) {
         *length_out = 2;
         static const char* const options[2] = {"Dots", "Lines"};
         return options;
-    };
+    }
     static const char* const* example_names(int64_t* length_out) {
         *length_out = 14;
         static const char* const options[14] = {
@@ -296,7 +296,7 @@ struct SuperScope_Info : public Effect_Info {
             examples[13].name,
         };
         return options;
-    };
+    }
 
     static constexpr uint32_t num_color_params = 1;
     static constexpr Parameter color_params[num_color_params] = {

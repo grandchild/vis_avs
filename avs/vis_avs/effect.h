@@ -48,7 +48,7 @@ class Effect {
     Effect* duplicate(Effect* to_duplicate);
     bool is_ancestor_of(Effect* descendent);
     void set_enabled(bool enabled);
-    virtual void on_enable(bool enabled) { (void)enabled; };
+    virtual void on_enable(bool enabled) { (void)enabled; }
     Effect* find_by_handle(AVS_Component_Handle handle);
     const AVS_Component_Handle* get_child_handles_for_api();
 
@@ -104,18 +104,18 @@ class Effect {
                        int h) {
         (void)visdata, (void)is_beat, (void)framebuffer, (void)fbout, (void)w, (void)h;
         return 0;  // returns 1 if fbout has dest
-    };
+    }
     virtual void render_with_context(RenderContext&){};
     virtual void load(json&){};
-    virtual json save() { return nullptr; };
+    virtual json save() { return nullptr; }
     virtual char* get_desc() = 0;
     virtual int32_t get_legacy_id() { return -1; }
     virtual const char* get_legacy_ape_id() { return nullptr; }
-    virtual void load_legacy(unsigned char* data, int len) { (void)data, (void)len; };
+    virtual void load_legacy(unsigned char* data, int len) { (void)data, (void)len; }
     virtual int save_legacy(unsigned char* data) {
         (void)data;
         return 0;
-    };
+    }
     static uint32_t string_load_legacy(const char* src,
                                        std::string& dest,
                                        uint32_t max_length);
@@ -131,7 +131,7 @@ class Effect {
                                           uint32_t max_length);
 
     // multithread render api
-    virtual bool can_multithread() { return false; };
+    virtual bool can_multithread() { return false; }
     virtual int smp_getflags() { return 0; }
     virtual int smp_begin(int max_threads,
                           char visdata[2][2][576],
@@ -154,7 +154,7 @@ class Effect {
                             int h) {
         (void)this_thread, (void)max_threads, (void)visdata, (void)is_beat,
             (void)framebuffer, (void)fbout, (void)w, (void)h;
-    };
+    }
     virtual int smp_finish(char visdata[2][2][576],
                            int is_beat,
                            int* framebuffer,
@@ -163,7 +163,7 @@ class Effect {
                            int h) {
         (void)visdata, (void)is_beat, (void)framebuffer, (void)fbout, (void)w, (void)h;
         return 0;
-    };
+    }
 
     void print_tree(std::string indent = "");
     virtual void print_config(const std::string& indent) = 0;

@@ -46,7 +46,7 @@ struct DynamicDistanceModifier_Info : public Effect_Info {
             "50/50",
         };
         return options;
-    };
+    }
 
     static void recompile(Effect*, const Parameter*, const std::vector<int64_t>&);
     static constexpr uint32_t num_parameters = 6;

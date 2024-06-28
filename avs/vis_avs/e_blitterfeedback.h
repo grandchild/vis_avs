@@ -30,7 +30,7 @@ struct BlitterFeedback_Info : public Effect_Info {
             "50/50",
         };
         return options;
-    };
+    }
 
     static void on_zoom_change(Effect*, const Parameter*, const std::vector<int64_t>&);
 

@@ -38,7 +38,7 @@ struct Video_Info : public Effect_Info {
             "50/50 + On-Beat Additive",
         };
         return options;
-    };
+    }
     static const char* const* resampling_modes(int64_t* length_out) {
         *length_out = 5;
         static const char* const options[5] = {
@@ -49,7 +49,7 @@ struct Video_Info : public Effect_Info {
             "Spline",
         };
         return options;
-    };
+    }
 
     static void on_file_change(Effect*, const Parameter*, const std::vector<int64_t>&);
 

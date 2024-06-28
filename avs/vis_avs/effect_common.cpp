@@ -9,7 +9,7 @@ const char* const* audio_sources(int64_t* length_out) {
         "Spectrum",
     };
     return options;
-};
+}
 
 const char* const* draw_modes(int64_t* length_out) {
     if (length_out) {
@@ -21,7 +21,7 @@ const char* const* draw_modes(int64_t* length_out) {
         "Solid",
     };
     return options;
-};
+}
 
 const char* const* audio_channels(int64_t* length_out) {
     if (length_out) {
@@ -33,7 +33,7 @@ const char* const* audio_channels(int64_t* length_out) {
         "Center",
     };
     return options;
-};
+}
 
 const char* const* h_positions(int64_t* length_out) {
     if (length_out) {
@@ -45,7 +45,7 @@ const char* const* h_positions(int64_t* length_out) {
         "Center",
     };
     return options;
-};
+}
 
 const char* const* v_positions(int64_t* length_out) {
     if (length_out) {
@@ -57,7 +57,7 @@ const char* const* v_positions(int64_t* length_out) {
         "Center",
     };
     return options;
-};
+}
 
 const char* const* blend_modes(int64_t* length_out) {
     if (length_out) {
@@ -76,7 +76,7 @@ const char* const* blend_modes(int64_t* length_out) {
         "Minimum",
     };
     return options;
-};
+}
 
 const char* const* blend_modes_simple(int64_t* length_out) {
     if (length_out) {
@@ -88,4 +88,4 @@ const char* const* blend_modes_simple(int64_t* length_out) {
         "Additive",
     };
     return options;
-};
+}

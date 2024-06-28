@@ -120,26 +120,26 @@ class AVS {
                     this->avs->handle, this->effect->handle, this->handle, &this->info);
             }
         }
-        AVS_Parameter_Type type() const { return this->info.type; };
-        std::string name() const { return this->info.name; };
-        std::string description() const { return this->info.description; };
-        int64_t int_min() const { return this->info.int_min; };
-        int64_t int_max() const { return this->info.int_max; };
-        double float_min() const { return this->info.float_min; };
-        double float_max() const { return this->info.float_max; };
+        AVS_Parameter_Type type() const { return this->info.type; }
+        std::string name() const { return this->info.name; }
+        std::string description() const { return this->info.description; }
+        int64_t int_min() const { return this->info.int_min; }
+        int64_t int_max() const { return this->info.int_max; }
+        double float_min() const { return this->info.float_min; }
+        double float_max() const { return this->info.float_max; }
         std::vector<std::string> options() {
             avs_parameter_info(
                 this->avs->handle, this->effect->handle, this->handle, &this->info);
             return std::vector<std::string>(
                 this->info.options, this->info.options + this->info.options_length);
-        };
+        }
         std::vector<Parameter> children() {
             std::vector<Parameter> out;
             for (uint32_t i = 0; i < this->info.children_length; i++) {
                 out.emplace_back(this->avs, this->effect, this->info.children[i]);
             }
             return out;
-        };
+        }
     };
     class Effect {
         AVS* avs;
@@ -153,11 +153,11 @@ class AVS {
             this->info.name = "";
             this->info.help = "";
             avs_effect_info(this->avs->handle, this->handle, &this->info);
-        };
+        }
 
-        std::string group() const { return this->info.group; };
-        std::string name() const { return this->info.name; };
-        std::string help() const { return this->info.help; };
+        std::string group() const { return this->info.group; }
+        std::string name() const { return this->info.name; }
+        std::string help() const { return this->info.help; }
         std::vector<Parameter> children() {
             std::vector<Parameter> out;
             if (avs_effect_info(this->avs->handle, this->handle, &this->info)) {
@@ -166,7 +166,7 @@ class AVS {
                 }
             }
             return out;
-        };
+        }
     };
     template <typename T>
     class Readonly_Array {
@@ -177,9 +177,9 @@ class AVS {
        public:
         Readonly_Array() = delete;  // use `Readonly_Array(data, size)`
         Readonly_Array(const T* data, size_t size) : _size(size), _data(data){};
-        size_t size() const { return this->_size; };
-        const T* data() const { return this->_data; };
-        const T& operator[](size_t index) const { return this->_data[index]; };
+        size_t size() const { return this->_size; }
+        const T* data() const { return this->_data; }
+        const T& operator[](size_t index) const { return this->_data[index]; }
     };
 
    public:
@@ -203,7 +203,7 @@ class AVS {
         for (auto effect : this->effects_library) {
             this->effects_by_name[effect.name()] = &effect;
         }
-    };
+    }
     ~AVS() { avs_free(this->handle); }
     AVS(AVS&) = delete;  // Always call by reference, e.g.: void foo(AVS& avs) {...}
 
@@ -259,9 +259,9 @@ class AVS {
             return this->_error;
         }
     }
-    void set_error(std::string error_str) { this->_error = std::move(error_str); };
-    void clear_error() { this->_error = ""; };
-    static std::string global_error_str() { return avs_error_str(0); };
+    void set_error(std::string error_str) { this->_error = std::move(error_str); }
+    void clear_error() { this->_error = ""; }
+    static std::string global_error_str() { return avs_error_str(0); }
 
    private:
     std::string _error;
@@ -271,17 +271,17 @@ class AVS {
         AVS* avs;
         Has_AVS_Ref() = delete;
         explicit Has_AVS_Ref(AVS* avs) : avs(avs){};
-        AVS_Handle avs_handle() { return this->avs != NULL ? this->avs->handle : 0; };
+        AVS_Handle avs_handle() { return this->avs != NULL ? this->avs->handle : 0; }
         void clear_error() {
             if (this->avs != NULL) {
                 this->avs->clear_error();
             }
-        };
+        }
         void set_error(const std::string& error_msg) {
             if (this->avs != NULL) {
                 this->avs->set_error(error_msg);
             }
-        };
+        }
     };
 
     /**

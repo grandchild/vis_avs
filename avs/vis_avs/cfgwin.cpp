@@ -460,7 +460,7 @@ static BOOL CALLBACK DlgProc_Disp(HWND hwndDlg,
                     cfg_bkgnd_render =
                         (IsDlgButtonChecked(hwndDlg, IDC_BKGND_RENDER) ? 1 : 0)
                         | (IsDlgButtonChecked(hwndDlg, IDC_SETDESKTOPCOLOR) ? 2 : 0);
-                update_overlayshit : {
+                update_overlayshit: {
                     RECT r;
                     GetClientRect_adj(g_hwnd, &r);
                     DDraw_Resize(r.right, r.bottom, cfg_fs_d & 2);

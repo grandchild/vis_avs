@@ -100,7 +100,7 @@ void Audio::get(AudioData& audio_data, int64_t until_time_samples) {
     // this->fft->time_to_frequency_domain(audio_data.osc.right, audio_data.spec.right);
     audio_data.osc.average_center();
     // audio_data.spec.average_center();
-};
+}
 
 int32_t Audio::set(const float* audio_left,
                    const float* audio_right,

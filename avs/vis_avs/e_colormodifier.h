@@ -127,7 +127,7 @@ struct ColorModifier_Info : public Effect_Info {
             examples[9].name,
         };
         return options;
-    };
+    }
 
     static void recompile(Effect*, const Parameter*, const std::vector<int64_t>&);
     static void load_example(Effect*, const Parameter*, const std::vector<int64_t>&);

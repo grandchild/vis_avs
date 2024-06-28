@@ -31,7 +31,7 @@ struct MultiFilter_Info : public Effect_Info {
             "Infinite Root Multiplier + Small Border Convolution",
         };
         return options;
-    };
+    }
 
     static constexpr uint32_t num_parameters = 2;
     static constexpr Parameter parameters[num_parameters] = {

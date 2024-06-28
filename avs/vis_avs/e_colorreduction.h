@@ -38,7 +38,7 @@ struct ColorReduction_Info : public Effect_Info {
             "256",
         };
         return options;
-    };
+    }
 
     static constexpr uint32_t num_parameters = 1;
     static constexpr Parameter parameters[num_parameters] = {

@@ -35,17 +35,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "r_defs.h"
 
 #define PUT_INT(y)                   \
-    data[pos] = (y)&255;             \
+    data[pos] = (y) & 255;           \
     data[pos + 1] = (y >> 8) & 255;  \
     data[pos + 2] = (y >> 16) & 255; \
     data[pos + 3] = (y >> 24) & 255
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
 
-#define _R(x)         ((x)&0xff)
+#define _R(x)         ((x) & 0xff)
 #define _G(x)         (((x)) & 0xff00)
 #define _B(x)         (((x)) & 0xff0000)
-#define _RGB(r, g, b) ((r) | ((g)&0xff00) | ((b)&0xff0000))
+#define _RGB(r, g, b) ((r) | ((g) & 0xff00) | ((b) & 0xff0000))
 
 E_Water::E_Water(AVS_Instance* avs)
     : Configurable_Effect(avs), lastframe(NULL), lastframe_size(0) {}

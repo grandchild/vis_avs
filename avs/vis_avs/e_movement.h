@@ -259,7 +259,7 @@ struct Movement_Info : public Effect_Info {
             "50/50",
         };
         return options;
-    };
+    }
 
     static const char* const* coordinates(int64_t* length_out) {
         *length_out = 2;
@@ -268,7 +268,7 @@ struct Movement_Info : public Effect_Info {
             "Cartesian",
         };
         return options;
-    };
+    }
 
     static const char* const* effect_names(int64_t* length_out) {
         *length_out = num_effects;
@@ -281,7 +281,7 @@ struct Movement_Info : public Effect_Info {
             effects[20].name, effects[21].name, effects[22].name,
         };
         return options;
-    };
+    }
 
     static void recreate_tab(Effect*, const Parameter*, const std::vector<int64_t>&);
     static void recompile(Effect*, const Parameter*, const std::vector<int64_t>&);
@@ -343,7 +343,7 @@ class E_Movement
     virtual int save_legacy(unsigned char* data);
     virtual E_Movement* clone() { return new E_Movement(*this); }
 
-    virtual bool can_multithread() { return true; };
+    virtual bool can_multithread() { return true; }
     virtual int smp_begin(int max_threads,
                           char visdata[2][2][576],
                           int is_beat,

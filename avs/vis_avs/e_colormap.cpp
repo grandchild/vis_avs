@@ -27,7 +27,7 @@ index from the baked map.
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
 #define PUT_INT(y)                      \
-    data[pos] = (y)&0xff;               \
+    data[pos] = (y) & 0xff;             \
     data[pos + 1] = ((y) >> 8) & 0xff;  \
     data[pos + 2] = ((y) >> 16) & 0xff; \
     data[pos + 3] = ((y) >> 24) & 0xff

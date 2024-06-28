@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "r_defs.h"
 
 #define PUT_INT(y)                   \
-    data[pos] = (y)&255;             \
+    data[pos] = (y) & 255;           \
     data[pos + 1] = (y >> 8) & 255;  \
     data[pos + 2] = (y >> 16) & 255; \
     data[pos + 3] = (y >> 24) & 255
@@ -52,10 +52,10 @@ static unsigned int mmx_mask2[2] = {MASK_SH2, MASK_SH2};
 static unsigned int mmx_mask3[2] = {MASK_SH3, MASK_SH3};
 static unsigned int mmx_mask4[2] = {MASK_SH4, MASK_SH4};
 
-#define DIV_2(x)  (((x)&MASK_SH1) >> 1)
-#define DIV_4(x)  (((x)&MASK_SH2) >> 2)
-#define DIV_8(x)  (((x)&MASK_SH3) >> 3)
-#define DIV_16(x) (((x)&MASK_SH4) >> 4)
+#define DIV_2(x)  (((x) & MASK_SH1) >> 1)
+#define DIV_4(x)  (((x) & MASK_SH2) >> 2)
+#define DIV_8(x)  (((x) & MASK_SH3) >> 3)
+#define DIV_16(x) (((x) & MASK_SH4) >> 4)
 
 constexpr Parameter Blur_Info::parameters[];
 

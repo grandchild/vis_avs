@@ -36,7 +36,7 @@ struct CustomBPM_Info : public Effect_Info {
             "Invert",
         };
         return options;
-    };
+    }
 
     static constexpr uint32_t num_parameters = 6;
     static constexpr Parameter parameters[num_parameters] = {

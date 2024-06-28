@@ -219,10 +219,10 @@ class AVS_Video {
             return this->pixel_format == other.pixel_format
                    && this->width == other.width && this->height == other.height
                    && this->scale_mode == other.scale_mode;
-        };
+        }
         inline bool operator!=(const Output_Format& other) {
             return !this->operator==(other);
-        };
+        }
     };
 
     struct Resample_Info {
