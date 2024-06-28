@@ -197,20 +197,52 @@ elseif(LINUX)
     set(AVS_DYLIB_EXTENSION "so")
 endif()
 
-ExternalProject_Add(avsrs
-    DEPENDS libavs
-    SOURCE_DIR "${CMAKE_SOURCE_DIR}"
-    CONFIGURE_COMMAND ""  # default configure looks for the toolchain file in parent dir
-    BINARY_DIR "${CMAKE_SOURCE_DIR}"
-    BUILD_COMMAND ${CMAKE_COMMAND} -E env
-        "RUSTFLAGS=-L${CMAKE_BINARY_DIR}"
-        LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}
-        cargo build --release --target-dir ${CMAKE_BINARY_DIR}
-    INSTALL_COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_BINARY_DIR}/i686-unknown-linux-gnu/release/avs
-        ${CMAKE_BINARY_DIR}/
-    LOG_BUILD ON
-)
+
+# Rust
+if(WIN32)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        set(RUST_TARGET "i686-pc-windows-msvc")
+    else()
+        set(RUST_TARGET "i686-pc-windows-gnu")
+    endif()
+elseif(LINUX)
+    set(RUST_TARGET "i686-unknown-linux-gnu")
+endif()
+find_program(RUSTC rustc)
+find_program(CARGO cargo)
+if(NOT RUSTC)
+    message(WARNING "Rust compiler not found. Rust code skipped.")
+    set(SKIP_RUST ON)
+elseif(NOT CARGO)
+    message(WARNING "Cargo not found. Rust code skipped.")
+    set(SKIP_RUST ON)
+else()
+    execute_process(COMMAND ${RUSTC} --target ${RUST_TARGET} --print target-libdir
+        OUTPUT_VARIABLE RUST_LIBDIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(NOT IS_DIRECTORY ${RUST_LIBDIR})
+        message(WARNING "Rust toolchain for \"${RUST_TARGET}\" not found. Rust code skipped.")
+        set(SKIP_RUST ON)
+    endif()
+endif()
+if(NOT SKIP_RUST)
+    ExternalProject_Add(avsrs
+        DEPENDS libavs
+        SOURCE_DIR "${CMAKE_SOURCE_DIR}"
+        CONFIGURE_COMMAND ""  # default configure looks for the toolchain file in parent dir
+        BINARY_DIR "${CMAKE_SOURCE_DIR}"
+        BUILD_COMMAND ${CMAKE_COMMAND} -E env
+            "RUSTFLAGS=-L${CMAKE_BINARY_DIR}"
+            LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}
+            cargo build --target ${RUST_TARGET} --release --target-dir ${CMAKE_BINARY_DIR}
+        INSTALL_COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_BINARY_DIR}/${RUST_TARGET}/release/avs
+            ${CMAKE_BINARY_DIR}/
+        LOG_BUILD ON
+    )
+endif()
+
 
 if(NOT MSVC)
     # # tests
