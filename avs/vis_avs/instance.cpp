@@ -48,6 +48,9 @@ bool AVS_Instance::render_frame(void* framebuffer,
     auto render_context = RenderContext(
         width, height, pixel_format, *this->global_buffers, this->audio, framebuffer);
     this->audio.get();
+    if (this->beat_source == AVS_BEAT_EXTERNAL) {
+        this->audio.is_beat = is_beat;
+    }
     this->root.render_with_context(render_context);
 
     // char visdata[2][2][AUDIO_BUFFER_LEN];
