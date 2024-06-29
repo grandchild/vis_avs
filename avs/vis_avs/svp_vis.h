@@ -71,8 +71,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // files should be renamed from .DLL to .SVP
 
+#ifdef _WIN32
 #ifndef DLLEXPORT
 #define DLLEXPORT __declspec(dllexport)
+#endif
+#else
+#define DLLEXPORT
 #endif
 
 #define VI_WAVEFORM 0x0001  // set if you need the waveform
