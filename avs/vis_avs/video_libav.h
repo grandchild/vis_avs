@@ -9,10 +9,10 @@ extern "C" {
 }
 
 #ifdef _WIN32
-#define LIBAV_SUFFIX_AVCODEC  "-60"
-#define LIBAV_SUFFIX_AVFORMAT "-60"
-#define LIBAV_SUFFIX_AVUTIL   "-58"
-#define LIBAV_SUFFIX_SWSCALE  "-7"
+#define LIBAV_SUFFIX_AVCODEC  "-61"
+#define LIBAV_SUFFIX_AVFORMAT "-61"
+#define LIBAV_SUFFIX_AVUTIL   "-59"
+#define LIBAV_SUFFIX_SWSCALE  "-8"
 #elif __linux__
 #define LIBAV_SUFFIX_AVCODEC  ".so"
 #define LIBAV_SUFFIX_AVFORMAT ".so"
