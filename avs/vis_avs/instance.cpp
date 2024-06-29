@@ -46,7 +46,7 @@ bool AVS_Instance::render_frame(void* framebuffer,
                                 AVS_Pixel_Format pixel_format) {
     this->init_global_buffers_if_needed(width, height, pixel_format);
     auto render_context =
-        RenderContext(pixel_format, width, height, *this->global_buffers, framebuffer);
+        RenderContext(width, height, pixel_format, *this->global_buffers, framebuffer);
     this->audio.get(render_context.audio);
     this->root.render_with_context(render_context);
 

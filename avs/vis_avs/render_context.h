@@ -50,18 +50,18 @@ struct Buffer {
 };
 
 struct RenderContext {
-    AVS_Pixel_Format pixel_format = AVS_PIXEL_RGB0_8;
+    Buffer framebuffers[2];
     size_t w = 0;
     size_t h = 0;
-    Buffer framebuffers[2];
+    AVS_Pixel_Format pixel_format = AVS_PIXEL_RGB0_8;
     std::array<Buffer, 8>& global_buffers;
     AudioData audio;
     bool is_preinit = false;
     bool needs_final_fb_copy = false;
 
-    RenderContext(AVS_Pixel_Format pixel_format,
-                  size_t w,
+    RenderContext(size_t w,
                   size_t h,
+                  AVS_Pixel_Format pixel_format,
                   std::array<Buffer, 8>& global_buffers,
                   void* external_buffer = nullptr);
     void swap_framebuffers();

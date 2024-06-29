@@ -79,14 +79,14 @@ void Buffer::swap(Buffer& other) {
     std::swap(this->owns_data, other.owns_data);
 }
 
-RenderContext::RenderContext(AVS_Pixel_Format pixel_format,
-                             size_t w,
+RenderContext::RenderContext(size_t w,
                              size_t h,
+                             AVS_Pixel_Format pixel_format,
                              std::array<Buffer, 8>& global_buffers,
                              void* external_buffer)
-    : pixel_format(pixel_format),
-      w(w),
+    : w(w),
       h(h),
+      pixel_format(pixel_format),
       framebuffers{Buffer(w, h, pixel_format, external_buffer),
                    Buffer(w, h, pixel_format)},
       global_buffers(global_buffers) {}
