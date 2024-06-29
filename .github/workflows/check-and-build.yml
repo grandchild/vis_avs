@@ -30,8 +30,11 @@ jobs:
               -verbose
           )
           set -x -u -o pipefail
+          shopt -s globstar  # Enable **/ for recursive globbing
           clang-format --version
           git ls-files '*.c' '*.cpp' '*.h' \
+              | grep -vf <(grep -rl "^DisableFormat: *true" **/.clang-format \
+                           | sed 's:/.clang-format::') \
               | xargs clang-format "${clang_format_args[@]}"
           git diff --exit-code  # i.e. fail CI on non-empty diff
 
