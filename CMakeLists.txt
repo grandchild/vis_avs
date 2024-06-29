@@ -1,8 +1,9 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.18)
 
 project(vis_avs VERSION 2.82)
 
 include(CheckIncludeFiles)
+include(CheckLinkerFlag)
 include(ExternalProject)
 
 file(GLOB SRC_FILES_NS_EEL
@@ -129,8 +130,6 @@ add_library(avs_common OBJECT
 )
 
 add_library(libavs SHARED $<TARGET_OBJECTS:avs_common>)
-add_executable(avs-cli avs/avs-cli.c)
-target_link_libraries(avs-cli libavs)
 
 check_include_files(
     "libavcodec/avcodec.h;libavformat/avformat.h;libswscale/swscale.h"
@@ -155,7 +154,22 @@ if(WIN32)
     )
     target_compile_definitions(vis_avs PUBLIC CAN_TALK_TO_WINAMP)
 
-    target_link_options(avs-cli PUBLIC -Wl,--disable-nxcompat)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        check_linker_flag(C "/NXCOMPAT:NO" HAS_DISABLE_NXCOMPAT)
+        set(NXCOMPAT_DISABLED_FLAG "/NXCOMPAT:NO")
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        check_linker_flag(C "-Wl,--disable-nxcompat" HAS_DISABLE_NXCOMPAT)
+        set(NXCOMPAT_DISABLED_FLAG "-Wl,--disable-nxcompat")
+    endif()
+    if(HAS_DISABLE_NXCOMPAT)
+        add_executable(avs-cli avs/avs-cli.c)
+        target_link_libraries(avs-cli libavs)
+        target_link_options(avs-cli PUBLIC ${NXCOMPAT_DISABLED_FLAG})
+    else()
+        message(WARNING "Linker flag --disable-nxcompat not supported."
+                        " No standalone Win32 C/C++ binaries possible (libs will work)."
+                        " Needs binutils 2.36 or higher.")
+    endif()
     target_link_libraries(vis_avs
         ddraw  # draw.cpp includes ddraw.h
                # https://docs.microsoft.com/en-us/windows/win32/api/ddraw/nf-ddraw-directdrawcreate
@@ -195,6 +209,8 @@ elseif(LINUX)
     target_link_libraries(libavs ${PIPEWIRE_LIBRARIES})
     target_link_options(libavs PUBLIC -Wl,-m elf_i386)
     set(AVS_DYLIB_EXTENSION "so")
+    add_executable(avs-cli avs/avs-cli.c)
+    target_link_libraries(avs-cli libavs)
 endif()
 
 
