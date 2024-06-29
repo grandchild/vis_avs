@@ -95,11 +95,10 @@ void Audio::get(AudioData& audio_data, int64_t until_time_samples) {
         audio_data.osc.right[it.linear - dest_back_offset] =
             this->buffer[it.ring].right;
     }
-    // TODO: Needs float audio data.
-    // this->fft->time_to_frequency_domain(audio_data.osc.left, audio_data.spec.left);
-    // this->fft->time_to_frequency_domain(audio_data.osc.right, audio_data.spec.right);
+    this->fft->time_to_frequency_domain(audio_data.osc.left, audio_data.spec.left);
+    this->fft->time_to_frequency_domain(audio_data.osc.right, audio_data.spec.right);
     audio_data.osc.average_center();
-    // audio_data.spec.average_center();
+    audio_data.spec.average_center();
 }
 
 int32_t Audio::set(const float* audio_left,
