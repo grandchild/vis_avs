@@ -74,9 +74,7 @@ E_Video::E_Video(AVS_Instance* avs)
 E_Video::~E_Video() { close_file(); }
 
 static void add_file_callback(const char* file, void* data) {
-    auto base_path_len = ((E_Video*)data)->avs->base_path.size();
-    // remove base_path + "/" from the front of the filepath
-    E_Video::filenames.emplace_back(file + base_path_len + 1);
+    E_Video::filenames.emplace_back(file);
 }
 
 void E_Video::find_video_files() {

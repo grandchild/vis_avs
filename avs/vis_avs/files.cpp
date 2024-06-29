@@ -161,8 +161,10 @@ void find_files_by_extensions_(const char* path,
                  &glob_info);
             is_first_glob_call = false;
         }
+        size_t path_length = strnlen(path, MAX_PATH - 1);
         for (size_t i = 0; i < glob_info.gl_pathc; i++) {
-            callback(glob_info.gl_pathv[i], callback_data);
+            // remove path + "/" from the front of the filepath
+            callback(glob_info.gl_pathv[i] + path_length + 1, callback_data);
         }
         globfree(&glob_info);
     }
