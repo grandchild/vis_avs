@@ -4,21 +4,6 @@
 #include <cstdlib>
 #include <cstring>
 
-void AudioData::to_legacy_visdata(char visdata[2][2][AUDIO_BUFFER_LEN]) {
-    for (int i = 0; i < AUDIO_BUFFER_LEN; ++i) {
-        auto ileft = (int8_t)(this->osc.left[i] * 127.0f);
-        auto iright = (int8_t)(this->osc.right[i] * 127.0f);
-        visdata[1 /*osc*/][0][i] = ileft;
-        visdata[1 /*osc*/][1][i] = iright;
-    }
-    for (int i = 0; i < AUDIO_BUFFER_LEN; ++i) {
-        auto ileft = (uint8_t)(this->spec.left[i] * 255.0f);
-        auto iright = (uint8_t)(this->spec.right[i] * 255.0f);
-        visdata[0 /*spec*/][0][i] = (int8_t)ileft;
-        visdata[0 /*spec*/][1][i] = (int8_t)iright;
-    }
-}
-
 Buffer::Buffer(size_t w, size_t h, AVS_Pixel_Format pixel_format, void* external_buffer)
     : w(w), h(h), pixel_format(pixel_format), data(external_buffer) {
     if (this->data == nullptr) {
@@ -83,13 +68,15 @@ RenderContext::RenderContext(size_t w,
                              size_t h,
                              AVS_Pixel_Format pixel_format,
                              std::array<Buffer, 8>& global_buffers,
+                             Audio& audio,
                              void* external_buffer)
     : w(w),
       h(h),
       pixel_format(pixel_format),
       framebuffers{Buffer(w, h, pixel_format, external_buffer),
                    Buffer(w, h, pixel_format)},
-      global_buffers(global_buffers) {}
+      global_buffers(global_buffers),
+      audio(audio) {}
 
 void RenderContext::swap_framebuffers() {
     std::swap(this->framebuffers[0], this->framebuffers[1]);

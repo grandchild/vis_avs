@@ -67,7 +67,7 @@ Audio::~Audio() {
     delete this->fft;
 }
 
-void Audio::get(AudioData& audio_data, int64_t until_time_samples) {
+void Audio::get(int64_t until_time_samples) {
     size_t dest_back_offset = 0;
     if (until_time_samples == 0) {
         until_time_samples = this->latest_sample_time;
@@ -75,30 +75,24 @@ void Audio::get(AudioData& audio_data, int64_t until_time_samples) {
         auto silence_samples = until_time_samples - this->latest_sample_time;
         dest_back_offset += silence_samples;
         auto dest_silence_start = AUDIO_BUFFER_LEN - silence_samples;
-        memset(&audio_data.osc.left[dest_silence_start],
-               0,
-               silence_samples * sizeof(float));
-        memset(&audio_data.osc.right[dest_silence_start],
-               0,
-               silence_samples * sizeof(float));
-        memset(&audio_data.spec.left[dest_silence_start],
-               0,
-               silence_samples * sizeof(float));
-        memset(&audio_data.spec.right[dest_silence_start],
-               0,
-               silence_samples * sizeof(float));
+        memset(&this->osc.left[dest_silence_start], 0, silence_samples * sizeof(float));
+        memset(
+            &this->osc.right[dest_silence_start], 0, silence_samples * sizeof(float));
+        memset(
+            &this->spec.left[dest_silence_start], 0, silence_samples * sizeof(float));
+        memset(
+            &this->spec.right[dest_silence_start], 0, silence_samples * sizeof(float));
     }
     for (RingIter it(this->buffer.size() - dest_back_offset, this->write_head, true);
          it.linear > dest_back_offset;
          ++it) {
-        audio_data.osc.left[it.linear - dest_back_offset] = this->buffer[it.ring].left;
-        audio_data.osc.right[it.linear - dest_back_offset] =
-            this->buffer[it.ring].right;
+        this->osc.left[it.linear - dest_back_offset] = this->buffer[it.ring].left;
+        this->osc.right[it.linear - dest_back_offset] = this->buffer[it.ring].right;
     }
-    this->fft->time_to_frequency_domain(audio_data.osc.left, audio_data.spec.left);
-    this->fft->time_to_frequency_domain(audio_data.osc.right, audio_data.spec.right);
-    audio_data.osc.average_center();
-    audio_data.spec.average_center();
+    this->fft->time_to_frequency_domain(this->osc.left, this->spec.left);
+    this->fft->time_to_frequency_domain(this->osc.right, this->spec.right);
+    this->osc.average_center();
+    this->spec.average_center();
 }
 
 int32_t Audio::set(const float* audio_left,
@@ -136,6 +130,21 @@ int32_t Audio::set(const float* audio_left,
         lock_unlock(this->lock);
     }
     return remaining;
+}
+
+void Audio::to_legacy_visdata(char visdata[2][2][AUDIO_BUFFER_LEN]) {
+    for (int i = 0; i < AUDIO_BUFFER_LEN; ++i) {
+        auto ileft = (int8_t)(this->osc.left[i] * 127.0f);
+        auto iright = (int8_t)(this->osc.right[i] * 127.0f);
+        visdata[1 /*osc*/][0][i] = ileft;
+        visdata[1 /*osc*/][1][i] = iright;
+    }
+    for (int i = 0; i < AUDIO_BUFFER_LEN; ++i) {
+        auto ileft = (uint8_t)(this->spec.left[i] * 255.0f);
+        auto iright = (uint8_t)(this->spec.right[i] * 255.0f);
+        visdata[0 /*spec*/][0][i] = (int8_t)ileft;
+        visdata[0 /*spec*/][1][i] = (int8_t)iright;
+    }
 }
 
 int32_t Audio::samples_remaining(int64_t relative_to) const {

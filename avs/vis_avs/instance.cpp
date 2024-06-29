@@ -45,9 +45,9 @@ bool AVS_Instance::render_frame(void* framebuffer,
                                 size_t height,
                                 AVS_Pixel_Format pixel_format) {
     this->init_global_buffers_if_needed(width, height, pixel_format);
-    auto render_context =
-        RenderContext(width, height, pixel_format, *this->global_buffers, framebuffer);
-    this->audio.get(render_context.audio);
+    auto render_context = RenderContext(
+        width, height, pixel_format, *this->global_buffers, this->audio, framebuffer);
+    this->audio.get();
     this->root.render_with_context(render_context);
 
     // char visdata[2][2][AUDIO_BUFFER_LEN];
