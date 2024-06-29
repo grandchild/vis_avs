@@ -9,10 +9,10 @@ bool AVS_Video::LibAV::load_libav_dlibs() {
         && LibAV::libavcodec != NULL && LibAV::libswscale != NULL) {
         return true;
     }
-    LOAD_LIB(AVS_Video::LibAV, avutil, "-" STR(LIBAV_VERSION_AVUTIL));
-    LOAD_LIB(AVS_Video::LibAV, avformat, "-" STR(LIBAV_VERSION_AVFORMAT));
-    LOAD_LIB(AVS_Video::LibAV, avcodec, "-" STR(LIBAV_VERSION_AVCODEC));
-    LOAD_LIB(AVS_Video::LibAV, swscale, "-" STR(LIBAV_VERSION_SWSCALE));
+    LOAD_LIB(AVS_Video::LibAV, avutil, LIBAV_SUFFIX_AVUTIL);
+    LOAD_LIB(AVS_Video::LibAV, avformat, LIBAV_SUFFIX_AVFORMAT);
+    LOAD_LIB(AVS_Video::LibAV, avcodec, LIBAV_SUFFIX_AVCODEC);
+    LOAD_LIB(AVS_Video::LibAV, swscale, LIBAV_SUFFIX_SWSCALE);
     LOAD_FUNC(AVS_Video::LibAV, libavformat, avformat, alloc_context);
     LOAD_FUNC(AVS_Video::LibAV, libavformat, avformat, open_input);
     LOAD_FUNC(AVS_Video::LibAV, libavformat, avformat, close_input);

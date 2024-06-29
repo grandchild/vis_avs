@@ -8,10 +8,17 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
-#define LIBAV_VERSION_AVCODEC  60
-#define LIBAV_VERSION_AVFORMAT 60
-#define LIBAV_VERSION_AVUTIL   58
-#define LIBAV_VERSION_SWSCALE  7
+#ifdef _WIN32
+#define LIBAV_SUFFIX_AVCODEC  "-60"
+#define LIBAV_SUFFIX_AVFORMAT "-60"
+#define LIBAV_SUFFIX_AVUTIL   "-58"
+#define LIBAV_SUFFIX_SWSCALE  "-7"
+#elif __linux__
+#define LIBAV_SUFFIX_AVCODEC  ".so"
+#define LIBAV_SUFFIX_AVFORMAT ".so"
+#define LIBAV_SUFFIX_AVUTIL   ".so"
+#define LIBAV_SUFFIX_SWSCALE  ".so"
+#endif
 
 // Hide libav types in here so that video.h doesn't have to include any libav headers.
 struct AVS_Video::LibAV {

@@ -1,10 +1,19 @@
+#pragma once
+
 #include "platform.h"
 
-#define LOAD_LIB(NAMESPACE, LIB, FILENAME_SUFFIX)                             \
-    library_unload(NAMESPACE::lib##LIB);                                      \
-    if ((NAMESPACE::lib##LIB = library_load(#LIB FILENAME_SUFFIX)) == NULL) { \
-        NAMESPACE::load_error = "error loading " #LIB FILENAME_SUFFIX;        \
-        return false;                                                         \
+#ifdef _WIN32
+#define LIB_PREFIX
+#elif __linux__
+#define LIB_PREFIX "lib"
+#endif
+
+#define LOAD_LIB(NAMESPACE, LIB, FILENAME_SUFFIX)                                 \
+    library_unload(NAMESPACE::lib##LIB);                                          \
+    if ((NAMESPACE::lib##LIB = library_load(LIB_PREFIX #LIB FILENAME_SUFFIX))     \
+        == NULL) {                                                                \
+        NAMESPACE::load_error = "error loading " LIB_PREFIX #LIB FILENAME_SUFFIX; \
+        return false;                                                             \
     }
 
 #define STR(x) #x
