@@ -49,7 +49,6 @@ Audio::Audio(size_t ring_buffer_length)
       samples_per_second(0),
       fft(new FFT()) {
     this->buffer.resize(ring_buffer_length, {0, 0});
-    printf("buf len: %ld\n", this->buffer.size());
     if (this->fft) {
         this->fft->Init(ring_buffer_length,
                         ring_buffer_length,
