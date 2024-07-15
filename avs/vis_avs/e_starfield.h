@@ -56,14 +56,14 @@ struct Starfield_Info : public Effect_Info {
     EFFECT_INFO_GETTERS;
 };
 
-typedef struct {
+struct StarField_Star {
     int x = 0;
     int y = 0;
     float z = 0;
     float speed = 0.0;
     int ox = 0;
     int oy = 0;
-} StarField_Star;
+};
 
 class E_Starfield : public Configurable_Effect<Starfield_Info, Starfield_Config> {
    public:
