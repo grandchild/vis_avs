@@ -670,9 +670,9 @@ class Configurable_Effect : public Effect {
                     auto list_length = param.list_length(
                         this->get_config_address(&param, parameter_path));
                     printf("list (%u entries)\n", list_length);
-                    for (size_t i = 0; i < list_length; i++) {
+                    for (size_t k = 0; k < list_length; k++) {
                         std::vector<int64_t> new_parameter_path = parameter_path;
-                        new_parameter_path.push_back(i);
+                        new_parameter_path.push_back(k);
                         this->print_config(indent + "  ",
                                            param.child_parameters,
                                            param.num_child_parameters,
