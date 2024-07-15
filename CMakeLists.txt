@@ -63,6 +63,9 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
                             # parameter. Setters should be able to have a parameter
                             # named exactly the same as the member it's setting. The
                             # code style advocates for `this->` everywhere anyway.
+        /wd4244             # Ignore warning about type conversions with data loss.
+                            # They are simply too many at the moment and obscure other
+                            # warnings. TODO[cleanup]: Reenable and fix warnings.
         /MP                 # Multithreaded compilation
         /std:c++14          # Pin to C++14 features
         /Zc:__cplusplus     # Define the actual C++ standard in __cplusplus, instead of
