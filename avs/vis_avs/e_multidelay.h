@@ -72,7 +72,7 @@ struct MultiDelay_Info : public Effect_Info {
                    on_delay),
     };
 
-    static constexpr uint32_t num_parameters = 14;
+    static constexpr uint32_t num_parameters = 3;
     static constexpr Parameter parameters[num_parameters] = {
         P_SELECT(offsetof(MultiDelay_Config, mode), "Mode", modes),
         P_IRANGE(offsetof(MultiDelay_Config, active_buffer),
