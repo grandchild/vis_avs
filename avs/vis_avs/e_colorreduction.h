@@ -15,8 +15,10 @@ enum ColorReduction_Levels {
 };
 
 struct ColorReduction_Config : public Effect_Config {
-    int64_t levels = COLRED_LEVELS_256;
+    int64_t levels = COLRED_LEVELS_128;
 };
+
+void on_levels_change(Effect*, const Parameter*, const std::vector<int64_t>&);
 
 struct ColorReduction_Info : public Effect_Info {
     static constexpr char const* group = "Trans";
@@ -42,7 +44,11 @@ struct ColorReduction_Info : public Effect_Info {
 
     static constexpr uint32_t num_parameters = 1;
     static constexpr Parameter parameters[num_parameters] = {
-        P_SELECT(offsetof(ColorReduction_Config, levels), "Color Levels", levels),
+        P_SELECT(offsetof(ColorReduction_Config, levels),
+                 "Color Levels",
+                 levels,
+                 nullptr,
+                 on_levels_change),
     };
 
     EFFECT_INFO_GETTERS;
@@ -59,7 +65,13 @@ class E_ColorReduction
                        int* fbout,
                        int w,
                        int h);
+    virtual void on_load();
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
     virtual E_ColorReduction* clone() { return new E_ColorReduction(*this); }
+
+    void bake_mask();
+
+   private:
+    uint32_t mask;
 };

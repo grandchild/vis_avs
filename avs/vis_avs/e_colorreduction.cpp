@@ -35,10 +35,49 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../util.h"  // ssizeof32()
 
+#include <immintrin.h>
+
 constexpr Parameter ColorReduction_Info::parameters[];
 
-E_ColorReduction::E_ColorReduction(AVS_Instance* avs) : Configurable_Effect(avs) {}
+void on_levels_change(Effect* component,
+                      const Parameter*,
+                      const std::vector<int64_t>&) {
+    ((E_ColorReduction*)component)->bake_mask();
+}
+
+E_ColorReduction::E_ColorReduction(AVS_Instance* avs) : Configurable_Effect(avs) {
+    this->bake_mask();
+}
 E_ColorReduction::~E_ColorReduction() {}
+
+void E_ColorReduction::bake_mask() {
+    // 0 -> 100000000
+    // 1 -> 110000000
+    // 2 -> 111000000
+    // 3 -> 111100000
+    // 4 -> 111110000
+    // 5 -> 111111000
+    // 6 -> 111111100
+    // 7 -> 111111110
+    this->mask = (0xFF << (7 - this->config.levels)) & 0xFF;
+    // spread mask to other color channels & leave alpha as-is
+    this->mask |= (this->mask << 16) | (this->mask << 8) | 0xFF000000;
+}
+
+void render_c(int32_t* framebuffer, int length, uint32_t mask) {
+    for (int i = 0; i < length; i++) {
+        framebuffer[i] &= mask;
+    }
+}
+
+void render_simd(int32_t* framebuffer, int length, uint32_t mask) {
+    __m128i mask4 = _mm_set1_epi32(mask);
+    for (int i = 0; i < length; i += 4) {
+        __m128i four_px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
+        four_px = _mm_and_si128(four_px, mask4);
+        _mm_store_si128((__m128i*)&framebuffer[i], four_px);
+    }
+}
 
 int E_ColorReduction::render(char[2][2][576],
                              int is_beat,
@@ -49,57 +88,17 @@ int E_ColorReduction::render(char[2][2][576],
     if (is_beat & 0x80000000) {
         return 0;
     }
-
-    int a, b, c;
-    a = 8 - config.levels;
-    b = 0xFF;
-    while (a--) {
-        b = (b << 1) & 0xFF;
-    }
-    b |= (b << 16) | (b << 8);
-    c = w * h;
-#ifdef _MSC_VER
-    __asm {
-		mov ebx, framebuffer;
-		mov ecx, c;
-		mov edx, b;
-		lp:
-		sub ecx, 4;
-		test ecx, ecx;
-		jz end;
-		and dword ptr [ebx+ecx*4], edx;
-		and dword ptr [ebx+ecx*4+4], edx;
-		and dword ptr [ebx+ecx*4+8], edx;
-		and dword ptr [ebx+ecx*4+12], edx;
-		jmp lp;
-		end:
-    }
-#else  // _MSC_VER
-    __asm__ __volatile__(
-        "mov %%ebx, %0\n\t"
-        "mov %%ecx, %1\n\t"
-        "mov %%edx, %2\n"
-        "lp:\n\t"
-        "sub %%ecx, 4\n\t"
-        "test %%ecx, %%ecx\n\t"
-        "jz end\n\t"
-        // TODO [performance]: could be put into one or two packed instructions?
-        "and dword ptr [%%ebx + %%ecx * 4], %%edx\n\t"
-        "and dword ptr [%%ebx + %%ecx * 4 + 4], %%edx\n\t"
-        "and dword ptr [%%ebx + %%ecx * 4 + 8], %%edx\n\t"
-        "and dword ptr [%%ebx + %%ecx * 4 + 12], %%edx\n\t"
-        "jmp lp\n"
-        "end:"
-        : /* no outputs */
-        : "m"(framebuffer), "m"(c), "m"(b)
-        : "ebx", "ecx", "edx");
-#endif
+    // render_c(framebuffer, w * h, this->mask);
+    render_simd(framebuffer, w * h, this->mask);
     return 0;
 }
 
+void E_ColorReduction::on_load() { this->bake_mask(); }
+
 void E_ColorReduction::load_legacy(unsigned char* data, int len) {
     if (len - LEGACY_SAVE_PATH_LEN >= ssizeof32(uint32_t)) {
-        this->config.levels = *(uint32_t*)&data[LEGACY_SAVE_PATH_LEN];
+        this->config.levels = *(uint32_t*)&data[LEGACY_SAVE_PATH_LEN] - 1;
+        this->bake_mask();
     } else {
         this->config.levels = COLRED_LEVELS_256;
     }
@@ -107,7 +106,7 @@ void E_ColorReduction::load_legacy(unsigned char* data, int len) {
 
 int E_ColorReduction::save_legacy(unsigned char* data) {
     memset(data, '\0', LEGACY_SAVE_PATH_LEN);
-    *(uint32_t*)&data[LEGACY_SAVE_PATH_LEN] = (uint32_t)this->config.levels;
+    *(uint32_t*)&data[LEGACY_SAVE_PATH_LEN] = (uint32_t)(this->config.levels + 1);
     return LEGACY_SAVE_PATH_LEN + sizeof(uint32_t);
 }
 
