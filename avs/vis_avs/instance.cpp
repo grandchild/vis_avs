@@ -142,6 +142,7 @@ bool AVS_Instance::preset_load(const std::string& preset, bool with_transition) 
         this->root_secondary.load(preset_root);
     } catch (const std::exception& e) {
         log_err("error loading json preset: %s", e.what());
+        this->error = e.what();
         this->clear_secondary();
         return false;
     }
