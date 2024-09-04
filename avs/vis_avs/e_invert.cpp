@@ -33,10 +33,26 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "r_defs.h"
 
+#include <immintrin.h>
 #include <stdlib.h>
 
 E_Invert::E_Invert(AVS_Instance* avs) : Configurable_Effect(avs) {}
 E_Invert::~E_Invert() {}
+
+static void render_c(int* framebuffer, int length) {
+    for (int i = 0; i < length; i++) {
+        framebuffer[i] ^= 0xffffff;
+    }
+}
+
+static void render_simd(int* framebuffer, int length) {
+    __m128i mask = _mm_set1_epi32(0xffffff);
+    for (int i = 0; i < length; i += 4) {
+        __m128i four_px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
+        four_px = _mm_xor_si128(four_px, mask);
+        _mm_store_si128((__m128i*)&framebuffer[i], four_px);
+    }
+}
 
 int E_Invert::render(char[2][2][576],
                      int is_beat,
@@ -53,92 +69,8 @@ int E_Invert::render(char[2][2][576],
     if (!enabled) {
         return 0;
     }
-
-#ifndef NO_MMX
-    int a[2] = {0xffffff, 0xffffff};
-#ifdef _MSC_VER  // MSVC asm
-    __asm {
-      mov ecx, i
-      shr ecx, 3
-      movq mm0, [a]
-      mov edi, p
-      align 16
-_mmx_invert_loop:
-      movq mm1, [edi]
-      movq mm2, [edi+8]
-      pxor mm1, mm0
-      movq mm3, [edi+16]
-      pxor mm2, mm0
-      movq mm4, [edi+24]
-      pxor mm3, mm0
-      movq [edi], mm1
-      pxor mm4, mm0
-      movq [edi+8], mm2
-      movq [edi+16], mm3
-      movq [edi+24], mm4
-      add edi, 32
-      dec ecx
-      jnz _mmx_invert_loop
-      mov ecx, i
-      shr ecx, 1
-      and ecx, 3
-      jz _mmx_invert_noendloop
-_mmx_invert_endloop:
-      movq mm1, [edi]
-      pxor mm1, mm0
-      movq [edi], mm1
-      add edi, 8
-      dec ecx
-      jnz _mmx_invert_endloop
-
-_mmx_invert_noendloop:
-      emms
-    }
-#else   // _MSC_VER, GCC asm
-    __asm__ __volatile__(
-        "mov    %%ecx, %[i]\n\t"
-        "shr    %%ecx, 3\n\t"
-        "movq   %%mm0, [%[a]]\n\t"
-        "mov    %%edi, %[p]\n\t"
-        ".align 16\n"
-        "_mmx_invert_loop:\n\t"
-        "movq   %%mm1, [%%edi]\n\t"
-        "movq   %%mm2, [%%edi + 8]\n\t"
-        "pxor   %%mm1, %%mm0\n\t"
-        "movq   %%mm3, [%%edi + 16]\n\t"
-        "pxor   %%mm2, %%mm0\n\t"
-        "movq   %%mm4, [%%edi + 24]\n\t"
-        "pxor   %%mm3, %%mm0\n\t"
-        "movq   [%%edi], %%mm1\n\t"
-        "pxor   %%mm4, %%mm0\n\t"
-        "movq   [%%edi + 8], %%mm2\n\t"
-        "movq   [%%edi + 16], %%mm3\n\t"
-        "movq   [%%edi + 24], %%mm4\n\t"
-        "add    %%edi, 32\n\t"
-        "dec    %%ecx\n\t"
-        "jnz    _mmx_invert_loop\n\t"
-        "mov    %%ecx, %[i]\n\t"
-        "shr    %%ecx, 1\n\t"
-        "and    %%ecx, 3\n\t"
-        "jz     _mmx_invert_noendloop\n"
-        "_mmx_invert_endloop:\n\t"
-        "movq   %%mm1, [%%edi]\n\t"
-        "pxor   %%mm1, %%mm0\n\t"
-        "movq   [%%edi], %%mm1\n\t"
-        "add    %%edi, 8\n\t"
-        "dec    %%ecx\n\t"
-        "jnz    _mmx_invert_endloop\n"
-        "_mmx_invert_noendloop:\n\t"
-        "emms\n\t"
-        : /* no outputs */
-        : [i] "m"(i), [a] "m"(a), [p] "m"(p)
-        : "ecx", "edi");
-#endif  // _MSC_VER
-#else
-    while (i--) {
-        *p++ = 0xFFFFFF ^ *p;
-    }
-#endif
+    // render_c(framebuffer, w * h);
+    render_simd(framebuffer, w * h);
     return 0;
 }
 
