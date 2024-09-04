@@ -224,14 +224,15 @@ int32_t avs_audio_set(AVS_Handle avs,
 int32_t avs_audio_device_count(AVS_Handle avs);
 
 /**
- * Returns a list of the names of audio input devices AVS has detected. The number of
- * devices is returned by `avs_audio_device_count()`.
+ * Returns a null-terminated list of the names of audio input devices AVS has detected.
+ * The number of devices is returned by `avs_audio_device_count()`.
  *
  * The returned list memory will be valid until you either call
  * `avs_audio_device_names()` again or `avs_free()` is called for this instance.
  *
- * Returns NULL if no devices found or `avs` was initialized with
- * `audio_source=AVS_AUDIO_EXTERNAL`.
+ * Returns a list with just `NULL` if no devices found. Returns `NULL` directly(!) if
+ * `avs` was initialized with `audio_source=AVS_AUDIO_EXTERNAL` or some other error
+ * occurred.
  */
 const char* const* avs_audio_device_names(AVS_Handle avs);
 

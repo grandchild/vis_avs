@@ -97,11 +97,46 @@ int32_t avs_audio_set(AVS_Handle avs,
 }
 
 AVS_API
-int32_t avs_audio_device_count(AVS_Handle avs) { return 0; }
+int32_t avs_audio_device_count(AVS_Handle avs) {
+    AVS_Instance* instance = get_instance_from_handle(avs);
+    if (instance == NULL) {
+        return NULL;
+    }
+    if (instance->audio_source == AVS_AUDIO_EXTERNAL) {
+        instance->error = "Audio source set to external on init";
+        return -1;
+    }
+    // return instance->audio_device_count();
+    instance->error = "Audio device enumeration not implemented";
+    return -1;
+}
 AVS_API
-const char* const* avs_audio_device_names(AVS_Handle avs) { return NULL; }
+const char* const* avs_audio_device_names(AVS_Handle avs) {
+    AVS_Instance* instance = get_instance_from_handle(avs);
+    if (instance == NULL) {
+        return NULL;
+    }
+    if (instance->audio_source == AVS_AUDIO_EXTERNAL) {
+        instance->error = "Audio source set to external on init";
+        return NULL;
+    }
+    // return instance->audio_device_names();
+    instance->error = "Audio device enumeration not implemented";
+    return NULL;
+}
 AVS_API
-bool avs_audio_device_set(AVS_Handle avs, int32_t device) { return false; }
+bool avs_audio_device_set(AVS_Handle avs, int32_t device) {
+    AVS_Instance* instance = get_instance_from_handle(avs);
+    if (instance == NULL) {
+        return false;
+    }
+    if (instance->audio_source == AVS_AUDIO_EXTERNAL) {
+        return true;
+    }
+    // return instance->audio_device_set(device);
+    instance->error = "Audio device selection not implemented";
+    return false;
+}
 
 AVS_API
 bool avs_preset_load(AVS_Handle avs, const char* file_path) {
