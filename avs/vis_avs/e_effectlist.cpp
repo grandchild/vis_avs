@@ -391,7 +391,7 @@ int E_EffectList::render(char visdata[2][2][576],
             default: break;
             case LIST_BLEND_BUFFER: {
                 int* buf = (int*)this->avs->get_buffer(
-                    w, h, this->config.input_blend_buffer, false);
+                    w, h, this->config.input_blend_buffer - 1, false);
                 if (!buf) {
                     break;
                 }
@@ -589,7 +589,7 @@ int E_EffectList::render(char visdata[2][2][576],
                 break;
             case LIST_BLEND_BUFFER: {
                 int* buf = (int*)this->avs->get_buffer(
-                    w, h, this->config.output_blend_buffer, false);
+                    w, h, this->config.output_blend_buffer - 1, false);
                 if (!buf) {
                     break;
                 }
