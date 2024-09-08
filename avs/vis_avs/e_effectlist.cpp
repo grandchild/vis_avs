@@ -123,7 +123,7 @@ int E_EffectList::render(char visdata[2][2][576],
     }
 
     bool enabled_this_frame = this->enabled || this->on_beat_frames_cooldown > 0;
-    int64_t input_blend_this_frame = this->config.output_blend_adjustable;
+    int64_t input_blend_this_frame = this->config.input_blend_adjustable;
     int64_t output_blend_this_frame = this->config.output_blend_adjustable;
     bool clear_this_frame = this->config.clear_every_frame;
 
