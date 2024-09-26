@@ -12,6 +12,7 @@ file(GLOB SRC_FILES_NS_EEL
 file(GLOB SRC_FILES_AVS_COMMON
     avs/vis_avs/audio.cpp
     avs/vis_avs/avs*.cpp
+    avs/vis_avs/blend.cpp
     avs/vis_avs/e_*.cpp
     avs/vis_avs/effect*.cpp
     avs/vis_avs/*.c
