@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_clearscreen.h"
 
-#include "r_defs.h"
+#include "blend.h"
 
 #include <stdlib.h>
 
@@ -68,7 +68,7 @@ int E_ClearScreen::render(char[2][2][576],
                           int w,
                           int h) {
     int i = w * h;
-    int* p = framebuffer;
+    auto p = (uint32_t*)framebuffer;
 
     if (this->config.only_first && frame_counter) {
         return 0;
@@ -78,25 +78,30 @@ int E_ClearScreen::render(char[2][2][576],
     }
 
     frame_counter++;
+    auto color_rgb0_8 = (uint32_t)(this->config.color & 0x00ffffff);
 
-    if (this->config.blend_mode == CLEAR_BLEND_DEFAULT) {
-        while (i--) {
-            BLEND_LINE(p++, this->config.color);
-        }
-    } else if (this->config.blend_mode == CLEAR_BLEND_ADDITIVE) {
-        while (i--) {
-            *p = BLEND(*p, this->config.color);
-            p++;
-        }
-    } else if (this->config.blend_mode == CLEAR_BLEND_5050) {
-        while (i--) {
-            *p = BLEND_AVG(*p, this->config.color);
-            p++;
-        }
-    } else {  // CLEAR_BLEND_REPLACE
-        while (i--) {
-            *p++ = this->config.color;
-        }
+    switch (this->config.blend_mode) {
+        case CLEAR_BLEND_DEFAULT:
+            while (i--) {
+                blend_default_1px(&color_rgb0_8, p++);
+            }
+            break;
+        case CLEAR_BLEND_ADDITIVE:
+            while (i--) {
+                blend_add_1px(&color_rgb0_8, p++);
+            }
+            break;
+        case CLEAR_BLEND_5050:
+            while (i--) {
+                blend_5050_1px(&color_rgb0_8, p++);
+            }
+            break;
+        default: [[fallthrough]];
+        case CLEAR_BLEND_REPLACE:
+            while (i--) {
+                blend_replace_1px(&color_rgb0_8, p++);
+            }
+            break;
     }
     return 0;
 }
