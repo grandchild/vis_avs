@@ -476,13 +476,9 @@ class Configurable_Effect : public Effect {
                     Effect* child_effect = nullptr;
                     if (!child_data.contains("effect")) {
                         log_warn("effect without 'effect' key, preset file corrupt.");
-                    } else {
-                        child_effect =
-                            component_factory_by_name(child_data["effect"], this->avs);
                     }
-                    if (child_effect == nullptr) {
-                        child_effect = component_factory_by_name("Unknown", this->avs);
-                    }
+                    child_effect = component_factory_by_name(
+                        child_data.value("effect", ""), this->avs);
                     child_effect->load(child_data);
                     this->insert(child_effect, this, INSERT_CHILD);
                 }

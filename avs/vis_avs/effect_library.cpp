@@ -137,6 +137,8 @@ bool make_effect_lib() {
     return true;
 }
 
+extern Effect* create_Unknown(AVS_Instance*);
+
 Effect* component_factory(const Effect_Info* effect, AVS_Instance* avs) {
     for (auto const& factory : g_component_factories) {
         if (factory.first->get_handle() == effect->get_handle()) {
@@ -147,7 +149,7 @@ Effect* component_factory(const Effect_Info* effect, AVS_Instance* avs) {
             }
         }
     }
-    return nullptr;
+    return create_Unknown(avs);
 }
 
 Effect* component_factory_by_name(const std::string& name, AVS_Instance* avs) {
@@ -160,7 +162,7 @@ Effect* component_factory_by_name(const std::string& name, AVS_Instance* avs) {
             }
         }
     }
-    return nullptr;
+    return create_Unknown(avs);
 }
 
 Effect* component_factory_legacy(int legacy_effect_id,

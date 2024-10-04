@@ -68,6 +68,7 @@ class E_Unknown : public Configurable_Effect<Unknown_Info, Unknown_Config> {
                        int* fbout,
                        int w,
                        int h);
+    virtual void load(json& data);
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
     virtual E_Unknown* clone() { return new E_Unknown(*this); }

@@ -57,6 +57,16 @@ void E_Unknown::set_id(int builtin_id, const char* ape_id) {
     }
 }
 
+void E_Unknown::load(json& data) {
+    this->enabled = data.value("enabled", true);
+    this->comment = Effect_Info::load_string(data.value("comment", json::array()));
+    if (data.contains("config")) {
+        this->config.id = data.value("effect", "");
+        this->config.config =
+            data["config"].dump(-1, ' ', false, json::error_handler_t::ignore);
+    }
+}
+
 void E_Unknown::load_legacy(unsigned char* data, int len) {
     // Need to call `set_id()` first!
     if (this->legacy_ape_id[0] != '\0') {
