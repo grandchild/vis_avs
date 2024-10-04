@@ -32,8 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // alphachannel safe 11/21/99
 #include "e_buffersave.h"
 
-#include "r_defs.h"
-
+#include "blend.h"
 #include "instance.h"
 #include "timing.h"
 
@@ -107,109 +106,30 @@ int E_BufferSave::render(char[2][2][576],
             break;
     }
     this->save_restore_toggle = !this->save_restore_toggle;
-    int* fbin = (int*)(frame_action == 0 ? framebuffer : buffer_ref);
-    int* fbout = (int*)(frame_action != 0 ? framebuffer : buffer_ref);
+    uint32_t* fbin =
+        (uint32_t*)(frame_action == BUFFER_ACTION_SAVE ? framebuffer : buffer_ref);
+    uint32_t* fbout =
+        (uint32_t*)(frame_action == BUFFER_ACTION_RESTORE ? framebuffer : buffer_ref);
     switch (this->config.blend_mode) {
-        default:
-        case BUFFER_BLEND_REPLACE: {
-            memcpy(fbout, fbin, w * h * sizeof(int32_t));
+        default: [[fallthrough]];
+        case BUFFER_BLEND_REPLACE: blend_replace(fbin, fbout, w, h); break;
+        case BUFFER_BLEND_ADDITIVE: blend_add(fbin, fbout, w, h); break;
+        case BUFFER_BLEND_MAXIMUM: blend_maximum(fbin, fbout, w, h); break;
+        case BUFFER_BLEND_5050: blend_5050(fbin, fbout, w, h); break;
+        case BUFFER_BLEND_SUB1: blend_sub_src_from_dest(fbin, fbout, w, h); break;
+        case BUFFER_BLEND_SUB2: blend_sub_dest_from_src(fbin, fbout, w, h); break;
+        case BUFFER_BLEND_MULTIPLY: blend_multiply(fbin, fbout, w, h); break;
+        case BUFFER_BLEND_ADJUSTABLE:
+            blend_adjustable(fbin, fbout, this->config.adjustable_blend, w, h);
             break;
-        }
-        case BUFFER_BLEND_ADDITIVE: {
-            mmx_addblend_block(fbout, fbin, w * h);
+        case BUFFER_BLEND_XOR: blend_xor(fbin, fbout, w, h); break;
+        case BUFFER_BLEND_MINIMUM: blend_minimum(fbin, fbout, w, h); break;
+        case BUFFER_BLEND_EVERY_OTHER_PIXEL:
+            blend_every_other_pixel(fbin, fbout, w, h);
             break;
-        }
-        case BUFFER_BLEND_MAXIMUM: {
-            int x = w * h;
-            int* bf = fbin;
-            while (x-- > 0) {
-                *fbout = BLEND_MAX(*fbout, *bf);
-                fbout++;
-                bf++;
-            }
+        case BUFFER_BLEND_EVERY_OTHER_LINE:
+            blend_every_other_line(fbin, fbout, w, h);
             break;
-        }
-        case BUFFER_BLEND_5050: {
-            mmx_avgblend_block(fbout, fbin, w * h);
-            break;
-        }
-        case BUFFER_BLEND_SUB1: {
-            int x = w * h;
-            int* bf = fbin;
-            while (x-- > 0) {
-                *fbout = BLEND_SUB(*fbout, *bf);
-                fbout++;
-                bf++;
-            }
-            break;
-        }
-        case BUFFER_BLEND_SUB2: {
-            int x = w * h;
-            int* bf = fbin;
-            while (x-- > 0) {
-                *fbout = BLEND_SUB(*bf, *fbout);
-                fbout++;
-                bf++;
-            }
-            break;
-        }
-        case BUFFER_BLEND_MULTIPLY: {
-            mmx_mulblend_block(fbout, fbin, w * h);
-            break;
-        }
-        case BUFFER_BLEND_ADJUSTABLE: {
-            mmx_adjblend_block(
-                fbout, fbin, fbout, w * h, (int32_t)this->config.adjustable_blend);
-            break;
-        }
-        case BUFFER_BLEND_XOR: {
-            int x = w * h;
-            while (x-- > 0) {
-                *fbout = *fbout ^ *fbin;
-                fbout++;
-                fbin++;
-            }
-            break;
-        }
-        case BUFFER_BLEND_MINIMUM: {
-            int x = w * h;
-            int* bf = fbin;
-            while (x-- > 0) {
-                *fbout = BLEND_MIN(*fbout, *bf);
-                fbout++;
-                bf++;
-            }
-            break;
-        }
-        case BUFFER_BLEND_EVERY_OTHER_PIXEL: {
-            int r = 0;
-            int y = h;
-            int* bf = fbin;
-            while (y-- > 0) {
-                int *out, *in;
-                int x = w / 2;
-                out = fbout + r;
-                in = bf + r;
-                r ^= 1;
-                while (x-- > 0) {
-                    *out = *in;
-                    out += 2;
-                    in += 2;
-                }
-                fbout += w;
-                bf += w;
-            }
-            break;
-        }
-        case BUFFER_BLEND_EVERY_OTHER_LINE: {
-            int y = h / 2;
-            while (y-- > 0) {
-                memcpy(fbout, fbin, w * sizeof(int32_t));
-                fbout += w * 2;
-                fbin += w * 2;
-            }
-            break;
-        }
     }
     return 0;
 }
