@@ -113,17 +113,21 @@ int E_BufferSave::render(char[2][2][576],
     switch (this->config.blend_mode) {
         default: [[fallthrough]];
         case BUFFER_BLEND_REPLACE: blend_replace(fbin, fbout, w, h); break;
-        case BUFFER_BLEND_ADDITIVE: blend_add(fbin, fbout, w, h); break;
-        case BUFFER_BLEND_MAXIMUM: blend_maximum(fbin, fbout, w, h); break;
-        case BUFFER_BLEND_5050: blend_5050(fbin, fbout, w, h); break;
-        case BUFFER_BLEND_SUB1: blend_sub_src_from_dest(fbin, fbout, w, h); break;
-        case BUFFER_BLEND_SUB2: blend_sub_dest_from_src(fbin, fbout, w, h); break;
-        case BUFFER_BLEND_MULTIPLY: blend_multiply(fbin, fbout, w, h); break;
-        case BUFFER_BLEND_ADJUSTABLE:
-            blend_adjustable(fbin, fbout, this->config.adjustable_blend, w, h);
+        case BUFFER_BLEND_ADDITIVE: blend_add(fbin, fbout, fbout, w, h); break;
+        case BUFFER_BLEND_MAXIMUM: blend_maximum(fbin, fbout, fbout, w, h); break;
+        case BUFFER_BLEND_5050: blend_5050(fbin, fbout, fbout, w, h); break;
+        case BUFFER_BLEND_SUB1:
+            blend_sub_src1_from_src2(fbin, fbout, fbout, w, h);
             break;
-        case BUFFER_BLEND_XOR: blend_xor(fbin, fbout, w, h); break;
-        case BUFFER_BLEND_MINIMUM: blend_minimum(fbin, fbout, w, h); break;
+        case BUFFER_BLEND_SUB2:
+            blend_sub_src2_from_src1(fbin, fbout, fbout, w, h);
+            break;
+        case BUFFER_BLEND_MULTIPLY: blend_multiply(fbin, fbout, fbout, w, h); break;
+        case BUFFER_BLEND_ADJUSTABLE:
+            blend_adjustable(fbin, fbout, fbout, this->config.adjustable_blend, w, h);
+            break;
+        case BUFFER_BLEND_XOR: blend_xor(fbin, fbout, fbout, w, h); break;
+        case BUFFER_BLEND_MINIMUM: blend_minimum(fbin, fbout, fbout, w, h); break;
         case BUFFER_BLEND_EVERY_OTHER_PIXEL:
             blend_every_other_pixel(fbin, fbout, w, h);
             break;

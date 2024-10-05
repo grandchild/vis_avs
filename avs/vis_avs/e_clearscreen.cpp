@@ -83,17 +83,17 @@ int E_ClearScreen::render(char[2][2][576],
     switch (this->config.blend_mode) {
         case CLEAR_BLEND_DEFAULT:
             while (i--) {
-                blend_default_1px(&color_rgb0_8, p++);
+                blend_default_1px(&color_rgb0_8, p, p++);
             }
             break;
         case CLEAR_BLEND_ADDITIVE:
             while (i--) {
-                blend_add_1px(&color_rgb0_8, p++);
+                blend_add_1px(&color_rgb0_8, p, p++);
             }
             break;
         case CLEAR_BLEND_5050:
             while (i--) {
-                blend_5050_1px(&color_rgb0_8, p++);
+                blend_5050_1px(&color_rgb0_8, p, p++);
             }
             break;
         default: [[fallthrough]];

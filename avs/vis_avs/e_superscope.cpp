@@ -191,8 +191,8 @@ int E_SuperScope::render(char visdata[2][2][576],
                                      | (makeint(*this->vars.red) << 16);
                 if (*this->vars.drawmode < 0.00001) {
                     if (y >= 0 && y < h && x >= 0 && x < w) {
-                        blend_default_1px(&thiscolor,
-                                          (uint32_t*)framebuffer + x + y * w);
+                        uint32_t* dest = (uint32_t*)framebuffer + x + y * w;
+                        blend_default_1px(&thiscolor, dest, dest);
                     }
                 } else {
                     if (!is_first_point) {

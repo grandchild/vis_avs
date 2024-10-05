@@ -4,9 +4,12 @@
 
 #include "../platform.h"
 
+#include <cstdint>
 #include <immintrin.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <sys/types.h>
 
 static uint8_t lut_u8_multiply[256][256];
 static uint8_t lut_u8_screen[256][256];
@@ -56,120 +59,148 @@ void blend_replace(const uint32_t* src, uint32_t* dest, uint32_t w, uint32_t h) 
 
 // ADDITIVE BLEND
 
-static inline void blend_add_rgb0_8_c(const uint32_t* src, uint32_t* dest) {
-    uint32_t channel = (*src & 0xff) + (*dest & 0xff);
+static inline void blend_add_rgb0_8_c(const uint32_t* src1,
+                                      const uint32_t* src2,
+                                      uint32_t* dest) {
+    uint32_t channel = (*src1 & 0xff) + (*src2 & 0xff);
     uint32_t out = min(channel, 0xff);
-    channel = (*src & 0xff00) + (*dest & 0xff00);
+    channel = (*src1 & 0xff00) + (*src2 & 0xff00);
     out |= min(channel, 0xff00);
-    channel = (*src & 0xff0000) + (*dest & 0xff0000);
+    channel = (*src1 & 0xff0000) + (*src2 & 0xff0000);
     *dest = out | min(channel, 0xff0000);
 }
 
-static inline void blend_add_rgb0_8_x86v128(const uint32_t* src, uint32_t* dest) {
-    __m128i src_4px = _mm_load_si128((__m128i*)src);
-    __m128i dest_4px = _mm_load_si128((__m128i*)dest);
-    _mm_store_si128((__m128i*)dest, _mm_adds_epu8(src_4px, dest_4px));
+static inline void blend_add_rgb0_8_x86v128(const uint32_t* src1,
+                                            const uint32_t* src2,
+                                            uint32_t* dest) {
+    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
+    _mm_store_si128((__m128i*)dest, _mm_adds_epu8(src1_4px, src2_4px));
 }
 
-void blend_add(const uint32_t* src, uint32_t* dest, uint32_t w, uint32_t h) {
+void blend_add(const uint32_t* src1,
+               const uint32_t* src2,
+               uint32_t* dest,
+               uint32_t w,
+               uint32_t h) {
 #ifdef SIMD_MODE_X86_SSE
     for (size_t i = 0; i < w * h; i += 4) {
-        blend_add_rgb0_8_x86v128(&src[i], &dest[i]);
+        blend_add_rgb0_8_x86v128(&src1[i], &src2[i], &dest[i]);
     }
 #else
     for (size_t i = 0; i < w * h; i++) {
-        blend_add_rgb0_8_c(&src[i], &dest[i]);
+        blend_add_rgb0_8_c(&src1[i], &src2[i], &dest[i]);
     }
 #endif
 }
 
 // 50/50 BLEND
 
-static inline void blend_5050_rgb0_8_c(const uint32_t* src, uint32_t* dest) {
+static inline void blend_5050_rgb0_8_c(const uint32_t* src1,
+                                       const uint32_t* src2,
+                                       uint32_t* dest) {
     static uint32_t strip_high_bit_mask = 0x007f7f7f;
-    *dest = ((*src >> 1) & strip_high_bit_mask) + ((*dest >> 1) & strip_high_bit_mask);
+    *dest = ((*src1 >> 1) & strip_high_bit_mask) + ((*dest >> 1) & strip_high_bit_mask);
 }
 
-static inline void blend_5050_rgb0_8_x86v128(const uint32_t* src, uint32_t* dest) {
-    __m128i src_4px = _mm_load_si128((__m128i*)src);
-    __m128i dest_4px = _mm_load_si128((__m128i*)dest);
+static inline void blend_5050_rgb0_8_x86v128(const uint32_t* src1,
+                                             const uint32_t* src2,
+                                             uint32_t* dest) {
+    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
     // This should use _mm_avg_epu8(), but that does a correct average, i.e. it does
     // (a + b + 1) / 2, while avs does (a + b) / 2. We opt for consistency and backward
     // compatibility here.
     __m128i strip_high_bit_mask = _mm_set1_epi32(0x007f7f7f);
-    __m128i src_half = _mm_and_si128(_mm_srli_epi16(src_4px, 1), strip_high_bit_mask);
-    __m128i dest_half = _mm_and_si128(_mm_srli_epi16(dest_4px, 1), strip_high_bit_mask);
-    _mm_store_si128((__m128i*)dest, _mm_adds_epu8(src_half, dest_half));
+    __m128i src1_half = _mm_and_si128(_mm_srli_epi16(src1_4px, 1), strip_high_bit_mask);
+    __m128i src2_half = _mm_and_si128(_mm_srli_epi16(src2_4px, 1), strip_high_bit_mask);
+    _mm_store_si128((__m128i*)dest, _mm_adds_epu8(src1_half, src2_half));
 }
 
-void blend_5050(const uint32_t* src, uint32_t* dest, uint32_t w, uint32_t h) {
+void blend_5050(const uint32_t* src1,
+                const uint32_t* src2,
+                uint32_t* dest,
+                uint32_t w,
+                uint32_t h) {
 #ifdef SIMD_MODE_X86_SSE
     for (size_t i = 0; i < w * h; i += 4) {
-        blend_5050_rgb0_8_x86v128(&src[i], &dest[i]);
+        blend_5050_rgb0_8_x86v128(&src1[i], &src2[i], &dest[i]);
     }
 #else
     for (size_t i = 0; i < w * h; i++) {
-        blend_5050_rgb0_8_c(&src[i], &dest[i]);
+        blend_5050_rgb0_8_c(&src1[i], &src2[i], &dest[i]);
     }
 #endif
 }
 
 // MULTIPLY BLEND
 
-static inline void blend_multiply_rgb0_8_c(const uint32_t* src, uint32_t* dest) {
-    uint8_t result = lut_u8_multiply[*src & 0xFF][*dest & 0xFF];
-    result |= lut_u8_multiply[(*src & 0xFF00) >> 8][(*dest & 0xFF00) >> 8] << 8;
-    result |= lut_u8_multiply[(*src & 0xFF0000) >> 16][(*dest & 0xFF0000) >> 16] << 16;
+static inline void blend_multiply_rgb0_8_c(const uint32_t* src1,
+                                           const uint32_t* src2,
+                                           uint32_t* dest) {
+    uint8_t result = lut_u8_multiply[*src1 & 0xFF][*dest & 0xFF];
+    result |= lut_u8_multiply[(*src1 & 0xFF00) >> 8][(*dest & 0xFF00) >> 8] << 8;
+    result |= lut_u8_multiply[(*src1 & 0xFF0000) >> 16][(*dest & 0xFF0000) >> 16] << 16;
     *dest = result;
 }
 
-static inline void blend_multiply_rgb0_8_x86v128(const uint32_t* src, uint32_t* dest) {
-    __m128i src_4px = _mm_load_si128((__m128i*)src);
-    __m128i dest_4px = _mm_load_si128((__m128i*)dest);
-    __m128i src_lo_2px = _mm_unpacklo_epi8(src_4px, _mm_setzero_si128());
-    __m128i src_hi_2px = _mm_unpackhi_epi8(src_4px, _mm_setzero_si128());
-    __m128i dest_lo_2px = _mm_unpacklo_epi8(dest_4px, _mm_setzero_si128());
-    __m128i dest_hi_2px = _mm_unpackhi_epi8(dest_4px, _mm_setzero_si128());
-    __m128i mul_lo = _mm_mullo_epi16(src_lo_2px, dest_lo_2px);
-    __m128i mul_hi = _mm_mullo_epi16(src_hi_2px, dest_hi_2px);
+static inline void blend_multiply_rgb0_8_x86v128(const uint32_t* src1,
+                                                 const uint32_t* src2,
+                                                 uint32_t* dest) {
+    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
+    __m128i src1_lo_2px = _mm_unpacklo_epi8(src1_4px, _mm_setzero_si128());
+    __m128i src1_hi_2px = _mm_unpackhi_epi8(src1_4px, _mm_setzero_si128());
+    __m128i src2_lo_2px = _mm_unpacklo_epi8(src2_4px, _mm_setzero_si128());
+    __m128i src2_hi_2px = _mm_unpackhi_epi8(src2_4px, _mm_setzero_si128());
+    __m128i mul_lo = _mm_mullo_epi16(src1_lo_2px, src2_lo_2px);
+    __m128i mul_hi = _mm_mullo_epi16(src1_hi_2px, src2_hi_2px);
     __m128i mul_lo_norm = _mm_srli_epi16(mul_lo, 8);
     __m128i mul_hi_norm = _mm_srli_epi16(mul_hi, 8);
     __m128i packed = _mm_packus_epi16(mul_lo_norm, mul_hi_norm);
     _mm_store_si128((__m128i*)dest, packed);
 }
 
-void blend_multiply(const uint32_t* src, uint32_t* dest, uint32_t w, uint32_t h) {
+void blend_multiply(const uint32_t* src1,
+                    const uint32_t* src2,
+                    uint32_t* dest,
+                    uint32_t w,
+                    uint32_t h) {
 #ifdef SIMD_MODE_X86_SSE
     for (size_t i = 0; i < w * h; i += 4) {
-        blend_multiply_rgb0_8_x86v128(&src[i], &dest[i]);
+        blend_multiply_rgb0_8_x86v128(&src1[i], &src2[i], &dest[i]);
     }
 #else
     for (size_t i = 0; i < w * h; i++) {
-        blend_multiply_rgb0_8_c(&src[i], &dest[i]);
+        blend_multiply_rgb0_8_c(&src1[i], &src2[i], &dest[i]);
     }
 #endif
 }
 
 // SCREEN BLEND
 
-static inline void blend_screen_rgb0_8_c(const uint32_t* src, uint32_t* dest) {
-    uint8_t result = lut_u8_screen[*src & 0xFF][*dest & 0xFF];
-    result |= lut_u8_screen[(*src & 0xFF00) >> 8][(*dest & 0xFF00) >> 8] << 8;
-    result |= lut_u8_screen[(*src & 0xFF0000) >> 16][(*dest & 0xFF0000) >> 16] << 16;
+static inline void blend_screen_rgb0_8_c(const uint32_t* src1,
+                                         const uint32_t* src2,
+                                         uint32_t* dest) {
+    uint8_t result = lut_u8_screen[*src1 & 0xFF][*dest & 0xFF];
+    result |= lut_u8_screen[(*src1 & 0xFF00) >> 8][(*dest & 0xFF00) >> 8] << 8;
+    result |= lut_u8_screen[(*src1 & 0xFF0000) >> 16][(*dest & 0xFF0000) >> 16] << 16;
     *dest = result;
 }
 
-static inline void blend_screen_rgb0_8_x86v128(const uint32_t* src, uint32_t* dest) {
-    __m128i src_4px = _mm_load_si128((__m128i*)src);
-    __m128i dest_4px = _mm_load_si128((__m128i*)dest);
-    src_4px = _mm_xor_si128(src_4px, _mm_set1_epi32(0x00ffffff));
-    dest_4px = _mm_xor_si128(dest_4px, _mm_set1_epi32(0x00ffffff));
-    __m128i src_lo_2px = _mm_unpacklo_epi8(src_4px, _mm_setzero_si128());
-    __m128i src_hi_2px = _mm_unpackhi_epi8(src_4px, _mm_setzero_si128());
-    __m128i dest_lo_2px = _mm_unpacklo_epi8(dest_4px, _mm_setzero_si128());
-    __m128i dest_hi_2px = _mm_unpackhi_epi8(dest_4px, _mm_setzero_si128());
-    __m128i mul_lo = _mm_mullo_epi16(src_lo_2px, dest_lo_2px);
-    __m128i mul_hi = _mm_mullo_epi16(src_hi_2px, dest_hi_2px);
+static inline void blend_screen_rgb0_8_x86v128(const uint32_t* src1,
+                                               const uint32_t* src2,
+                                               uint32_t* dest) {
+    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
+    src1_4px = _mm_xor_si128(src1_4px, _mm_set1_epi32(0x00ffffff));
+    src2_4px = _mm_xor_si128(src2_4px, _mm_set1_epi32(0x00ffffff));
+    __m128i src1_lo_2px = _mm_unpacklo_epi8(src1_4px, _mm_setzero_si128());
+    __m128i src1_hi_2px = _mm_unpackhi_epi8(src1_4px, _mm_setzero_si128());
+    __m128i src2_lo_2px = _mm_unpacklo_epi8(src2_4px, _mm_setzero_si128());
+    __m128i src2_hi_2px = _mm_unpackhi_epi8(src2_4px, _mm_setzero_si128());
+    __m128i mul_lo = _mm_mullo_epi16(src1_lo_2px, src2_lo_2px);
+    __m128i mul_hi = _mm_mullo_epi16(src1_hi_2px, src2_hi_2px);
     __m128i mul_lo_norm = _mm_srli_epi16(mul_lo, 8);
     __m128i mul_hi_norm = _mm_srli_epi16(mul_hi, 8);
     __m128i packed = _mm_packus_epi16(mul_lo_norm, mul_hi_norm);
@@ -177,184 +208,228 @@ static inline void blend_screen_rgb0_8_x86v128(const uint32_t* src, uint32_t* de
     _mm_store_si128((__m128i*)dest, packed);
 }
 
-void blend_screen(const uint32_t* src, uint32_t* dest, uint32_t w, uint32_t h) {
+void blend_screen(const uint32_t* src1,
+                  const uint32_t* src2,
+                  uint32_t* dest,
+                  uint32_t w,
+                  uint32_t h) {
 #ifdef SIMD_MODE_X86_SSE
     for (size_t i = 0; i < w * h; i += 4) {
-        blend_screen_rgb0_8_x86v128(&src[i], &dest[i]);
+        blend_screen_rgb0_8_x86v128(&src1[i], &src2[i], &dest[i]);
     }
 #else
     for (size_t i = 0; i < w * h; i++) {
-        blend_screen_rgb0_8_c(&src[i], &dest[i]);
+        blend_screen_rgb0_8_c(&src1[i], &src2[i], &dest[i]);
     }
 #endif
 }
 
 // MAXIMUM BLEND
 
-static inline void blend_maximum_rgb0_8_c(const uint32_t* src, uint32_t* dest) {
-    uint32_t channel = *src & 0xff;
+static inline void blend_maximum_rgb0_8_c(const uint32_t* src1,
+                                          const uint32_t* src2,
+                                          uint32_t* dest) {
+    uint32_t channel = *src1 & 0xff;
     uint32_t out = max(channel, *dest & 0xff);
-    channel = *src & 0xff00;
+    channel = *src1 & 0xff00;
     out |= max(channel, *dest & 0xff00);
-    channel = *src & 0xff0000;
+    channel = *src1 & 0xff0000;
     *dest = out | max(channel, *dest & 0xff0000);
 }
 
-static inline void blend_maximum_rgb0_8_x86v128(const uint32_t* src, uint32_t* dest) {
-    __m128i src_4px = _mm_load_si128((__m128i*)src);
-    __m128i dest_4px = _mm_load_si128((__m128i*)dest);
-    _mm_store_si128((__m128i*)dest, _mm_max_epu8(src_4px, dest_4px));
+static inline void blend_maximum_rgb0_8_x86v128(const uint32_t* src1,
+                                                const uint32_t* src2,
+                                                uint32_t* dest) {
+    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
+    _mm_store_si128((__m128i*)dest, _mm_max_epu8(src1_4px, src2_4px));
 }
 
-void blend_maximum(const uint32_t* src, uint32_t* dest, uint32_t w, uint32_t h) {
+void blend_maximum(const uint32_t* src1,
+                   const uint32_t* src2,
+                   uint32_t* dest,
+                   uint32_t w,
+                   uint32_t h) {
 #ifdef SIMD_MODE_X86_SSE
     for (size_t i = 0; i < w * h; i += 4) {
-        blend_maximum_rgb0_8_x86v128(&src[i], &dest[i]);
+        blend_maximum_rgb0_8_x86v128(&src1[i], &src2[i], &dest[i]);
     }
 #else
     for (size_t i = 0; i < w * h; i++) {
-        blend_maximum_rgb0_8_c(&src[i], &dest[i]);
+        blend_maximum_rgb0_8_c(&src1[i], &src2[i], &dest[i]);
     }
 #endif
 }
 
 // MINIMUM BLEND
 
-static inline void blend_minimum_rgb0_8_c(const uint32_t* src, uint32_t* dest) {
-    *dest = min(*src & 0xff, *dest & 0xff) | min(*src & 0xff00, *dest & 0xff00)
-            | min(*src & 0xff0000, *dest & 0xff0000);
+static inline void blend_minimum_rgb0_8_c(const uint32_t* src1,
+                                          const uint32_t* src2,
+                                          uint32_t* dest) {
+    *dest = min(*src1 & 0xff, *dest & 0xff) | min(*src1 & 0xff00, *dest & 0xff00)
+            | min(*src1 & 0xff0000, *dest & 0xff0000);
 }
 
-static inline void blend_minimum_rgb0_8_x86v128(const uint32_t* src, uint32_t* dest) {
-    __m128i src_4px = _mm_load_si128((__m128i*)src);
-    __m128i dest_4px = _mm_load_si128((__m128i*)dest);
-    _mm_store_si128((__m128i*)dest, _mm_min_epu8(src_4px, dest_4px));
+static inline void blend_minimum_rgb0_8_x86v128(const uint32_t* src1,
+                                                const uint32_t* src2,
+                                                uint32_t* dest) {
+    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
+    _mm_store_si128((__m128i*)dest, _mm_min_epu8(src1_4px, src2_4px));
 }
 
-void blend_minimum(const uint32_t* src, uint32_t* dest, uint32_t w, uint32_t h) {
+void blend_minimum(const uint32_t* src1,
+                   const uint32_t* src2,
+                   uint32_t* dest,
+                   uint32_t w,
+                   uint32_t h) {
 #ifdef SIMD_MODE_X86_SSE
     for (size_t i = 0; i < w * h; i += 4) {
-        blend_minimum_rgb0_8_x86v128(&src[i], &dest[i]);
+        blend_minimum_rgb0_8_x86v128(&src1[i], &src2[i], &dest[i]);
     }
 #else
     for (size_t i = 0; i < w * h; i++) {
-        blend_minimum_rgb0_8_c(&src[i], &dest[i]);
+        blend_minimum_rgb0_8_c(&src1[i], &src2[i], &dest[i]);
     }
 #endif
 }
 
 // COLOR DODGE BLEND
 
-static inline void blend_color_dodge_rgb0_8_c(const uint32_t* src, uint32_t* dest) {
-    uint8_t result = lut_u8_color_dodge[*src & 0xFF][*dest & 0xFF];
-    result |= lut_u8_color_dodge[(*src & 0xFF00) >> 8][(*dest & 0xFF00) >> 8] << 8;
-    result |= lut_u8_color_dodge[(*src & 0xFF0000) >> 16][(*dest & 0xFF0000) >> 16]
+static inline void blend_color_dodge_rgb0_8_c(const uint32_t* src1,
+                                              const uint32_t* src2,
+                                              uint32_t* dest) {
+    uint8_t result = lut_u8_color_dodge[*src1 & 0xFF][*dest & 0xFF];
+    result |= lut_u8_color_dodge[(*src1 & 0xFF00) >> 8][(*dest & 0xFF00) >> 8] << 8;
+    result |= lut_u8_color_dodge[(*src1 & 0xFF0000) >> 16][(*dest & 0xFF0000) >> 16]
               << 16;
     *dest = result;
 }
 
-void blend_color_dodge(const uint32_t* src, uint32_t* dest, uint32_t w, uint32_t h) {
+void blend_color_dodge(const uint32_t* src1,
+                       const uint32_t* src2,
+                       uint32_t* dest,
+                       uint32_t w,
+                       uint32_t h) {
     for (size_t i = 0; i < w * h; i++) {
-        blend_color_dodge_rgb0_8_c(&src[i], &dest[i]);
+        blend_color_dodge_rgb0_8_c(&src1[i], &src2[i], &dest[i]);
     }
 }
 
 // COLOR BURN BLEND
 
-static inline void blend_color_burn_rgb0_8_c(const uint32_t* src, uint32_t* dest) {
-    uint8_t result = lut_u8_color_burn[*src & 0xFF][*dest & 0xFF];
-    result |= lut_u8_color_burn[(*src & 0xFF00) >> 8][(*dest & 0xFF00) >> 8] << 8;
-    result |= lut_u8_color_burn[(*src & 0xFF0000) >> 16][(*dest & 0xFF0000) >> 16]
+static inline void blend_color_burn_rgb0_8_c(const uint32_t* src1,
+                                             const uint32_t* src2,
+                                             uint32_t* dest) {
+    uint8_t result = lut_u8_color_burn[*src1 & 0xFF][*dest & 0xFF];
+    result |= lut_u8_color_burn[(*src1 & 0xFF00) >> 8][(*dest & 0xFF00) >> 8] << 8;
+    result |= lut_u8_color_burn[(*src1 & 0xFF0000) >> 16][(*dest & 0xFF0000) >> 16]
               << 16;
     *dest = result;
 }
 
-void blend_color_burn(const uint32_t* src, uint32_t* dest, uint32_t w, uint32_t h) {
+void blend_color_burn(const uint32_t* src1,
+                      const uint32_t* src2,
+                      uint32_t* dest,
+                      uint32_t w,
+                      uint32_t h) {
     for (size_t i = 0; i < w * h; i++) {
-        blend_color_burn_rgb0_8_c(&src[i], &dest[i]);
+        blend_color_burn_rgb0_8_c(&src1[i], &src2[i], &dest[i]);
     }
 }
 
 // LINEAR BURN BLEND
 
-static inline void blend_linear_burn_rgb0_8_c(const uint32_t* src, uint32_t* dest) {
-    uint8_t result = lut_u8_linear_burn[*src & 0xFF][*dest & 0xFF];
-    result |= lut_u8_linear_burn[(*src & 0xFF00) >> 8][(*dest & 0xFF00) >> 8] << 8;
-    result |= lut_u8_linear_burn[(*src & 0xFF0000) >> 16][(*dest & 0xFF0000) >> 16]
+static inline void blend_linear_burn_rgb0_8_c(const uint32_t* src1,
+                                              const uint32_t* src2,
+                                              uint32_t* dest) {
+    uint8_t result = lut_u8_linear_burn[*src1 & 0xFF][*dest & 0xFF];
+    result |= lut_u8_linear_burn[(*src1 & 0xFF00) >> 8][(*dest & 0xFF00) >> 8] << 8;
+    result |= lut_u8_linear_burn[(*src1 & 0xFF0000) >> 16][(*dest & 0xFF0000) >> 16]
               << 16;
     *dest = result;
 }
 
-void blend_linear_burn(const uint32_t* src, uint32_t* dest, uint32_t w, uint32_t h) {
+void blend_linear_burn(const uint32_t* src1,
+                       const uint32_t* src2,
+                       uint32_t* dest,
+                       uint32_t w,
+                       uint32_t h) {
     for (size_t i = 0; i < w * h; i++) {
-        blend_linear_burn_rgb0_8_c(&src[i], &dest[i]);
+        blend_linear_burn_rgb0_8_c(&src1[i], &src2[i], &dest[i]);
     }
 }
 
-// SUBTRACTIVE 1 BLEND (source from destination)
+// SUBTRACTIVE 1 BLEND (source 1 from source 2)
 
-static inline void blend_sub_src_from_dest_rgb0_8_c(const uint32_t* src,
-                                                    uint32_t* dest) {
-    int32_t channel = (*dest & 0xff) - (*src & 0xff);
+static inline void blend_sub_src1_from_src2_rgb0_8_c(const uint32_t* src1,
+                                                     const uint32_t* src2,
+                                                     uint32_t* dest) {
+    int32_t channel = (*dest & 0xff) - (*src1 & 0xff);
     uint32_t out = max(0, channel);
-    channel = (*dest & 0xff00) - (*src & 0xff00);
+    channel = (*dest & 0xff00) - (*src1 & 0xff00);
     out |= max(0, channel);
-    channel = (*dest & 0xff0000) - (*src & 0xff0000);
+    channel = (*dest & 0xff0000) - (*src1 & 0xff0000);
     *dest = out | max(0, channel);
 }
 
-static inline void blend_sub_src_from_dest_rgb0_8_x86v128(const uint32_t* src,
-                                                          uint32_t* dest) {
-    __m128i src_4px = _mm_load_si128((__m128i*)src);
-    __m128i dest_4px = _mm_load_si128((__m128i*)dest);
-    _mm_store_si128((__m128i*)dest, _mm_subs_epu8(dest_4px, src_4px));
+static inline void blend_sub_src1_from_src2_rgb0_8_x86v128(const uint32_t* src1,
+                                                           const uint32_t* src2,
+                                                           uint32_t* dest) {
+    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
+    _mm_store_si128((__m128i*)dest, _mm_subs_epu8(src2_4px, src1_4px));
 }
 
-void blend_sub_src_from_dest(const uint32_t* src,
-                             uint32_t* dest,
-                             uint32_t w,
-                             uint32_t h) {
+void blend_sub_src1_from_src2(const uint32_t* src1,
+                              const uint32_t* src2,
+                              uint32_t* dest,
+                              uint32_t w,
+                              uint32_t h) {
 #ifdef SIMD_MODE_X86_SSE
     for (size_t i = 0; i < w * h; i += 4) {
-        blend_sub_src_from_dest_rgb0_8_x86v128(&src[i], &dest[i]);
+        blend_sub_src1_from_src2_rgb0_8_x86v128(&src1[i], &src2[i], &dest[i]);
     }
 #else
     for (size_t i = 0; i < w * h; i++) {
-        blend_sub_src_from_dest_rgb0_8_c(&src[i], &dest[i]);
+        blend_sub_src1_from_src2_rgb0_8_c(&src1[i], &src2[i], &dest[i]);
     }
 #endif
 }
 
-// SUBTRACTIVE 2 BLEND (destination from source)
+// SUBTRACTIVE 2 BLEND (source 2 from source 1)
 
-static inline void blend_sub_dest_from_src_rgb0_8_c(const uint32_t* src,
-                                                    uint32_t* dest) {
-    int32_t channel = (*src & 0xff) - (*dest & 0xff);
+static inline void blend_sub_src2_from_src1_rgb0_8_c(const uint32_t* src1,
+                                                     const uint32_t* src2,
+                                                     uint32_t* dest) {
+    int32_t channel = (*src1 & 0xff) - (*dest & 0xff);
     uint32_t out = max(0, channel);
-    channel = (*src & 0xff00) - (*dest & 0xff00);
+    channel = (*src1 & 0xff00) - (*dest & 0xff00);
     out |= max(0, channel);
-    channel = (*src & 0xff0000) - (*dest & 0xff0000);
+    channel = (*src1 & 0xff0000) - (*dest & 0xff0000);
     *dest = out | max(0, channel);
 }
 
-static inline void blend_sub_dest_from_src_rgb0_8_x86v128(const uint32_t* src,
-                                                          uint32_t* dest) {
-    __m128i src_4px = _mm_load_si128((__m128i*)src);
-    __m128i dest_4px = _mm_load_si128((__m128i*)dest);
-    _mm_store_si128((__m128i*)dest, _mm_subs_epu8(src_4px, dest_4px));
+static inline void blend_sub_src2_from_src1_rgb0_8_x86v128(const uint32_t* src1,
+                                                           const uint32_t* src2,
+                                                           uint32_t* dest) {
+    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
+    _mm_store_si128((__m128i*)dest, _mm_subs_epu8(src1_4px, src2_4px));
 }
 
-void blend_sub_dest_from_src(const uint32_t* src,
-                             uint32_t* dest,
-                             uint32_t w,
-                             uint32_t h) {
+void blend_sub_src2_from_src1(const uint32_t* src1,
+                              const uint32_t* src2,
+                              uint32_t* dest,
+                              uint32_t w,
+                              uint32_t h) {
 #ifdef SIMD_MODE_X86_SSE
     for (size_t i = 0; i < w * h; i += 4) {
-        blend_sub_dest_from_src_rgb0_8_x86v128(&src[i], &dest[i]);
+        blend_sub_src2_from_src1_rgb0_8_x86v128(&src1[i], &src2[i], &dest[i]);
     }
 #else
     for (size_t i = 0; i < w * h; i++) {
-        blend_sub_dest_from_src_rgb0_8_c(&src[i], &dest[i]);
+        blend_sub_src2_from_src1_rgb0_8_c(&src1[i], &src2[i], &dest[i]);
     }
 #endif
 }
@@ -363,63 +438,74 @@ void blend_sub_dest_from_src(const uint32_t* src,
 
 static inline int32_t abs_i32(int32_t x) { return x < 0 ? -x : x; }
 
-static inline void blend_sub_src_from_dest_abs_rgb0_8_c(const uint32_t* src,
-                                                        uint32_t* dest) {
-    *dest = abs_i32((int32_t)(*dest & 0xff) - (*src & 0xff))
-            | abs_i32((int32_t)(*dest & 0xff00) - (*src & 0xff00))
-            | abs_i32((int32_t)(*dest & 0xff0000) - (*src & 0xff0000));
+static inline void blend_sub_src1_from_src2_abs_rgb0_8_c(const uint32_t* src1,
+                                                         const uint32_t* src2,
+                                                         uint32_t* dest) {
+    *dest = abs_i32((int32_t)(*dest & 0xff) - (*src1 & 0xff))
+            | abs_i32((int32_t)(*dest & 0xff00) - (*src1 & 0xff00))
+            | abs_i32((int32_t)(*dest & 0xff0000) - (*src1 & 0xff0000));
 }
 
-static inline void blend_sub_src_from_dest_abs_rgb0_8_x86v128(const uint32_t* src,
-                                                              uint32_t* dest) {
-    __m128i src_4px = _mm_load_si128((__m128i*)src);
-    __m128i dest_4px = _mm_load_si128((__m128i*)dest);
+static inline void blend_sub_src1_from_src2_abs_rgb0_8_x86v128(const uint32_t* src1,
+                                                               const uint32_t* src2,
+                                                               uint32_t* dest) {
+    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
     // abs(x - y)  <=>  (x ⊢ y)  | (y ⊢ x) (where ⊢ is minus-with-saturation)
     _mm_store_si128((__m128i*)dest,
-                    _mm_or_si128(_mm_subs_epu8(dest_4px, src_4px),
-                                 _mm_subs_epu8(src_4px, dest_4px)));
+                    _mm_or_si128(_mm_subs_epu8(src2_4px, src1_4px),
+                                 _mm_subs_epu8(src1_4px, src2_4px)));
     // alternatively: TODO[performance]: test if this is faster
     // abs(x - y)  <=>  max(x, y) - min(x, y)
     // _mm_store_si128((__m128i*)dest,
-    //                 _mm_subs_epu8(_mm_max_epu8(dest_4px, src_4px),
-    //                               _mm_min_epu8(dest_4px, src_4px)));
+    //                 _mm_subs_epu8(_mm_max_epu8(src2_4px, src1_4px),
+    //                               _mm_min_epu8(src2_4px, src1_4px)));
 }
 
-void blend_sub_src_from_dest_abs(const uint32_t* src,
-                                 uint32_t* dest,
-                                 uint32_t w,
-                                 uint32_t h) {
+void blend_sub_src1_from_src2_abs(const uint32_t* src1,
+                                  const uint32_t* src2,
+                                  uint32_t* dest,
+                                  uint32_t w,
+                                  uint32_t h) {
 #ifdef SIMD_MODE_X86_SSE
     for (size_t i = 0; i < w * h; i += 4) {
-        blend_sub_src_from_dest_abs_rgb0_8_x86v128(&src[i], &dest[i]);
+        blend_sub_src1_from_src2_abs_rgb0_8_x86v128(&src1[i], &src2[i], &dest[i]);
     }
 #else
     for (size_t i = 0; i < w * h; i++) {
-        blend_sub_src_from_dest_abs_rgb0_8_c(&src[i], &dest[i]);
+        blend_sub_src1_from_src2_abs_rgb0_8_c(&src1[i], &src2[i], &dest[i]);
     }
 #endif
 }
 
 // XOR BLEND
 
-static inline void blend_xor_rgb0_8_c(const uint32_t* src, uint32_t* dest) {
-    *dest = *src ^ *dest;
+static inline void blend_xor_rgb0_8_c(const uint32_t* src1,
+                                      const uint32_t* src2,
+                                      uint32_t* dest) {
+    *dest = *src1 ^ *dest;
 }
 
-static inline void blend_xor_rgb0_8_x86v128(const uint32_t* src, uint32_t* dest) {
-    __m128i src_4px = _mm_load_si128((__m128i*)src);
-    __m128i dest_4px = _mm_load_si128((__m128i*)dest);
-    _mm_store_si128((__m128i*)dest, _mm_xor_si128(src_4px, dest_4px));
+static inline void blend_xor_rgb0_8_x86v128(const uint32_t* src1,
+                                            const uint32_t* src2,
+                                            uint32_t* dest) {
+    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
+    _mm_store_si128((__m128i*)dest, _mm_xor_si128(src1_4px, src2_4px));
 }
 
-void blend_xor(const uint32_t* src, uint32_t* dest, uint32_t w, uint32_t h) {
+void blend_xor(const uint32_t* src1,
+               const uint32_t* src2,
+               uint32_t* dest,
+               uint32_t w,
+               uint32_t h) {
 #ifdef SIMD_MODE_X86_SSE
     for (size_t i = 0; i < w * h; i += 4) {
-        blend_xor_rgb0_8_x86v128(&src[i], &dest[i]);
+        blend_xor_rgb0_8_x86v128(&src1[i], &src2[i], &dest[i]);
     }
 #else
     for (size_t i = 0; i < w * h; i++) {
-        blend_xor_rgb0_8_c(&src[i], &dest[i]);
+        blend_xor_rgb0_8_c(&src1[i], &src2[i], &dest[i]);
     }
 #endif
 }
@@ -452,9 +538,9 @@ void blend_every_other_line(const uint32_t* src,
     }
 }
 
-#define BLEND_SRC_DEST_1PX(blend)                           \
-    void blend##_1px(const uint32_t* src, uint32_t* dest) { \
-        blend##_rgb0_8_c(src, dest);                        \
+#define BLEND_SRC_DEST_1PX(blend)                                                  \
+    void blend##_1px(const uint32_t* src1, const uint32_t* src2, uint32_t* dest) { \
+        blend##_rgb0_8_c(src1, src2, dest);                                        \
     }
 
 BLEND_SRC_DEST_1PX(blend_add)
@@ -466,76 +552,83 @@ BLEND_SRC_DEST_1PX(blend_color_burn)
 BLEND_SRC_DEST_1PX(blend_linear_burn)
 BLEND_SRC_DEST_1PX(blend_maximum)
 BLEND_SRC_DEST_1PX(blend_minimum)
-BLEND_SRC_DEST_1PX(blend_sub_src_from_dest)
-BLEND_SRC_DEST_1PX(blend_sub_dest_from_src)
-BLEND_SRC_DEST_1PX(blend_sub_src_from_dest_abs)
+BLEND_SRC_DEST_1PX(blend_sub_src1_from_src2)
+BLEND_SRC_DEST_1PX(blend_sub_src2_from_src1)
+BLEND_SRC_DEST_1PX(blend_sub_src1_from_src2_abs)
 BLEND_SRC_DEST_1PX(blend_xor)
 
 // ADJUSTABLE BLEND
 
-static inline void blend_adjustable_rgb0_8_c(const uint32_t* src,
+static inline void blend_adjustable_rgb0_8_c(const uint32_t* src1,
+                                             const uint32_t* src2,
                                              uint32_t* dest,
                                              uint32_t param) {
     uint8_t v = param & 0xff;
     uint8_t iv = 0xff - v;
     int32_t output =
-        lut_u8_multiply[*src & 0xFF][v] + lut_u8_multiply[*dest & 0xFF][iv];
-    output |= (lut_u8_multiply[(*src & 0xFF00) >> 8][v]
+        lut_u8_multiply[*src1 & 0xFF][v] + lut_u8_multiply[*dest & 0xFF][iv];
+    output |= (lut_u8_multiply[(*src1 & 0xFF00) >> 8][v]
                + lut_u8_multiply[(*dest & 0xFF00) >> 8][iv])
               << 8;
-    output |= (lut_u8_multiply[(*src & 0xFF0000) >> 16][v]
+    output |= (lut_u8_multiply[(*src1 & 0xFF0000) >> 16][v]
                + lut_u8_multiply[(*dest & 0xFF0000) >> 16][iv])
               << 16;
     *dest = output;
 }
 
-static inline void blend_adjustable_rgb0_8_x86v128(const uint32_t* src,
+static inline void blend_adjustable_rgb0_8_x86v128(const uint32_t* src1,
+                                                   const uint32_t* src2,
                                                    uint32_t* dest,
                                                    uint32_t param) {
-    __m128i src_4px = _mm_load_si128((__m128i*)src);
-    __m128i dest_4px = _mm_load_si128((__m128i*)dest);
+    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
     __m128i zero = _mm_setzero_si128();
-    __m128i src_lo_2px = _mm_unpacklo_epi8(src_4px, zero);
-    __m128i src_hi_2px = _mm_unpackhi_epi8(src_4px, zero);
-    __m128i dest_lo_2px = _mm_unpacklo_epi8(dest_4px, zero);
-    __m128i dest_hi_2px = _mm_unpackhi_epi8(dest_4px, zero);
+    __m128i src1_lo_2px = _mm_unpacklo_epi8(src1_4px, zero);
+    __m128i src1_hi_2px = _mm_unpackhi_epi8(src1_4px, zero);
+    __m128i src2_lo_2px = _mm_unpacklo_epi8(src2_4px, zero);
+    __m128i src2_hi_2px = _mm_unpackhi_epi8(src2_4px, zero);
     __m128i v = _mm_set1_epi16(param);
     __m128i iv = _mm_xor_si128(v, _mm_set1_epi16(0x00ff));
-    __m128i mul_src_lo = _mm_mullo_epi16(src_lo_2px, v);
-    __m128i mul_src_hi = _mm_mullo_epi16(src_hi_2px, v);
-    __m128i mul_dest_lo = _mm_mullo_epi16(dest_lo_2px, iv);
-    __m128i mul_dest_hi = _mm_mullo_epi16(dest_hi_2px, iv);
-    __m128i lo = _mm_adds_epu16(mul_src_lo, mul_dest_lo);
-    __m128i hi = _mm_adds_epu16(mul_src_hi, mul_dest_hi);
+    __m128i mul_src1_lo = _mm_mullo_epi16(src1_lo_2px, v);
+    __m128i mul_src1_hi = _mm_mullo_epi16(src1_hi_2px, v);
+    __m128i mul_src2_lo = _mm_mullo_epi16(src2_lo_2px, iv);
+    __m128i mul_src2_hi = _mm_mullo_epi16(src2_hi_2px, iv);
+    __m128i lo = _mm_adds_epu16(mul_src1_lo, mul_src2_lo);
+    __m128i hi = _mm_adds_epu16(mul_src1_hi, mul_src2_hi);
     __m128i lo_norm = _mm_srli_epi16(lo, 8);
     __m128i hi_norm = _mm_srli_epi16(hi, 8);
     __m128i packed = _mm_packus_epi16(lo_norm, hi_norm);
     _mm_store_si128((__m128i*)dest, packed);
 }
 
-void blend_adjustable(const uint32_t* src,
+void blend_adjustable(const uint32_t* src1,
+                      const uint32_t* src2,
                       uint32_t* dest,
                       uint32_t param,
                       uint32_t w,
                       uint32_t h) {
 #ifdef SIMD_MODE_X86_SSE
     for (size_t i = 0; i < w * h; i += 4) {
-        blend_adjustable_rgb0_8_x86v128(&src[i], &dest[i], param);
+        blend_adjustable_rgb0_8_x86v128(&src1[i], &src2[i], &dest[i], param);
     }
 #else
     for (size_t i = 0; i < w * h; i++) {
-        blend_adjustable_rgb0_8_c(&src[i], &dest[i], param);
+        blend_adjustable_rgb0_8_c(&src1[i], &src2[i], &dest[i], param);
     }
 #endif
 }
 
-void blend_adjustable_1px(const uint32_t* src, uint32_t* dest, uint32_t param) {
-    blend_adjustable_rgb0_8_c(src, dest, param);
+void blend_adjustable_1px(const uint32_t* src1,
+                          const uint32_t* src2,
+                          uint32_t* dest,
+                          uint32_t param) {
+    blend_adjustable_rgb0_8_c(src1, src2, dest, param);
 }
 
 // BUFFER BLEND
 
-static inline void blend_buffer_rgb0_8_c(const uint32_t* src,
+static inline void blend_buffer_rgb0_8_c(const uint32_t* src1,
+                                         const uint32_t* src2,
                                          uint32_t* dest,
                                          const uint32_t* buf,
                                          bool invert) {
@@ -552,18 +645,19 @@ static inline void blend_buffer_rgb0_8_c(const uint32_t* src,
     }
 
     // do an adjustable blend
-    uint8_t src_r = *src >> 16 & 0xff;
-    uint8_t src_g = *src >> 8 & 0xff;
-    uint8_t src_b = *src & 0xff;
-    uint8_t dest_r = *dest >> 16 & 0xff;
-    uint8_t dest_g = *dest >> 8 & 0xff;
-    uint8_t dest_b = *dest & 0xff;
-    *dest = (lut_u8_multiply[src_r][v] + lut_u8_multiply[dest_r][iv]) << 16
-            | (lut_u8_multiply[src_g][v] + lut_u8_multiply[dest_g][iv]) << 8
-            | (lut_u8_multiply[src_b][v] + lut_u8_multiply[dest_b][iv]);
+    uint8_t src1_r = *src1 >> 16 & 0xff;
+    uint8_t src1_g = *src1 >> 8 & 0xff;
+    uint8_t src1_b = *src1 & 0xff;
+    uint8_t src2_r = *dest >> 16 & 0xff;
+    uint8_t src2_g = *dest >> 8 & 0xff;
+    uint8_t src2_b = *dest & 0xff;
+    *dest = (lut_u8_multiply[src1_r][v] + lut_u8_multiply[src2_r][iv]) << 16
+            | (lut_u8_multiply[src1_g][v] + lut_u8_multiply[src2_g][iv]) << 8
+            | (lut_u8_multiply[src1_b][v] + lut_u8_multiply[src2_b][iv]);
 }
 
-static inline void blend_buffer_rgb0_8_x86v128(const uint32_t* src,
+static inline void blend_buffer_rgb0_8_x86v128(const uint32_t* src1,
+                                               const uint32_t* src2,
                                                uint32_t* dest,
                                                const uint32_t* buf,
                                                bool invert) {
@@ -604,28 +698,29 @@ static inline void blend_buffer_rgb0_8_x86v128(const uint32_t* src,
         buf_lo_inv_2px = _mm_xor_si128(buf_lo_2px, invert255_mask);
     }
 
-    __m128i src_4px = _mm_load_si128((__m128i*)src);
-    __m128i dest_4px = _mm_load_si128((__m128i*)dest);
-    __m128i src_hi_2px = _mm_unpackhi_epi8(src_4px, zero);
-    __m128i src_lo_2px = _mm_unpacklo_epi8(src_4px, zero);
-    __m128i dest_hi_2px = _mm_unpackhi_epi8(dest_4px, zero);
-    __m128i dest_lo_2px = _mm_unpacklo_epi8(dest_4px, zero);
+    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
+    __m128i src1_hi_2px = _mm_unpackhi_epi8(src1_4px, zero);
+    __m128i src1_lo_2px = _mm_unpacklo_epi8(src1_4px, zero);
+    __m128i src2_hi_2px = _mm_unpackhi_epi8(src2_4px, zero);
+    __m128i src2_lo_2px = _mm_unpacklo_epi8(src2_4px, zero);
     // src * v
-    __m128i src_hi_v = _mm_mullo_epi16(src_hi_2px, buf_hi_2px);
-    __m128i src_lo_v = _mm_mullo_epi16(src_lo_2px, buf_lo_2px);
+    __m128i src1_hi_v = _mm_mullo_epi16(src1_hi_2px, buf_hi_2px);
+    __m128i src1_lo_v = _mm_mullo_epi16(src1_lo_2px, buf_lo_2px);
     // dest * (255 - v)
-    __m128i dest_hi_v = _mm_mullo_epi16(dest_hi_2px, buf_hi_inv_2px);
-    __m128i dest_lo_v = _mm_mullo_epi16(dest_lo_2px, buf_lo_inv_2px);
+    __m128i src2_hi_v = _mm_mullo_epi16(src2_hi_2px, buf_hi_inv_2px);
+    __m128i src2_lo_v = _mm_mullo_epi16(src2_lo_2px, buf_lo_inv_2px);
     // src * v + dest * (255 - v)
-    __m128i hi = _mm_add_epi16(src_hi_v, dest_hi_v);
-    __m128i lo = _mm_add_epi16(src_lo_v, dest_lo_v);
+    __m128i hi = _mm_add_epi16(src1_hi_v, src2_hi_v);
+    __m128i lo = _mm_add_epi16(src1_lo_v, src2_lo_v);
     __m128i his8 = _mm_srli_epi16(hi, 8);
     __m128i los8 = _mm_srli_epi16(lo, 8);
     __m128i packed = _mm_packus_epi16(los8, his8);
     _mm_store_si128((__m128i*)dest, packed);
 }
 
-void blend_buffer(const uint32_t* src,
+void blend_buffer(const uint32_t* src1,
+                  const uint32_t* src2,
                   uint32_t* dest,
                   const uint32_t* buf,
                   bool invert,
@@ -633,22 +728,23 @@ void blend_buffer(const uint32_t* src,
                   uint32_t h) {
 #ifdef SIMD_MODE_X86_SSE
     for (size_t i = 0; i < w * h; i += 4) {
-        blend_buffer_rgb0_8_x86v128(&src[i], &dest[i], &buf[i], invert);
+        blend_buffer_rgb0_8_x86v128(&src1[i], &src2[i], &dest[i], &buf[i], invert);
     }
 #else
     for (size_t i = 0; i < w * h; i++) {
-        blend_buffer_rgb0_8_c(&src[i], &dest[i], &buf[i], invert);
+        blend_buffer_rgb0_8_c(&src1[i], &src2[i], &dest[i], &buf[i], invert);
     }
 #endif
 }
 
-void blend_buffer_1px(const uint32_t* src,
+void blend_buffer_1px(const uint32_t* src1,
+                      const uint32_t* src2,
                       uint32_t* dest,
                       const uint32_t* buf,
                       bool invert) {
 #ifdef SIMD_MODE_X86_SSE
-    blend_buffer_rgb0_8_x86v128(src, dest, buf, invert);
+    blend_buffer_rgb0_8_x86v128(src1, src2, dest, buf, invert);
 #else
-    blend_buffer_rgb0_8_c(src, dest, buf, invert);
+    blend_buffer_rgb0_8_c(src1, src2, dest, buf, invert);
 #endif
 }

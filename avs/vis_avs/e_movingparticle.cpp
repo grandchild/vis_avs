@@ -32,8 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // alphachannel safe 11/21/99
 #include "e_movingparticle.h"
 
-#include "r_defs.h"
-
+#include "blend.h"
 #include "pixel_format.h"
 
 #include <math.h>
@@ -99,19 +98,22 @@ int E_MovingParticle::render(char[2][2][576],
     if (is_beat && this->config.on_beat_size_change) {
         this->cur_size = this->config.on_beat_size;
     }
+    auto color = (pixel_rgb0_8)(this->config.color & AVS_PIXEL_COLOR_MASK_RGB0_8);
     int32_t size = this->cur_size;
     this->cur_size = (this->cur_size + this->config.size) / 2;
     if (size <= 1) {
-        framebuffer += xp + (yp)*w;
+        auto dest = (uint32_t*)framebuffer + xp + yp * w;
         if (xp >= 0 && yp >= 0 && xp < w && yp < h) {
-            if (this->config.blend_mode == PARTICLE_BLEND_REPLACE) {
-                framebuffer[0] = (pixel_rgb0_8)this->config.color;
-            } else if (this->config.blend_mode == PARTICLE_BLEND_5050) {
-                framebuffer[0] = BLEND_AVG(framebuffer[0], this->config.color);
-            } else if (this->config.blend_mode == PARTICLE_BLEND_DEFAULT) {
-                BLEND_LINE(framebuffer, (pixel_rgb0_8)this->config.color);
-            } else {  // PARTICLE_BLEND_ADDITIVE
-                framebuffer[0] = BLEND(framebuffer[0], this->config.color);
+            switch (this->config.blend_mode) {
+                case PARTICLE_BLEND_REPLACE: blend_replace_1px(&color, dest); break;
+                case PARTICLE_BLEND_5050: blend_5050_1px(&color, dest, dest); break;
+                case PARTICLE_BLEND_DEFAULT:
+                    blend_default_1px(&color, dest, dest);
+                    break;
+                default:
+                case PARTICLE_BLEND_ADDITIVE:
+                    blend_default_1px(&color, dest, dest);
+                    break;
             }
         }
         return 0;
@@ -139,25 +141,29 @@ int E_MovingParticle::render(char[2][2][576],
             if (xst < 0) {
                 xst = 0;
             }
-            int* f = &framebuffer[xst + (yp + y) * w];
-            if (this->config.blend_mode == PARTICLE_BLEND_REPLACE) {
-                for (x = xst; x < xe; x++) {
-                    *f++ = (pixel_rgb0_8)this->config.color;
-                }
-            } else if (this->config.blend_mode == PARTICLE_BLEND_5050) {
-                for (x = xst; x < xe; x++) {
-                    *f = BLEND_AVG(*f, this->config.color);
-                    f++;
-                }
-            } else if (this->config.blend_mode == PARTICLE_BLEND_DEFAULT) {
-                for (x = xst; x < xe; x++) {
-                    BLEND_LINE(f++, (pixel_rgb0_8)this->config.color);
-                }
-            } else {  // PARTICLE_BLEND_ADDITIVE
-                for (x = xst; x < xe; x++) {
-                    *f = BLEND(*f, this->config.color);
-                    f++;
-                }
+            auto f = (uint32_t*)&framebuffer[xst + (yp + y) * w];
+            switch (this->config.blend_mode) {
+                case PARTICLE_BLEND_REPLACE:
+                    for (x = xst; x < xe; x++, f++) {
+                        blend_replace_1px(&color, f);
+                    }
+                    break;
+                case PARTICLE_BLEND_5050:
+                    for (x = xst; x < xe; x++, f++) {
+                        blend_5050_1px(&color, f, f);
+                    }
+                    break;
+                case PARTICLE_BLEND_DEFAULT:
+                    for (x = xst; x < xe; x++, f++) {
+                        blend_default_1px(&color, f, f);
+                    }
+                    break;
+                default:
+                case PARTICLE_BLEND_ADDITIVE:
+                    for (x = xst; x < xe; x++, f++) {
+                        blend_default_1px(&color, f, f);
+                    }
+                    break;
             }
         }
     }

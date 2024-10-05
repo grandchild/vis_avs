@@ -126,7 +126,7 @@ void E_BassSpin::render_triangle(uint32_t* fb,
             }
             if (xl > 0) {
                 while (xl--) {
-                    blend_default_1px(&color, t++);
+                    blend_default_1px(&color, t, t++);
                 }
             }
         }

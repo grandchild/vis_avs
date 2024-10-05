@@ -81,7 +81,7 @@ void line(uint32_t* fb,
                 while (d++ < ye) {
                     int x = lw;
                     while (x--) {
-                        blend_default_1px(&color, fb);
+                        blend_default_1px(&color, fb, fb);
                         fb++;
                     }
                     fb += width;
@@ -110,7 +110,7 @@ void line(uint32_t* fb,
             while (y--) {
                 int lt = d;
                 while (lt++ < xe) {
-                    blend_default_1px(&color, fb);
+                    blend_default_1px(&color, fb, fb);
                     fb++;
                 }
                 fb += width;
@@ -201,7 +201,7 @@ void line(uint32_t* fb,
                     ype = height;
                 }
                 while (yp++ < ype) {
-                    blend_default_1px(&color, newfb);
+                    blend_default_1px(&color, fb, newfb);
                     newfb += width;
                 }
                 if (d < 0) {
@@ -262,7 +262,7 @@ void line(uint32_t* fb,
                     xpe = width;
                 }
                 while (xp++ < xpe) {
-                    blend_default_1px(&color, newfb);
+                    blend_default_1px(&color, fb, newfb);
                     newfb++;
                 }
 
