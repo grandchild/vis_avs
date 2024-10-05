@@ -75,7 +75,15 @@ class E_BlitterFeedback
     void set_current_zoom(int32_t zoom);
 
    private:
-    int32_t blitter_normal(int* framebuffer, int* fbout, int w, int h, int32_t zoom);
-    int32_t blitter_out(int* framebuffer, int* fbout, int w, int h, int32_t zoom);
+    int32_t blitter_normal(uint32_t* framebuffer,
+                           uint32_t* fbout,
+                           int w,
+                           int h,
+                           int32_t zoom);
+    int32_t blitter_out(uint32_t* framebuffer,
+                        uint32_t* fbout,
+                        int w,
+                        int h,
+                        int32_t zoom);
     int32_t current_zoom;
 };

@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "e_blitterfeedback.h"
 
-#include "r_defs.h"
+#include "blend.h"
 
 // TODO: doesn't complain if not included. -> research.
 #include "timing.h"
@@ -68,8 +68,8 @@ E_BlitterFeedback::E_BlitterFeedback(AVS_Instance* avs)
 
 void E_BlitterFeedback::set_current_zoom(int32_t zoom) { this->current_zoom = zoom; }
 
-int E_BlitterFeedback::blitter_out(int* framebuffer,
-                                   int* fbout,
+int E_BlitterFeedback::blitter_out(uint32_t* framebuffer,
+                                   uint32_t* fbout,
                                    int w,
                                    int h,
                                    int32_t zoom) {
@@ -93,8 +93,8 @@ int E_BlitterFeedback::blitter_out(int* framebuffer,
     fbout += start_y * w;
     for (y = 0; y < y_len; y++) {
         int32_t s_x = 32768;
-        uint32_t* src = ((uint32_t*)framebuffer) + (s_y >> 16) * w;
-        uint32_t* old_dest = ((uint32_t*)fbout) + start_x;
+        uint32_t* src = framebuffer + (s_y >> 16) * w;
+        uint32_t* old_dest = fbout + start_x;
         s_y += ds_x;
         if (this->config.blend_mode == BLITTER_BLEND_REPLACE) {
             int32_t x = x_len / 4;
@@ -113,13 +113,13 @@ int E_BlitterFeedback::blitter_out(int* framebuffer,
             uint32_t* s2 = (uint32_t*)framebuffer + ((y + start_y) * w) + start_x;
             int32_t x = x_len / 4;
             while (x--) {
-                old_dest[0] = BLEND_AVG(s2[0], src[s_x >> 16]);
+                blend_5050_1px(&src[s_x >> 16], &s2[0], &old_dest[0]);
                 s_x += ds_x;
-                old_dest[1] = BLEND_AVG(s2[1], src[s_x >> 16]);
+                blend_5050_1px(&src[s_x >> 16], &s2[1], &old_dest[1]);
                 s_x += ds_x;
-                old_dest[2] = BLEND_AVG(s2[2], src[s_x >> 16]);
+                blend_5050_1px(&src[s_x >> 16], &s2[2], &old_dest[2]);
                 s_x += ds_x;
-                old_dest[3] = BLEND_AVG(s2[3], src[s_x >> 16]);
+                blend_5050_1px(&src[s_x >> 16], &s2[3], &old_dest[3]);
                 s2 += 4;
                 old_dest += 4;
                 s_x += ds_x;
@@ -136,8 +136,8 @@ int E_BlitterFeedback::blitter_out(int* framebuffer,
     return 0;
 }
 
-int E_BlitterFeedback::blitter_normal(int* framebuffer,
-                                      int* fbout,
+int E_BlitterFeedback::blitter_normal(uint32_t* framebuffer,
+                                      uint32_t* fbout,
                                       int w,
                                       int h,
                                       int32_t zoom) {
@@ -433,15 +433,15 @@ int E_BlitterFeedback::blitter_normal(int* framebuffer,
                 int32_t x = w / 4;
                 uint32_t* s2 = (uint32_t*)framebuffer + y * w;
                 while (x--) {
-                    fbout[0] = BLEND_AVG(fbout[0], s2[0]);
-                    fbout[1] = BLEND_AVG(fbout[1], s2[1]);
-                    fbout[2] = BLEND_AVG(fbout[2], s2[2]);
-                    fbout[3] = BLEND_AVG(fbout[3], s2[3]);
+                    blend_5050_1px(&s2[0], &fbout[0], &fbout[0]);
+                    blend_5050_1px(&s2[1], &fbout[1], &fbout[1]);
+                    blend_5050_1px(&s2[2], &fbout[2], &fbout[2]);
+                    blend_5050_1px(&s2[3], &fbout[3], &fbout[3]);
                     fbout += 4;
                     s2 += 4;
                 }
             }
-        }     // end subpixel y loop
+        }  // end subpixel y loop
     } else {  // !this->config.bilinear
         int32_t y;
         for (y = 0; y < h; y++) {
@@ -465,13 +465,13 @@ int E_BlitterFeedback::blitter_normal(int* framebuffer,
                 uint32_t* s2 = (uint32_t*)framebuffer + (y * w);
                 int32_t x = w / 4;
                 while (x--) {
-                    fbout[0] = BLEND_AVG(s2[0], src[s_x >> 16]);
+                    blend_5050_1px(&src[s_x >> 16], &s2[0], &fbout[0]);
                     s_x += ds_x;
-                    fbout[1] = BLEND_AVG(s2[1], src[s_x >> 16]);
+                    blend_5050_1px(&src[s_x >> 16], &s2[1], &fbout[1]);
                     s_x += ds_x;
-                    fbout[2] = BLEND_AVG(s2[2], src[s_x >> 16]);
+                    blend_5050_1px(&src[s_x >> 16], &s2[2], &fbout[2]);
                     s_x += ds_x;
-                    fbout[3] = BLEND_AVG(s2[3], src[s_x >> 16]);
+                    blend_5050_1px(&src[s_x >> 16], &s2[3], &fbout[3]);
                     s2 += 4;
                     fbout += 4;
                     s_x += ds_x;
@@ -510,10 +510,11 @@ int E_BlitterFeedback::render(char[2][2][576],
     }
 
     if (target_zoom < 32) {
-        return blitter_normal(framebuffer, fbout, w, h, target_zoom);
+        return blitter_normal(
+            (uint32_t*)framebuffer, (uint32_t*)fbout, w, h, target_zoom);
     }
     if (target_zoom > 32) {
-        return blitter_out(framebuffer, fbout, w, h, target_zoom);
+        return blitter_out((uint32_t*)framebuffer, (uint32_t*)fbout, w, h, target_zoom);
     }
     return 0;
 }
