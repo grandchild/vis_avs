@@ -33,8 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "e_bassspin.h"
 
-#include "r_defs.h"
-
+#include "blend.h"
 #include "linedraw.h"
 
 #include <cmath>
@@ -62,7 +61,7 @@ E_BassSpin::E_BassSpin(AVS_Instance* avs)
       dir{-1.0, 1.0} {}
 
 // TODO [clean]: Replace this method by reusing the one from Triangle
-void E_BassSpin::render_triangle(int32_t* fb,
+void E_BassSpin::render_triangle(uint32_t* fb,
                                  int32_t points[6],
                                  int32_t width,
                                  int32_t height,
@@ -117,7 +116,7 @@ void E_BassSpin::render_triangle(int32_t* fb,
             if (!xl) {
                 xl++;
             }
-            int32_t* t = fb + x;
+            uint32_t* t = fb + x;
             if (x < 0) {
                 t -= x;
                 xl -= x;
@@ -127,7 +126,7 @@ void E_BassSpin::render_triangle(int32_t* fb,
             }
             if (xl > 0) {
                 while (xl--) {
-                    BLEND_LINE(t++, color);
+                    blend_default_1px(&color, t++);
                 }
             }
         }
@@ -227,14 +226,14 @@ int E_BassSpin::render(char visdata[2][2][576],
             if (lx[0][triangle] || ly[0][triangle]) {
                 int32_t points[6] = {
                     c_x, h / 2, lx[0][triangle], ly[0][triangle], xp + c_x, yp + h / 2};
-                render_triangle(framebuffer, points, w, h, color);
+                render_triangle((uint32_t*)framebuffer, points, w, h, color);
             }
             lx[0][triangle] = xp + c_x;
             ly[0][triangle] = yp + h / 2;
             if (lx[1][triangle] || ly[1][triangle]) {
                 int32_t points[6] = {
                     c_x, h / 2, lx[1][triangle], ly[1][triangle], c_x - xp, h / 2 - yp};
-                render_triangle(framebuffer, points, w, h, color);
+                render_triangle((uint32_t*)framebuffer, points, w, h, color);
             }
             lx[1][triangle] = c_x - xp;
             ly[1][triangle] = h / 2 - yp;
