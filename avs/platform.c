@@ -37,6 +37,9 @@ void log_set_level(enum LogLevel level) { g_log_level = level; }
         va_start(args, fmt);                                                    \
         vfprintf(stderr, log_fmt_str, args);                                    \
     }
+#ifdef DEBUG
+void log_debug(const char* fmt, ...) { LOG(DEBUG); }
+#endif
 void log_info(const char* fmt, ...) { LOG(INFO); }
 void log_warn(const char* fmt, ...) { LOG(WARN); }
 void log_err(const char* fmt, ...) { LOG(ERR); }
