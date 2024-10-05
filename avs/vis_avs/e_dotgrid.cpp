@@ -32,8 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // alphachannel safe 11/21/99
 #include "e_dotgrid.h"
 
-#include "r_defs.h"
-
+#include "blend.h"
 #include "pixel_format.h"
 
 #include <cstdint>
@@ -75,7 +74,7 @@ int E_DotGrid::render(char[2][2][576],
                       int h) {
     int32_t x;
     int32_t y;
-    int32_t current_color;
+    uint32_t current_color;
 
     if (is_beat & 0x80000000) {
         return 0;
@@ -119,26 +118,27 @@ int E_DotGrid::render(char[2][2][576],
 
     int32_t sy = (yp >> 8) % (int32_t)this->config.spacing;
     int32_t sx = (xp >> 8) % (int32_t)this->config.spacing;
-    framebuffer += sy * w;
+    auto dest = (uint32_t*)framebuffer;
+    dest += sy * w;
     for (y = sy; y < h; y += (int32_t)this->config.spacing) {
         if (this->config.blend_mode == DOTGRID_BLEND_ADDITIVE) {
             for (x = sx; x < w; x += (int32_t)this->config.spacing) {
-                framebuffer[x] = BLEND(framebuffer[x], current_color);
+                blend_add_1px(&current_color, &dest[x], &dest[x]);
             }
         } else if (this->config.blend_mode == DOTGRID_BLEND_5050) {
             for (x = sx; x < w; x += (int32_t)this->config.spacing) {
-                framebuffer[x] = BLEND_AVG(framebuffer[x], current_color);
+                blend_5050_1px(&current_color, &dest[x], &dest[x]);
             }
         } else if (this->config.blend_mode == DOTGRID_BLEND_DEFAULT) {
             for (x = sx; x < w; x += (int32_t)this->config.spacing) {
-                BLEND_LINE(framebuffer + x, current_color);
+                blend_default_1px(&current_color, &dest[x], &dest[x]);
             }
         } else {  // DOTGRID_BLEND_REPLACE
             for (x = sx; x < w; x += (int32_t)this->config.spacing) {
-                framebuffer[x] = current_color;
+                blend_replace_1px(&current_color, &dest[x]);
             }
         }
-        framebuffer += w * this->config.spacing;
+        dest += w * this->config.spacing;
     }
     xp += (int32_t)this->config.speed_x;
     yp += (int32_t)this->config.speed_y;
