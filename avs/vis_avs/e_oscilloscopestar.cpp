@@ -32,8 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // alphachannel safe 11/21/99
 #include "e_oscilloscopestar.h"
 
-#include "r_defs.h"
-
+#include "linedraw.h"
 #include "pixel_format.h"
 
 #include <cmath>
@@ -136,7 +135,7 @@ int E_OscilloscopeStar::render(char visdata[2][2][576],
             y = h / 2 + (int)(s * p) + (int)(c * ale);
             if ((x >= 0 && x < w && y >= 0 && y < h)
                 || (lx >= 0 && lx < w && ly >= 0 && ly < h)) {
-                line(framebuffer,
+                line((uint32_t*)framebuffer,
                      x,
                      y,
                      lx,

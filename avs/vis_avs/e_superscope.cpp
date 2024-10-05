@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "r_defs.h"
 
 #include "avs_eelif.h"
+#include "linedraw.h"
 
 #define PUT_INT(y)                   \
     data[pos] = (y) & 255;           \
@@ -196,7 +197,7 @@ int E_SuperScope::render(char visdata[2][2][576],
                 } else {
                     if (!is_first_point) {
                         if ((thiscolor & 0xffffff) || (g_line_blend_mode & 0xff) != 1) {
-                            line(framebuffer,
+                            line((uint32_t*)framebuffer,
                                  lx,
                                  ly,
                                  x,

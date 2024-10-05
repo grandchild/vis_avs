@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // alphachannel safe 11/21/99
 #include "e_simple.h"
 
-#include "r_defs.h"
+#include "linedraw.h"
 
 #define PUT_INT(y)                   \
     data[pos] = (y) & 255;           \
@@ -167,7 +167,7 @@ int E_Simple::render(char visdata[2][2][576],
             for (x = 1; x < 288; x++) {
                 ox = (int)(x * xs);
                 oy = yh + (int)((int)(fa_data[x] ^ 128) * yscale);
-                line(framebuffer,
+                line((uint32_t*)framebuffer,
                      lx,
                      ly,
                      ox,
@@ -195,7 +195,7 @@ int E_Simple::render(char visdata[2][2][576],
             for (x = 1; x < 200; x++) {
                 oy = h2 + (int)((fa_data[x]) * ys);
                 ox = (int)(x * xs);
-                line(framebuffer,
+                line((uint32_t*)framebuffer,
                      lx,
                      ly,
                      ox,
@@ -220,7 +220,7 @@ int E_Simple::render(char visdata[2][2][576],
                 float s1 = r - (int)r;
                 float yr = (fa_data[(int)r] ^ 128) * (1.0f - s1)
                            + (fa_data[(int)r + 1] ^ 128) * (s1);
-                line(framebuffer,
+                line((uint32_t*)framebuffer,
                      x,
                      ys - 1,
                      x,
@@ -246,7 +246,7 @@ int E_Simple::render(char visdata[2][2][576],
                 float r = x * xs;
                 float s1 = r - (int)r;
                 float yr = fa_data[(int)r] * (1.0f - s1) + fa_data[(int)r + 1] * (s1);
-                line(framebuffer,
+                line((uint32_t*)framebuffer,
                      x,
                      h2 - adj,
                      x,

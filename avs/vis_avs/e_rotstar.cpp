@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // alphachannel safe 11/21/99
 #include "e_rotstar.h"
 
-#include "r_defs.h"
+#include "linedraw.h"
 
 #include <math.h>
 
@@ -126,7 +126,7 @@ int E_RotStar::render(char visdata[2][2][576],
             nx = (int)(cos(r2) * vw + w / 2 + a);
             ny = (int)(sin(r2) * vh + h / 2 + b);
             r2 += 3.14159 * 4.0 / 5.0;
-            line(framebuffer,
+            line((uint32_t*)framebuffer,
                  lx,
                  ly,
                  nx,

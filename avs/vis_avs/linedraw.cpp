@@ -29,7 +29,11 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "r_defs.h"
+#include "linedraw.h"
+
+#include "blend.h"
+
+#include "../platform.h"
 
 #include <math.h>
 
@@ -39,14 +43,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     (y) = (temp)
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 
-void line(int* fb,
+void line(uint32_t* fb,
           int x1,
           int y1,
           int x2,
           int y2,
           int width,
           int height,
-          int color,
+          uint32_t color,
           int lw) {
     int dy = ABS(y2 - y1);
     int dx = ABS(x2 - x1);
@@ -77,7 +81,7 @@ void line(int* fb,
                 while (d++ < ye) {
                     int x = lw;
                     while (x--) {
-                        BLEND_LINE(fb, color);
+                        blend_default_1px(&color, fb);
                         fb++;
                     }
                     fb += width;
@@ -106,7 +110,7 @@ void line(int* fb,
             while (y--) {
                 int lt = d;
                 while (lt++ < xe) {
-                    BLEND_LINE(fb, color);
+                    blend_default_1px(&color, fb);
                     fb++;
                 }
                 fb += width;
@@ -188,7 +192,7 @@ void line(int* fb,
             while (x1 < x2) {
                 int yp = y1;
                 int ype = y1 + lw;
-                int* newfb = fb + offs;
+                uint32_t* newfb = fb + offs;
                 if (yp < 0) {
                     newfb -= yp * width;
                     yp = 0;
@@ -197,7 +201,7 @@ void line(int* fb,
                     ype = height;
                 }
                 while (yp++ < ype) {
-                    BLEND_LINE(newfb, color);
+                    blend_default_1px(&color, newfb);
                     newfb += width;
                 }
                 if (d < 0) {
@@ -249,7 +253,7 @@ void line(int* fb,
             while (y1 < y2) {
                 int xp = x1;
                 int xpe = x1 + lw;
-                int* newfb = fb + offs;
+                uint32_t* newfb = fb + offs;
                 if (xp < 0) {
                     newfb -= xp;
                     xp = 0;
@@ -258,7 +262,7 @@ void line(int* fb,
                     xpe = width;
                 }
                 while (xp++ < xpe) {
-                    BLEND_LINE(newfb, color);
+                    blend_default_1px(&color, newfb);
                     newfb++;
                 }
 

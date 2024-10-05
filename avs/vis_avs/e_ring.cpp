@@ -32,9 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // alphachannel safe 11/21/99
 #include "e_ring.h"
 
-#include "r_defs.h"
-
 #include "effect_common.h"
+#include "linedraw.h"
 #include "pixel_format.h"
 
 #include <math.h>
@@ -154,7 +153,7 @@ int E_Ring::render(char visdata[2][2][576],
 
         if ((tx >= 0 && tx < w && ty >= 0 && ty < h)
             || (lx >= 0 && lx < w && ly >= 0 && ly < h)) {
-            line(framebuffer,
+            line((uint32_t*)framebuffer,
                  tx,
                  ty,
                  lx,
@@ -164,7 +163,7 @@ int E_Ring::render(char visdata[2][2][576],
                  current_color,
                  (g_line_blend_mode & 0xff0000) >> 16);
         }
-        // line(framebuffer, tx, ty, c_x, c_y, w, h, current_color);
+        // line((uint32_t*)framebuffer, tx, ty, c_x, c_y, w, h, current_color);
         // if (tx >= 0 && tx < w && ty >= 0 && ty < h) {
         //     framebuffer[tx + ty * w] = current_color;
         // }

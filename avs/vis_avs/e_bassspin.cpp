@@ -35,6 +35,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "r_defs.h"
 
+#include "linedraw.h"
+
 #include <cmath>
 
 #define F16(x) ((x) << 16)
@@ -178,7 +180,7 @@ int E_BassSpin::render(char visdata[2][2][576],
         xp = (int32_t)(cos(r_v[triangle]) * screen_size_f);
         if (this->config.mode == BASSSPIN_MODE_OUTLINE) {
             if (lx[0][triangle] || ly[0][triangle]) {
-                line(framebuffer,
+                line((uint32_t*)framebuffer,
                      lx[0][triangle],
                      ly[0][triangle],
                      xp + c_x,
@@ -190,7 +192,7 @@ int E_BassSpin::render(char visdata[2][2][576],
             }
             lx[0][triangle] = xp + c_x;
             ly[0][triangle] = yp + h / 2;
-            line(framebuffer,
+            line((uint32_t*)framebuffer,
                  c_x,
                  h / 2,
                  c_x + xp,
@@ -200,7 +202,7 @@ int E_BassSpin::render(char visdata[2][2][576],
                  color,
                  (g_line_blend_mode & 0xff0000) >> 16);
             if (lx[1][triangle] || ly[1][triangle]) {
-                line(framebuffer,
+                line((uint32_t*)framebuffer,
                      lx[1][triangle],
                      ly[1][triangle],
                      c_x - xp,
@@ -212,7 +214,7 @@ int E_BassSpin::render(char visdata[2][2][576],
             }
             lx[1][triangle] = c_x - xp;
             ly[1][triangle] = h / 2 - yp;
-            line(framebuffer,
+            line((uint32_t*)framebuffer,
                  c_x,
                  h / 2,
                  c_x - xp,

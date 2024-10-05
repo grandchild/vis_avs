@@ -88,17 +88,6 @@ void matrixApply(float* m,
  */
 extern int g_line_blend_mode;
 
-// linedraw.cpp
-void line(int* fb,
-          int x1,
-          int y1,
-          int x2,
-          int y2,
-          int width,
-          int height,
-          int color,
-          int lw);
-
 // inlines
 static unsigned int __inline BLEND(unsigned int a, unsigned int b) {
     unsigned int r, t;
