@@ -10,6 +10,9 @@
 #include <string.h>
 #include <string>
 
+// Legacy maximum code section length (for legacy preset files)
+#define MAX_CODE_LEN (1 << 16)
+
 /**
  * Inherit from `Variables` to define available EEL variables:
  *

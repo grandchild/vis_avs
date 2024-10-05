@@ -31,9 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_superscope.h"
 
-#include "r_defs.h"
-
 #include "avs_eelif.h"
+#include "blend.h"
 #include "linedraw.h"
 
 #define PUT_INT(y)                   \
@@ -187,12 +186,13 @@ int E_SuperScope::render(char visdata[2][2][576],
             int x = (*this->vars.x + 1.0) * w * 0.5;
             int y = (*this->vars.y + 1.0) * h * 0.5;
             if (*this->vars.skip < 0.00001) {
-                int thiscolor = makeint(*this->vars.blue)
-                                | (makeint(*this->vars.green) << 8)
-                                | (makeint(*this->vars.red) << 16);
+                uint32_t thiscolor = makeint(*this->vars.blue)
+                                     | (makeint(*this->vars.green) << 8)
+                                     | (makeint(*this->vars.red) << 16);
                 if (*this->vars.drawmode < 0.00001) {
                     if (y >= 0 && y < h && x >= 0 && x < w) {
-                        BLEND_LINE(framebuffer + x + y * w, thiscolor);
+                        blend_default_1px(&thiscolor,
+                                          (uint32_t*)framebuffer + x + y * w);
                     }
                 } else {
                     if (!is_first_point) {
