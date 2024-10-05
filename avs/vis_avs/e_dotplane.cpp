@@ -32,8 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // alphachannel safe 11/21/99
 #include "e_dotplane.h"
 
-#include "r_defs.h"
-
+#include "blend.h"
 #include "matrix.h"
 
 #include <cmath>
@@ -183,7 +182,8 @@ int E_DotPlane::render(char visdata[2][2][576],
             int screen_x = (int)(x * z) + (w / 2);
             int screen_y = (int)(y * z) + (h / 2);
             if (screen_y >= 0 && screen_y < h && screen_x >= 0 && screen_x < w) {
-                BLEND_LINE(framebuffer + screen_y * w + screen_x, (int32_t)*color);
+                auto dest = (uint32_t*)framebuffer + screen_y * w + screen_x;
+                blend_default_1px(color, dest, dest);
             }
             cur_y += grid_step;
             color += direction;
