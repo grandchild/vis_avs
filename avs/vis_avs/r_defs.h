@@ -32,6 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _R_DEFS_H_
 #define _R_DEFS_H_
 
+#include "matrix.h"
+
 #include "../platform.h"
 
 #include <string.h>  // Many if not all components need strcpy or memcpy.
@@ -63,18 +65,6 @@ extern int g_reset_vars_on_recompile;
 // use this function to get a global buffer, and the last flag says whether or not to
 // allocate it if it's not valid...
 void* getGlobalBuffer(int w, int h, int n, int do_alloc);
-
-// matrix.cpp
-void matrixRotate(float matrix[], char m, float Deg);
-void matrixTranslate(float m[], float x, float y, float z);
-void matrixMultiply(float* dest, float src[]);
-void matrixApply(float* m,
-                 float x,
-                 float y,
-                 float z,
-                 float* outx,
-                 float* outy,
-                 float* outz);
 
 /**
  * struct line_blend_mode {

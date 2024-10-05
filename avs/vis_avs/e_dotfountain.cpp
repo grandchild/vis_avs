@@ -34,6 +34,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "r_defs.h"
 
+#include "matrix.h"
+
 #include <array>
 #include <cmath>
 #include <cstdint>
