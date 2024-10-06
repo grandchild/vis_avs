@@ -36,10 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wa_ipc.h"
 #include "wnd.h"
 
-#include <immintrin.h>
-
-int is_mmx(void) { return _may_i_use_cpu_feature(_FEATURE_MMX); }
-
 void Render_Init() {
     timingInit();
 

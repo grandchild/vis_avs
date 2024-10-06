@@ -196,17 +196,6 @@ static int init(struct winampVisModule* this_mod) {
     }
 #endif
 
-#ifndef NO_MMX
-    extern int is_mmx(void);
-    if (!is_mmx()) {
-        MessageBox(this_mod->hwndParent,
-                   "NO MMX SUPPORT FOUND - CANNOT RUN AVS - GET THE NON-MMX VERSION.",
-                   "AVS ERROR",
-                   MB_OK | MB_ICONSTOP);
-        return 1;
-    }
-#endif
-
 #ifdef WA3_COMPONENT
     strcat(g_path, "\\wacs\\data");
 #endif
