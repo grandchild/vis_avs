@@ -36,37 +36,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wa_ipc.h"
 #include "wnd.h"
 
-int is_mmx(void) {
-    DWORD retval1, retval2;
-    try {
-#ifdef _MSC_VER
-        // TODO [cleanup]: This is CPUID, maybe it wasn't available in MASM at the time?
-        _asm {
-			mov eax, 1           // set up CPUID to return processor version and features
-            //	0 = vendor string, 1 = version info, 2 = cache info
-			_emit 0x0f  // code bytes = 0fh,  0a2h
-			_emit 0xa2
-			mov retval1, eax		
-			mov retval2, edx
-        }
-#else  // _MSC_VER
-        __asm__ __volatile__(
-            "mov %%eax, 1\n\t"
-            "cpuid\n\t"
-            "mov %0, %%eax\n\t"
-            "mov %1, %%edx\n\t"
-            : "=m"(retval1), "=m"(retval2)
-            : /* no inputs */
-            : "eax", "ebx", "ecx", "edx");
-#endif
-    } catch (...) {
-        retval1 = retval2 = 0;
-    }
-    if (!retval1) {
-        return 0;
-    }
-    return (retval2 & 0x800000) ? 1 : 0;
-}
+#include <immintrin.h>
+
+int is_mmx(void) { return _may_i_use_cpu_feature(_FEATURE_MMX); }
 
 void Render_Init() {
     timingInit();
