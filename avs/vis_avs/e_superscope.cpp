@@ -208,8 +208,8 @@ int E_SuperScope::render(char visdata[2][2][576],
                                  (int)(*this->vars.linesize + 0.5));
                         }
                     }  // is_first_point
-                }      // line
-            }          // skip
+                }  // line
+            }  // skip
             is_first_point = false;
             lx = x;
             ly = y;

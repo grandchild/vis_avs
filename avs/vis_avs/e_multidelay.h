@@ -28,7 +28,7 @@ struct MultiDelay_Global_Buffer : public Effect_Config {
     uint32_t delay = 0;
     uint32_t frame_delay = 0;
     MultiDelay_Global_Buffer()
-        : buffer(calloc(1, 1)), in_pos(this->buffer), out_pos(this->buffer){};
+        : buffer(calloc(1, 1)), in_pos(this->buffer), out_pos(this->buffer) {};
     ~MultiDelay_Global_Buffer() { free(this->buffer); }
 };
 
@@ -95,7 +95,7 @@ class E_MultiDelay : public Configurable_Effect<MultiDelay_Info,
                                                 MultiDelay_Global_Config> {
    public:
     E_MultiDelay(AVS_Instance* avs);
-    virtual ~E_MultiDelay(){};
+    virtual ~E_MultiDelay() {};
     virtual int render(char visdata[2][2][576],
                        int is_beat,
                        int* framebuffer,

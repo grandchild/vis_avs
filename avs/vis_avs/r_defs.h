@@ -397,30 +397,30 @@ static __inline unsigned int BLEND4(unsigned int* p1, unsigned int w, int xp, in
     pmullw mm3, mm6
 
     paddw mm0, mm1
-          // stall (mm0)
+         // stall (mm0)
 
     psrlw mm0, 8
-      // stall (waiting for mm3/mm2)
+     // stall (waiting for mm3/mm2)
 
     paddw mm2, mm3
     pmullw mm0, mm5
 
     psrlw mm2, 8
-      // stall (mm2)
+     // stall (mm2)
 
     pmullw mm2, mm7
-          // stall
+         // stall
 
-          // stall (mm2)
+         // stall (mm2)
 
     paddw mm0, mm2
-          // stall
+         // stall
 
     psrlw mm0, 8
-      // stall
+     // stall
 
     packuswb mm0, mm0
-          // stall
+         // stall
 
     movd eax, mm0
     }
@@ -543,30 +543,30 @@ static __inline unsigned int BLEND4_16(unsigned int* p1,
     pmullw mm3, mm6
 
     paddw mm0, mm1
-          // stall (mm0)
+         // stall (mm0)
 
     psrlw mm0, 8
-      // stall (waiting for mm3/mm2)
+     // stall (waiting for mm3/mm2)
 
     paddw mm2, mm3
     pmullw mm0, mm5
 
     psrlw mm2, 8
-      // stall (mm2)
+     // stall (mm2)
 
     pmullw mm2, mm7
-          // stall
+         // stall
 
-          // stall (mm2)
+         // stall (mm2)
 
     paddw mm0, mm2
-          // stall
+         // stall
 
     psrlw mm0, 8
-      // stall
+     // stall
 
     packuswb mm0, mm0
-          // stall
+         // stall
 
     movd eax, mm0
     }
