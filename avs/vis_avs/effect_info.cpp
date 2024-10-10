@@ -124,7 +124,7 @@ static std::string join_string_lines(const json& str, const char* nl = "\n") {
     for (auto& line : str) {
         joined += line.get<std::string>() + nl;
     }
-    return joined + nl;
+    return joined;
 }
 
 std::string Effect_Info::load_string(const json& str) { return join_string_lines(str); }
@@ -288,7 +288,7 @@ void Effect_Info::load_config(Effect_Config* config,
                 parameter.from_json(config_json[parameter.name],
                                     local_or_global_config);
             } catch (std::exception& e) {
-                log_err("Exception while loading config for %s/%s: %s\n",
+                log_err("Exception while loading config for %s/%s: %s",
                         this->get_name(),
                         parameter.name,
                         e.what());
@@ -317,7 +317,7 @@ json Effect_Info::save_config(const Effect_Config* config,
                     config_save[parameter.name] = value;
                 }
             } catch (std::exception& e) {
-                log_err("Exception while saving config for %s/%s: %s\n",
+                log_err("Exception while saving config for %s/%s: %s",
                         this->get_name(),
                         parameter.name,
                         e.what());
