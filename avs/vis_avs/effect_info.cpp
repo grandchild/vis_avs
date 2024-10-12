@@ -5,6 +5,15 @@
 #include "../platform.h"
 
 #include <iostream>
+#include <stdexcept>
+
+class load_exception : public std::exception {
+    std::string msg;
+
+   public:
+    load_exception(const std::string& msg) : msg(msg) {}
+    const char* what() const noexcept override { return msg.c_str(); }
+};
 
 /**
  * 0x0000000000ffffff -> "rgb0_8(255, 255, 255)"
@@ -119,12 +128,14 @@ static std::string& replace_lf_newlines_with_crlf_for_winamp_ui(std::string& str
 static std::string join_string_lines(const json& str, const char* nl = "\n") {
     if (str.is_string()) {
         return str;
+    } else if (str.is_array()) {
+        std::string joined;
+        for (auto& line : str) {
+            joined += line.get<std::string>() + nl;
+        }
+        return joined;
     }
-    std::string joined;
-    for (auto& line : str) {
-        joined += line.get<std::string>() + nl;
-    }
-    return joined;
+    throw load_exception("Expected string or list-of-strings");
 }
 
 std::string Effect_Info::load_string(const json& str) { return join_string_lines(str); }
@@ -163,6 +174,9 @@ void Parameter::from_json(const json& config_json, Effect_Config* config) const 
             break;
         }
         case AVS_PARAM_SELECT: {
+            if (!config_json.is_string()) {
+                throw load_exception("Expected string option for Select parameter");
+            }
             int64_t num_options = 0;
             const char* const* options = this->get_options(&num_options);
             int64_t selection = -1;
@@ -288,7 +302,7 @@ void Effect_Info::load_config(Effect_Config* config,
                 parameter.from_json(config_json[parameter.name],
                                     local_or_global_config);
             } catch (std::exception& e) {
-                log_err("Exception while loading config for %s/%s: %s",
+                log_err("Loading config for %s/%s: %s",
                         this->get_name(),
                         parameter.name,
                         e.what());
