@@ -4,14 +4,14 @@
 #include "effect_info.h"
 
 enum Multiplier_Factor {
-    MULTIPLY_XI = 0,
+    MULTIPLY_INF_ROOT = 0,
     MULTIPLY_X8 = 1,
     MULTIPLY_X4 = 2,
     MULTIPLY_X2 = 3,
     MULTIPLY_X05 = 4,
     MULTIPLY_X025 = 5,
     MULTIPLY_X0125 = 6,
-    MULTIPLY_XS = 7,
+    MULTIPLY_INF_SQUARE = 7,
 };
 
 struct Multiplier_Config : public Effect_Config {

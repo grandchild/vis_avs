@@ -31,13 +31,113 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_multiplier.h"
 
-#include "r_defs.h"
+#ifdef SIMD_MODE_X68_SSE
+#include <immintrin.h>
+#endif
 
 constexpr Parameter Multiplier_Info::parameters[];
 
 E_Multiplier::E_Multiplier(AVS_Instance* avs) : Configurable_Effect(avs) {}
 
 E_Multiplier::~E_Multiplier() {}
+
+#define MULTIPLY_C(NAME, OP, TIMES)                                       \
+    inline static void multiply_x##NAME##_rgb0_8_c(uint32_t* framebuffer, \
+                                                   size_t length) {       \
+        for (size_t i = 0; i < length; i++) {                             \
+            uint32_t r = (framebuffer[i] & 0xff0000) OP TIMES;            \
+            uint32_t g = (framebuffer[i] & 0xff00) OP TIMES;              \
+            uint32_t b = (framebuffer[i] & 0xff) OP TIMES;                \
+            r = r > 0xff0000 ? 0xff0000 : r;                              \
+            g = g > 0xff00 ? 0xff00 : g;                                  \
+            b = b > 0xff ? 0xff : b;                                      \
+            framebuffer[i] = r | g | b;                                   \
+        }                                                                 \
+    }
+
+// Generates multiply_x8_rgb0_8_c() etc.
+MULTIPLY_C(8, *, 8)
+MULTIPLY_C(4, *, 4)
+MULTIPLY_C(2, *, 2)
+MULTIPLY_C(05, >>, 1)
+MULTIPLY_C(025, >>, 2)
+MULTIPLY_C(0125, >>, 3)
+
+inline static void multiply_infroot_rgb0_8_c(uint32_t* framebuffer, size_t length) {
+    for (size_t i = 0; i < length; i++) {
+        if ((framebuffer[i] & 0x00ffffff) != 0x00ffffff) {
+            framebuffer[i] = 0;
+        }
+    }
+}
+
+inline static void multiply_infsquare_rgb0_8_c(uint32_t* framebuffer, size_t length) {
+    for (size_t i = 0; i < length; i++) {
+        if ((framebuffer[i] & 0x00ffffff) != 0x00000000) {
+            framebuffer[i] = 0x00ffffff;
+        }
+    }
+}
+
+#ifdef SIMD_MODE_X68_SSE
+#define REPEAT_1(code)  code
+#define REPEAT_2(code)  code code
+#define REPEAT_3(code)  code code code
+#define REPEAT(code, n) REPEAT_##n(code)
+#define MULTIPLY_BRIGHTEN_X86V128(NAME, TIMES)                                  \
+    inline static void multiply_x##NAME##_rgb0_8_x86v128(uint32_t* framebuffer, \
+                                                         size_t length) {       \
+        for (size_t i = 0; i < length; i += 4) {                                \
+            __m128i fb_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);        \
+            REPEAT(fb_4px = _mm_adds_epu8(fb_4px, fb_4px);, TIMES)              \
+            _mm_storeu_si128((__m128i*)&framebuffer[i], fb_4px);                \
+        }                                                                       \
+    }
+
+#define MULTIPLY_DARKEN_X86V128(NAME, TIMES, MASK)                              \
+    inline static void multiply_x##NAME##_rgb0_8_x86v128(uint32_t* framebuffer, \
+                                                         size_t length) {       \
+        __m128i mask = _mm_set1_epi32(MASK);                                    \
+        for (size_t i = 0; i < length; i += 4) {                                \
+            __m128i fb_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);        \
+            fb_4px = _mm_srli_si128(fb_4px, TIMES);                             \
+            fb_4px = _mm_and_si128(fb_4px, mask);                               \
+            _mm_storeu_si128((__m128i*)&framebuffer[i], fb_4px);                \
+        }                                                                       \
+    }
+
+// Generates multiply_x8_rgb0_8_x86v128() etc.
+MULTIPLY_BRIGHTEN_X86V128(8, 3)
+MULTIPLY_BRIGHTEN_X86V128(4, 2)
+MULTIPLY_BRIGHTEN_X86V128(2, 1)
+// Generates multiply_x05_rgb0_8_x86v128() etc.
+MULTIPLY_DARKEN_X86V128(05, 1, 0x007f7f7f)
+MULTIPLY_DARKEN_X86V128(025, 2, 0x003f3f3f)
+MULTIPLY_DARKEN_X86V128(0125, 3, 0x001f1f1f)
+
+inline static void multiply_infroot_rgb0_8_x86v128(uint32_t* framebuffer,
+                                                   size_t length) {
+    __m128i white = _mm_set1_epi32(0x00ffffff);
+    for (size_t i = 0; i < length; i += 4) {
+        __m128i fb_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
+        fb_4px = _mm_and_si128(fb_4px, white);
+        fb_4px = _mm_cmpeq_epi32(fb_4px, white);
+        _mm_storeu_si128((__m128i*)&framebuffer[i], fb_4px);
+    }
+}
+
+inline static void multiply_infsquare_rgb0_8_x86v128(uint32_t* framebuffer,
+                                                     size_t length) {
+    __m128i mask = _mm_set1_epi32(0x00ffffff);
+    __m128i black = _mm_setzero_si128();
+    for (size_t i = 0; i < length; i += 4) {
+        __m128i fb_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
+        fb_4px = _mm_and_si128(fb_4px, mask);
+        fb_4px = _mm_cmpgt_epi32(fb_4px, black);
+        _mm_storeu_si128((__m128i*)&framebuffer[i], fb_4px);
+    }
+}
+#endif  // SIMD_MODE_X68_SSE
 
 int E_Multiplier::render(char[2][2][576],
                          int is_beat,
@@ -49,327 +149,30 @@ int E_Multiplier::render(char[2][2][576],
         return 0;
     }
 
-    int /*b,*/ c;  // TODO [cleanup]: see below
-    int64_t mask;
-
-    c = w * h;
+    size_t length = w * h;
+    auto fb = (uint32_t*)framebuffer;
     switch (config.multiply) {
-        case MULTIPLY_XI:
-#ifdef _MSC_VER
-            __asm {
-			mov ebx, framebuffer;
-			mov ecx, c;
-                // mov	edx, b; // doesn't do anything. a leftover?
-			lp0:
-			xor eax, eax;
-			dec ecx;
-			test ecx, ecx;
-			jz end;
-			mov eax, dword ptr [ebx+ecx*4];
-			test eax, eax;
-			jz sk0;
-			mov eax, 0xFFFFFF;
-			sk0:
-			mov [ebx+ecx*4], eax;
-			jmp lp0;
-            }
-#else  // _MSC_VER
-            __asm__ goto(
-                "mov %%ebx, %0\n\t"
-                "mov %%ecx, %1\n"
-                "lp0:\n\t"
-                "xor %%eax, %%eax\n\t"
-                "dec %%ecx\n\t"
-                "test %%ecx, %%ecx\n\t"
-                "jz %l[end]\n\t"
-                "mov %%eax, dword ptr [%%ebx + %%ecx * 4]\n\t"
-                "test %%eax, %%eax\n\t"
-                "jz sk0\n\t"
-                "mov %%eax, 0xFFFFFF\n"
-                "sk0:\n\t"
-                "mov [%%ebx + %%ecx * 4], %%eax\n\t"
-                "jmp lp0\n\t"
-                : /* no outputs */
-                : "m"(framebuffer), "m"(c)
-                : "eax", "ebx", "ecx"
-                : end);
-#endif
-            break;
-        case MULTIPLY_XS:
-#ifdef _MSC_VER
-            __asm {
-			mov ebx, framebuffer;
-			mov ecx, c;
-                // mov	edx, b; // doesn't do anything. a leftover?
-			lp9:
-			xor eax, eax;
-			dec ecx;
-			test ecx, ecx;
-			jz end;
-			mov eax, dword ptr [ebx+ecx*4];
-			cmp eax, 0xFFFFFF;
-			je sk9;  // TODO [bugfix]: this could be jae, to account for garbage in
-                         // MSByte
-                // TODO [performance]: the next _3_ lines could be compressed into just
-                //          mov [ebx+ecx*4], 0x000000
-                //          sk9:
-                //      since the white pixel (= 0xFFFFFF) doesn't need to be rewritten
-			mov eax, 0x000000;
-			sk9:
-			mov [ebx+ecx*4], eax;
-			jmp lp9;
-                }
-#else  // _MSC_VER
-            __asm__ goto(
-                "mov %%ebx, %0\n\t"
-                "mov %%ecx, %1\n"
-                "lp9:\n\t"
-                "xor %%eax, %%eax\n\t"
-                "dec %%ecx\n\t"
-                "test %%ecx, %%ecx\n\t"
-                "jz %l[end]\n\t"
-                "mov %%eax, dword ptr [%%ebx + %%ecx * 4]\n\t"
-                "cmp %%eax, 0xFFFFFF\n\t"
-                "je sk9\n\t"
-                "mov %%eax, 0x000000\n"
-                "sk9:\n\t"
-                "mov [%%ebx + %%ecx * 4], %%eax\n\t"
-                "jmp lp9\n\t"
-                : /* no outputs */
-                : "m"(framebuffer), "m"(c)
-                : "eax", "ebx", "ecx"
-                : end);
-#endif
-            break;
-        case MULTIPLY_X8: c = w * h / 2;
-#ifdef _MSC_VER
-            __asm {
-			mov ebx, framebuffer;
-			mov ecx, c;
-			lp1:
-			movq mm0, [ebx];
-			paddusb mm0, mm0;
-			paddusb mm0, mm0;
-			paddusb mm0, mm0;
-			movq [ebx], mm0;
-			add ebx, 8;
-			dec ecx;
-			test ecx, ecx;
-			jz end;
-			jmp lp1;
-            }
-#else  // _MSC_VER
-            __asm__ goto(
-                "mov %%ebx, %0\n\t"
-                "mov %%ecx, %1\n"
-                "lp1:\n\t"
-                "movq %%mm0, [%%ebx]\n\t"
-                "paddusb %%mm0, %%mm0\n\t"
-                "paddusb %%mm0, %%mm0\n\t"
-                "paddusb %%mm0, %%mm0\n\t"
-                "movq [%%ebx], %%mm0\n\t"
-                "add %%ebx, 8\n\t"
-                "dec %%ecx\n\t"
-                "test %%ecx, %%ecx\n\t"
-                "jz %l[end]\n\t"
-                "jmp lp1\n\t"
-                : /* no outputs */
-                : "m"(framebuffer), "m"(c)
-                : "ebx", "ecx"
-                : end);
-#endif
-            break;
-        case MULTIPLY_X4: c = w * h / 2;
-#ifdef _MSC_VER
-            __asm {
-			mov ebx, framebuffer;
-			mov ecx, c;
-			lp2:
-			movq mm0, [ebx];
-			paddusb mm0, mm0;
-			paddusb mm0, mm0;
-			movq [ebx], mm0;
-			add ebx, 8;
-			dec ecx;
-			test ecx, ecx;
-			jz end;
-			jmp lp2;
-            }
-#else  // _MSC_VER
-            __asm__ goto(
-                "mov %%ebx, %0\n\t"
-                "mov %%ecx, %1\n"
-                "lp2:\n\t"
-                "movq %%mm0, [%%ebx]\n\t"
-                "paddusb %%mm0, %%mm0\n\t"
-                "paddusb %%mm0, %%mm0\n\t"
-                "movq [%%ebx], %%mm0\n\t"
-                "add %%ebx, 8\n\t"
-                "dec %%ecx\n\t"
-                "test %%ecx, %%ecx\n\t"
-                "jz %l[end]\n\t"
-                "jmp lp2\n\t"
-                : /* no outputs */
-                : "m"(framebuffer), "m"(c)
-                : "ebx", "ecx"
-                : end);
-#endif
-            break;
-        case MULTIPLY_X2: c = w * h / 2;
-#ifdef _MSC_VER
-            __asm {
-			mov ebx, framebuffer;
-			mov ecx, c;
-			lp3:
-			movq mm0, [ebx];
-			paddusb mm0, mm0;
-			movq [ebx], mm0;
-			add ebx, 8;
-			dec ecx;
-			test ecx, ecx;
-			jz end;
-			jmp lp3;
-            }
-#else  // _MSC_VER
-            __asm__ goto(
-                "mov %%ebx, %0\n\t"
-                "mov %%ecx, %1\n"
-                "lp3:\n\t"
-                "movq %%mm0, [%%ebx]\n\t"
-                "paddusb %%mm0, %%mm0\n\t"
-                "movq [%%ebx], %%mm0\n\t"
-                "add %%ebx, 8\n\t"
-                "dec %%ecx\n\t"
-                "test %%ecx, %%ecx\n\t"
-                "jz %l[end]\n\t"
-                "jmp lp3\n\t"
-                : /* no outputs */
-                : "m"(framebuffer), "m"(c)
-                : "ebx", "ecx"
-                : end);
-#endif
-            break;
-        case MULTIPLY_X05: c = w * h / 2; mask = 0x7F7F7F7F7F7F7F7F;
-#ifdef _MSC_VER
-            __asm {
-			mov ebx, framebuffer;
-			mov ecx, c;
-			movq mm1, mask;
-			lp4:
-			movq mm0, [ebx];
-			psrlq mm0, 1;
-			pand mm0, mm1;
-			movq [ebx], mm0;
-			add ebx, 8;
-			dec ecx;
-			test ecx, ecx;
-			jz end;
-			jmp lp4;
-            }
-#else  // _MSC_VER
-            __asm__ goto(
-                "mov %%ebx, %0\n\t"
-                "mov %%ecx, %1\n\t"
-                "movq %%mm1, %2\n"
-                "lp4:\n\t"
-                "movq %%mm0, [%%ebx]\n\t"
-                "psrlq %%mm0, 1\n\t"
-                "pand %%mm0, %%mm1\n\t"
-                "movq [%%ebx], %%mm0\n\t"
-                "add %%ebx, 8\n\t"
-                "dec %%ecx\n\t"
-                "test %%ecx, %%ecx\n\t"
-                "jz %l[end]\n\t"
-                "jmp lp4\n\t"
-                : /* no outputs */
-                : "m"(framebuffer), "m"(c), "m"(mask)
-                : "ebx", "ecx"
-                : end);
-#endif
-            break;
-        case MULTIPLY_X025: c = w * h / 2; mask = 0x3F3F3F3F3F3F3F3F;
-#ifdef _MSC_VER
-            __asm {
-			mov ebx, framebuffer;
-			mov ecx, c;
-			movq mm1, mask;
-			lp5:
-			movq mm0, [ebx];
-			psrlq mm0, 2;
-			pand mm0, mm1;
-			movq [ebx], mm0;
-			add ebx, 8;
-			dec ecx;
-			test ecx, ecx;
-			jz end;
-			jmp lp5;
-            }
-#else  // _MSC_VER
-            __asm__ goto(
-                "mov %%ebx, %0\n\t"
-                "mov %%ecx, %1\n\t"
-                "movq %%mm1, %2\n"
-                "lp5:\n\t"
-                "movq %%mm0, [%%ebx]\n\t"
-                "psrlq %%mm0, 2\n\t"
-                "pand %%mm0, %%mm1\n\t"
-                "movq [%%ebx], %%mm0\n\t"
-                "add %%ebx, 8\n\t"
-                "dec %%ecx\n\t"
-                "test %%ecx, %%ecx\n\t"
-                "jz %l[end]\n\t"
-                "jmp lp5\n\t"
-                : /* no outputs */
-                : "m"(framebuffer), "m"(c), "m"(mask)
-                : "ebx", "ecx"
-                : end);
-#endif
-            break;
-        case MULTIPLY_X0125: c = w * h / 2; mask = 0x1F1F1F1F1F1F1F1F;
-#ifdef _MSC_VER
-            __asm {
-			mov ebx, framebuffer;
-			mov ecx, c;
-			movq mm1, mask;
-			lp6:
-			movq mm0, [ebx];
-			psrlq mm0, 3;
-			pand mm0, mm1;
-			movq [ebx], mm0;
-			add ebx, 8;
-			dec ecx;
-			test ecx, ecx;
-			jz end;
-			jmp lp6;
-            }
-#else  // _MSC_VER
-            __asm__ goto(
-                "mov %%ebx, %0\n\t"
-                "mov %%ecx, %1\n\t"
-                "movq %%mm1, %2\n"
-                "lp6:\n\t"
-                "movq %%mm0, [%%ebx]\n\t"
-                "psrlq %%mm0, 3\n\t"
-                "pand %%mm0, %%mm1\n\t"
-                "movq [%%ebx], %%mm0\n\t"
-                "add %%ebx, 8\n\t"
-                "dec %%ecx\n\t"
-                "test %%ecx, %%ecx\n\t"
-                "jz %l[end]\n\t"
-                "jmp lp6\n\t"
-                : /* no outputs */
-                : "m"(framebuffer), "m"(c), "m"(mask)
-                : "ebx", "ecx"
-                : end);
-#endif
-            break;
+#ifdef SIMD_MODE_X68_SSE
+        case MULTIPLY_INF_ROOT: multiply_infroot_rgb0_8_x86v128(fb, length); break;
+        case MULTIPLY_X8: multiply_x8_rgb0_8_x86v128(fb, length); break;
+        case MULTIPLY_X4: multiply_x4_rgb0_8_x86v128(fb, length); break;
+        case MULTIPLY_X2: multiply_x2_rgb0_8_x86v128(fb, length); break;
+        case MULTIPLY_X05: multiply_x05_rgb0_8_x86v128(fb, length); break;
+        case MULTIPLY_X025: multiply_x025_rgb0_8_x86v128(fb, length); break;
+        case MULTIPLY_X0125: multiply_x0125_rgb0_8_x86v128(fb, length); break;
+        case MULTIPLY_INF_SQUARE: multiply_infsquare_rgb0_8_x86v128(fb, length); break;
+#else
+        case MULTIPLY_INF_ROOT: multiply_infroot_rgb0_8_c(fb, length); break;
+        case MULTIPLY_X8: multiply_x8_rgb0_8_c(fb, length); break;
+        case MULTIPLY_X4: multiply_x4_rgb0_8_c(fb, length); break;
+        case MULTIPLY_X2: multiply_x2_rgb0_8_c(fb, length); break;
+        case MULTIPLY_X05: multiply_x05_rgb0_8_c(fb, length); break;
+        case MULTIPLY_X025: multiply_x025_rgb0_8_c(fb, length); break;
+        case MULTIPLY_X0125: multiply_x0125_rgb0_8_c(fb, length); break;
+        case MULTIPLY_INF_SQUARE: multiply_infsquare_rgb0_8_c(fb, length); break;
+#endif  // SIMD_MODE_...
+        default: break;
     }
-end:
-#ifdef _MSC_VER
-    __asm emms;
-#else  // _MSC_VER
-    __asm__ __volatile__("emms");
-#endif
     return 0;
 }
 
