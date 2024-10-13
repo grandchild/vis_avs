@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_brightness.h"
 
-#include "r_defs.h"
+#include "blend.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -192,25 +192,25 @@ void E_Brightness::smp_render(int this_thread,
 
     int l = w * out_h;
 
-    int* p = framebuffer + start_l * w;
+    uint32_t* p = (uint32_t*)&framebuffer[start_l * w];
     switch (this->config.blend_mode) {
         case BLEND_SIMPLE_ADDITIVE: {
             if (!this->config.exclude) {
                 while (l--) {
-                    *p = BLEND(*p,
-                               this->red_tab[(*p >> 16) & 0xff]
-                                   | this->green_tab[(*p >> 8) & 0xff]
-                                   | this->blue_tab[*p & 0xff]);
+                    uint32_t color = this->red_tab[(*p >> 16) & 0xff]
+                                     | this->green_tab[(*p >> 8) & 0xff]
+                                     | this->blue_tab[*p & 0xff];
+                    blend_add_1px(&color, p, p);
                     p++;
                 }
             } else {
                 while (l--) {
                     if (!in_range(
                             *p, this->config.exclude_color, this->config.distance)) {
-                        *p = BLEND(*p,
-                                   this->red_tab[(*p >> 16) & 0xff]
-                                       | this->green_tab[(*p >> 8) & 0xff]
-                                       | this->blue_tab[*p & 0xff]);
+                        uint32_t color = this->red_tab[(*p >> 16) & 0xff]
+                                         | this->green_tab[(*p >> 8) & 0xff]
+                                         | this->blue_tab[*p & 0xff];
+                        blend_add_1px(&color, p, p);
                     }
                     p++;
                 }
@@ -220,20 +220,20 @@ void E_Brightness::smp_render(int this_thread,
         case BLEND_SIMPLE_5050: {
             if (!this->config.exclude) {
                 while (l--) {
-                    *p = BLEND_AVG(*p,
-                                   this->red_tab[(*p >> 16) & 0xff]
-                                       | this->green_tab[(*p >> 8) & 0xff]
-                                       | this->blue_tab[*p & 0xff]);
+                    uint32_t color = this->red_tab[(*p >> 16) & 0xff]
+                                     | this->green_tab[(*p >> 8) & 0xff]
+                                     | this->blue_tab[*p & 0xff];
+                    blend_5050_1px(&color, p, p);
                     p++;
                 }
             } else {
                 while (l--) {
                     if (!in_range(
                             *p, this->config.exclude_color, this->config.distance)) {
-                        *p = BLEND_AVG(*p,
-                                       this->red_tab[(*p >> 16) & 0xff]
-                                           | this->green_tab[(*p >> 8) & 0xff]
-                                           | this->blue_tab[*p & 0xff]);
+                        uint32_t color = this->red_tab[(*p >> 16) & 0xff]
+                                         | this->green_tab[(*p >> 8) & 0xff]
+                                         | this->blue_tab[*p & 0xff];
+                        blend_5050_1px(&color, p, p);
                     }
                     p++;
                 }
@@ -244,18 +244,20 @@ void E_Brightness::smp_render(int this_thread,
         case BLEND_SIMPLE_REPLACE: {
             if (!this->config.exclude) {
                 while (l--) {
-                    *p = this->red_tab[(*p >> 16) & 0xff]
-                         | this->green_tab[(*p >> 8) & 0xff]
-                         | this->blue_tab[*p & 0xff];
+                    uint32_t color = this->red_tab[(*p >> 16) & 0xff]
+                                     | this->green_tab[(*p >> 8) & 0xff]
+                                     | this->blue_tab[*p & 0xff];
+                    blend_replace_1px(&color, p);
                     p++;
                 }
             } else {
                 while (l--) {
                     if (!in_range(
                             *p, this->config.exclude_color, this->config.distance)) {
-                        *p = this->red_tab[(*p >> 16) & 0xff]
-                             | this->green_tab[(*p >> 8) & 0xff]
-                             | this->blue_tab[*p & 0xff];
+                        uint32_t color = this->red_tab[(*p >> 16) & 0xff]
+                                         | this->green_tab[(*p >> 8) & 0xff]
+                                         | this->blue_tab[*p & 0xff];
+                        blend_replace_1px(&color, p);
                     }
                     p++;
                 }
@@ -264,6 +266,8 @@ void E_Brightness::smp_render(int this_thread,
         }
     }
 }
+
+void E_Brightness::on_load() { Brightness_Info::on_separate_toggle(this, nullptr, {}); }
 
 void E_Brightness::load_legacy(unsigned char* data, int len) {
     int pos = 0;
@@ -312,6 +316,7 @@ void E_Brightness::load_legacy(unsigned char* data, int len) {
         this->config.distance = GET_INT();
         pos += 4;
     }
+    Brightness_Info::on_separate_toggle(this, nullptr, {});
     this->need_tab_init = true;
 }
 
