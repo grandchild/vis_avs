@@ -31,9 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_bump.h"
 
-#include "r_defs.h"
-
 #include "avs_eelif.h"
+#include "blend.h"
 #include "instance.h"
 
 #include <stdio.h>
@@ -71,21 +70,22 @@ E_Bump::E_Bump(AVS_Instance* avs)
       use_old_xy_range(0) {}
 E_Bump::~E_Bump() {}
 
-static inline int max_channel(int color, bool invert) {
-    int r = max(max((color & 0xFF), ((color & 0xFF00) >> 8)), (color & 0xFF0000) >> 16);
+static inline uint32_t max_channel(uint32_t color, bool invert) {
+    uint32_t r =
+        max(max((color & 0xFF), ((color & 0xFF00) >> 8)), (color & 0xFF0000) >> 16);
     return invert ? 255 - r : r;
 }
 
-static inline int set_depth(int light_distance, int color) {
-    int r;
+static inline uint32_t set_depth(int light_distance, uint32_t color) {
+    uint32_t r;
     r = min((color & 0xFF) + light_distance, 254);
     r |= min(((color & 0xFF00)) + (light_distance << 8), 254 << 8);
     r |= min(((color & 0xFF0000)) + (light_distance << 16), 254 << 16);
     return r;
 }
 
-static inline int set_far_depth(int c) {
-    int r;
+static inline uint32_t set_far_depth(uint32_t c) {
+    uint32_t r;
     r = min((c & 0xFF), 254);
     r |= min((c & 0xFF00), 254 << 8);
     r |= min((c & 0xFF0000), 254 << 16);
@@ -109,15 +109,13 @@ int E_Bump::render(char visdata[2][2][576],
         return 0;
     }
 
-    int* src_buffer =
-        !this->config.depth_buffer
-            ? framebuffer
-            : (int*)this->avs->get_buffer(w, h, this->config.depth_buffer - 1, false);
+    uint32_t* src_buffer = this->config.depth_buffer == 0
+                               ? (uint32_t*)framebuffer
+                               : (uint32_t*)this->avs->get_buffer(
+                                     w, h, this->config.depth_buffer - 1, false);
     if (!src_buffer) {
         return 0;
     }
-
-    use_cur_buf = (src_buffer == framebuffer);
 
     if (this->need_init) {
         this->code_init.exec(visdata);
@@ -174,7 +172,10 @@ int E_Bump::render(char visdata[2][2][576],
     int x_distance;
     int y_distance;
     int xy_combined;
-    int distance;
+    uint32_t distance;
+    auto fb_in = (uint32_t*)framebuffer;
+    auto fb_out = (uint32_t*)fbout;
+    use_cur_buf = (src_buffer == fb_in);
     while (i--) {
         int j = w - 2;
         int light_x = 1 - center_x;
@@ -196,17 +197,17 @@ int E_Bump::render(char visdata[2][2][576],
                         x_distance = 127 - abs(x_distance);
                         y_distance = 127 - abs(y_distance);
                         if (x_distance <= 0 || y_distance <= 0) {
-                            distance = set_far_depth(framebuffer[0]);
+                            distance = set_far_depth(*fb_in);
                         } else {
                             xy_combined =
                                 (x_distance * y_distance * depth_scaled) >> (8 + 6);
-                            distance = set_depth(xy_combined, framebuffer[0]);
+                            distance = set_depth(xy_combined, *fb_in);
                         }
-                        fbout[0] = BLEND(framebuffer[0], distance);
+                        blend_add_1px(&distance, fb_in, fb_out);
                     }
                     src_buffer++;
-                    framebuffer++;
-                    fbout++;
+                    fb_in++;
+                    fb_out++;
                     light_x++;
                 }
                 break;
@@ -228,17 +229,17 @@ int E_Bump::render(char visdata[2][2][576],
                         x_distance = 127 - abs(x_distance);
                         y_distance = 127 - abs(y_distance);
                         if (x_distance <= 0 || y_distance <= 0) {
-                            distance = set_far_depth(framebuffer[0]);
+                            distance = set_far_depth(*fb_in);
                         } else {
                             xy_combined =
                                 (x_distance * y_distance * depth_scaled) >> (8 + 6);
-                            distance = set_depth(xy_combined, framebuffer[0]);
+                            distance = set_depth(xy_combined, *fb_in);
                         }
-                        fbout[0] = BLEND_AVG(framebuffer[0], distance);
+                        blend_5050_1px(&distance, fb_in, fb_out);
                     }
                     src_buffer++;
-                    framebuffer++;
-                    fbout++;
+                    fb_in++;
+                    fb_out++;
                     light_x++;
                 }
                 break;
@@ -261,25 +262,25 @@ int E_Bump::render(char visdata[2][2][576],
                         x_distance = 127 - abs(x_distance);
                         y_distance = 127 - abs(y_distance);
                         if (x_distance <= 0 || y_distance <= 0) {
-                            distance = set_far_depth(framebuffer[0]);
+                            distance = set_far_depth(*fb_in);
                         } else {
                             xy_combined =
                                 (x_distance * y_distance * depth_scaled) >> (8 + 6);
-                            distance = set_depth(xy_combined, framebuffer[0]);
+                            distance = set_depth(xy_combined, *fb_in);
                         }
-                        fbout[0] = distance;
+                        blend_replace_1px(&distance, fb_out);
                     }
                     src_buffer++;
-                    framebuffer++;
-                    fbout++;
+                    fb_in++;
+                    fb_out++;
                     light_x++;
                 }
                 break;
             }
         }
         src_buffer += 2;
-        framebuffer += 2;
-        fbout += 2;
+        fb_in += 2;
+        fb_out += 2;
         light_y++;
     }
 
