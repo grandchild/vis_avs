@@ -2,6 +2,7 @@
 
 #include "avs_eelif.h"
 #include "avs_internal.h"
+#include "blend.h"
 #include "effect_library.h"
 #include "instance.h"
 
@@ -44,6 +45,7 @@ AVS_Handle avs_init(const char* base_path,
     AVS_EEL_IF_init();
     if (g_instances.empty()) {
         make_effect_lib();
+        make_blend_LUTs();
     }
     for (int j = 0; j < 256; j++) {
         for (int i = 0; i < 256; i++) {
