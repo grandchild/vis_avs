@@ -9,7 +9,7 @@ was made open source software in May 2005, released under a BSD-style license. â
 
 ## Modern Toolchain Port
 
-This fork is a **MingW-w64 GCC 8+** as well as **MSVC 19+** port of AVS.
+This fork is a **MingW-w64 GCC 9+** as well as **MSVC 19+** port of AVS.
 
 The goal was to create a **v2.81d**-compliant *vis_avs.dll* version that can be built
 with a modern toolchain, which was largely successful. One notable exception being that
