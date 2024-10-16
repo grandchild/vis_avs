@@ -42,7 +42,9 @@ AVS_Handle avs_init(const char* base_path,
                     AVS_Audio_Source audio_source,
                     AVS_Beat_Source beat_source) {
     AVS_EEL_IF_init();
-    make_effect_lib();
+    if (g_instances.empty()) {
+        make_effect_lib();
+    }
     for (int j = 0; j < 256; j++) {
         for (int i = 0; i < 256; i++) {
             g_blendtable[i][j] = (unsigned char)((i / 255.0) * (float)j);
