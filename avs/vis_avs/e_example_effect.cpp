@@ -28,6 +28,11 @@
  *      parameters.
  */
 
+// ===================================================================================
+// For simplicity this is all in one .cpp file. Actual effects should declare the first
+// section in a header file e_example.h and the second half in e_example.cpp.
+// ===================================================================================
+
 #include "effect.h"       // Configurable_Effect<...>
 #include "effect_info.h"  // Effect_Info, Parameter, P_*
 
@@ -263,7 +268,7 @@ class E_Example : public Configurable_Effect<Example_Info, Example_Config> {
 
 // ===================================================================================
 // For simplicity this is all in one .cpp file. Actual effects should declare the above
-// in a .h header file e_example.h and the parts below in a .cpp file e_example.cpp.
+// in a header file e_example.h and the section below in e_example.cpp.
 // ===================================================================================
 
 E_Example::E_Example(AVS_Instance* avs) : Configurable_Effect(avs) {}
