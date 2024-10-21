@@ -301,7 +301,13 @@ int E_Example::render(char visdata[2][2][576],
     return 0;
 }
 
-/* You need to put the storage of the parameter list array into the .cpp file. */
+/* Above in the config you specified the list of parameter metadata. But since that is a
+ * static array (i.e. exactly the same for all instances), C++ needs a static place to
+ * actually store it in memory. That cannot be defined in a header file (since it may be
+ * included multiple times), but must be in a .cpp file. This line tells the compiler to
+ * allocate space for the parameter metadata right here in the effect's .cpp file.
+ * Thankfully you do not need to specify the length, it's inferred from the declaration.
+ */
 constexpr Parameter Example_Info::parameters[];
 
 /* You also need to define two functions that will be called by the effect library.
