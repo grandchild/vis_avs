@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "r_defs.h"
 
+#include "blend.h"
 #include "bpm.h"
 #include "cfgwin.h"
 #include "draw.h"
@@ -212,6 +213,8 @@ static int init(struct winampVisModule* this_mod) {
     g_single_instance = new AVS_Instance(g_path, AVS_AUDIO_INTERNAL, AVS_BEAT_INTERNAL);
 
     AVS_EEL_IF_init();
+
+    make_blend_LUTs();
 
     if (Wnd_Init(this_mod)) {
         return 1;
