@@ -100,7 +100,7 @@ static inline void blend_5050_rgb0_8_c(const uint32_t* src1,
                                        const uint32_t* src2,
                                        uint32_t* dest) {
     static uint32_t strip_high_bit_mask = 0x007f7f7f;
-    *dest = ((*src1 >> 1) & strip_high_bit_mask) + ((*dest >> 1) & strip_high_bit_mask);
+    *dest = ((*src1 >> 1) & strip_high_bit_mask) + ((*src2 >> 1) & strip_high_bit_mask);
 }
 
 static inline void blend_5050_rgb0_8_x86v128(const uint32_t* src1,
@@ -138,9 +138,9 @@ void blend_5050(const uint32_t* src1,
 static inline void blend_multiply_rgb0_8_c(const uint32_t* src1,
                                            const uint32_t* src2,
                                            uint32_t* dest) {
-    uint8_t result = lut_u8_multiply[*src1 & 0xFF][*dest & 0xFF];
-    result |= lut_u8_multiply[(*src1 & 0xFF00) >> 8][(*dest & 0xFF00) >> 8] << 8;
-    result |= lut_u8_multiply[(*src1 & 0xFF0000) >> 16][(*dest & 0xFF0000) >> 16] << 16;
+    uint8_t result = lut_u8_multiply[*src1 & 0xFF][*src2 & 0xFF];
+    result |= lut_u8_multiply[(*src1 & 0xFF00) >> 8][(*src2 & 0xFF00) >> 8] << 8;
+    result |= lut_u8_multiply[(*src1 & 0xFF0000) >> 16][(*src2 & 0xFF0000) >> 16] << 16;
     *dest = result;
 }
 
@@ -182,9 +182,9 @@ void blend_multiply(const uint32_t* src1,
 static inline void blend_screen_rgb0_8_c(const uint32_t* src1,
                                          const uint32_t* src2,
                                          uint32_t* dest) {
-    uint8_t result = lut_u8_screen[*src1 & 0xFF][*dest & 0xFF];
-    result |= lut_u8_screen[(*src1 & 0xFF00) >> 8][(*dest & 0xFF00) >> 8] << 8;
-    result |= lut_u8_screen[(*src1 & 0xFF0000) >> 16][(*dest & 0xFF0000) >> 16] << 16;
+    uint8_t result = lut_u8_screen[*src1 & 0xFF][*src2 & 0xFF];
+    result |= lut_u8_screen[(*src1 & 0xFF00) >> 8][(*src2 & 0xFF00) >> 8] << 8;
+    result |= lut_u8_screen[(*src1 & 0xFF0000) >> 16][(*src2 & 0xFF0000) >> 16] << 16;
     *dest = result;
 }
 
@@ -230,11 +230,11 @@ static inline void blend_maximum_rgb0_8_c(const uint32_t* src1,
                                           const uint32_t* src2,
                                           uint32_t* dest) {
     uint32_t channel = *src1 & 0xff;
-    uint32_t out = max(channel, *dest & 0xff);
+    uint32_t out = max(channel, *src2 & 0xff);
     channel = *src1 & 0xff00;
-    out |= max(channel, *dest & 0xff00);
+    out |= max(channel, *src2 & 0xff00);
     channel = *src1 & 0xff0000;
-    *dest = out | max(channel, *dest & 0xff0000);
+    *dest = out | max(channel, *src2 & 0xff0000);
 }
 
 static inline void blend_maximum_rgb0_8_x86v128(const uint32_t* src1,
@@ -266,8 +266,8 @@ void blend_maximum(const uint32_t* src1,
 static inline void blend_minimum_rgb0_8_c(const uint32_t* src1,
                                           const uint32_t* src2,
                                           uint32_t* dest) {
-    *dest = min(*src1 & 0xff, *dest & 0xff) | min(*src1 & 0xff00, *dest & 0xff00)
-            | min(*src1 & 0xff0000, *dest & 0xff0000);
+    *dest = min(*src1 & 0xff, *src2 & 0xff) | min(*src1 & 0xff00, *src2 & 0xff00)
+            | min(*src1 & 0xff0000, *src2 & 0xff0000);
 }
 
 static inline void blend_minimum_rgb0_8_x86v128(const uint32_t* src1,
@@ -299,9 +299,9 @@ void blend_minimum(const uint32_t* src1,
 static inline void blend_color_dodge_rgb0_8_c(const uint32_t* src1,
                                               const uint32_t* src2,
                                               uint32_t* dest) {
-    uint8_t result = lut_u8_color_dodge[*src1 & 0xFF][*dest & 0xFF];
-    result |= lut_u8_color_dodge[(*src1 & 0xFF00) >> 8][(*dest & 0xFF00) >> 8] << 8;
-    result |= lut_u8_color_dodge[(*src1 & 0xFF0000) >> 16][(*dest & 0xFF0000) >> 16]
+    uint8_t result = lut_u8_color_dodge[*src1 & 0xFF][*src2 & 0xFF];
+    result |= lut_u8_color_dodge[(*src1 & 0xFF00) >> 8][(*src2 & 0xFF00) >> 8] << 8;
+    result |= lut_u8_color_dodge[(*src1 & 0xFF0000) >> 16][(*src2 & 0xFF0000) >> 16]
               << 16;
     *dest = result;
 }
@@ -321,9 +321,9 @@ void blend_color_dodge(const uint32_t* src1,
 static inline void blend_color_burn_rgb0_8_c(const uint32_t* src1,
                                              const uint32_t* src2,
                                              uint32_t* dest) {
-    uint8_t result = lut_u8_color_burn[*src1 & 0xFF][*dest & 0xFF];
-    result |= lut_u8_color_burn[(*src1 & 0xFF00) >> 8][(*dest & 0xFF00) >> 8] << 8;
-    result |= lut_u8_color_burn[(*src1 & 0xFF0000) >> 16][(*dest & 0xFF0000) >> 16]
+    uint8_t result = lut_u8_color_burn[*src1 & 0xFF][*src2 & 0xFF];
+    result |= lut_u8_color_burn[(*src1 & 0xFF00) >> 8][(*src2 & 0xFF00) >> 8] << 8;
+    result |= lut_u8_color_burn[(*src1 & 0xFF0000) >> 16][(*src2 & 0xFF0000) >> 16]
               << 16;
     *dest = result;
 }
@@ -343,9 +343,9 @@ void blend_color_burn(const uint32_t* src1,
 static inline void blend_linear_burn_rgb0_8_c(const uint32_t* src1,
                                               const uint32_t* src2,
                                               uint32_t* dest) {
-    uint8_t result = lut_u8_linear_burn[*src1 & 0xFF][*dest & 0xFF];
-    result |= lut_u8_linear_burn[(*src1 & 0xFF00) >> 8][(*dest & 0xFF00) >> 8] << 8;
-    result |= lut_u8_linear_burn[(*src1 & 0xFF0000) >> 16][(*dest & 0xFF0000) >> 16]
+    uint8_t result = lut_u8_linear_burn[*src1 & 0xFF][*src2 & 0xFF];
+    result |= lut_u8_linear_burn[(*src1 & 0xFF00) >> 8][(*src2 & 0xFF00) >> 8] << 8;
+    result |= lut_u8_linear_burn[(*src1 & 0xFF0000) >> 16][(*src2 & 0xFF0000) >> 16]
               << 16;
     *dest = result;
 }
@@ -365,11 +365,11 @@ void blend_linear_burn(const uint32_t* src1,
 static inline void blend_sub_src1_from_src2_rgb0_8_c(const uint32_t* src1,
                                                      const uint32_t* src2,
                                                      uint32_t* dest) {
-    int32_t channel = (*dest & 0xff) - (*src1 & 0xff);
+    int32_t channel = (*src2 & 0xff) - (*src1 & 0xff);
     uint32_t out = max(0, channel);
-    channel = (*dest & 0xff00) - (*src1 & 0xff00);
+    channel = (*src2 & 0xff00) - (*src1 & 0xff00);
     out |= max(0, channel);
-    channel = (*dest & 0xff0000) - (*src1 & 0xff0000);
+    channel = (*src2 & 0xff0000) - (*src1 & 0xff0000);
     *dest = out | max(0, channel);
 }
 
@@ -402,11 +402,11 @@ void blend_sub_src1_from_src2(const uint32_t* src1,
 static inline void blend_sub_src2_from_src1_rgb0_8_c(const uint32_t* src1,
                                                      const uint32_t* src2,
                                                      uint32_t* dest) {
-    int32_t channel = (*src1 & 0xff) - (*dest & 0xff);
+    int32_t channel = (*src1 & 0xff) - (*src2 & 0xff);
     uint32_t out = max(0, channel);
-    channel = (*src1 & 0xff00) - (*dest & 0xff00);
+    channel = (*src1 & 0xff00) - (*src2 & 0xff00);
     out |= max(0, channel);
-    channel = (*src1 & 0xff0000) - (*dest & 0xff0000);
+    channel = (*src1 & 0xff0000) - (*src2 & 0xff0000);
     *dest = out | max(0, channel);
 }
 
@@ -441,9 +441,9 @@ static inline int32_t abs_i32(int32_t x) { return x < 0 ? -x : x; }
 static inline void blend_sub_src1_from_src2_abs_rgb0_8_c(const uint32_t* src1,
                                                          const uint32_t* src2,
                                                          uint32_t* dest) {
-    *dest = abs_i32((int32_t)(*dest & 0xff) - (*src1 & 0xff))
-            | abs_i32((int32_t)(*dest & 0xff00) - (*src1 & 0xff00))
-            | abs_i32((int32_t)(*dest & 0xff0000) - (*src1 & 0xff0000));
+    *dest = abs_i32((int32_t)(*src2 & 0xff) - (*src1 & 0xff))
+            | abs_i32((int32_t)(*src2 & 0xff00) - (*src1 & 0xff00))
+            | abs_i32((int32_t)(*src2 & 0xff0000) - (*src1 & 0xff0000));
 }
 
 static inline void blend_sub_src1_from_src2_abs_rgb0_8_x86v128(const uint32_t* src1,
@@ -566,12 +566,12 @@ static inline void blend_adjustable_rgb0_8_c(const uint32_t* src1,
     uint8_t v = param & 0xff;
     uint8_t iv = 0xff - v;
     int32_t output =
-        lut_u8_multiply[*src1 & 0xFF][v] + lut_u8_multiply[*dest & 0xFF][iv];
+        lut_u8_multiply[*src1 & 0xFF][v] + lut_u8_multiply[*src2 & 0xFF][iv];
     output |= (lut_u8_multiply[(*src1 & 0xFF00) >> 8][v]
-               + lut_u8_multiply[(*dest & 0xFF00) >> 8][iv])
+               + lut_u8_multiply[(*src2 & 0xFF00) >> 8][iv])
               << 8;
     output |= (lut_u8_multiply[(*src1 & 0xFF0000) >> 16][v]
-               + lut_u8_multiply[(*dest & 0xFF0000) >> 16][iv])
+               + lut_u8_multiply[(*src2 & 0xFF0000) >> 16][iv])
               << 16;
     *dest = output;
 }
@@ -648,9 +648,9 @@ static inline void blend_buffer_rgb0_8_c(const uint32_t* src1,
     uint8_t src1_r = *src1 >> 16 & 0xff;
     uint8_t src1_g = *src1 >> 8 & 0xff;
     uint8_t src1_b = *src1 & 0xff;
-    uint8_t src2_r = *dest >> 16 & 0xff;
-    uint8_t src2_g = *dest >> 8 & 0xff;
-    uint8_t src2_b = *dest & 0xff;
+    uint8_t src2_r = *src2 >> 16 & 0xff;
+    uint8_t src2_g = *src2 >> 8 & 0xff;
+    uint8_t src2_b = *src2 & 0xff;
     *dest = (lut_u8_multiply[src1_r][v] + lut_u8_multiply[src2_r][iv]) << 16
             | (lut_u8_multiply[src1_g][v] + lut_u8_multiply[src2_g][iv]) << 8
             | (lut_u8_multiply[src1_b][v] + lut_u8_multiply[src2_b][iv]);
@@ -704,13 +704,13 @@ static inline void blend_buffer_rgb0_8_x86v128(const uint32_t* src1,
     __m128i src1_lo_2px = _mm_unpacklo_epi8(src1_4px, zero);
     __m128i src2_hi_2px = _mm_unpackhi_epi8(src2_4px, zero);
     __m128i src2_lo_2px = _mm_unpacklo_epi8(src2_4px, zero);
-    // src * v
+    // src1 * v
     __m128i src1_hi_v = _mm_mullo_epi16(src1_hi_2px, buf_hi_2px);
     __m128i src1_lo_v = _mm_mullo_epi16(src1_lo_2px, buf_lo_2px);
-    // dest * (255 - v)
+    // src2 * (255 - v)
     __m128i src2_hi_v = _mm_mullo_epi16(src2_hi_2px, buf_hi_inv_2px);
     __m128i src2_lo_v = _mm_mullo_epi16(src2_lo_2px, buf_lo_inv_2px);
-    // src * v + dest * (255 - v)
+    // src1 * v + src2 * (255 - v)
     __m128i hi = _mm_add_epi16(src1_hi_v, src2_hi_v);
     __m128i lo = _mm_add_epi16(src1_lo_v, src2_lo_v);
     __m128i his8 = _mm_srli_epi16(hi, 8);
