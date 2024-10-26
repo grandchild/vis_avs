@@ -748,3 +748,96 @@ void blend_buffer_1px(const uint32_t* src1,
     blend_buffer_rgb0_8_c(src1, src2, dest, buf, invert);
 #endif
 }
+
+static inline uint32_t blend_bilinear_2x2_rgb0_8_c(const uint32_t* src,
+                                                   uint32_t w,
+                                                   uint8_t lerp_x,
+                                                   uint8_t lerp_y) {
+    uint8_t lerp_1 = lut_u8_multiply[255 - lerp_x][255 - lerp_y];
+    uint8_t lerp_2 = lut_u8_multiply[lerp_x][255 - lerp_y];
+    uint8_t lerp_3 = lut_u8_multiply[255 - lerp_x][lerp_y];
+    uint8_t lerp_4 = lut_u8_multiply[lerp_x][lerp_y];
+    return (lut_u8_multiply[src[0] & 0xff][lerp_1]
+            + lut_u8_multiply[src[1] & 0xff][lerp_2]
+            + lut_u8_multiply[src[w] & 0xff][lerp_3]
+            + lut_u8_multiply[src[w + 1] & 0xff][lerp_4])
+           | (lut_u8_multiply[src[0] >> 8 & 0xff][lerp_1]
+              + lut_u8_multiply[src[1] >> 8 & 0xff][lerp_2]
+              + lut_u8_multiply[src[w] >> 8 & 0xff][lerp_3]
+              + lut_u8_multiply[src[w + 1] >> 8 & 0xff][lerp_4])
+                 << 8
+           | (lut_u8_multiply[src[0] >> 16 & 0xff][lerp_1]
+              + lut_u8_multiply[src[1] >> 16 & 0xff][lerp_2]
+              + lut_u8_multiply[src[w] >> 16 & 0xff][lerp_3]
+              + lut_u8_multiply[src[w + 1] >> 16 & 0xff][lerp_4])
+                 << 16;
+}
+
+static inline void print_m128i(__m128i a) {
+    uint32_t debug[] = {0, 0, 0, 0};
+    _mm_store_si128((__m128i*)debug, a);
+    printf(":: %08x %08x %08x %08x\n", debug[3], debug[2], debug[1], debug[0]);
+}
+
+static inline uint32_t blend_bilinear_2x2_rgb0_8_x86v128(const uint32_t* src,
+                                                         uint32_t w,
+                                                         uint8_t lerp_x,
+                                                         uint8_t lerp_y) {
+    // Algorithm, per channel:
+    //   dest = src[0](1-x)(1-y) + src[1](1-x)y + src[w]x(1-y) + src[w+1]xy
+    // assuming src, lerp_x and lerp_y are ranged 0-1. In reality they are ranged 0-255,
+    // and every intermediate multiplication result is normalized through a division by
+    // 256, i.e. a right-shift by 8.
+
+    // Spread & invert the lerp values in specific patterns for x and y:
+    //    src         +0                +1
+    //         _A___R___G___B__  _A___R___G___B__
+    //    +0  | 0  1-x 1-x 1-x    0   x   x   x   ─┬─▶ lerp_2px_x
+    //    +w  | 0  1-x 1-x 1-x    0   x   x   x   ─┘
+    //
+    //         _A___R___G___B__  _A___R___G___B__
+    //    +0  | 0  1-y 1-y 1-y    0  1-y 1-y 1-y  ───▶ lerp_2px_y0
+    //    +w  | 0   y   y   y     0   y   y   y   ───▶ lerp_2px_y1
+    static uint64_t inv_values[] = {0x000000ff00ff00ff, 0};
+    static __m128i inv_x = _mm_load_si128((__m128i*)inv_values);
+    static __m128i inv_y0 = _mm_set1_epi64x(inv_values[0]);
+    static __m128i zero = _mm_setzero_si128();
+    __m128i lerp_2px_x = _mm_xor_si128(_mm_set1_epi16(lerp_x), inv_x);
+    __m128i lerp_2px_y1 = _mm_set1_epi16(lerp_y);
+    __m128i lerp_2px_y0 = _mm_xor_si128(lerp_2px_y1, inv_y0);
+
+    __m128i src_2corners_y0 = _mm_loadl_epi64((__m128i*)src);
+    __m128i src_2corners_y1 = _mm_loadl_epi64((__m128i*)(&src[w]));
+    // Unpack src into the _high_ byte. This allows us to skip the intermediate
+    // normalize shift. Normally one would multiply-and-normalize two times. But by
+    // putting the second multiplication's operand into the high bytes it has the same
+    // scale as the result of the first multiplication and we can multiply a second time
+    // right away. With the help of PMULHUW (which returns the high 16 bits of the 32bit
+    // intermediate) instead of PMULLW we get a uint16 result for free and only need to
+    // shift 8 bits once after addition (because the lerp values cancel each other out
+    // and the addtion cannot overflow/saturate) for a uint8-ranged result.
+    src_2corners_y0 = _mm_unpacklo_epi8(zero, src_2corners_y0);
+    src_2corners_y1 = _mm_unpacklo_epi8(zero, src_2corners_y1);
+    src_2corners_y0 =
+        _mm_mulhi_epu16(src_2corners_y0, _mm_mullo_epi16(lerp_2px_x, lerp_2px_y0));
+    src_2corners_y1 =
+        _mm_mulhi_epu16(src_2corners_y1, _mm_mullo_epi16(lerp_2px_x, lerp_2px_y1));
+    __m128i result = _mm_add_epi16(src_2corners_y0, src_2corners_y1);
+    result = _mm_srli_epi16(result, 8);
+    result = _mm_add_epi16(result, _mm_srli_si128(result, 8));
+    result = _mm_packus_epi16(result, zero);
+    uint32_t iresult;
+    _mm_storeu_si32(&iresult, result);
+    return iresult;
+}
+
+uint32_t blend_bilinear_2x2(const uint32_t* src,
+                            uint32_t w,
+                            uint8_t lerp_x,
+                            uint8_t lerp_y) {
+#ifdef SIMD_MODE_X86_SSE
+    return blend_bilinear_2x2_rgb0_8_x86v128(src, w, lerp_x, lerp_y);
+#else
+    return blend_bilinear_2x2_rgb0_8_c(src, w, lerp_x, lerp_y);
+#endif
+}

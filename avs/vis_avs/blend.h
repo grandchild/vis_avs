@@ -75,3 +75,8 @@ inline void blend_default_1px(ARGS_2SRC_DEST) {
         case 9: blend_minimum_1px(src1, src2, dest); break;
     }
 }
+
+uint32_t blend_bilinear_2x2(const uint32_t* src,
+                            uint32_t w,
+                            uint8_t lerp_x,
+                            uint8_t lerp_y);
