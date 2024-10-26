@@ -31,10 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_dynamicdistancemodifier.h"
 
-#include "r_defs.h"
-
 #include "avs_eelif.h"
-#include "timing.h"
+#include "blend.h"
 
 #include <math.h>
 
@@ -161,7 +159,6 @@ int E_DynamicDistanceModifier::render(char visdata[2][2][576],
                                       int* fbout,
                                       int w,
                                       int h) {
-    int* fbin = framebuffer;
     if (this->m_lasth != h || this->m_lastw != w || !this->m_tab || !this->m_wmul) {
         int y;
         this->m_lastw = w;  // jf 121100 - added (oops)
@@ -213,145 +210,131 @@ int E_DynamicDistanceModifier::render(char visdata[2][2][576],
         }
     }
 
-    {
-        int w2 = w / 2;
-        int h2 = h / 2;
-        int y;
-        for (y = 0; y < h; y++) {
-            int ty = y - h2;
-            int x2 = w2 * w2 + w2 + ty * ty + 256;
-            int dx2 = -2 * w2;
-            int yysc = ty;
-            int xxsc = -w2;
-            int x = w;
-            if (this->config.bilinear) {
-                if (this->config.blend_mode == BLEND_SIMPLE_5050) {
-                    while (x--) {
-                        int qd = this->m_tab[isqrt(x2)];
-                        int ow, oh;
-                        int xpart, ypart;
-                        x2 += dx2;
-                        dx2 += 2;
-                        xpart = (qd * xxsc + 128);
-                        ypart = (qd * yysc + 128);
-                        ow = w2 + (xpart >> 8);
-                        oh = h2 + (ypart >> 8);
-                        xpart &= 0xff;
-                        ypart &= 0xff;
-                        xxsc++;
+    int w2 = w / 2;
+    int h2 = h / 2;
+    int y;
+    auto in = (uint32_t*)framebuffer;
+    auto out = (uint32_t*)fbout;
+    auto in2 = in;
+    for (y = 0; y < h; y++) {
+        int ty = y - h2;
+        int x2 = w2 * w2 + w2 + ty * ty + 256;
+        int dx2 = -2 * w2;
+        int yysc = ty;
+        int xxsc = -w2;
+        int x = w;
+        if (this->config.bilinear) {
+            if (this->config.blend_mode == BLEND_SIMPLE_5050) {
+                while (x--) {
+                    int qd = this->m_tab[isqrt(x2)];
+                    int ow, oh;
+                    int xpart, ypart;
+                    x2 += dx2;
+                    dx2 += 2;
+                    xpart = (qd * xxsc + 128);
+                    ypart = (qd * yysc + 128);
+                    ow = w2 + (xpart >> 8);
+                    oh = h2 + (ypart >> 8);
+                    xpart &= 0xff;
+                    ypart &= 0xff;
+                    xxsc++;
 
-                        if (ow < 0) {
-                            ow = 0;
-                        } else if (ow >= w - 1) {
-                            ow = w - 2;
-                        }
-                        if (oh < 0) {
-                            oh = 0;
-                        } else if (oh >= h - 1) {
-                            oh = h - 2;
-                        }
-
-                        *fbout++ = BLEND_AVG(
-                            BLEND4((unsigned int*)framebuffer + ow + this->m_wmul[oh],
-                                   w,
-                                   xpart,
-                                   ypart),
-                            *fbin++);
+                    if (ow < 0) {
+                        ow = 0;
+                    } else if (ow >= w - 1) {
+                        ow = w - 2;
                     }
-                } else {
-                    while (x--) {
-                        int qd = this->m_tab[isqrt(x2)];
-                        int ow, oh;
-                        int xpart, ypart;
-                        x2 += dx2;
-                        dx2 += 2;
-                        xpart = (qd * xxsc + 128);
-                        ypart = (qd * yysc + 128);
-                        ow = w2 + (xpart >> 8);
-                        oh = h2 + (ypart >> 8);
-                        xpart &= 0xff;
-                        ypart &= 0xff;
-                        xxsc++;
-
-                        if (ow < 0) {
-                            ow = 0;
-                        } else if (ow >= w - 1) {
-                            ow = w - 2;
-                        }
-                        if (oh < 0) {
-                            oh = 0;
-                        } else if (oh >= h - 1) {
-                            oh = h - 2;
-                        }
-
-                        *fbout++ =
-                            BLEND4((unsigned int*)framebuffer + ow + this->m_wmul[oh],
-                                   w,
-                                   xpart,
-                                   ypart);
+                    if (oh < 0) {
+                        oh = 0;
+                    } else if (oh >= h - 1) {
+                        oh = h - 2;
                     }
+
+                    uint32_t src =
+                        blend_bilinear_2x2(&in[ow + this->m_wmul[oh]], w, xpart, ypart);
+                    blend_5050_1px(&src, in2++, out++);
                 }
             } else {
-                if (this->config.blend_mode == BLEND_SIMPLE_5050) {
-                    while (x--) {
-                        int qd = this->m_tab[isqrt(x2)];
-                        int ow, oh;
-                        x2 += dx2;
-                        dx2 += 2;
-                        ow = w2 + ((qd * xxsc + 128) >> 8);
-                        xxsc++;
-                        oh = h2 + ((qd * yysc + 128) >> 8);
+                while (x--) {
+                    int qd = this->m_tab[isqrt(x2)];
+                    int ow, oh;
+                    int xpart, ypart;
+                    x2 += dx2;
+                    dx2 += 2;
+                    xpart = (qd * xxsc + 128);
+                    ypart = (qd * yysc + 128);
+                    ow = w2 + (xpart >> 8);
+                    oh = h2 + (ypart >> 8);
+                    xpart &= 0xff;
+                    ypart &= 0xff;
+                    xxsc++;
 
-                        if (ow < 0) {
-                            ow = 0;
-                        } else if (ow >= w) {
-                            ow = w - 1;
-                        }
-                        if (oh < 0) {
-                            oh = 0;
-                        } else if (oh >= h) {
-                            oh = h - 1;
-                        }
-
-                        *fbout++ =
-                            BLEND_AVG(framebuffer[ow + this->m_wmul[oh]], *fbin++);
+                    if (ow < 0) {
+                        ow = 0;
+                    } else if (ow >= w - 1) {
+                        ow = w - 2;
                     }
-                } else {
-                    while (x--) {
-                        int qd = this->m_tab[isqrt(x2)];
-                        int ow, oh;
-                        x2 += dx2;
-                        dx2 += 2;
-                        ow = w2 + ((qd * xxsc + 128) >> 8);
-                        xxsc++;
-                        oh = h2 + ((qd * yysc + 128) >> 8);
-
-                        if (ow < 0) {
-                            ow = 0;
-                        } else if (ow >= w) {
-                            ow = w - 1;
-                        }
-                        if (oh < 0) {
-                            oh = 0;
-                        } else if (oh >= h) {
-                            oh = h - 1;
-                        }
-
-                        *fbout++ = framebuffer[ow + this->m_wmul[oh]];
+                    if (oh < 0) {
+                        oh = 0;
+                    } else if (oh >= h - 1) {
+                        oh = h - 2;
                     }
+
+                    uint32_t src =
+                        blend_bilinear_2x2(&in[ow + this->m_wmul[oh]], w, xpart, ypart);
+                    blend_replace_1px(&src, out++);
+                }
+            }
+        } else {
+            if (this->config.blend_mode == BLEND_SIMPLE_5050) {
+                while (x--) {
+                    int qd = this->m_tab[isqrt(x2)];
+                    int ow, oh;
+                    x2 += dx2;
+                    dx2 += 2;
+                    ow = w2 + ((qd * xxsc + 128) >> 8);
+                    xxsc++;
+                    oh = h2 + ((qd * yysc + 128) >> 8);
+
+                    if (ow < 0) {
+                        ow = 0;
+                    } else if (ow >= w) {
+                        ow = w - 1;
+                    }
+                    if (oh < 0) {
+                        oh = 0;
+                    } else if (oh >= h) {
+                        oh = h - 1;
+                    }
+
+                    blend_5050_1px(&in[ow + this->m_wmul[oh]], in2++, out++);
+                }
+            } else {
+                while (x--) {
+                    int qd = this->m_tab[isqrt(x2)];
+                    int ow, oh;
+                    x2 += dx2;
+                    dx2 += 2;
+                    ow = w2 + ((qd * xxsc + 128) >> 8);
+                    xxsc++;
+                    oh = h2 + ((qd * yysc + 128) >> 8);
+
+                    if (ow < 0) {
+                        ow = 0;
+                    } else if (ow >= w) {
+                        ow = w - 1;
+                    }
+                    if (oh < 0) {
+                        oh = 0;
+                    } else if (oh >= h) {
+                        oh = h - 1;
+                    }
+
+                    blend_replace_1px(&in[ow + this->m_wmul[oh]], out++);
                 }
             }
         }
     }
-#ifndef NO_MMX
-    if (this->config.bilinear) {
-#ifdef _MSC_VER
-        __asm emms;
-#else  // _MSC_VER
-        __asm__ __volatile__("emms");
-#endif
-    }
-#endif
     return 1;
 }
 
