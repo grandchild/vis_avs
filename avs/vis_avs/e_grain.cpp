@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_grain.h"
 
-#include "r_defs.h"
+#include "blend.h"
 
 #include <stdlib.h>
 
@@ -96,8 +96,6 @@ int E_Grain::render(char[2][2][576],
     }
 
     int amount_scaled = (this->config.amount * 255) / 100;
-    int* p;
-    unsigned char* q;
     int l = w * h;
 
     if (w != this->old_x || h != this->old_y) {
@@ -110,13 +108,13 @@ int E_Grain::render(char[2][2][576],
         this->randtab_pos -= 491;
     }
 
-    p = framebuffer;
-    q = this->depth_buffer;
+    auto p = (uint32_t*)framebuffer;
+    uint8_t* q = this->depth_buffer;
     if (this->config.static_) {
         if (this->config.blend_mode == BLEND_SIMPLE_ADDITIVE) {
             while (l--) {
                 if (*p) {
-                    int c = 0;
+                    uint32_t c = 0;
                     if (q[1] < amount_scaled) {
                         int s = q[0];
                         int r = (((p[0] & 0xff0000) * s) >> 8);
@@ -135,7 +133,7 @@ int E_Grain::render(char[2][2][576],
                         }
                         c |= r;
                     }
-                    *p = BLEND(*p, c);
+                    blend_add_1px(&c, p, p);
                 }
                 p++;
                 q += 2;
@@ -143,7 +141,7 @@ int E_Grain::render(char[2][2][576],
         } else if (this->config.blend_mode == BLEND_SIMPLE_5050) {
             while (l--) {
                 if (*p) {
-                    int c = 0;
+                    uint32_t c = 0;
                     if (q[1] < amount_scaled) {
                         int s = q[0];
                         int r = (((p[0] & 0xff0000) * s) >> 8);
@@ -162,7 +160,7 @@ int E_Grain::render(char[2][2][576],
                         }
                         c |= r;
                     }
-                    *p = BLEND_AVG(*p, c);
+                    blend_5050_1px(&c, p, p);
                 }
                 p++;
                 q += 2;
@@ -170,7 +168,7 @@ int E_Grain::render(char[2][2][576],
         } else {  // BLEND_SIMPLE_REPLACE
             while (l--) {
                 if (*p) {
-                    int c = 0;
+                    uint32_t c = 0;
                     if (q[1] < amount_scaled) {
                         int s = q[0];
                         int r = (((p[0] & 0xff0000) * s) >> 8);
@@ -189,7 +187,7 @@ int E_Grain::render(char[2][2][576],
                         }
                         c |= r;
                     }
-                    *p = c;
+                    blend_replace_1px(&c, p);
                 }
                 p++;
                 q += 2;
@@ -199,7 +197,7 @@ int E_Grain::render(char[2][2][576],
         if (this->config.blend_mode == BLEND_SIMPLE_ADDITIVE) {
             while (l--) {
                 if (*p) {
-                    int c = 0;
+                    uint32_t c = 0;
                     if (fastrandbyte() < amount_scaled) {
                         int s = fastrandbyte();
                         int r = (((p[0] & 0xff0000) * s) >> 8);
@@ -218,7 +216,7 @@ int E_Grain::render(char[2][2][576],
                         }
                         c |= r;
                     }
-                    *p = BLEND(*p, c);
+                    blend_add_1px(&c, p, p);
                 }
                 p++;
                 q += 2;
@@ -226,7 +224,7 @@ int E_Grain::render(char[2][2][576],
         } else if (this->config.blend_mode == BLEND_SIMPLE_5050) {
             while (l--) {
                 if (*p) {
-                    int c = 0;
+                    uint32_t c = 0;
                     if (fastrandbyte() < amount_scaled) {
                         int s = fastrandbyte();
                         int r = (((p[0] & 0xff0000) * s) >> 8);
@@ -245,7 +243,7 @@ int E_Grain::render(char[2][2][576],
                         }
                         c |= r;
                     }
-                    *p = BLEND_AVG(*p, c);
+                    blend_5050_1px(&c, p, p);
                 }
                 p++;
                 q += 2;
@@ -253,7 +251,7 @@ int E_Grain::render(char[2][2][576],
         } else {  // BLEND_SIMPLE_REPLACE
             while (l--) {
                 if (*p) {
-                    int c = 0;
+                    uint32_t c = 0;
                     if (fastrandbyte() < amount_scaled) {
                         int s = fastrandbyte();
                         int r = (((p[0] & 0xff0000) * s) >> 8);
@@ -272,7 +270,7 @@ int E_Grain::render(char[2][2][576],
                         }
                         c |= r;
                     }
-                    *p = c;
+                    blend_replace_1px(&c, p);
                 }
                 p++;
                 q += 2;
