@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_timescope.h"
 
-#include "r_defs.h"
+#include "blend.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -73,7 +73,7 @@ int E_Timescope::render(char visdata[2][2][576],
 
     this->position++;
     this->position %= w;
-    framebuffer += this->position;
+    auto fb = (uint32_t*)framebuffer + this->position;
     uint32_t r, g, b;
     r = (uint32_t)this->config.color & 0xff;
     g = ((uint32_t)this->config.color >> 8) & 0xff;
@@ -84,16 +84,12 @@ int E_Timescope::render(char visdata[2][2][576],
         px = (r * px) / 256 + (((g * px) / 256) << 8) + (((b * px) / 256) << 16);
         switch (this->config.blend_mode) {
             default:
-            case TIMESCOPE_BLEND_DEFAULT: BLEND_LINE(framebuffer, px); break;
-            case TIMESCOPE_BLEND_ADDITIVE:
-                framebuffer[0] = BLEND(framebuffer[0], px);
-                break;
-            case TIMESCOPE_BLEND_5050:
-                framebuffer[0] = BLEND_AVG(framebuffer[0], px);
-                break;
-            case TIMESCOPE_BLEND_REPLACE: framebuffer[0] = px;
+            case TIMESCOPE_BLEND_DEFAULT: blend_default_1px(&px, fb, fb); break;
+            case TIMESCOPE_BLEND_ADDITIVE: blend_add_1px(&px, fb, fb); break;
+            case TIMESCOPE_BLEND_5050: blend_5050_1px(&px, fb, fb); break;
+            case TIMESCOPE_BLEND_REPLACE: blend_replace_1px(&px, fb); break;
         }
-        framebuffer += w;
+        fb += w;
     }
 
     return 0;
