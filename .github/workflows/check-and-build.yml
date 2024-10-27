@@ -22,6 +22,10 @@ jobs:
           sudo apt-get install --yes --no-install-recommends -V clang-format-${clang_major_version}
           echo "/usr/lib/llvm-${clang_major_version}/bin" >> "${GITHUB_PATH}"
 
+      - name: Dump clang-format config
+        run: |-
+          clang-format -dump-config -style=file
+
       - name: Enforce clang-format clean
         run: |-
           clang_format_args=(
