@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_interferences.h"
 
-#include "r_defs.h"
+#include "blend.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -135,7 +135,7 @@ int E_Interferences::render(char[2][2][576],
         angle += angle_step;
     }
 
-    unsigned char* bt = g_blendtable[alpha];
+    unsigned char* bt = lut_u8_multiply[alpha];
 
     int* outp = fbout;
     for (y = 0; y < h; y++) {
@@ -319,21 +319,13 @@ int E_Interferences::render(char[2][2][576],
         this->on_beat_fadeout = M_PI;
     }
 
-    int* p = framebuffer;
-    int* d = fbout;
+    auto src = (uint32_t*)fbout;
+    auto dest = (uint32_t*)framebuffer;
     switch (this->config.blend_mode) {
         default:
         case BLEND_SIMPLE_REPLACE: return 1;
-        case BLEND_SIMPLE_ADDITIVE: mmx_addblend_block(p, d, w * h); break;
-        case BLEND_SIMPLE_5050: {
-            int i = w * h;
-            while (i--) {
-                *p = BLEND_AVG(*p, *d);
-                p++;
-                d++;
-            }
-            break;
-        }
+        case BLEND_SIMPLE_ADDITIVE: blend_add(src, src, dest, w, h); break;
+        case BLEND_SIMPLE_5050: blend_5050(src, src, dest, w, h); break;
     }
     return 0;
 }
