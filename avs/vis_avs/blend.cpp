@@ -11,7 +11,7 @@
 
 #include <sys/types.h>
 
-static uint8_t lut_u8_multiply[256][256];
+uint8_t lut_u8_multiply[256][256];
 static uint8_t lut_u8_screen[256][256];
 static uint8_t lut_u8_linear_burn[256][256];
 static uint8_t lut_u8_color_dodge[256][256];

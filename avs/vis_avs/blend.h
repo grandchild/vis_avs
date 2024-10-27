@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 void make_blend_LUTs();
+extern uint8_t lut_u8_multiply[256][256];
 
 // The following SIMD modes may be targeted by a build variable definition. If a SIMD
 // implementation is not available, the C fallback (SIMD_MODE_NONE) version will be
