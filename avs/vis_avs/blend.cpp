@@ -779,6 +779,13 @@ static inline void print_m128i(__m128i a) {
     printf(":: %08x %08x %08x %08x\n", debug[3], debug[2], debug[1], debug[0]);
 }
 
+// Some older compilers don't implement the `_mm_storeu_si32()` instrinsic. They do
+// implement the `_mm_store_ss()` intrinsic which stores the same, just expects floats.
+#ifndef _mm_storeu_si32
+#define _mm_storeu_si32(dest, a) \
+    _mm_store_ss(reinterpret_cast<float*>(dest), _mm_castsi128_ps(a));
+#endif
+
 static inline uint32_t blend_bilinear_2x2_rgb0_8_x86v128(const uint32_t* src,
                                                          uint32_t w,
                                                          uint8_t lerp_x,
