@@ -57,6 +57,12 @@ void blend_replace(const uint32_t* src, uint32_t* dest, uint32_t w, uint32_t h) 
     memcpy(dest, src, w * h * pixel_size(pixel_rgb0_8));
 }
 
+void blend_replace_fill(uint32_t src, uint32_t* dest, uint32_t w) {
+    for (size_t i = 0; i < w; i++) {
+        dest[i] = src;
+    }
+}
+
 // ADDITIVE BLEND
 
 static inline void blend_add_rgb0_8_c(const uint32_t* src1,
@@ -543,19 +549,50 @@ void blend_every_other_line(const uint32_t* src,
         blend##_rgb0_8_c(src1, src2, dest);                                        \
     }
 
+#ifdef SIMD_MODE_X86_SSE
+#define BLEND_SRC_DEST_FILL(blend)                                \
+    void blend##_fill(uint32_t src, uint32_t* dest, uint32_t w) { \
+        uint32_t src_4px[4] = {src, src, src, src};               \
+        size_t i = 0;                                             \
+        for (; (i + 4) <= w; i += 4) {                            \
+            blend##_rgb0_8_x86v128(src_4px, &dest[i], &dest[i]);  \
+        }                                                         \
+        for (; i < w; i++) {                                      \
+            blend##_rgb0_8_c(&src, &dest[i], &dest[i]);           \
+        }                                                         \
+    }
+#else
+#define BLEND_SRC_DEST_FILL(blend)                                \
+    void blend##_fill(uint32_t src, uint32_t* dest, uint32_t w) { \
+        for (size_t i = 0; i < w; i++) {                          \
+            blend##_rgb0_8_c(&src, &dest[i], &dest[i]);           \
+        }                                                         \
+    }
+#endif
+
 BLEND_SRC_DEST_1PX(blend_add)
+BLEND_SRC_DEST_FILL(blend_add)
 BLEND_SRC_DEST_1PX(blend_5050)
+BLEND_SRC_DEST_FILL(blend_5050)
 BLEND_SRC_DEST_1PX(blend_multiply)
+BLEND_SRC_DEST_FILL(blend_multiply)
 BLEND_SRC_DEST_1PX(blend_screen)
+BLEND_SRC_DEST_FILL(blend_screen)
 BLEND_SRC_DEST_1PX(blend_color_dodge)
 BLEND_SRC_DEST_1PX(blend_color_burn)
 BLEND_SRC_DEST_1PX(blend_linear_burn)
 BLEND_SRC_DEST_1PX(blend_maximum)
+BLEND_SRC_DEST_FILL(blend_maximum)
 BLEND_SRC_DEST_1PX(blend_minimum)
+BLEND_SRC_DEST_FILL(blend_minimum)
 BLEND_SRC_DEST_1PX(blend_sub_src1_from_src2)
+BLEND_SRC_DEST_FILL(blend_sub_src1_from_src2)
 BLEND_SRC_DEST_1PX(blend_sub_src2_from_src1)
+BLEND_SRC_DEST_FILL(blend_sub_src2_from_src1)
 BLEND_SRC_DEST_1PX(blend_sub_src1_from_src2_abs)
+BLEND_SRC_DEST_FILL(blend_sub_src1_from_src2_abs)
 BLEND_SRC_DEST_1PX(blend_xor)
+BLEND_SRC_DEST_FILL(blend_xor)
 
 // ADJUSTABLE BLEND
 
@@ -623,6 +660,23 @@ void blend_adjustable_1px(const uint32_t* src1,
                           uint32_t* dest,
                           uint32_t param) {
     blend_adjustable_rgb0_8_c(src1, src2, dest, param);
+}
+
+void blend_adjustable_fill(uint32_t src, uint32_t* dest, uint32_t param, uint32_t w) {
+#ifdef SIMD_MODE_X86_SSE
+    uint32_t src_4px[4] = {src, src, src, src};
+    size_t i = 0;
+    for (; (i + 4) <= w; i += 4) {
+        blend_adjustable_rgb0_8_x86v128(src_4px, &dest[i], &dest[i], param);
+    }
+    for (; i < w; i++) {
+        blend_adjustable_rgb0_8_c(&src, &dest[i], &dest[i], param);
+    }
+#else
+    for (size_t i = 0; i < w; i++) {
+        blend_adjustable_rgb0_8_c(&src, &dest[i], &dest[i], param);
+    }
+#endif
 }
 
 // BUFFER BLEND
