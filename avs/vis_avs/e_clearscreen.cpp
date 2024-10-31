@@ -81,27 +81,11 @@ int E_ClearScreen::render(char[2][2][576],
     auto color_rgb0_8 = (uint32_t)(this->config.color & 0x00ffffff);
 
     switch (this->config.blend_mode) {
-        case CLEAR_BLEND_DEFAULT:
-            while (i--) {
-                blend_default_1px(&color_rgb0_8, p, p++);
-            }
-            break;
-        case CLEAR_BLEND_ADDITIVE:
-            while (i--) {
-                blend_add_1px(&color_rgb0_8, p, p++);
-            }
-            break;
-        case CLEAR_BLEND_5050:
-            while (i--) {
-                blend_5050_1px(&color_rgb0_8, p, p++);
-            }
-            break;
+        case CLEAR_BLEND_DEFAULT: blend_default_fill(color_rgb0_8, p, w * h); break;
+        case CLEAR_BLEND_ADDITIVE: blend_add_fill(color_rgb0_8, p, w * h); break;
+        case CLEAR_BLEND_5050: blend_5050_fill(color_rgb0_8, p, w * h); break;
         default: [[fallthrough]];
-        case CLEAR_BLEND_REPLACE:
-            while (i--) {
-                blend_replace_1px(&color_rgb0_8, p++);
-            }
-            break;
+        case CLEAR_BLEND_REPLACE: blend_replace_fill(color_rgb0_8, p, w * h); break;
     }
     return 0;
 }
