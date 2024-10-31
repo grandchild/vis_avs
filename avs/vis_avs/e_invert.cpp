@@ -60,9 +60,6 @@ int E_Invert::render(char[2][2][576],
                      int*,
                      int w,
                      int h) {
-    int i = w * h;
-    int* p = framebuffer;
-
     if (is_beat & 0x80000000) {
         return 0;
     }
