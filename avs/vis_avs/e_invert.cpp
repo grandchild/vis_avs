@@ -66,8 +66,11 @@ int E_Invert::render(char[2][2][576],
     if (!enabled) {
         return 0;
     }
-    // render_c(framebuffer, w * h);
+#ifdef SIMD_MODE_X86_SSE
     render_simd(framebuffer, w * h);
+#else
+    render_c(framebuffer, w * h);
+#endif
     return 0;
 }
 
