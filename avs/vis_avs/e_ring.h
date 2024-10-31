@@ -7,7 +7,7 @@
 struct Ring_Color_Config : public Effect_Config {
     uint64_t color = 0x000000;
     Ring_Color_Config() = default;
-    Ring_Color_Config(uint64_t color) : color(color){};
+    Ring_Color_Config(uint64_t color) : color(color) {};
 };
 
 struct Ring_Config : public Effect_Config {

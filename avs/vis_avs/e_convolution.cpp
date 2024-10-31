@@ -999,7 +999,7 @@ void E_Convolution::create_draw_func() {
         auto value = ((char)(jloopstart - (this->code_length + 1)));
         appenddraw(value);
         // this->code_length + 1 is the index of the next command
-    }                  // clear mmx state
+    }  // clear mmx state
     appenddraw(0x0F);  // emms
     appenddraw(0x77);
     // function exit code

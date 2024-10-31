@@ -14,7 +14,7 @@
 struct Convolution_Kernel_Config : public Effect_Config {
     int64_t value = 0;
     Convolution_Kernel_Config() = default;
-    explicit Convolution_Kernel_Config(int64_t value) : value(value){};
+    explicit Convolution_Kernel_Config(int64_t value) : value(value) {};
 };
 
 struct Convolution_Config : public Effect_Config {

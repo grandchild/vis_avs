@@ -11,7 +11,7 @@
 struct DotPlane_Color_Config : public Effect_Config {
     uint64_t color = 0xffffff;
     DotPlane_Color_Config() = default;
-    DotPlane_Color_Config(uint64_t color) : color(color){};
+    DotPlane_Color_Config(uint64_t color) : color(color) {};
 };
 
 struct DotPlane_Config : public Effect_Config {

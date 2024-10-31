@@ -127,7 +127,7 @@ void Movement_Info::load_effect(Effect* component,
 
 E_Movement::E_Movement(AVS_Instance* avs) : Programmable_Effect(avs) {}
 E_Movement::~E_Movement() {}
-E_Movement::Transform::Transform() : need_regen(true), lock(lock_init()){};
+E_Movement::Transform::Transform() : need_regen(true), lock(lock_init()) {};
 E_Movement::Transform::~Transform() {
     free(this->table);
     lock_destroy(this->lock);

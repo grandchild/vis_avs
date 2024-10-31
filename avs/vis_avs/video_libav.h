@@ -31,7 +31,7 @@ struct AVS_Video::LibAV {
     SwsContext* scaler = NULL;
     bool loaded = false;
 
-    LibAV() : loaded(load_libav_dlibs()){};
+    LibAV() : loaded(load_libav_dlibs()) {};
     // TODO [feature][bug]: avs_register_exit_cleanup(this->unload_libav_dlibs);
 
     static const char* load_error;

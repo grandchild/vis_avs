@@ -52,7 +52,9 @@ class Translator {
     Translator(TranslateMode mode,
                bool translate_firstlevel,
                const std::string& avs_base_path)
-        : mode(mode), trans_first(translate_firstlevel), avs_base_path(avs_base_path){};
+        : mode(mode),
+          trans_first(translate_firstlevel),
+          avs_base_path(avs_base_path) {};
     std::string translate(const std::string& prefix_code, std::string input);
 };
 

@@ -6,7 +6,7 @@
 struct RotStar_Color_Config : public Effect_Config {
     uint64_t color = 0x000000;
     RotStar_Color_Config() = default;
-    RotStar_Color_Config(uint64_t color) : color(color){};
+    RotStar_Color_Config(uint64_t color) : color(color) {};
 };
 
 struct RotStar_Config : public Effect_Config {

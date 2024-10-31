@@ -14,7 +14,7 @@
 struct DotFountain_Color_Config : public Effect_Config {
     uint64_t color = 0xffffff;
     DotFountain_Color_Config() = default;
-    DotFountain_Color_Config(uint64_t color) : color(color){};
+    DotFountain_Color_Config(uint64_t color) : color(color) {};
 };
 
 struct DotFountain_Config : public Effect_Config {

@@ -54,28 +54,28 @@ be sure to preserve edi, too.
 
 #ifdef _MSC_VER
 
-#define _ARGS1                        \
-    double *parm_a, *__nextBlock;     \
+#define _ARGS1                      \
+    double *parm_a, *__nextBlock;   \
     __asm { mov ebp, esp}              \
-    __asm { sub esp, __LOCAL_SIZE }   \
-    __asm { mov dword ptr parm_a, eax} \
+    __asm { sub esp, __LOCAL_SIZE } \
+    __asm { mov dword ptr parm_a, eax}   \
     __asm { mov __nextBlock, esi }
 
 #define _ARGS2                             \
     double *parm_a, *parm_b, *__nextBlock; \
-    __asm { mov ebp, esp}                   \
+    __asm { mov ebp, esp}                     \
     __asm { sub esp, __LOCAL_SIZE }        \
-    __asm { mov dword ptr parm_a, eax}      \
+    __asm { mov dword ptr parm_a, eax}          \
     __asm { mov dword ptr parm_b, ebx }    \
     __asm { mov __nextBlock, esi}
 
 #define _ARGS3                                      \
     double *parm_a, *parm_b, *parm_c, *__nextBlock; \
-    __asm { mov ebp, esp}                            \
+    __asm { mov ebp, esp}                              \
     __asm { sub esp, __LOCAL_SIZE }                 \
-    __asm { mov dword ptr parm_a, eax}               \
+    __asm { mov dword ptr parm_a, eax}                   \
     __asm { mov dword ptr parm_b, ebx }             \
-    __asm { mov dword ptr parm_c, ecx}               \
+    __asm { mov dword ptr parm_c, ecx}                   \
     __asm { mov __nextBlock, esi }
 
 // Calls with double-typed parameters
@@ -112,9 +112,9 @@ be sure to preserve edi, too.
     __asm { UD2 }
 
 #define _LEAVE           \
-    __asm { mov eax, esi} \
+    __asm { mov eax, esi}   \
     __asm { add esi, 8 } \
-    __asm { mov esp, ebp} \
+    __asm { mov esp, ebp}   \
     _MARK_FUNCTION_END
 
 #else  // GCC

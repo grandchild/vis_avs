@@ -15,7 +15,7 @@ enum DotGrid_Blend_Mode {
 struct DotGrid_Color_Config : public Effect_Config {
     uint64_t color = 0x000000;
     DotGrid_Color_Config() = default;
-    DotGrid_Color_Config(uint64_t color) : color(color){};
+    DotGrid_Color_Config(uint64_t color) : color(color) {};
 };
 
 struct DotGrid_Config : public Effect_Config {

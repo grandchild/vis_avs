@@ -18,8 +18,8 @@ static void rdtsc(unsigned int t[2]) {
     __asm
     {
 		mov esi, t
-          // TODO [cleanup]: This is RDTSC, maybe it wasn't available in MASM at the
-          // time?
+         // TODO [cleanup]: This is RDTSC, maybe it wasn't available in MASM at the
+         // time?
 		_emit 0xf
 		_emit 0x31
 		mov [esi], eax

@@ -7,7 +7,7 @@
 struct OscilloscopeStar_Color_Config : public Effect_Config {
     uint64_t color = 0x000000;
     OscilloscopeStar_Color_Config() = default;
-    OscilloscopeStar_Color_Config(uint64_t color) : color(color){};
+    OscilloscopeStar_Color_Config(uint64_t color) : color(color) {};
 };
 
 struct OscilloscopeStar_Config : public Effect_Config {

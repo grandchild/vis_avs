@@ -177,14 +177,14 @@ NAKED void nseel_asm_invsqrt(void) {
 
     mov edx, 0x5f3759df
     fst dword ptr [esi]
-      // floating point stack has input, as does [eax]
+     // floating point stack has input, as does [eax]
     fmul dword ptr [negativezeropointfive]
     mov ecx, [esi]
     sar ecx, 1
     sub edx, ecx
     mov [esi], edx
 
-          // st(0) = input, [eax] has x
+         // st(0) = input, [eax] has x
     fmul dword ptr [esi]
 
     fmul dword ptr [esi]
@@ -717,7 +717,7 @@ NAKED void nseel_asm_and_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_uplus(void)  // this is the same as doing nothing, it seems
-{
+    {
 #if 0
   __asm 
   {
@@ -731,9 +731,8 @@ NAKED void nseel_asm_uplus(void)  // this is the same as doing nothing, it seems
     mov nextBlock, ebx
   }
 #endif
-    _MARK_FUNCTION_END
+        _MARK_FUNCTION_END} NAKED void nseel_asm_uplus_end(void) {
 }
-NAKED void nseel_asm_uplus_end(void) {}
 
 //---------------------------------------------------------------------------------------------------------------
 NAKED void nseel_asm_uminus(void) {
@@ -871,7 +870,7 @@ NAKED void nseel_asm_if(void) {
 
     call eax  // call the proper function
 
-      // at this point, the return value will be in eax, as desired
+     // at this point, the return value will be in eax, as desired
     }
 #else
     __asm__ __volatile__(
@@ -912,7 +911,7 @@ NAKED void nseel_asm_repeat(void) {
 again:
       push ecx
       push esi  // revert back to last
-                                                                // temp workspace
+                                                           // temp workspace
         mov ecx, 0FFFFFFFFh
         call ecx
       pop esi

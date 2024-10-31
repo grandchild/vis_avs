@@ -50,7 +50,7 @@ struct ColorClip_Info : public Effect_Info {
 
 class E_ColorClip : public Configurable_Effect<ColorClip_Info, ColorClip_Config> {
    public:
-    E_ColorClip(AVS_Instance* avs) : Configurable_Effect(avs){};
+    E_ColorClip(AVS_Instance* avs) : Configurable_Effect(avs) {};
     virtual ~E_ColorClip() = default;
     virtual int render(char visdata[2][2][576],
                        int is_beat,
