@@ -29,6 +29,7 @@ file(GLOB SRC_FILES_AVS_COMMON
     avs/vis_avs/video.cpp
     avs/vis_avs/video_libav.cpp
     avs/platform.c
+    avs/uuid.cpp
     avs/3rdparty/md_fft.cpp
 )
 
@@ -178,6 +179,10 @@ if(WIN32)
     target_link_libraries(vis_avs
         ddraw  # draw.cpp includes ddraw.h
                # https://docs.microsoft.com/en-us/windows/win32/api/ddraw/nf-ddraw-directdrawcreate
+        rpcrt4 # UUIDs
+    )
+    target_link_libraries(libavs
+        rpcrt4 # UUIDs
     )
 
     get_filename_component(WINAMP_DIR "[HKEY_CURRENT_USER\\SOFTWARE\\Winamp]" ABSOLUTE)
@@ -211,7 +216,7 @@ elseif(LINUX)
     include(FindPkgConfig)
     pkg_search_module(PIPEWIRE REQUIRED libpipewire-0.3)
     target_include_directories(avs_common PUBLIC ${PIPEWIRE_INCLUDE_DIRS})
-    target_link_libraries(libavs ${PIPEWIRE_LIBRARIES})
+    target_link_libraries(libavs ${PIPEWIRE_LIBRARIES} uuid)
     target_link_options(libavs PUBLIC -Wl,-m elf_i386)
     set(AVS_DYLIB_EXTENSION "so")
     add_executable(avs-cli avs/avs-cli.c)
