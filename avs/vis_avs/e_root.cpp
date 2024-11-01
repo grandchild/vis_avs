@@ -6,6 +6,7 @@
 
 #include "../platform.h"
 #include "../util.h"
+#include "../uuid.h"
 
 #include <iostream>
 
@@ -18,9 +19,23 @@
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
 
 constexpr Parameter Root_Info::author_parameters[];
+constexpr Parameter Root_Info::remix_parameters[];
 constexpr Parameter Root_Info::parameters[];
 
-E_Root::E_Root(AVS_Instance* avs) : Configurable_Effect(avs), buffers_saved(false) {}
+std::string random_preset_name_slug() {
+    static const char charset[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+    std::string slug;
+    for (int i = 0; i < 10; i++) {
+        slug += charset[rand() % (sizeof(charset) - 1)];
+    }
+    return slug;
+}
+
+E_Root::E_Root(AVS_Instance* avs) : Configurable_Effect(avs), buffers_saved(false) {
+    this->config.date_init = current_date_str();
+    this->config.name = "Untitled Preset " + random_preset_name_slug();
+    this->config.id = uuid4();
+}
 E_Root::~E_Root() {
     for (int i = 0; i < NBUF; i++) {
         free(this->buffers[i]);
@@ -28,6 +43,17 @@ E_Root::~E_Root() {
         this->buffers_w[i] = 0;
         this->buffers_h[i] = 0;
     }
+}
+
+void E_Root::remix() {
+    Root_BasedOn_Config based_on;
+    based_on.id = this->config.id;
+    based_on.name = this->config.name;
+    based_on.date = this->config.date_last;
+    based_on.authors = this->config.authors;
+    this->config.based_on.push_back(based_on);
+    this->config.id = uuid4();
+    this->config.date_init = current_date_str();
 }
 
 int E_Root::render(char visdata[2][2][576],

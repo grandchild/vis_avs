@@ -177,8 +177,8 @@ bool AVS_Instance::preset_load_legacy(const uint8_t* preset,
     return false;
 }
 
-bool AVS_Instance::preset_save_file(const char* file_path, bool indent) {
-    auto preset_str = this->preset_save(indent);
+bool AVS_Instance::preset_save_file(const char* file_path, bool as_remix, bool indent) {
+    auto preset_str = this->preset_save(as_remix, indent);
     FILE* fp = fopen(file_path, "wb");
     if (fp != nullptr) {
         fwrite(preset_str, 1, strlen(preset_str), fp);
@@ -210,10 +210,14 @@ int AVS_Instance::preset_save_file_legacy(const char* file_path) {
     return result;
 }
 
-const char* AVS_Instance::preset_save(bool indent) {
+const char* AVS_Instance::preset_save(bool as_remix, bool indent) {
     json j;
     j["preset format version"] = "0";
     j["avs version"] = "2.81.4";
+    if (as_remix) {
+        this->root.remix();
+    }
+    this->root.config.date_last = current_date_str();
     try {
         j.update(this->root.save());
         j.erase("effect");

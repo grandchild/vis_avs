@@ -266,7 +266,9 @@ bool avs_preset_load(AVS_Handle avs, const char* file_path);
 bool avs_preset_set(AVS_Handle avs, const char* preset);
 
 /**
- * Save the currently loaded preset to the given file path. If `indent` is `true`, the
+ * Save the currently loaded preset to the given file path. If `as_remix` is `true`, the
+ * preset's metadata will be refreshed, a new ID assigned and some of the old preset's
+ * metadata appended to the history list for the new preset. If `indent` is `true`, the
  * JSON will be indented with 4 spaces in the file. Otherwise it will be a single line.
  *
  * If `file_path` does not end in ".avs" it will be appended. Setting `file_path` to a
@@ -274,7 +276,7 @@ bool avs_preset_set(AVS_Handle avs, const char* preset);
  *
  * Returns `true` on success or `false` if saving fails for some reason.
  */
-bool avs_preset_save(AVS_Handle avs, const char* file_path, bool indent);
+bool avs_preset_save(AVS_Handle avs, const char* file_path, bool as_remix, bool indent);
 
 /**
  * Return the currently loaded preset's JSON string. If `indent` is `true`, the JSON
@@ -289,7 +291,7 @@ bool avs_preset_save(AVS_Handle avs, const char* file_path, bool indent);
  *
  * Returns `NULL` on error.
  */
-const char* avs_preset_get(AVS_Handle avs, bool indent);
+const char* avs_preset_get(AVS_Handle avs, bool as_remix, bool indent);
 
 /**
  * Load a preset from a legacy binary buffer.

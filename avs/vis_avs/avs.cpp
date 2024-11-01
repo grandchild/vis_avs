@@ -161,20 +161,23 @@ bool avs_preset_set(AVS_Handle avs, const char* preset) {
     return instance->preset_load(preset, false);
 }
 AVS_API
-bool avs_preset_save(AVS_Handle avs, const char* file_path, bool indent) {
+bool avs_preset_save(AVS_Handle avs,
+                     const char* file_path,
+                     bool as_remix,
+                     bool indent) {
     AVS_Instance* instance = get_instance_from_handle(avs);
     if (instance == nullptr) {
         return false;
     }
-    return instance->preset_save_file(file_path, indent);
+    return instance->preset_save_file(file_path, as_remix, indent);
 }
 AVS_API
-const char* avs_preset_get(AVS_Handle avs, bool indent) {
+const char* avs_preset_get(AVS_Handle avs, bool as_remix, bool indent) {
     AVS_Instance* instance = get_instance_from_handle(avs);
     if (instance == nullptr) {
         return nullptr;
     }
-    return instance->preset_save(indent);
+    return instance->preset_save(as_remix, indent);
 }
 AVS_API
 bool avs_preset_set_legacy(AVS_Handle avs,

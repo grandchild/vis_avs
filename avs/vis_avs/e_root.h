@@ -11,11 +11,21 @@ struct Root_Author_Config : public Effect_Config {
     std::string name;
 };
 
-struct Root_Config : public Effect_Config {
-    bool clear = false;
+struct Root_BasedOn_Config : public Effect_Config {
+    std::string id;
     std::string name;
     std::string date;
     std::vector<Root_Author_Config> authors;
+};
+
+struct Root_Config : public Effect_Config {
+    bool clear = false;
+    std::string name;
+    std::string date_init;
+    std::string date_last;
+    std::vector<Root_Author_Config> authors;
+    std::string id;
+    std::vector<Root_BasedOn_Config> based_on;
 };
 
 struct Root_Info : public Effect_Info {
@@ -34,13 +44,36 @@ struct Root_Info : public Effect_Info {
                  "Role",
                  "'author', 'remixer', 'editor', 'curator' - or anything else")};
 
-    static constexpr uint32_t num_parameters = 4;
+    static constexpr uint32_t num_remix_parameters = 4;
+    static constexpr Parameter remix_parameters[num_remix_parameters] = {
+        P_STRING(offsetof(Root_BasedOn_Config, id), "ID", "UUID of the predecessor"),
+        P_STRING(offsetof(Root_BasedOn_Config, name),
+                 "Name",
+                 "Name of the predecessor"),
+        P_STRING(offsetof(Root_BasedOn_Config, date),
+                 "Date",
+                 "Last-edited date of the predecessor"),
+        P_LIST<Root_Author_Config>(offsetof(Root_BasedOn_Config, authors),
+                                   "Authors",
+                                   author_parameters,
+                                   num_author_parameters,
+                                   0,
+                                   0,
+                                   "Authors of the predecessor"),
+    };
+
+    static constexpr uint32_t num_parameters = 7;
     static constexpr Parameter parameters[num_parameters] = {
         P_BOOL(offsetof(Root_Config, clear),
                "Clear",
                "Clear the screen for every new frame"),
         P_STRING(offsetof(Root_Config, name), "Name", "Name of the preset"),
-        P_STRING(offsetof(Root_Config, date), "Date", "Date of the preset"),
+        P_STRING(offsetof(Root_Config, date_init),
+                 "Date Initial",
+                 "Date of preset's first save"),
+        P_STRING(offsetof(Root_Config, date_last),
+                 "Date Last",
+                 "Date of preset's latest save"),
         P_LIST<Root_Author_Config>(offsetof(Root_Config, authors),
                                    "Authors",
                                    author_parameters,
@@ -48,6 +81,14 @@ struct Root_Info : public Effect_Info {
                                    0,
                                    0,
                                    "Authors of the preset"),
+        P_STRING(offsetof(Root_Config, id), "ID", "UUID of the preset"),
+        P_LIST<Root_BasedOn_Config>(offsetof(Root_Config, based_on),
+                                    "Based On",
+                                    remix_parameters,
+                                    num_remix_parameters,
+                                    0,
+                                    0,
+                                    "Previous presets used to create this one"),
     };
 
     virtual bool can_have_child_components() const { return true; }
@@ -69,6 +110,7 @@ class E_Root : public Configurable_Effect<Root_Info, Root_Config> {
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
     virtual E_Root* clone() { return new E_Root(*this); }
+    void remix();
     int64_t get_num_renders() { return this->children.size(); }
     void start_buffer_context();
     void end_buffer_context();

@@ -113,7 +113,7 @@ int main(int argc, char const* argv[]) {
         } else {
             printf("failed loading: %s\n", avs_error_str(avs));
         }
-        const char* preset = avs_preset_get(avs, true);
+        const char* preset = avs_preset_get(avs, false, true);
         printf("%s\n", preset);
     }
     // avs_preset_save(avs, argv[1], true);
