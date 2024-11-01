@@ -63,6 +63,13 @@ uint64_t timer_us();
 double timer_us_precision();
 
 /**
+ * Return a string pointer with the current date in the format "YYYY-MM-DD" (11 bytes).
+ * The data is stored in a static buffer, so the return pointer is always the same, but
+ * its contents are not guaranteed to stay the same between calls to this function.
+ */
+const char* current_date_str();
+
+/**
  * Create a new lock object.
  */
 lock_t* lock_init();

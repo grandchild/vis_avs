@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <windowsx.h>
 
-/* timers */
+/* timers & time */
 
 static int64_t timer_highres_ticks_per_us = 0;
 
@@ -34,6 +34,14 @@ double timer_us_precision() {
         timer_us_init();
     }
     return 1.0f / (double)timer_highres_ticks_per_us;
+}
+
+const char* current_date_str() {
+    static char date_str[11];
+    SYSTEMTIME date;
+    GetLocalTime(&date);
+    snprintf(date_str, 11, "%04d-%02d-%02d", date.wYear, date.wMonth, date.wDay);
+    return date_str;
 }
 
 /* locking */

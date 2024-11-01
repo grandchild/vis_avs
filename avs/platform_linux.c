@@ -12,7 +12,7 @@
 #include <sys/mman.h>  // mprotect flags
 #include <sys/stat.h>  // mkdir()
 
-/* timers */
+/* timers & time */
 
 uint64_t timer_ms() {
     struct timespec ts;
@@ -36,6 +36,19 @@ double timer_us_precision() {
         return 0.0;
     }
     return ts.tv_sec * 1000.0 * 1000.0 + (double)ts.tv_nsec / 1000.0;
+}
+
+const char* current_date_str() {
+    static char date_str[11];
+    time_t t = time(NULL);
+    struct tm date = *localtime(&t);
+    snprintf(date_str,
+             11,
+             "%04d-%02d-%02d",
+             date.tm_year + 1900,
+             date.tm_mon + 1,
+             date.tm_mday);
+    return date_str;
 }
 
 /* locking */
