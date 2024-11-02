@@ -68,6 +68,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         /wd4244             # Ignore warning about type conversions with data loss.
                             # They are simply too many at the moment and obscure other
                             # warnings. TODO[cleanup]: Reenable and fix warnings.
+        /wd5051             # Ignore warning that [[fallthrough]] is ignored on C++<17.
+                            # It's still useful for readability.
         /MP                 # Multithreaded compilation
         /std:c++14          # Pin to C++14 features
         /Zc:__cplusplus     # Define the actual C++ standard in __cplusplus, instead of
