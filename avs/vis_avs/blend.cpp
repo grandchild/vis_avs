@@ -489,7 +489,7 @@ void blend_sub_src1_from_src2_abs(const uint32_t* src1,
 static inline void blend_xor_rgb0_8_c(const uint32_t* src1,
                                       const uint32_t* src2,
                                       uint32_t* dest) {
-    *dest = *src1 ^ *dest;
+    *dest = *src1 ^ *src2;
 }
 
 static inline void blend_xor_rgb0_8_x86v128(const uint32_t* src1,
