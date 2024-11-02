@@ -21,10 +21,10 @@ struct Root_BasedOn_Config : public Effect_Config {
 struct Root_Config : public Effect_Config {
     bool clear = false;
     std::string name;
+    std::string id;
     std::string date_init;
     std::string date_last;
     std::vector<Root_Author_Config> authors;
-    std::string id;
     std::vector<Root_BasedOn_Config> based_on;
 };
 
@@ -68,6 +68,7 @@ struct Root_Info : public Effect_Info {
                "Clear",
                "Clear the screen for every new frame"),
         P_STRING(offsetof(Root_Config, name), "Name", "Name of the preset"),
+        P_STRING(offsetof(Root_Config, id), "ID", "UUID of the preset"),
         P_STRING(offsetof(Root_Config, date_init),
                  "Date Initial",
                  "Date of preset's first save"),
@@ -81,7 +82,6 @@ struct Root_Info : public Effect_Info {
                                    0,
                                    0,
                                    "Authors of the preset"),
-        P_STRING(offsetof(Root_Config, id), "ID", "UUID of the preset"),
         P_LIST<Root_BasedOn_Config>(offsetof(Root_Config, based_on),
                                     "Based On",
                                     remix_parameters,
