@@ -29,8 +29,8 @@ struct CustomBPM_Info : public Effect_Info {
     static constexpr char const* legacy_ape_id = nullptr;
 
     static const char* const* bpm_modes(int64_t* length_out) {
-        *length_out = 4;
-        static const char* const options[4] = {
+        *length_out = 3;
+        static const char* const options[3] = {
             "Fixed",
             "Skip Beats",
             "Invert",
