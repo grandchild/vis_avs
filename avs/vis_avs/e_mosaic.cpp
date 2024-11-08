@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_mosaic.h"
 
-#include "r_defs.h"
+#include "blend.h"
 
 #include <cstdlib>
 
@@ -72,56 +72,52 @@ int E_Mosaic::render(char[2][2][576],
 
     if (this->cur_size < 100) {
         int y;
-        int* p = fbout;
-        int* p2 = framebuffer;
-        int step_x = (w * (1 << 16)) / this->cur_size;
-        int step_y = (h * (1 << 16)) / this->cur_size;
-        int ypos = (step_y >> 17);
-        int dypos = 0;
+        auto dest = (uint32_t*)fbout;
+        auto src = (uint32_t*)framebuffer;
+        uint32_t step_x = ((uint64_t)w << 16) / this->cur_size;
+        uint32_t step_y = ((uint64_t)h << 16) / this->cur_size;
+        uint32_t ypos = (step_y >> 17);
+        uint32_t dypos = 0;
 
         for (y = 0; y < h; y++) {
             int x = w;
-            int* fbread = framebuffer + ypos * w;
-            int dpos = 0;
+            auto fbread = (uint32_t*)framebuffer + ypos * w;
+            uint32_t dpos = 0;
             int xpos = (step_x >> 17);
-            int src = fbread[xpos];
 
             if (this->config.blend_mode == BLEND_SIMPLE_ADDITIVE) {
                 while (x--) {
-                    *p++ = BLEND(*p2++, src);
+                    blend_add_1px(&fbread[xpos], src++, dest++);
                     dpos += 1 << 16;
                     if (dpos >= step_x) {
                         xpos += dpos >> 16;
                         if (xpos >= w) {
                             break;
                         }
-                        src = fbread[xpos];
                         dpos -= step_x;
                     }
                 }
             } else if (this->config.blend_mode == BLEND_SIMPLE_5050) {
                 while (x--) {
-                    *p++ = BLEND_AVG(*p2++, src);
+                    blend_5050_1px(&fbread[xpos], src++, dest++);
                     dpos += 1 << 16;
                     if (dpos >= step_x) {
                         xpos += dpos >> 16;
                         if (xpos >= w) {
                             break;
                         }
-                        src = fbread[xpos];
                         dpos -= step_x;
                     }
                 }
             } else {  // BLEND_SIMPLE_REPLACE
                 while (x--) {
-                    *p++ = src;
+                    blend_replace_1px(&fbread[xpos], dest++);
                     dpos += 1 << 16;
                     if (dpos >= step_x) {
                         xpos += dpos >> 16;
                         if (xpos >= w) {
                             break;
                         }
-                        src = fbread[xpos];
                         dpos -= step_x;
                     }
                 }
@@ -130,7 +126,7 @@ int E_Mosaic::render(char[2][2][576],
             if (dypos >= step_y) {
                 ypos += (dypos >> 16);
                 dypos -= step_y;
-                if (ypos >= h) {
+                if (ypos >= (uint32_t)h) {
                     break;
                 }
             }
