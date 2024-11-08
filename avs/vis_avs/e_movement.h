@@ -371,7 +371,7 @@ class E_Movement
     void regenerate_transform_table(int effect, char visdata[2][2][576], int w, int h);
 
     struct Transform {
-        int* table = NULL;
+        uint32_t* table = NULL;
         int w = 0;
         int h = 0;
         bool bilinear = false;

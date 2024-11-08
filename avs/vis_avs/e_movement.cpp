@@ -33,9 +33,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "e_movement.h"
 
-#include "r_defs.h"
-
 #include "avs_eelif.h"
+#include "blend.h"
 
 #include <math.h>
 #include <mmintrin.h>
@@ -139,27 +138,26 @@ void E_Movement::regenerate_transform_table(int effect,
                                             int h) {
     lock_lock(this->transform.lock);
     int p;
-    int* trans_p;
     int x;
     free(this->transform.table);
     this->transform.w = w;
     this->transform.h = h;
     this->transform.table =
-        (int*)malloc(this->transform.w * this->transform.h * sizeof(int));
+        (uint32_t*)malloc(this->transform.w * this->transform.h * sizeof(int));
     this->transform.bilinear =
         (this->config.bilinear && this->transform.w * this->transform.h < (1 << 22)
          && ((effect >= REFFECT_MIN && effect <= REFFECT_MAX && effect != 0
               && effect != 1 && effect != 6)
              || this->config.use_custom_code));
 
-    trans_p = this->transform.table;
+    uint32_t* trans = this->transform.table;
     x = w * h;
     p = 0;
 
     if (effect == 0) {  // slight fuzzify
         while (x--) {
             int r = (p++) + (rand() % 3) - 1 + ((rand() % 3) - 1) * w;
-            *trans_p++ = min(w * h - 1, max(r, 0));
+            *trans++ = min(w * h - 1, max(r, 0));
         }
     } else if (effect == 1) {  // shift rotate left
         int y = h;
@@ -167,7 +165,7 @@ void E_Movement::regenerate_transform_table(int effect,
             int x = w;
             int lp = w / 64;
             while (x--) {
-                *trans_p++ = p + lp++;
+                *trans++ = p + lp++;
                 if (lp >= w) {
                     lp -= w;
                 }
@@ -179,11 +177,11 @@ void E_Movement::regenerate_transform_table(int effect,
         for (y = 0; y < h; y++) {
             for (x = 0; x < w; x++) {
                 if (x & 2 || y & 2) {
-                    *trans_p++ = x + y * w;
+                    *trans++ = x + y * w;
                 } else {
                     int xp = w / 2 + (((x & ~1) - w / 2) * 7) / 8;
                     int yp = h / 2 + (((y & ~1) - h / 2) * 7) / 8;
-                    *trans_p++ = xp + yp * w;
+                    *trans++ = xp + yp * w;
                 }
             }
         }
@@ -240,8 +238,7 @@ void E_Movement::regenerate_transform_table(int effect,
                                 oh = h - 2;
                             }
                         }
-                        *trans_p++ =
-                            (oh * w + ow) | (ypartial << 22) | (xpartial << 27);
+                        *trans++ = (oh * w + ow) | (ypartial << 22) | (xpartial << 27);
                     } else {
                         if (this->config.wrap) {
                             ow %= (w);
@@ -266,7 +263,7 @@ void E_Movement::regenerate_transform_table(int effect,
                                 oh = h - 1;
                             }
                         }
-                        *trans_p++ = ow + oh * w;
+                        *trans++ = ow + oh * w;
                     }
                 }
             }
@@ -343,8 +340,7 @@ void E_Movement::regenerate_transform_table(int effect,
                                 oh = h - 2;
                             }
                         }
-                        *trans_p++ =
-                            (oh * w + ow) | (ypartial << 22) | (xpartial << 27);
+                        *trans++ = (oh * w + ow) | (ypartial << 22) | (xpartial << 27);
                     } else {
                         tmp1 += 0.5;
                         tmp2 += 0.5;
@@ -373,15 +369,15 @@ void E_Movement::regenerate_transform_table(int effect,
                                 oh = h - 1;
                             }
                         }
-                        *trans_p++ = ow + oh * w;
+                        *trans++ = ow + oh * w;
                     }
                 }
             }
         } else {
-            trans_p = this->transform.table;
+            trans = this->transform.table;
             this->transform.bilinear = false;
             for (x = 0; x < w * h; x++) {
-                *trans_p++ = x;
+                *trans++ = x;
             }
         }
     }
@@ -424,11 +420,9 @@ void E_Movement::smp_render(int this_thread,
                             int* fbout,
                             int w,
                             int h) {
+// TODO [cleanup]: Why is this mask/limit needed? It seems arbitrary.
 #define OFFSET_MASK ((1 << 22) - 1)
 
-    unsigned int* in_p = (unsigned int*)framebuffer;
-    unsigned int* out_p;
-    int* trans_p;
     int x;
 
     if (max_threads < 1) {
@@ -451,186 +445,193 @@ void E_Movement::smp_render(int this_thread,
 
     int skip_pix = start_l * w;
     lock_lock(this->transform.lock);
-    trans_p = this->transform.table;
+    uint32_t* trans = this->transform.table;
 
-    out_p = (unsigned int*)fbout;
+    auto src = (uint32_t*)framebuffer;
+    auto dest = (uint32_t*)fbout;
     x = (w * out_h) / 4;
     if (this->config.source_map) {
-        in_p += skip_pix;
-        trans_p += skip_pix;
+        src += skip_pix;
+        trans += skip_pix;
         if (this->transform.bilinear) {
             while (x--) {
-                fbout[trans_p[0] & OFFSET_MASK] =
-                    BLEND_MAX(in_p[0], fbout[trans_p[0] & OFFSET_MASK]);
-                fbout[trans_p[1] & OFFSET_MASK] =
-                    BLEND_MAX(in_p[1], fbout[trans_p[1] & OFFSET_MASK]);
-                fbout[trans_p[2] & OFFSET_MASK] =
-                    BLEND_MAX(in_p[2], fbout[trans_p[2] & OFFSET_MASK]);
-                fbout[trans_p[3] & OFFSET_MASK] =
-                    BLEND_MAX(in_p[3], fbout[trans_p[3] & OFFSET_MASK]);
-                in_p += 4;
-                trans_p += 4;
+                auto out_0 = &dest[trans[0] & OFFSET_MASK];
+                auto out_1 = &dest[trans[1] & OFFSET_MASK];
+                auto out_2 = &dest[trans[2] & OFFSET_MASK];
+                auto out_3 = &dest[trans[3] & OFFSET_MASK];
+                blend_maximum_1px(&src[0], out_0, out_0);
+                blend_maximum_1px(&src[1], out_1, out_1);
+                blend_maximum_1px(&src[2], out_2, out_2);
+                blend_maximum_1px(&src[3], out_3, out_3);
+                src += 4;
+                trans += 4;
             }
             x = (w * out_h) & 3;
             if (x > 0) {
                 while (x--) {
-                    fbout[trans_p[0] & OFFSET_MASK] =
-                        BLEND_MAX(in_p++[0], fbout[trans_p[0] & OFFSET_MASK]);
-                    trans_p++;
+                    auto out_0 = &dest[trans[0] & OFFSET_MASK];
+                    blend_maximum_1px(&src[0], out_0, out_0);
+                    src++;
+                    trans++;
                 }
             }
         } else {
             {
                 while (x--) {
-                    fbout[trans_p[0]] = BLEND_MAX(in_p[0], fbout[trans_p[0]]);
-                    fbout[trans_p[1]] = BLEND_MAX(in_p[1], fbout[trans_p[1]]);
-                    fbout[trans_p[2]] = BLEND_MAX(in_p[2], fbout[trans_p[2]]);
-                    fbout[trans_p[3]] = BLEND_MAX(in_p[3], fbout[trans_p[3]]);
-                    in_p += 4;
-                    trans_p += 4;
+                    blend_maximum_1px(&src[0], &dest[trans[0]], &dest[trans[0]]);
+                    blend_maximum_1px(&src[1], &dest[trans[1]], &dest[trans[1]]);
+                    blend_maximum_1px(&src[2], &dest[trans[2]], &dest[trans[2]]);
+                    blend_maximum_1px(&src[3], &dest[trans[3]], &dest[trans[3]]);
+                    src += 4;
+                    trans += 4;
                 }
                 x = (w * out_h) & 3;
                 if (x > 0) {
                     while (x--) {
-                        fbout[trans_p[0]] = BLEND_MAX(in_p++[0], fbout[trans_p[0]]);
-                        trans_p++;
+                        blend_maximum_1px(src, &dest[*trans], &dest[*trans]);
+                        src++;
+                        trans++;
                     }
                 }
             }
         }
         if (this->config.blend_mode == BLEND_SIMPLE_5050) {
-            framebuffer += skip_pix;
-            fbout += skip_pix;
+            src += skip_pix;
+            dest += skip_pix;
             x = (w * out_h) / 4;
             while (x--) {
-                fbout[0] = BLEND_AVG(fbout[0], framebuffer[0]);
-                fbout[1] = BLEND_AVG(fbout[1], framebuffer[1]);
-                fbout[2] = BLEND_AVG(fbout[2], framebuffer[2]);
-                fbout[3] = BLEND_AVG(fbout[3], framebuffer[3]);
-                fbout += 4;
-                framebuffer += 4;
+                blend_5050_1px(&src[0], &dest[0], &dest[0]);
+                blend_5050_1px(&src[1], &dest[1], &dest[1]);
+                blend_5050_1px(&src[2], &dest[2], &dest[2]);
+                blend_5050_1px(&src[3], &dest[3], &dest[3]);
+                src += 4;
+                dest += 4;
             }
             x = (w * out_h) & 3;
             while (x--) {
-                fbout[0] = BLEND_AVG(fbout[0], framebuffer[0]);
-                fbout++;
-                framebuffer++;
+                blend_5050_1px(src, dest, dest);
+                src++;
+                dest++;
             }
         }
     } else {
-        in_p += skip_pix;
-        out_p += skip_pix;
-        trans_p += skip_pix;
+        src += skip_pix;
+        dest += skip_pix;
+        trans += skip_pix;
         if (this->transform.bilinear && this->config.blend_mode == BLEND_SIMPLE_5050) {
             while (x--) {
-                int offs = trans_p[0] & OFFSET_MASK;
-                out_p[0] = BLEND_AVG(in_p[0],
-                                     BLEND4((unsigned int*)framebuffer + offs,
-                                            w,
-                                            ((trans_p[0] >> 24) & (31 << 3)),
-                                            ((trans_p[0] >> 19) & (31 << 3))));
-                offs = trans_p[1] & OFFSET_MASK;
-                out_p[1] = BLEND_AVG(in_p[1],
-                                     BLEND4((unsigned int*)framebuffer + offs,
-                                            w,
-                                            ((trans_p[1] >> 24) & (31 << 3)),
-                                            ((trans_p[1] >> 19) & (31 << 3))));
-                offs = trans_p[2] & OFFSET_MASK;
-                out_p[2] = BLEND_AVG(in_p[2],
-                                     BLEND4((unsigned int*)framebuffer + offs,
-                                            w,
-                                            ((trans_p[2] >> 24) & (31 << 3)),
-                                            ((trans_p[2] >> 19) & (31 << 3))));
-                offs = trans_p[3] & OFFSET_MASK;
-                out_p[3] = BLEND_AVG(in_p[3],
-                                     BLEND4((unsigned int*)framebuffer + offs,
-                                            w,
-                                            ((trans_p[3] >> 24) & (31 << 3)),
-                                            ((trans_p[3] >> 19) & (31 << 3))));
-                trans_p += 4;
-                out_p += 4;
-                in_p += 4;
+                int offs = trans[0] & OFFSET_MASK;
+                auto src2 = blend_bilinear_2x2((uint32_t*)framebuffer + offs,
+                                               w,
+                                               ((trans[0] >> 24) & (31 << 3)),
+                                               ((trans[0] >> 19) & (31 << 3)));
+                blend_5050_1px(&src[0], &src2, &dest[0]);
+                offs = trans[1] & OFFSET_MASK;
+                src2 = blend_bilinear_2x2((uint32_t*)framebuffer + offs,
+                                          w,
+                                          ((trans[1] >> 24) & (31 << 3)),
+                                          ((trans[1] >> 19) & (31 << 3)));
+                blend_5050_1px(&src[1], &src2, &dest[1]);
+                offs = trans[2] & OFFSET_MASK;
+                src2 = blend_bilinear_2x2((uint32_t*)framebuffer + offs,
+                                          w,
+                                          ((trans[2] >> 24) & (31 << 3)),
+                                          ((trans[2] >> 19) & (31 << 3)));
+                blend_5050_1px(&src[2], &src2, &dest[2]);
+                offs = trans[3] & OFFSET_MASK;
+                src2 = blend_bilinear_2x2((uint32_t*)framebuffer + offs,
+                                          w,
+                                          ((trans[3] >> 24) & (31 << 3)),
+                                          ((trans[3] >> 19) & (31 << 3)));
+                blend_5050_1px(&src[3], &src2, &dest[3]);
+                src += 4;
+                dest += 4;
+                trans += 4;
             }
             x = (w * out_h) & 3;
             while (x--) {
-                int offs = trans_p[0] & OFFSET_MASK;
-                out_p++[0] = BLEND_AVG(in_p[0],
-                                       BLEND4((unsigned int*)framebuffer + offs,
-                                              w,
-                                              ((trans_p[0] >> 24) & (31 << 3)),
-                                              ((trans_p[0] >> 19) & (31 << 3))));
-                trans_p++;
-                in_p++;
+                int offs = trans[0] & OFFSET_MASK;
+                auto src2 = blend_bilinear_2x2((uint32_t*)framebuffer + offs,
+                                               w,
+                                               ((trans[0] >> 24) & (31 << 3)),
+                                               ((trans[0] >> 19) & (31 << 3)));
+                blend_5050_1px(src, &src2, dest);
+                src++;
+                dest++;
+                trans++;
             }
 #ifndef NO_MMX
             _mm_empty();
 #endif
         } else if (this->transform.bilinear) {
             while (x--) {
-                int offs = trans_p[0] & OFFSET_MASK;
-                out_p[0] = BLEND4((unsigned int*)framebuffer + offs,
-                                  w,
-                                  ((trans_p[0] >> 24) & (31 << 3)),
-                                  ((trans_p[0] >> 19) & (31 << 3)));
-                offs = trans_p[1] & OFFSET_MASK;
-                out_p[1] = BLEND4((unsigned int*)framebuffer + offs,
-                                  w,
-                                  ((trans_p[1] >> 24) & (31 << 3)),
-                                  ((trans_p[1] >> 19) & (31 << 3)));
-                offs = trans_p[2] & OFFSET_MASK;
-                out_p[2] = BLEND4((unsigned int*)framebuffer + offs,
-                                  w,
-                                  ((trans_p[2] >> 24) & (31 << 3)),
-                                  ((trans_p[2] >> 19) & (31 << 3)));
-                offs = trans_p[3] & OFFSET_MASK;
-                out_p[3] = BLEND4((unsigned int*)framebuffer + offs,
-                                  w,
-                                  ((trans_p[3] >> 24) & (31 << 3)),
-                                  ((trans_p[3] >> 19) & (31 << 3)));
-                trans_p += 4;
-                out_p += 4;
+                int offs = trans[0] & OFFSET_MASK;
+                dest[0] = blend_bilinear_2x2(&src[offs],
+                                             w,
+                                             ((trans[0] >> 24) & (31 << 3)),
+                                             ((trans[0] >> 19) & (31 << 3)));
+                offs = trans[1] & OFFSET_MASK;
+                dest[1] = blend_bilinear_2x2(&src[offs],
+                                             w,
+                                             ((trans[1] >> 24) & (31 << 3)),
+                                             ((trans[1] >> 19) & (31 << 3)));
+                offs = trans[2] & OFFSET_MASK;
+                dest[2] = blend_bilinear_2x2(&src[offs],
+                                             w,
+                                             ((trans[2] >> 24) & (31 << 3)),
+                                             ((trans[2] >> 19) & (31 << 3)));
+                offs = trans[3] & OFFSET_MASK;
+                dest[3] = blend_bilinear_2x2(&src[offs],
+                                             w,
+                                             ((trans[3] >> 24) & (31 << 3)),
+                                             ((trans[3] >> 19) & (31 << 3)));
+                dest += 4;
+                trans += 4;
             }
             x = (w * out_h) & 3;
             while (x--) {
-                int offs = trans_p[0] & OFFSET_MASK;
-                out_p++[0] = BLEND4((unsigned int*)framebuffer + offs,
-                                    w,
-                                    ((trans_p[0] >> 24) & (31 << 3)),
-                                    ((trans_p[0] >> 19) & (31 << 3)));
-                trans_p++;
+                int offs = trans[0] & OFFSET_MASK;
+                dest[0] = blend_bilinear_2x2(&src[offs],
+                                             w,
+                                             ((trans[0] >> 24) & (31 << 3)),
+                                             ((trans[0] >> 19) & (31 << 3)));
+                dest++;
+                trans++;
             }
-#ifndef NO_MMX
-            _mm_empty();
-#endif
         } else if (this->config.blend_mode == BLEND_SIMPLE_5050) {
+            auto src2 = (uint32_t*)framebuffer;
             while (x--) {
-                out_p[0] = BLEND_AVG(in_p[0], framebuffer[trans_p[0]]);
-                out_p[1] = BLEND_AVG(in_p[1], framebuffer[trans_p[1]]);
-                out_p[2] = BLEND_AVG(in_p[2], framebuffer[trans_p[2]]);
-                out_p[3] = BLEND_AVG(in_p[3], framebuffer[trans_p[3]]);
-                out_p += 4;
-                in_p += 4;
-                trans_p += 4;
+                blend_5050_1px(&src[0], &src2[trans[0]], &dest[0]);
+                blend_5050_1px(&src[1], &src2[trans[1]], &dest[1]);
+                blend_5050_1px(&src[2], &src2[trans[2]], &dest[2]);
+                blend_5050_1px(&src[3], &src2[trans[3]], &dest[3]);
+                src += 4;
+                dest += 4;
+                trans += 4;
             }
             x = (w * out_h) & 3;
             if (x > 0) {
                 while (x--) {
-                    out_p++[0] = BLEND_AVG(in_p++[0], framebuffer[trans_p++[0]]);
+                    blend_5050_1px(src, &src2[*trans], dest);
+                    src++;
+                    dest++;
+                    trans++;
                 }
             }
         } else {
+            auto src2 = (uint32_t*)framebuffer;
             while (x--) {
-                out_p[0] = framebuffer[trans_p[0]];
-                out_p[1] = framebuffer[trans_p[1]];
-                out_p[2] = framebuffer[trans_p[2]];
-                out_p[3] = framebuffer[trans_p[3]];
-                out_p += 4;
-                trans_p += 4;
+                dest[0] = src2[trans[0]];
+                dest[1] = src2[trans[1]];
+                dest[2] = src2[trans[2]];
+                dest[3] = src2[trans[3]];
+                dest += 4;
+                trans += 4;
             }
             x = (w * out_h) & 3;
             if (x > 0) {
                 while (x--) {
-                    out_p++[0] = framebuffer[trans_p++[0]];
+                    dest++[0] = src2[trans++[0]];
                 }
             }
         }
