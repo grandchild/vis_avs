@@ -50,6 +50,8 @@ bool AVS_Instance::render_frame(void* framebuffer,
     this->audio.get();
     if (this->beat_source == AVS_BEAT_EXTERNAL) {
         this->audio.is_beat = is_beat;
+    } else if (this->beat_source == AVS_BEAT_INTERNAL && is_beat) {
+        log_warn("`is_beat` is set to true but beat_source is AVS_BEAT_INTERNAL");
     }
     this->root.render_with_context(render_context);
 
