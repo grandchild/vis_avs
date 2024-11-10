@@ -32,9 +32,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // alphachannel safe 11/21/99
 #include "e_onbeatclear.h"
 
-#include "r_defs.h"
-
+#include "blend.h"
 #include "effect_common.h"
+#include "pixel_format.h"
 
 #define PUT_INT(y)                   \
     data[pos] = (y) & 255;           \
@@ -63,99 +63,12 @@ int E_OnBeatClear::render(char[2][2][576],
         if (++this->beat_counter >= this->config.every_n_beats) {
             this->beat_counter = 0;
             int i = w * h;
-            uint32_t c = this->config.color;
-            if (this->config.blend_mode == BLEND_SIMPLE_REPLACE) {
-#ifdef _MSC_VER
-                __asm {
-                    mov ecx, i
-                    mov edi, framebuffer
-                    mov eax, c
-                    rep stosd
-                }
-#else  // _MSC_VER
-                __asm__ __volatile__(
-                    "mov %%ecx, %0\n\t"
-                    "mov %%edi, %1\n\t"
-                    "mov %%eax, %2\n\t"
-                    "rep stosd\n\t"
-                    : /* no outputs */
-                    : "m"(i), "m"(framebuffer), "m"(c)
-                    : "eax", "ecx", "edi");
-#endif
-            } else {  // BLEND_SIMPLE_5050
-#ifdef NO_MMX
-                while (i--) {
-                    *framebuffer = BLEND_AVG(*framebuffer, this->config.color);
-                    framebuffer++;
-                }
-#else
-                uint32_t icolor[2] = {(uint32_t)this->config.color,
-                                      (uint32_t)this->config.color};
-                int32_t vc[2] = {~((1 << 7) | (1 << 15) | (1 << 23)),
-                                 ~((1 << 7) | (1 << 15) | (1 << 23))};
-                i /= 4;
-#ifdef _MSC_VER
-                __asm {
-                    movq mm6, vc
-                    movq mm7, icolor
-                    psrlq mm7, 1
-                    pand mm7, mm6
-                    mov edx, i
-                    mov edi, framebuffer
-                    onbeatclear_l1:
-                    movq mm0, [edi]
-
-                    movq mm1, [edi+8]
-                    psrlq mm0, 1
-
-                    pand mm0, mm6
-                    psrlq mm1, 1
-
-                    paddb mm0, mm7
-                    pand mm1, mm6
-
-                    movq [edi], mm0
-                    paddb mm1, mm7
-
-                    movq [edi+8], mm1
-                    add edi, 16
-                    dec edx
-                    jnz onbeatclear_l1
-                    emms
-                }
-#else   // _MSC_VER
-                __asm__ __volatile__(
-                    "movq %%mm6, %0\n\t"
-                    "movq %%mm7, %1\n\t"
-                    "psrlq %%mm7, 1\n\t"
-                    "pand %%mm7, %%mm6\n\t"
-                    "mov %%edx, %2\n\t"
-                    "mov %%edi, %3\n"
-                    "onbeatclear_l1:\n\t"
-                    "movq %%mm0, [%%edi]\n\t"
-
-                    "movq %%mm1, [%%edi+8]\n\t"
-                    "psrlq %%mm0, 1\n\t"
-
-                    "pand %%mm0, %%mm6\n\t"
-                    "psrlq %%mm1, 1\n\t"
-
-                    "paddb %%mm0, %%mm7\n\t"
-                    "pand %%mm1, %%mm6\n\t"
-
-                    "movq [%%edi], %%mm0\n\t"
-                    "paddb %%mm1, %%mm7\n\t"
-
-                    "movq [%%edi + 8], %%mm1\n\t"
-                    "add %%edi, 16\n\t"
-                    "dec %%edx\n\t"
-                    "jnz onbeatclear_l1\n\t"
-                    "emms\n\t"
-                    : /* no outputs */
-                    : "m"(vc), "m"(icolor), "m"(i), "m"(framebuffer)
-                    : "edx", "edi");
-#endif  // _MSC_VER
-#endif
+            auto dest = (uint32_t*)framebuffer;
+            uint32_t c = this->config.color & AVS_PIXEL_COLOR_MASK_RGB0_8;
+            switch (this->config.blend_mode) {
+                default:
+                case BLEND_SIMPLE_REPLACE: blend_replace_fill(c, dest, i); break;
+                case BLEND_SIMPLE_5050: blend_5050_fill(c, dest, i); break;
             }
         }
     }
