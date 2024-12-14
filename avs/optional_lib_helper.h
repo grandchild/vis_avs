@@ -8,12 +8,13 @@
 #define LIB_PREFIX "lib"
 #endif
 
-#define LOAD_LIB(NAMESPACE, LIB, FILENAME_SUFFIX)                                 \
-    library_unload(NAMESPACE::lib##LIB);                                          \
-    if ((NAMESPACE::lib##LIB = library_load(LIB_PREFIX #LIB FILENAME_SUFFIX))     \
-        == NULL) {                                                                \
-        NAMESPACE::load_error = "error loading " LIB_PREFIX #LIB FILENAME_SUFFIX; \
-        return false;                                                             \
+#define LOAD_LIB(NAMESPACE, LIB, FILENAME_SUFFIX)                                \
+    library_unload(NAMESPACE::lib##LIB);                                         \
+    if ((NAMESPACE::lib##LIB = library_load(LIB_PREFIX #LIB FILENAME_SUFFIX))    \
+        == NULL) {                                                               \
+        NAMESPACE::load_error = "loading " LIB_PREFIX #LIB FILENAME_SUFFIX ": "; \
+        NAMESPACE::load_error += library_error();                                \
+        return false;                                                            \
     }
 
 #define STR(x) #x

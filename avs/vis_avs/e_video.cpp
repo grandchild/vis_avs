@@ -121,6 +121,10 @@ void E_Video::load_file() {
     this->video = new AVS_Video(filepath, 32, 0);
     if (this->video != NULL && this->video->error == NULL) {
         this->loaded = true;
+    } else {
+        log_warn("Failed to load video file: %s, Reason: %s",
+                 this->config.filename.c_str(),
+                 this->video->error);
     }
     lock_unlock(this->video_file_lock);
 }

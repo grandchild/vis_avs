@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <windowsx.h>
 
+#define SYSTEM_ERR_STR_BUFFER_SIZE 1024
+
 /* timers & time */
 
 static int64_t timer_highres_ticks_per_us = 0;
@@ -166,6 +168,18 @@ void library_unload(dlib_t* library) {
     }
 }
 
+const char* library_error() {
+    static char buffer[SYSTEM_ERR_STR_BUFFER_SIZE];
+    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+                  0,
+                  GetLastError(),
+                  0,
+                  buffer,
+                  SYSTEM_ERR_STR_BUFFER_SIZE,
+                  NULL);
+    return buffer;
+}
+
 /* mkdir */
 
 int create_directory(const char* path) { return CreateDirectory(path, NULL); }
@@ -183,18 +197,16 @@ void mem_mark_rwx(void* block, size_t length) {
 /* errors */
 
 void print_last_system_error() {
-#define SYSTEM_ERR_BUFFER_SIZE 1024
-    char buffer[SYSTEM_ERR_BUFFER_SIZE];
+    char buffer[SYSTEM_ERR_STR_BUFFER_SIZE];
     if (!FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
                        0,
                        GetLastError(),
                        0,
                        buffer,
-                       SYSTEM_ERR_BUFFER_SIZE,
+                       SYSTEM_ERR_STR_BUFFER_SIZE,
                        NULL)) {
         printf("Format message failed with 0x%lx\n", GetLastError());
         return;
     }
     printf("!! %s", buffer);
-#undef SYSTEM_ERR_BUFFER_SIZE
 }

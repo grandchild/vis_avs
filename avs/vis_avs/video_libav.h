@@ -2,6 +2,8 @@
 
 #include "video.h"
 
+#include <string>
+
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -34,7 +36,7 @@ struct AVS_Video::LibAV {
     LibAV() : loaded(load_libav_dlibs()) {};
     // TODO [feature][bug]: avs_register_exit_cleanup(this->unload_libav_dlibs);
 
-    static const char* load_error;
+    static std::string load_error;
     static dlib_t* libavutil;
     static dlib_t* libavformat;
     static dlib_t* libavcodec;

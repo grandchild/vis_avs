@@ -292,6 +292,7 @@ void library_unload(dlib_t* library) {
         dlclose(library);
     }
 }
+const char* library_error() { return dlerror(); }
 
 /* mkdir */
 

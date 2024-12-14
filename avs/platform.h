@@ -108,6 +108,10 @@ func_t library_get(dlib_t* library, const char* func_name);
  * Unmap the given library from memory and destroy the library object.
  */
 void library_unload(dlib_t* library);
+/**
+ * Get the last error message from the library loader.
+ */
+const char* library_error();
 
 #define WAIT_INFINITE (-1)
 /**

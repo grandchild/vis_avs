@@ -38,7 +38,7 @@ AVS_Video::AVS_Video(const char* filename,
       playback_lock(lock_init()) {
     if (!this->av->loaded) {
         this->error =
-            LibAV::load_error != NULL ? LibAV::load_error : "libav not loaded";
+            !LibAV::load_error.empty() ? LibAV::load_error.c_str() : "libav not loaded";
         return;
     }
     if (!this->init(filename)) {

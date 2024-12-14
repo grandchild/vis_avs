@@ -38,7 +38,7 @@ bool AVS_Video::LibAV::load_libav_dlibs() {
     return true;
 }
 
-const char* AVS_Video::LibAV::load_error = NULL;
+std::string AVS_Video::LibAV::load_error;
 dlib_t* AVS_Video::LibAV::libavutil = NULL;
 dlib_t* AVS_Video::LibAV::libavformat = NULL;
 dlib_t* AVS_Video::LibAV::libavcodec = NULL;
