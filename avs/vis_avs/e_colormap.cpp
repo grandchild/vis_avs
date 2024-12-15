@@ -15,7 +15,7 @@ index from the baked map.
 */
 #include "e_colormap.h"
 
-#include "r_defs.h"
+#include "blend.h"
 
 #include <algorithm>  // std::sort & std::reverse for map colors
 #include <cstdio>
@@ -152,8 +152,13 @@ void E_ColorMap::bake_full_map(size_t map_index) {
             int rel_i = cache_index - from.position;
             int w = to.position - from.position;
             int lerp = NUM_COLOR_VALUES * (float)rel_i / (float)w;
-            this->config.maps[map_index].baked_map[cache_index] =
-                BLEND_ADJ_NOMMX(to.color, from.color, lerp);
+            uint32_t from_color = (uint32_t)(from.color & AVS_PIXEL_COLOR_MASK_RGB0_8);
+            uint32_t to_color = (uint32_t)(to.color & AVS_PIXEL_COLOR_MASK_RGB0_8);
+            blend_adjustable_1px(
+                &from_color,
+                &to_color,
+                (uint32_t*)&this->config.maps[map_index].baked_map[cache_index],
+                lerp);
         }
     }
     ColorMap_Map_Color& last = this->config.maps[map_index].colors[color_index];
@@ -216,10 +221,11 @@ std::vector<uint64_t>& E_ColorMap::animate_map_frame(int is_beat) {
 
 inline void E_ColorMap::animation_step() {
     for (unsigned int i = 0; i < NUM_COLOR_VALUES; i++) {
-        this->tween_map[i] =
-            BLEND_ADJ_NOMMX(this->config.maps[this->config.next_map].baked_map[i],
-                            this->config.maps[this->config.current_map].baked_map[i],
-                            this->change_animation_step);
+        blend_adjustable_1px(
+            (uint32_t*)&this->config.maps[this->config.current_map].baked_map[i],
+            (uint32_t*)&this->config.maps[this->config.next_map].baked_map[i],
+            (uint32_t*)&this->tween_map[i],
+            this->change_animation_step);
     }
 }
 
@@ -261,17 +267,17 @@ inline int E_ColorMap::get_key(int color) {
 }
 
 void E_ColorMap::blend(std::vector<uint64_t>& blend_map,
-                       int* framebuffer,
+                       uint32_t* framebuffer,
                        int w,
                        int h) {
-    int four_px_colors[4];
+    uint32_t four_px_colors[4];
     int four_keys[4];
     switch (this->config.blendmode) {
         case COLORMAP_BLENDMODE_REPLACE:
             for (int i = 0; i < w * h; i += 4) {
                 for (int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
-                    framebuffer[i + k] = blend_map[four_keys[k]];
+                    blend_replace_1px(&blend_map[four_keys[k]], &framebuffer[i + k]);
                 }
             }
             break;
@@ -280,7 +286,8 @@ void E_ColorMap::blend(std::vector<uint64_t>& blend_map,
                 for (int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
                     four_px_colors[k] = blend_map[four_keys[k]];
-                    framebuffer[i + k] = BLEND(framebuffer[i + k], four_px_colors[k]);
+                    blend_add_1px(
+                        &four_px_colors[k], &framebuffer[i + k], &framebuffer[i + k]);
                 }
             }
             break;
@@ -289,8 +296,8 @@ void E_ColorMap::blend(std::vector<uint64_t>& blend_map,
                 for (int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
                     four_px_colors[k] = blend_map[four_keys[k]];
-                    framebuffer[i + k] =
-                        BLEND_MAX(framebuffer[i + k], four_px_colors[k]);
+                    blend_maximum_1px(
+                        &four_px_colors[k], &framebuffer[i + k], &framebuffer[i + k]);
                 }
             }
             break;
@@ -299,8 +306,8 @@ void E_ColorMap::blend(std::vector<uint64_t>& blend_map,
                 for (int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
                     four_px_colors[k] = blend_map[four_keys[k]];
-                    framebuffer[i + k] =
-                        BLEND_MIN(framebuffer[i + k], four_px_colors[k]);
+                    blend_minimum_1px(
+                        &four_px_colors[k], &framebuffer[i + k], &framebuffer[i + k]);
                 }
             }
             break;
@@ -309,8 +316,8 @@ void E_ColorMap::blend(std::vector<uint64_t>& blend_map,
                 for (int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
                     four_px_colors[k] = blend_map[four_keys[k]];
-                    framebuffer[i + k] =
-                        BLEND_AVG(framebuffer[i + k], four_px_colors[k]);
+                    blend_5050_1px(
+                        &four_px_colors[k], &framebuffer[i + k], &framebuffer[i + k]);
                 }
             }
             break;
@@ -319,8 +326,8 @@ void E_ColorMap::blend(std::vector<uint64_t>& blend_map,
                 for (int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
                     four_px_colors[k] = blend_map[four_keys[k]];
-                    framebuffer[i + k] =
-                        BLEND_SUB(framebuffer[i + k], four_px_colors[k]);
+                    blend_sub_src1_from_src2_1px(
+                        &four_px_colors[k], &framebuffer[i + k], &framebuffer[i + k]);
                 }
             }
             break;
@@ -329,8 +336,8 @@ void E_ColorMap::blend(std::vector<uint64_t>& blend_map,
                 for (int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
                     four_px_colors[k] = blend_map[four_keys[k]];
-                    framebuffer[i + k] =
-                        BLEND_SUB(four_px_colors[k], framebuffer[i + k]);
+                    blend_sub_src2_from_src1_1px(
+                        &framebuffer[i + k], &four_px_colors[k], &four_px_colors[k]);
                 }
             }
             break;
@@ -339,8 +346,8 @@ void E_ColorMap::blend(std::vector<uint64_t>& blend_map,
                 for (int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
                     four_px_colors[k] = blend_map[four_keys[k]];
-                    framebuffer[i + k] =
-                        BLEND_MUL(framebuffer[i + k], four_px_colors[k]);
+                    blend_multiply_1px(
+                        &four_px_colors[k], &framebuffer[i + k], &framebuffer[i + k]);
                 }
             }
             break;
@@ -349,7 +356,8 @@ void E_ColorMap::blend(std::vector<uint64_t>& blend_map,
                 for (int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
                     four_px_colors[k] = blend_map[four_keys[k]];
-                    framebuffer[i + k] ^= four_px_colors[k];
+                    blend_xor_1px(
+                        &four_px_colors[k], &framebuffer[i + k], &framebuffer[i + k]);
                 }
             }
             break;
@@ -358,9 +366,10 @@ void E_ColorMap::blend(std::vector<uint64_t>& blend_map,
                 for (int k = 0; k < 4; k++) {
                     four_keys[k] = this->get_key(framebuffer[i + k]);
                     four_px_colors[k] = blend_map[four_keys[k]];
-                    framebuffer[i + k] = BLEND_ADJ_NOMMX(four_px_colors[k],
-                                                         framebuffer[i + k],
-                                                         this->config.adjustable_alpha);
+                    blend_adjustable_1px(&four_px_colors[k],
+                                         &framebuffer[i + k],
+                                         &framebuffer[i + k],
+                                         this->config.adjustable_alpha);
                 }
             }
             break;
@@ -391,7 +400,7 @@ inline __m128i E_ColorMap::get_key_ssse3(__m128i color4) {
             // Original Colormap behavior, round down on .5, i.e. (a+b+c) >> 1:
             color4 = _mm_add_epi32(color4, g);
             color4 = _mm_srli_epi32(color4, 1);
-            return _mm_min_epi16(color4, max_channel_value);
+            return _mm_min_epi32(color4, max_channel_value);
         case COLORMAP_COLOR_KEY_MAX:
             r = _mm_shuffle_epi8(color4, gather_red);
             g = _mm_shuffle_epi8(color4, gather_green);
@@ -414,7 +423,7 @@ inline __m128i E_ColorMap::get_key_ssse3(__m128i color4) {
 }
 
 void E_ColorMap::blend_ssse3(std::vector<uint64_t>& blend_map,
-                             int* framebuffer,
+                             uint32_t* framebuffer,
                              int w,
                              int h) {
     __m128i framebuffer_4px;
@@ -610,7 +619,8 @@ int E_ColorMap::render(char[2][2][576],
                        int w,
                        int h) {
     auto blend_map = this->animate_map_frame(is_beat);
-    this->blend_ssse3(blend_map, framebuffer, w, h);
+    this->blend_ssse3(blend_map, (uint32_t*)framebuffer, w, h);
+    // this->blend(blend_map, (uint32_t*)framebuffer, w, h);
     return 0;
 }
 

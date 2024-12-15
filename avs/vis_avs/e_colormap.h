@@ -262,9 +262,12 @@ class E_ColorMap : public Configurable_Effect<ColorMap_Info, ColorMap_Config> {
     void reset_tween_map();
     std::vector<uint64_t>& animate_map_frame(int is_beat);
     int get_key(int color);
-    void blend(std::vector<uint64_t>& blend_map, int* framebuffer, int w, int h);
+    void blend(std::vector<uint64_t>& blend_map, uint32_t* framebuffer, int w, int h);
     __m128i get_key_ssse3(__m128i color4);
-    void blend_ssse3(std::vector<uint64_t>& blend_map, int* framebuffer, int w, int h);
+    void blend_ssse3(std::vector<uint64_t>& blend_map,
+                     uint32_t* framebuffer,
+                     int w,
+                     int h);
     size_t load_map_header(unsigned char* data, int len, size_t map_index, int pos);
     bool load_map_colors(unsigned char* data,
                          int len,
