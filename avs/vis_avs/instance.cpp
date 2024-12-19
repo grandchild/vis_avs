@@ -141,6 +141,7 @@ bool AVS_Instance::preset_load_file(const char* file_path, bool with_transition)
 bool AVS_Instance::preset_load(const std::string& preset, bool with_transition) {
     try {
         auto preset_root = json::parse(preset, nullptr, true, true);
+        this->clear_secondary();
         this->root_secondary.load(preset_root);
     } catch (const std::exception& e) {
         log_err("error loading json preset: %s", e.what());
@@ -149,7 +150,7 @@ bool AVS_Instance::preset_load(const std::string& preset, bool with_transition) 
         return false;
     }
     lock_lock(this->render_lock);
-    std::swap(this->root, this->root_secondary);
+    this->root.swap(this->root_secondary);
     lock_unlock(this->render_lock);
     // this->root.print_tree();
     return true;
@@ -163,6 +164,7 @@ bool AVS_Instance::preset_load_legacy(const uint8_t* preset,
         && !memcmp(preset, AVS_Instance::legacy_file_magic, file_magic_length - 2)
         && preset[file_magic_length - 2] >= '1' && preset[file_magic_length - 2] <= '2'
         && preset[file_magic_length - 1] == '\x1a') {
+        this->clear_secondary();
         //                               trustmebro! (i.e. TODO: make data param const)
         this->root_secondary.load_legacy((unsigned char*)preset + file_magic_length,
                                          (int)(preset_length - file_magic_length));
@@ -171,7 +173,7 @@ bool AVS_Instance::preset_load_legacy(const uint8_t* preset,
             // this->transition.do_transition();
         }
         lock_lock(this->render_lock);
-        std::swap(this->root, this->root_secondary);
+        this->root.swap(this->root_secondary);
         lock_unlock(this->render_lock);
         this->root.print_tree();
         return true;

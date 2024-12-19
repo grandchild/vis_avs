@@ -168,7 +168,6 @@ class Effect {
     void print_tree(std::string indent = "");
     virtual void print_config(const std::string& indent) = 0;
 
-   private:
     void swap(Effect&);
 };
 
