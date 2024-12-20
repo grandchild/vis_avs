@@ -14,8 +14,6 @@
 
 #include <string>
 
-#define MAX_LEGACY_PRESET_FILESIZE_BYTES (1024 * 1024)
-
 class AVS_Instance {
    public:
     AVS_Instance(const char* base_path,

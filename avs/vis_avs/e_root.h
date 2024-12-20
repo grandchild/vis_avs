@@ -1,5 +1,6 @@
 #pragma once
 
+#include "constants.h"
 #include "effect.h"
 #include "effect_info.h"
 
@@ -116,16 +117,15 @@ class E_Root : public Configurable_Effect<Root_Info, Root_Config> {
     void end_buffer_context();
 
    private:
-#define NBUF 8
     // these are our framebuffers (formerly nb_save)
-    int buffers_w[NBUF] = {};
-    int buffers_h[NBUF] = {};
-    void* buffers[NBUF] = {};
+    int buffers_w[NUM_GLOBAL_BUFFERS] = {};
+    int buffers_h[NUM_GLOBAL_BUFFERS] = {};
+    void* buffers[NUM_GLOBAL_BUFFERS] = {};
 
     // these are temp space for saving the global ones (formerly nb_save2)
-    int buffers_temp_w[NBUF] = {};
-    int buffers_temp_h[NBUF] = {};
-    void* buffers_temp[NBUF] = {};
+    int buffers_temp_w[NUM_GLOBAL_BUFFERS] = {};
+    int buffers_temp_h[NUM_GLOBAL_BUFFERS] = {};
+    void* buffers_temp[NUM_GLOBAL_BUFFERS] = {};
 
     bool buffers_saved;
 };

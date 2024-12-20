@@ -1,6 +1,7 @@
 #include "e_root.h"
 
 #include "avs.h"
+#include "constants.h"
 #include "effect_library.h"
 #include "handles.h"
 #include "instance.h"

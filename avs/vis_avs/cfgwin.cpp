@@ -33,7 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "e_effectlist.h"
 #include "e_unknown.h"
 
-#include "r_defs.h"
 #include "g__defs.h"
 #include "g__lib.h"
 
@@ -42,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "bpm.h"
 #include "c__defs.h"
 #include "cfgwin.h"
+#include "constants.h"
 #include "draw.h"
 #include "effect_library.h"
 #include "render.h"

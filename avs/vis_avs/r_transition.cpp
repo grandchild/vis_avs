@@ -31,8 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "c_transition.h"
 
-#include "r_defs.h"
-
+#include "constants.h"
 #include "render.h"
 
 #include <math.h>
