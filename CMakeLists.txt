@@ -22,6 +22,7 @@ file(GLOB SRC_FILES_AVS_COMMON
     avs/vis_avs/instance.cpp
     avs/vis_avs/linedraw.cpp
     avs/vis_avs/matrix.cpp
+    avs/vis_avs/preset_json_schema.cpp
     avs/vis_avs/render_context.cpp
     # avs/vis_avs/r_text.cpp
     avs/vis_avs/r_transition.cpp

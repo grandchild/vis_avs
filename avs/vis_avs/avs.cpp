@@ -5,6 +5,7 @@
 #include "blend.h"
 #include "effect_library.h"
 #include "instance.h"
+#include "preset_json_schema.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -213,6 +214,12 @@ bool avs_preset_save_legacy(AVS_Handle avs, const char* file_path) {
         g_error = "Unknown error during legacy file save";
     }
     return result == 0;
+}
+
+AVS_API
+const char* avs_preset_format_schema() {
+    static std::string schema = preset_json_schema("avs.sh");
+    return schema.c_str();
 }
 
 AVS_API

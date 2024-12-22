@@ -331,6 +331,24 @@ const uint8_t* avs_preset_get_legacy(AVS_Handle avs, size_t* preset_length_out);
 bool avs_preset_save_legacy(AVS_Handle avs, const char* file_path);
 
 /**
+ * Return a JSON schema of the current AVS preset format. The schema includes all
+ * currently builtin effects.
+ *
+ * The reason for providing a schema is so that others may know what to expect in a
+ * preset file and whether a specific one is likely to be loaded correctly by AVS and
+ * perhaps provide meaningful errors ahead of time.
+ *
+ * Note: AVS itself has _no_ JSON-schema validation capabilities and does _not_ validate
+ * files by this schema on-load. AVS loads presets on a best-effort basis and may both
+ * load presets (partially or completely) that violate this schema, and reject presets
+ * (partially or completely) that are valid by this schema.
+ *
+ * See https://json-schema.org/ for more information about JSON schema in general and
+ * for validation tools and libraries.
+ */
+const char* avs_preset_format_schema();
+
+/**
  * When called, will return a string with the most recent error for the given AVS
  * instance, if any. If no error occurred the return value is the empty string, `""`.
  *
