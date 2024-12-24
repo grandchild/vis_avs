@@ -155,7 +155,7 @@ static void recursive_add_dir_list(HMENU menu, UINT* id, char* path, int pathlen
         do {
             if (d.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY
                 && d.cFileName[0] != '.') {
-                wsprintf(dirmask, "%s\\%s", path, d.cFileName);
+                wsprintf(dirmask, "%s/%s", path, d.cFileName);
 
                 MENUITEMINFO i = {};
                 i.cbSize = sizeof(i);

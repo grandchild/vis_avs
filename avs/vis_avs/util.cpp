@@ -48,7 +48,7 @@ void loadComboBox(HWND dlg, char* ext, char* selectedName) {
     HANDLE ff;
     WIN32_FIND_DATA fd;
 
-    wsprintf(path, "%s\\%s", g_path, ext);
+    wsprintf(path, "%s/%s", g_path, ext);
 
     ff = FindFirstFile(path, &fd);
     if (ff == INVALID_HANDLE_VALUE) {

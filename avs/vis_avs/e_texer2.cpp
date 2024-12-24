@@ -153,7 +153,7 @@ void E_Texer2::load_image() {
     char filename[MAX_PATH];
     int printed = snprintf(filename,
                            MAX_PATH,
-                           "%s\\%s",
+                           "%s/%s",
                            this->avs->base_path.c_str(),
                            this->config.image.c_str());
     if (printed >= MAX_PATH) {

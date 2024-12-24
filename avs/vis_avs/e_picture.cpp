@@ -125,7 +125,7 @@ void E_Picture::load_image() {
     char file_path[MAX_PATH];
     snprintf(file_path,
              MAX_PATH,
-             "%s\\%s",
+             "%s/%s",
              this->avs->base_path.c_str(),
              this->config.image.c_str());
     AVS_Image* tmp_image = image_load(file_path);

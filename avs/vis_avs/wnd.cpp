@@ -950,7 +950,7 @@ static int find_preset(char* parent_path,
     if (h != INVALID_HANDLE_VALUE) {
         do {
             if (!(d.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-                wsprintf(dirmask, "%s\\%s", parent_path, d.cFileName);
+                wsprintf(dirmask, "%s/%s", parent_path, d.cFileName);
 
                 if (lastpreset) {
                     if (*state) {
@@ -999,7 +999,7 @@ static int find_preset(char* parent_path,
         do {
             if (d.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY
                 && d.cFileName[0] != '.') {
-                wsprintf(dirmask, "%s\\%s", parent_path, d.cFileName);
+                wsprintf(dirmask, "%s/%s", parent_path, d.cFileName);
                 if (find_preset(dirmask, dir, lastpreset, newpreset, state)) {
                     FindClose(h);
                     return 1;
@@ -1018,7 +1018,7 @@ void next_preset(HWND hwnd) {
         char dirmask[2048];
         char i_path[1024];
         if (config_pres_subdir[0]) {
-            wsprintf(i_path, "%s\\%s", g_path, config_pres_subdir);
+            wsprintf(i_path, "%s/%s", g_path, config_pres_subdir);
         } else {
             strcpy(i_path, g_path);
         }
@@ -1043,7 +1043,7 @@ void random_preset(HWND hwnd) {
         char dirmask[2048];
         char i_path[1024];
         if (config_pres_subdir[0]) {
-            wsprintf(i_path, "%s\\%s", g_path, config_pres_subdir);
+            wsprintf(i_path, "%s/%s", g_path, config_pres_subdir);
         } else {
             strcpy(i_path, g_path);
         }
@@ -1069,7 +1069,7 @@ void previous_preset(HWND hwnd) {
         char dirmask[2048];
         char i_path[1024];
         if (config_pres_subdir[0]) {
-            wsprintf(i_path, "%s\\%s", g_path, config_pres_subdir);
+            wsprintf(i_path, "%s/%s", g_path, config_pres_subdir);
         } else {
             strcpy(i_path, g_path);
         }
@@ -1223,7 +1223,7 @@ void DoPopupMenu() {
                     }
                 } else {
                     // g_single_instance->transition.load_preset
-                    // wsprintf(temp,"%s\\%s",g_path,curfilename);
+                    // wsprintf(temp,"%s/%s",g_path,curfilename);
                 }
             }
         }
