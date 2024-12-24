@@ -31,8 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_picture.h"
 
-#include "r_defs.h"
-
+#include "blend.h"
 #include "files.h"
 #include "image.h"
 #include "instance.h"
@@ -197,18 +196,15 @@ int E_Picture::render(char[2][2][576],
         on_beat_cooldown--;
     }
 
+    auto dest = (uint32_t*)framebuffer;
     lock_lock(this->image_lock);
     if (this->config.blend_mode == BLEND_SIMPLE_ADDITIVE
         || (this->config.on_beat_additive && (is_beat || this->on_beat_cooldown > 0))) {
-        for (int i = 0; i < w * h; i++) {
-            framebuffer[i] = (int)BLEND(framebuffer[i], this->image_data[i]);
-        }
+        blend_add(this->image_data, dest, dest, w, h);
     } else if (this->config.blend_mode == BLEND_SIMPLE_5050) {
-        for (int i = 0; i < w * h; i++) {
-            framebuffer[i] = (int)BLEND_AVG(framebuffer[i], this->image_data[i]);
-        }
+        blend_5050(this->image_data, dest, dest, w, h);
     } else {
-        memcpy(framebuffer, this->image_data, w * h * sizeof(pixel_rgb0_8));
+        blend_replace(this->image_data, dest, w, h);
     }
     lock_unlock(this->image_lock);
 
