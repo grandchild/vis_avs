@@ -6,6 +6,8 @@
 #define MAX_PATH           260
 #define NUM_GLOBAL_BUFFERS 8
 
+#define M_PI 3.14159265358979323846
+
 // Same as MAX_PATH now, but while MAX_PATH could be anything, LEGACY_SAVE_PATH_LEN is
 // fixed as part of the legacy preset file format.
 #define LEGACY_SAVE_PATH_LEN             260
