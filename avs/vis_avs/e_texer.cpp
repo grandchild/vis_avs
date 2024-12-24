@@ -1,5 +1,6 @@
 #include "e_texer.h"
 
+#include "blend.h"
 #include "files.h"
 #include "image.h"
 #include "instance.h"
@@ -187,12 +188,13 @@ inline void E_Texer::render_particle(int* framebuffer,
     }
     for (int iy = image_start_y, fby = fb_start_y; iy < image_end_y; iy++, fby++) {
         for (int ix = image_start_x, fbx = fb_start_x; ix < image_end_x; ix++, fbx++) {
-            pixel_rgb0_8 dest_pixel = this->image_data[ix + IMAGE_DATA_ROW_EXPAND
-                                                       + iy * this->image_data_width];
+            pixel_rgb0_8* dest_pixel = &this->image_data[ix + IMAGE_DATA_ROW_EXPAND
+                                                         + iy * this->image_data_width];
             if (this->config.colorize) {
-                dest_pixel = BLEND_MUL(dest_pixel, mask);
+                blend_multiply_1px(&mask, dest_pixel, dest_pixel);
             }
-            fbout[fbx + fby * w] = BLEND(fbout[fbx + fby * w], dest_pixel);
+            auto out = (uint32_t*)&fbout[fbx + fby * w];
+            blend_add_1px(dest_pixel, out, out);
         }
     }
 }
@@ -268,6 +270,8 @@ inline void E_Texer::render_particle_sse2(int* framebuffer,
         }
     }
 }
+
+void E_Texer::on_load() { this->load_image(); }
 
 /* The legacy save format has a few holes:
  *     16 bytes [unused]

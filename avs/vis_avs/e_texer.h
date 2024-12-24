@@ -51,6 +51,7 @@ class E_Texer : public Configurable_Effect<Texer_Info, Texer_Config> {
                        int* fbout,
                        int w,
                        int h);
+    virtual void on_load();
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
     virtual E_Texer* clone() { return new E_Texer(*this); }
