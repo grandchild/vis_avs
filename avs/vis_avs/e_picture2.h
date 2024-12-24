@@ -99,6 +99,7 @@ class E_Picture2 : public Configurable_Effect<Picture2_Info, Picture2_Config> {
                        int* fbout,
                        int w,
                        int h);
+    virtual void on_load();
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
     virtual E_Picture2* clone() { return new E_Picture2(*this); }

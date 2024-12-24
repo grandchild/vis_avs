@@ -1,7 +1,7 @@
 #include "e_picture2.h"
 
-#include "r_defs.h"
-
+#include "blend.h"
+#include "constants.h"
 #include "files.h"
 #include "image.h"
 #include "instance.h"
@@ -98,6 +98,7 @@ bool E_Picture2::load_image() {
         this->image = nullptr;
         this->config.error_msg = tmp_image->error;
         lock_unlock(this->image_lock);
+        log_warn("failed to load image '%s': %s", filename, tmp_image->error);
         return false;
     }
 
@@ -145,15 +146,8 @@ void E_Picture2::refresh_image(uint32_t w, uint32_t h) {
             double fy = py - (double)pyi;
             auto fxi = (uint8_t)(fx * 256);
             auto fyi = (uint8_t)(fy * 256);
-
-            unsigned int pixel[4];
-            pixel[0] = this->image[pxi + pyi * this->iw];
-            pixel[1] = this->image[pxi + pyi * this->iw + 1];
-            pixel[2] = this->image[pxi + (pyi + 1) * this->iw];
-            pixel[3] = this->image[pxi + (pyi + 1) * this->iw + 1];
-            *(wit++) = BLEND_ADJ_NOMMX(BLEND_ADJ_NOMMX(pixel[3], pixel[2], fxi),
-                                       BLEND_ADJ_NOMMX(pixel[1], pixel[0], fxi),
-                                       fyi);
+            *wit++ = blend_bilinear_2x2(
+                &this->image[pxi + pyi * this->iw], this->iw, fxi, fyi);
         }
     }
 
@@ -177,13 +171,14 @@ int E_Picture2::render(char[2][2][576],
     if (this->image == nullptr) {
         return 0;
     }
+    auto dest = (uint32_t*)framebuffer;
     uint32_t uw = (uint32_t)w;
     uint32_t uh = (uint32_t)h;
     if (this->need_image_refresh || this->wiw != uw || this->wih != uh
-        || this->work_image == nullptr) {
+        || this->work_image == nullptr || this->work_image_bilinear == nullptr) {
         this->refresh_image(uw, uh);
     }
-    pixel_rgb0_8* wit =
+    pixel_rgb0_8* src =
         is_beat
             ? (this->config.on_beat_bilinear ? this->work_image_bilinear
                                              : this->work_image)
@@ -191,84 +186,26 @@ int E_Picture2::render(char[2][2][576],
     uint32_t wh = uw * uh;
     // TODO [performance]: optimize with 4px at once
     switch (is_beat ? this->config.on_beat_blend_mode : this->config.blend_mode) {
-        case P2_BLEND_REPLACE: {
-            memcpy(framebuffer, wit, wh * 4);
-            break;
-        }
-
-        case P2_BLEND_ADDITIVE: {
-            for (uint32_t i = 0; i < wh; i++) {
-                framebuffer[i] = BLEND(wit[i], framebuffer[i]);
-            }
-            break;
-        }
-
-        case P2_BLEND_MAXIMUM: {
-            for (uint32_t i = 0; i < wh; i++) {
-                framebuffer[i] = BLEND_MAX(wit[i], framebuffer[i]);
-            }
-            break;
-        }
-
-        case P2_BLEND_5050: {
-            for (uint32_t i = 0; i < wh; i++) {
-                framebuffer[i] = BLEND_AVG(framebuffer[i], wit[i]);
-            }
-            break;
-        }
-
-        case P2_BLEND_SUB1: {
-            for (uint32_t i = 0; i < wh; i++) {
-                framebuffer[i] = BLEND_SUB(framebuffer[i], wit[i]);
-            }
-            break;
-        }
-
-        case P2_BLEND_SUB2: {
-            for (uint32_t i = 0; i < wh; i++) {
-                framebuffer[i] = BLEND_SUB(wit[i], framebuffer[i]);
-            }
-            break;
-        }
-
-        case P2_BLEND_MULTIPLY: {
-            for (uint32_t i = 0; i < wh; i++) {
-                framebuffer[i] = BLEND_MUL(framebuffer[i], wit[i]);
-            }
-            break;
-        }
-
-        case P2_BLEND_XOR: {
-            for (uint32_t i = 0; i < wh; i++) {
-                framebuffer[i] = framebuffer[i] ^ wit[i];
-            }
-            break;
-        }
-
+        case P2_BLEND_REPLACE: blend_replace(src, dest, uw, uh); break;
+        case P2_BLEND_ADDITIVE: blend_add(src, dest, dest, uw, uh); break;
+        case P2_BLEND_MAXIMUM: blend_maximum(src, dest, dest, uw, uh); break;
+        case P2_BLEND_MINIMUM: blend_minimum(src, dest, dest, uw, uh); break;
+        case P2_BLEND_5050: blend_5050(src, dest, dest, uw, uh); break;
+        case P2_BLEND_SUB1: blend_sub_src1_from_src2(src, dest, dest, uw, uh); break;
+        case P2_BLEND_SUB2: blend_sub_src2_from_src1(src, dest, dest, uw, uh); break;
+        case P2_BLEND_MULTIPLY: blend_multiply(src, dest, dest, uw, uh); break;
+        case P2_BLEND_XOR: blend_xor(src, dest, dest, uw, uh); break;
         case P2_BLEND_ADJUSTABLE: {
-            int t = is_beat ? (int32_t)this->config.on_beat_adjust_blend
-                            : (int32_t)this->config.adjust_blend;
-            for (uint32_t i = 0; i < wh; i++) {
-                framebuffer[i] = BLEND_ADJ(wit[i], framebuffer[i], t);
-            }
-#ifdef _MSC_VER  // MSVC asm
-            __asm emms;
-#else  // _MSC_VER, GCC asm
-            __asm__ __volatile__("emms");
-#endif
-            break;
-        }
-
-        case P2_BLEND_MINIMUM: {
-            for (uint32_t i = 0; i < wh; i++) {
-                framebuffer[i] = BLEND_MIN(framebuffer[i], wit[i]);
-            }
-            break;
+            uint32_t v = is_beat ? (uint32_t)this->config.on_beat_adjust_blend
+                                 : (uint32_t)this->config.adjust_blend;
+            blend_adjustable(src, dest, dest, v, uw, uh);
         }
     }
 
     return 0;
 }
+
+void E_Picture2::on_load() { this->load_image(); }
 
 // PictureII's legacy save format has a slightly different order of blend modes.
 // Translate here and only here for legacy load/save so we can use the common format
