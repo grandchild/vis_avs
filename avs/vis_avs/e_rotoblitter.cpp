@@ -32,9 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // alphachannel safe 11/21/99
 #include "e_rotoblitter.h"
 
-#include "r_defs.h"
-
-#include "timing.h"
+#include "blend.h"
+#include "constants.h"
 
 #include <math.h>
 
@@ -189,15 +188,21 @@ int E_RotoBlitter::render(char[2][2][576],
         DO_LOOP(if (t >= dt) t -= dt; if (s >= ds) s -= ds; Z)
 
             if (this->config.bilinear && this->config.blend_mode == BLEND_SIMPLE_5050) {
-                DO_LOOPS(*dest++ = BLEND_AVG(
-                             *bdest++,
-                             BLEND4_16(src + (s >> 16) + w_mul[t >> 16], w, s, t)))
+                uint32_t src_bilinear;
+                DO_LOOPS(src_bilinear = blend_bilinear_2x2(
+                             &src[(s >> 16) + w_mul[t >> 16]], w, s, t);
+                         blend_5050_1px(&src_bilinear, bdest, dest);
+                         bdest++;
+                         dest++)
             } else if (this->config.bilinear) {
-                DO_LOOPS(*dest++ = BLEND4_16(src + (s >> 16) + w_mul[t >> 16], w, s, t))
+                DO_LOOPS(*dest++ = blend_bilinear_2x2(
+                             &src[(s >> 16) + w_mul[t >> 16]], w, s, t))
             } else if (this->config.blend_mode == BLEND_SIMPLE_REPLACE) {
                 DO_LOOPS(*dest++ = src[(s >> 16) + w_mul[t >> 16]])
             } else {
-                DO_LOOPS(*dest++ = BLEND_AVG(*bdest++, src[(s >> 16) + w_mul[t >> 16]]))
+                DO_LOOPS(blend_5050_1px(&src[(s >> 16) + w_mul[t >> 16]], bdest, dest);
+                         bdest++;
+                         dest++)
             }
 
             s = (sstart += ds_dy);
