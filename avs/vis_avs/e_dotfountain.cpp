@@ -32,9 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // alphachannel safe 11/21/99
 #include "e_dotfountain.h"
 
-#include "r_defs.h"
-
 #include "blend.h"
+#include "constants.h"
 #include "matrix.h"
 
 #include <array>
