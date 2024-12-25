@@ -14,6 +14,7 @@ EXPORTS
     avs_preset_set_legacy
     avs_preset_get_legacy
     avs_preset_save_legacy
+    avs_preset_format_schema
     avs_error_str
     avs_free
     avs_effect_library
