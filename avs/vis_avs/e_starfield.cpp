@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_starfield.h"
 
-#include "r_defs.h"
+#include "blend.h"
 
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
@@ -113,9 +113,16 @@ void E_Starfield::create_star(int i) {
     this->stars[i].z = (float)this->z_off;
 }
 
-static unsigned int inline BLEND_ADAPT(unsigned int a, unsigned int b, int divisor) {
-    return (
-        (((a >> 4) & 0x0F0F0F) * (16 - divisor) + (((b >> 4) & 0x0F0F0F) * divisor)));
+// A very rough variant of the adjustable blend mode. Kept for pixel compatability.
+// It creates a "staircased", i.e. aliased progression of values: Every 16th value rises
+// by 15 and the values in between are the same:
+//   0, 0, ..., 0, 15, 15, ..., 15, 30, 30, ..., etc. until ..., 225, 225
+//
+// TODO [cleanup]: The render code using it below could probably be written in a simpler
+//                 way. It basically colorizes the stars, but shows something even if
+//                 the color is black (but not if brightness is).
+static uint32_t inline blend_adjustable_rough(uint32_t a, uint32_t b, uint32_t v) {
+    return ((a >> 4) & 0x0F0F0F) * (16 - v) + (((b >> 4) & 0x0F0F0F) * v);
 }
 
 int E_Starfield::render(char[2][2][576],
@@ -147,22 +154,26 @@ int E_Starfield::render(char[2][2][576],
             int nx = ((this->stars[i].x << 7) / (int)this->stars[i].z) + this->x_off;
             int ny = ((this->stars[i].y << 7) / (int)this->stars[i].z) + this->y_off;
             if ((nx > 0) && (nx < w) && (ny > 0) && (ny < h)) {
-                int brightness =
+                uint32_t brightness =
                     (int)((255 - (int)this->stars[i].z) * this->stars[i].speed);
                 if (this->config.color != 0xFFFFFF) {
-                    brightness = BLEND_ADAPT(
+                    brightness = blend_adjustable_rough(
                         (brightness | (brightness << 8) | (brightness << 16)),
                         this->config.color,
                         brightness >> 4);
                 } else {
                     brightness = (brightness | (brightness << 8) | (brightness << 16));
                 }
-                framebuffer[ny * w + nx] =
-                    this->config.blend_mode == BLEND_SIMPLE_ADDITIVE
-                        ? BLEND(framebuffer[ny * w + nx], brightness)
-                        : (this->config.blend_mode == BLEND_SIMPLE_5050
-                               ? BLEND_AVG(framebuffer[ny * w + nx], brightness)
-                               : brightness);
+                auto dest = (uint32_t*)&framebuffer[ny * w + nx];
+                switch (this->config.blend_mode) {
+                    case BLEND_SIMPLE_ADDITIVE:
+                        blend_add_1px(&brightness, dest, dest);
+                        break;
+                    case BLEND_SIMPLE_5050:
+                        blend_5050_1px(&brightness, dest, dest);
+                        break;
+                    default: framebuffer[ny * w + nx] = brightness; break;
+                }
                 this->stars[i].ox = nx;
                 this->stars[i].oy = ny;
                 this->stars[i].z -= this->stars[i].speed * this->current_speed;
