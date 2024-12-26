@@ -225,6 +225,8 @@ class Programmable_Effect
         va_end(extra_args);
     }
 
+    virtual void on_load() { this->need_full_recompile(); }
+
    protected:
     void swap(Programmable_Effect& other) {
         std::swap(this->vm_context, other.vm_context);
