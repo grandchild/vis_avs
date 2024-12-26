@@ -31,9 +31,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "draw.h"
 
-#include "r_defs.h"
 #include "g__defs.h"
 
+#include "blend.h"
 #include "vis.h"
 
 #include <windows.h>
@@ -378,11 +378,11 @@ void DD_CreateSurfaces(int w,
                 for (y = 0; y < h; y++) {
                     int xpos = 0;
                     for (x = 0; x < resize_w; x++) {
-                        *p++ = BLEND4_16((unsigned int*)fb_save + ((ypos >> 10) & ~63)
-                                             + (xpos >> 16),
-                                         64,
-                                         xpos,
-                                         ypos);
+                        *p++ = blend_bilinear_2x2(
+                            (uint32_t*)fb_save + ((ypos >> 10) & ~63) + (xpos >> 16),
+                            64,
+                            xpos,
+                            ypos);
                         xpos += dxpos;
                     }
                     ypos += dypos;
