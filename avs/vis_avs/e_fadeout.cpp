@@ -32,8 +32,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // alphachannel safe 11/21/99
 #include "e_fadeout.h"
 
-#include "r_defs.h"
-
 #include "timing.h"
 
 constexpr Parameter Fadeout_Info::parameters[];

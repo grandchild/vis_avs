@@ -1,7 +1,5 @@
 #include "e_eeltrans.h"
 
-#include "r_defs.h"
-
 #include <fstream>
 #include <sstream>
 #include <string>

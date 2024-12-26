@@ -1,8 +1,6 @@
 /* Reconstructed from scratch. Original APE by Goebish (https://github.com/goebish) */
 #include "e_addborders.h"
 
-#include "r_defs.h"
-
 #include "pixel_format.h"
 
 constexpr Parameter AddBorders_Info::parameters[];

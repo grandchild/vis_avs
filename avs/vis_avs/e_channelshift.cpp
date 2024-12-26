@@ -31,8 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_channelshift.h"
 
-#include "r_defs.h"
-
 #include "tmmintrin.h"
 
 #include "../util.h"

@@ -31,8 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_colormodifier.h"
 
-#include "r_defs.h"
-
 #define PUT_INT(y)                   \
     data[pos] = (y) & 255;           \
     data[pos + 1] = (y >> 8) & 255;  \

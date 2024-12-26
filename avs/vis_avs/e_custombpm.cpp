@@ -31,8 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_custombpm.h"
 
-#include "r_defs.h"
-
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_unknown.h"
 
-#include "r_defs.h"
+#include "constants.h"
 
 #define PUT_INT(y)                   \
     data[pos] = (y) & 255;           \

@@ -1,8 +1,6 @@
 #include "e_eeltrans.h"
 #include "e_eeltrans_translate.h"
 
-#include "r_defs.h"
-
 #include "instance.h"
 
 #include "../ns-eel/ns-eel.h"

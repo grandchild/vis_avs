@@ -31,8 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_fastbright.h"
 
-#include "r_defs.h"
-
 #include "timing.h"
 
 #define GET_INT() \

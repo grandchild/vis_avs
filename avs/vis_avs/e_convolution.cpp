@@ -4,7 +4,7 @@
 
 #include "e_convolution.h"
 
-#include "r_defs.h"
+#include "constants.h"
 
 #include <cstdint>
 #include <cstdlib>
@@ -1041,7 +1041,7 @@ void E_Convolution::kernel_load() {
         return;
     }
     fseek(file, 0, SEEK_END);
-    filesize = min(ftell(file), CONVO_FILE_STATIC_SIZE + MAX_PATH);
+    filesize = min(ftell(file), CONVO_FILE_STATIC_SIZE + LEGACY_SAVE_PATH_LEN);
     auto content = new uint8_t[filesize];
     fseek(file, 0, SEEK_SET);
     auto bytes_read = fread(content, 1, filesize, file);

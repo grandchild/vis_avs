@@ -32,8 +32,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // alphachannel safe 11/21/99
 #include "e_colorfade.h"
 
-#include "r_defs.h"
-
 constexpr Parameter Colorfade_Info::parameters[];
 
 #define PUT_INT(y)                     \

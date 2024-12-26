@@ -1,7 +1,5 @@
 #include "e_normalise.h"
 
-#include "r_defs.h"
-
 #include <emmintrin.h>
 #include <xmmintrin.h>
 

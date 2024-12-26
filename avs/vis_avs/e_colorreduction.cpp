@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_colorreduction.h"
 
-#include "r_defs.h"
+#include "constants.h"
 
 #include "../util.h"  // ssizeof32()
 

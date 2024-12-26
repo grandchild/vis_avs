@@ -1,7 +1,5 @@
 #pragma once
 
-#include "r_defs.h"
-
 #include "effect.h"
 #include "effect_info.h"
 #include "svp_vis.h"

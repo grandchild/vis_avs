@@ -1,8 +1,6 @@
 #include "e_texer2.h"
 #include "e_texer2_macros.h"
 
-#include "r_defs.h"
-
 #include "avs_eelif.h"
 #include "files.h"
 #include "image.h"

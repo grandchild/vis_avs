@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // alphachannel safe 11/21/99
 #include "e_comment.h"
 
-#include "r_defs.h"
+#include "constants.h"
 
 E_Comment::E_Comment(AVS_Instance* avs) : Configurable_Effect(avs) {}
 E_Comment::~E_Comment() {}

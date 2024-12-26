@@ -31,8 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_effectlist.h"
 
-#include "r_defs.h"
-
 #include "blend.h"
 #include "bpm.h"
 #include "cfgwin.h"

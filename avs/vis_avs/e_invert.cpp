@@ -31,8 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_invert.h"
 
-#include "r_defs.h"
-
 #include <immintrin.h>
 #include <stdlib.h>
 

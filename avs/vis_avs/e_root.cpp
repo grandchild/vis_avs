@@ -37,7 +37,7 @@ E_Root::E_Root(AVS_Instance* avs) : Configurable_Effect(avs), buffers_saved(fals
     this->config.id = uuid4();
 }
 E_Root::~E_Root() {
-    for (int i = 0; i < NBUF; i++) {
+    for (int i = 0; i < NUM_GLOBAL_BUFFERS; i++) {
         free(this->buffers[i]);
         this->buffers[i] = nullptr;
         this->buffers_w[i] = 0;

@@ -1,7 +1,5 @@
 #include "e_globalvariables.h"
 
-#include "r_defs.h"
-
 #include "avs_eelif.h"
 
 #include <algorithm>

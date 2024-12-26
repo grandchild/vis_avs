@@ -31,8 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_setrendermode.h"
 
-#include "r_defs.h"
-
 #include "timing.h"
 
 int g_line_blend_mode;
