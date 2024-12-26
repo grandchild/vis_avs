@@ -1,3 +1,5 @@
+#pragma once
+
 // 64k is the maximum component size in AVS
 #define MAX_CODE_LEN       (1 << 16)
 // Maximum number of threads
