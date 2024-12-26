@@ -32,9 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "e_effectlist.h"
 #include "e_unknown.h"
 
-#include "r_defs.h"
-
 #include "avs_eelif.h"
+#include "blend.h"
 #include "effect_library.h"
 #include "instance.h"
 #include "render.h"
@@ -105,11 +104,6 @@ void E_EffectList::smp_cleanup_threads() {
     memset(&E_EffectList::smp, 0, sizeof(E_EffectList::smp));
 }
 
-static int __inline depthof(int c, int i) {
-    int r = max(max((c & 0xFF), ((c & 0xFF00) >> 8)), (c & 0xFF0000) >> 16);
-    return i ? 255 - r : r;
-}
-
 int E_EffectList::render(char visdata[2][2][576],
                          int is_beat,
                          int* framebuffer,
@@ -160,14 +154,12 @@ int E_EffectList::render(char visdata[2][2][576],
 
         enabled_this_frame = *this->vars.enabled > 0.1 || *this->vars.enabled < -0.1;
         clear_this_frame = *this->vars.clear > 0.1 || *this->vars.clear < -0.1;
-
-        // code execute
     }
 
     // root/replaceinout special cases
     if (enabled_this_frame && this->config.input_blend_mode == LIST_BLEND_REPLACE
         && this->config.output_blend_mode == LIST_BLEND_REPLACE) {
-        int s = 0;
+        int buffer_parity = 0;
         int line_blend_mode_save = g_line_blend_mode;
         if (this->list_framebuffer) {
             free(this->list_framebuffer);
@@ -178,7 +170,6 @@ int E_EffectList::render(char visdata[2][2][576],
         }
         if (!is_preinit) {
             g_line_blend_mode = 0;
-            // set_n_Context();
         }
         for (auto& child : this->children) {
             int t = 0;
@@ -194,8 +185,8 @@ int E_EffectList::render(char visdata[2][2][576],
                 nt = child->smp_begin(nt,
                                       visdata,
                                       is_beat,
-                                      s ? fbout : framebuffer,
-                                      s ? framebuffer : fbout,
+                                      buffer_parity ? fbout : framebuffer,
+                                      buffer_parity ? framebuffer : fbout,
                                       w,
                                       h);
                 if (!is_preinit && nt > 0) {
@@ -208,15 +199,15 @@ int E_EffectList::render(char visdata[2][2][576],
                                           child,
                                           visdata,
                                           is_beat,
-                                          s ? fbout : framebuffer,
-                                          s ? framebuffer : fbout,
+                                          buffer_parity ? fbout : framebuffer,
+                                          buffer_parity ? framebuffer : fbout,
                                           w,
                                           h);
 
                     t = child->smp_finish(visdata,
                                           is_beat,
-                                          s ? fbout : framebuffer,
-                                          s ? framebuffer : fbout,
+                                          buffer_parity ? fbout : framebuffer,
+                                          buffer_parity ? framebuffer : fbout,
                                           w,
                                           h);
                 }
@@ -227,8 +218,8 @@ int E_EffectList::render(char visdata[2][2][576],
                     try {
                         t = child->render(visdata,
                                           is_beat,
-                                          s ? fbout : framebuffer,
-                                          s ? framebuffer : fbout,
+                                          buffer_parity ? fbout : framebuffer,
+                                          buffer_parity ? framebuffer : fbout,
                                           w,
                                           h);
                     } catch (...) {
@@ -237,15 +228,15 @@ int E_EffectList::render(char visdata[2][2][576],
                 } else {
                     t = child->render(visdata,
                                       is_beat,
-                                      s ? fbout : framebuffer,
-                                      s ? framebuffer : fbout,
+                                      buffer_parity ? fbout : framebuffer,
+                                      buffer_parity ? framebuffer : fbout,
                                       w,
                                       h);
                 }
             }
 
             if (t & 1) {
-                s ^= 1;
+                buffer_parity ^= 1;
             }
             if (!is_preinit) {
                 if (t & 0x10000000) {
@@ -258,10 +249,9 @@ int E_EffectList::render(char visdata[2][2][576],
         }
         if (!is_preinit) {
             g_line_blend_mode = line_blend_mode_save;
-            // unset_n_Context();
         }
         this->on_beat_frames_cooldown--;
-        return s;
+        return buffer_parity;
     }
 
     if (!enabled_this_frame) {
@@ -308,7 +298,6 @@ int E_EffectList::render(char visdata[2][2][576],
         }
         this->list_framebuffer = newfb;
     }
-    // handle clear mode
     if (clear_this_frame) {
         memset(this->list_framebuffer, 0, w * h * sizeof(int));
     }
@@ -316,107 +305,55 @@ int E_EffectList::render(char visdata[2][2][576],
     // blend parent framebuffer into current, if necessary
     if (!is_preinit) {
         int x = w * h;
-        int* tfb = framebuffer;
-        int* o = this->list_framebuffer;
-        // set_n_Context();
+        uint32_t* tfb = (uint32_t*)framebuffer;
+        uint32_t* dest = (uint32_t*)this->list_framebuffer;
         int64_t use_blendin = this->config.input_blend_mode;
-        if (use_blendin == LIST_BLEND_ADJUSTABLE && input_blend_this_frame >= 255) {
-            use_blendin = LIST_BLEND_REPLACE;
+        if (use_blendin == LIST_BLEND_ADJUSTABLE) {
+            if (input_blend_this_frame >= 255) {
+                use_blendin = LIST_BLEND_REPLACE;
+            } else if (input_blend_this_frame <= 0) {
+                use_blendin = LIST_BLEND_IGNORE;
+            }
         }
 
         switch (use_blendin) {
-            case LIST_BLEND_REPLACE: memcpy(o, tfb, w * h * sizeof(int)); break;
-            case LIST_BLEND_5050: mmx_avgblend_block(o, tfb, x); break;
-            case LIST_BLEND_MAXIMUM:
-                while (x--) {
-                    *o = BLEND_MAX(*o, *tfb++);
-                    o++;
-                }
-                break;
-            case LIST_BLEND_ADDITIVE: mmx_addblend_block(o, tfb, x); break;
+            case LIST_BLEND_REPLACE: blend_replace(tfb, dest, w, h); break;
+            case LIST_BLEND_5050: blend_5050(tfb, dest, dest, w, h); break;
+            case LIST_BLEND_MAXIMUM: blend_maximum(tfb, dest, dest, w, h); break;
+            case LIST_BLEND_ADDITIVE: blend_add(tfb, dest, dest, w, h); break;
             case LIST_BLEND_SUB_1:
-                while (x--) {
-                    *o = BLEND_SUB(*o, *tfb++);
-                    o++;
-                }
+                blend_sub_src1_from_src2(tfb, dest, dest, w, h);
                 break;
             case LIST_BLEND_SUB_2:
-                while (x--) {
-                    *o = BLEND_SUB(*tfb++, *o);
-                    o++;
-                }
+                blend_sub_src2_from_src1(tfb, dest, dest, w, h);
                 break;
-            case LIST_BLEND_EVERY_OTHER_LINE: {
-                int y = h / 2;
-                while (y-- > 0) {
-                    memcpy(o, tfb, w * sizeof(int));
-                    tfb += w * 2;
-                    o += w * 2;
-                }
-            } break;
-            case LIST_BLEND_EVERY_OTHER_PIXEL: {
-                int r = 0;
-                int y = h;
-                while (y-- > 0) {
-                    int *out, *in;
-                    int x = w / 2;
-                    out = o + r;
-                    in = tfb + r;
-                    r ^= 1;
-                    while (x-- > 0) {
-                        *out = *in;
-                        out += 2;
-                        in += 2;
-                    }
-                    o += w;
-                    tfb += w;
-                }
-            } break;
-            case LIST_BLEND_XOR:
-                while (x--) {
-                    *o = *o ^ *tfb++;
-                    o++;
-                }
+            case LIST_BLEND_EVERY_OTHER_LINE:
+                blend_every_other_line(tfb, dest, w, h);
                 break;
+            case LIST_BLEND_EVERY_OTHER_PIXEL:
+                blend_every_other_pixel(tfb, dest, w, h);
+                break;
+            case LIST_BLEND_XOR: blend_xor(tfb, dest, dest, w, h); break;
             case LIST_BLEND_ADJUSTABLE:
-                mmx_adjblend_block(o, tfb, o, x, input_blend_this_frame);
+                blend_adjustable(tfb, dest, dest, input_blend_this_frame, w, h);
                 break;
-            case LIST_BLEND_MULTIPLY: mmx_mulblend_block(o, tfb, x); break;
-            case LIST_BLEND_MINIMUM:
-                while (x--) {
-                    *o = BLEND_MIN(*o, *tfb++);
-                    o++;
-                }
-                break;
-            default: break;
+            case LIST_BLEND_MULTIPLY: blend_multiply(tfb, dest, dest, w, h); break;
+            case LIST_BLEND_MINIMUM: blend_minimum(tfb, dest, dest, w, h); break;
             case LIST_BLEND_BUFFER: {
-                int* buf = (int*)this->avs->get_buffer(
+                auto buf = (uint32_t*)this->avs->get_buffer(
                     w, h, this->config.input_blend_buffer - 1, false);
                 if (!buf) {
                     break;
                 }
-                while (x--) {
-                    *o = BLEND_ADJ(
-                        *tfb++,
-                        *o,
-                        depthof(*buf, this->config.input_blend_buffer_invert));
-                    o++;
-                    buf++;
-                }
-#ifndef NO_MMX
-#ifdef _MSC_VER  // MSVC asm
-                __asm emms;
-#else   // _MSC_VER, GCC asm
-                __asm__ __volatile__("emms");
-#endif  // _MSC_VER
-#endif
+                blend_buffer(
+                    tfb, dest, dest, buf, this->config.input_blend_buffer_invert, w, h);
                 break;
             }
+            default: break;
         }
-        // unset_n_Context();
     }
 
-    int s = 0;
+    int buffer_parity = 0;
     int x;
     int line_blend_mode_save = g_line_blend_mode;
     if (!is_preinit) {
@@ -438,8 +375,8 @@ int E_EffectList::render(char visdata[2][2][576],
             nt = child->smp_begin(nt,
                                   visdata,
                                   is_beat,
-                                  s ? fbout : framebuffer,
-                                  s ? framebuffer : fbout,
+                                  buffer_parity ? fbout : framebuffer,
+                                  buffer_parity ? framebuffer : fbout,
                                   w,
                                   h);
             if (!is_preinit && nt > 0) {
@@ -452,15 +389,15 @@ int E_EffectList::render(char visdata[2][2][576],
                                       child,
                                       visdata,
                                       is_beat,
-                                      s ? fbout : this->list_framebuffer,
-                                      s ? this->list_framebuffer : fbout,
+                                      buffer_parity ? fbout : this->list_framebuffer,
+                                      buffer_parity ? this->list_framebuffer : fbout,
                                       w,
                                       h);
 
                 t = child->smp_finish(visdata,
                                       is_beat,
-                                      s ? fbout : framebuffer,
-                                      s ? framebuffer : fbout,
+                                      buffer_parity ? fbout : framebuffer,
+                                      buffer_parity ? framebuffer : fbout,
                                       w,
                                       h);
             }
@@ -469,8 +406,8 @@ int E_EffectList::render(char visdata[2][2][576],
             try {
                 t = child->render(visdata,
                                   is_beat,
-                                  s ? fbout : this->list_framebuffer,
-                                  s ? this->list_framebuffer : fbout,
+                                  buffer_parity ? fbout : this->list_framebuffer,
+                                  buffer_parity ? this->list_framebuffer : fbout,
                                   w,
                                   h);
             } catch (...) {
@@ -479,14 +416,14 @@ int E_EffectList::render(char visdata[2][2][576],
         } else {
             t = child->render(visdata,
                               is_beat,
-                              s ? fbout : this->list_framebuffer,
-                              s ? this->list_framebuffer : fbout,
+                              buffer_parity ? fbout : this->list_framebuffer,
+                              buffer_parity ? this->list_framebuffer : fbout,
                               w,
                               h);
         }
 
         if (t & 1) {
-            s ^= 1;
+            buffer_parity ^= 1;
         }
         if (!is_preinit) {
             if (t & 0x10000000) {
@@ -501,118 +438,69 @@ int E_EffectList::render(char visdata[2][2][576],
         g_line_blend_mode = line_blend_mode_save;
     }
 
-    // if s==1 at this point, data we want is in fbout.
+    // if buffer_parity==1 at this point, data we want is in fbout.
 
     if (!is_preinit) {
-        if (s) {
+        if (buffer_parity) {
             memcpy(this->list_framebuffer, fbout, w * h * sizeof(int));
         }
 
-        int* tfb = s ? fbout : this->list_framebuffer;
-        int* o = framebuffer;
-        x = w * h;
-        // set_n_Context();
+        uint32_t* tfb = (uint32_t*)(buffer_parity ? fbout : this->list_framebuffer);
+        uint32_t* dest = (uint32_t*)framebuffer;
 
         int64_t use_blendout = this->config.output_blend_mode;
-        if (use_blendout == LIST_BLEND_ADJUSTABLE && output_blend_this_frame >= 255) {
-            use_blendout = 1;
+        if (use_blendout == LIST_BLEND_ADJUSTABLE) {
+            if (output_blend_this_frame >= 255) {
+                use_blendout = LIST_BLEND_REPLACE;
+            } else if (output_blend_this_frame <= 0) {
+                use_blendout = LIST_BLEND_IGNORE;
+            }
         }
         switch (use_blendout) {
             case LIST_BLEND_REPLACE:
-                if (s) {
-                    // unset_n_Context();
+                if (buffer_parity) {
                     return 1;
                 }
-                memcpy(o, tfb, x * sizeof(int));
+                blend_replace(tfb, dest, w, h);
                 break;
-            case LIST_BLEND_5050: mmx_avgblend_block(o, tfb, x); break;
-            case LIST_BLEND_MAXIMUM:
-                while (x--) {
-                    *o = BLEND_MAX(*o, *tfb++);
-                    o++;
-                }
-                break;
-            case LIST_BLEND_ADDITIVE: mmx_addblend_block(o, tfb, x); break;
+            case LIST_BLEND_5050: blend_5050(tfb, dest, dest, w, h); break;
+            case LIST_BLEND_MAXIMUM: blend_maximum(tfb, dest, dest, w, h); break;
+            case LIST_BLEND_ADDITIVE: blend_add(tfb, dest, dest, w, h); break;
             case LIST_BLEND_SUB_1:
-                while (x--) {
-                    *o = BLEND_SUB(*o, *tfb++);
-                    o++;
-                }
+                blend_sub_src1_from_src2(tfb, dest, dest, w, h);
                 break;
             case LIST_BLEND_SUB_2:
-                while (x--) {
-                    *o = BLEND_SUB(*tfb++, *o);
-                    o++;
-                }
+                blend_sub_src2_from_src1(tfb, dest, dest, w, h);
                 break;
-            case LIST_BLEND_EVERY_OTHER_LINE: {
-                int y = h / 2;
-                while (y-- > 0) {
-                    memcpy(o, tfb, w * sizeof(int));
-                    tfb += w * 2;
-                    o += w * 2;
-                }
-            } break;
-            case LIST_BLEND_EVERY_OTHER_PIXEL: {
-                int r = 0;
-                int y = h;
-                while (y-- > 0) {
-                    int *out, *in;
-                    int x = w / 2;
-                    out = o + r;
-                    in = tfb + r;
-                    r ^= 1;
-                    while (x-- > 0) {
-                        *out = *in;
-                        out += 2;
-                        in += 2;
-                    }
-                    o += w;
-                    tfb += w;
-                }
-            } break;
-            case LIST_BLEND_XOR:
-                while (x--) {
-                    *o = *o ^ *tfb++;
-                    o++;
-                }
+            case LIST_BLEND_EVERY_OTHER_LINE:
+                blend_every_other_line(tfb, dest, w, h);
                 break;
+            case LIST_BLEND_EVERY_OTHER_PIXEL:
+                blend_every_other_pixel(tfb, dest, w, h);
+                break;
+            case LIST_BLEND_XOR: blend_xor(tfb, dest, dest, w, h); break;
             case LIST_BLEND_ADJUSTABLE:
-                mmx_adjblend_block(o, tfb, o, x, output_blend_this_frame);
+                blend_adjustable(tfb, dest, dest, output_blend_this_frame, w, h);
                 break;
-            case LIST_BLEND_MULTIPLY: mmx_mulblend_block(o, tfb, x); break;
-            case LIST_BLEND_MINIMUM:
-                while (x--) {
-                    *o = BLEND_MIN(*o, *tfb++);
-                    o++;
-                }
-                break;
+            case LIST_BLEND_MULTIPLY: blend_multiply(tfb, dest, dest, w, h); break;
+            case LIST_BLEND_MINIMUM: blend_minimum(tfb, dest, dest, w, h); break;
             case LIST_BLEND_BUFFER: {
-                int* buf = (int*)this->avs->get_buffer(
+                auto buf = (uint32_t*)this->avs->get_buffer(
                     w, h, this->config.output_blend_buffer - 1, false);
                 if (!buf) {
                     break;
                 }
-                while (x--) {
-                    *o = BLEND_ADJ(
-                        *tfb++,
-                        *o,
-                        depthof(*buf, this->config.output_blend_buffer_invert));
-                    o++;
-                    buf++;
-                }
-#ifndef NO_MMX
-#ifdef _MSC_VER  // MSVC asm
-                __asm emms;
-#else   // _MSC_VER, GCC asm
-                __asm__ __volatile__("emms");
-#endif  // _MSC_VER
-#endif
+                blend_buffer(tfb,
+                             dest,
+                             dest,
+                             buf,
+                             this->config.output_blend_buffer_invert,
+                             w,
+                             h);
                 break;
             }
             default: break;
         }
-        // unset_n_Context();
     }
     return 0;
 }
