@@ -79,9 +79,9 @@ static inline void blend_add_rgb0_8_c(const uint32_t* src1,
 static inline void blend_add_rgb0_8_x86v128(const uint32_t* src1,
                                             const uint32_t* src2,
                                             uint32_t* dest) {
-    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
-    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
-    _mm_store_si128((__m128i*)dest, _mm_adds_epu8(src1_4px, src2_4px));
+    __m128i src1_4px = _mm_loadu_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_loadu_si128((__m128i*)src2);
+    _mm_storeu_si128((__m128i*)dest, _mm_adds_epu8(src1_4px, src2_4px));
 }
 
 void blend_add(const uint32_t* src1,
@@ -112,15 +112,15 @@ static inline void blend_5050_rgb0_8_c(const uint32_t* src1,
 static inline void blend_5050_rgb0_8_x86v128(const uint32_t* src1,
                                              const uint32_t* src2,
                                              uint32_t* dest) {
-    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
-    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
+    __m128i src1_4px = _mm_loadu_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_loadu_si128((__m128i*)src2);
     // This should use _mm_avg_epu8(), but that does a correct average, i.e. it does
     // (a + b + 1) / 2, while avs does (a + b) / 2. We opt for consistency and backward
     // compatibility here.
     __m128i strip_high_bit_mask = _mm_set1_epi32(0x007f7f7f);
     __m128i src1_half = _mm_and_si128(_mm_srli_epi16(src1_4px, 1), strip_high_bit_mask);
     __m128i src2_half = _mm_and_si128(_mm_srli_epi16(src2_4px, 1), strip_high_bit_mask);
-    _mm_store_si128((__m128i*)dest, _mm_adds_epu8(src1_half, src2_half));
+    _mm_storeu_si128((__m128i*)dest, _mm_adds_epu8(src1_half, src2_half));
 }
 
 void blend_5050(const uint32_t* src1,
@@ -153,8 +153,8 @@ static inline void blend_multiply_rgb0_8_c(const uint32_t* src1,
 static inline void blend_multiply_rgb0_8_x86v128(const uint32_t* src1,
                                                  const uint32_t* src2,
                                                  uint32_t* dest) {
-    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
-    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
+    __m128i src1_4px = _mm_loadu_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_loadu_si128((__m128i*)src2);
     __m128i src1_lo_2px = _mm_unpacklo_epi8(src1_4px, _mm_setzero_si128());
     __m128i src1_hi_2px = _mm_unpackhi_epi8(src1_4px, _mm_setzero_si128());
     __m128i src2_lo_2px = _mm_unpacklo_epi8(src2_4px, _mm_setzero_si128());
@@ -164,7 +164,7 @@ static inline void blend_multiply_rgb0_8_x86v128(const uint32_t* src1,
     __m128i mul_lo_norm = _mm_srli_epi16(mul_lo, 8);
     __m128i mul_hi_norm = _mm_srli_epi16(mul_hi, 8);
     __m128i packed = _mm_packus_epi16(mul_lo_norm, mul_hi_norm);
-    _mm_store_si128((__m128i*)dest, packed);
+    _mm_storeu_si128((__m128i*)dest, packed);
 }
 
 void blend_multiply(const uint32_t* src1,
@@ -197,8 +197,8 @@ static inline void blend_screen_rgb0_8_c(const uint32_t* src1,
 static inline void blend_screen_rgb0_8_x86v128(const uint32_t* src1,
                                                const uint32_t* src2,
                                                uint32_t* dest) {
-    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
-    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
+    __m128i src1_4px = _mm_loadu_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_loadu_si128((__m128i*)src2);
     src1_4px = _mm_xor_si128(src1_4px, _mm_set1_epi32(0x00ffffff));
     src2_4px = _mm_xor_si128(src2_4px, _mm_set1_epi32(0x00ffffff));
     __m128i src1_lo_2px = _mm_unpacklo_epi8(src1_4px, _mm_setzero_si128());
@@ -211,7 +211,7 @@ static inline void blend_screen_rgb0_8_x86v128(const uint32_t* src1,
     __m128i mul_hi_norm = _mm_srli_epi16(mul_hi, 8);
     __m128i packed = _mm_packus_epi16(mul_lo_norm, mul_hi_norm);
     packed = _mm_xor_si128(packed, _mm_set1_epi32(0x00ffffff));
-    _mm_store_si128((__m128i*)dest, packed);
+    _mm_storeu_si128((__m128i*)dest, packed);
 }
 
 void blend_screen(const uint32_t* src1,
@@ -246,9 +246,9 @@ static inline void blend_maximum_rgb0_8_c(const uint32_t* src1,
 static inline void blend_maximum_rgb0_8_x86v128(const uint32_t* src1,
                                                 const uint32_t* src2,
                                                 uint32_t* dest) {
-    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
-    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
-    _mm_store_si128((__m128i*)dest, _mm_max_epu8(src1_4px, src2_4px));
+    __m128i src1_4px = _mm_loadu_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_loadu_si128((__m128i*)src2);
+    _mm_storeu_si128((__m128i*)dest, _mm_max_epu8(src1_4px, src2_4px));
 }
 
 void blend_maximum(const uint32_t* src1,
@@ -279,9 +279,9 @@ static inline void blend_minimum_rgb0_8_c(const uint32_t* src1,
 static inline void blend_minimum_rgb0_8_x86v128(const uint32_t* src1,
                                                 const uint32_t* src2,
                                                 uint32_t* dest) {
-    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
-    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
-    _mm_store_si128((__m128i*)dest, _mm_min_epu8(src1_4px, src2_4px));
+    __m128i src1_4px = _mm_loadu_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_loadu_si128((__m128i*)src2);
+    _mm_storeu_si128((__m128i*)dest, _mm_min_epu8(src1_4px, src2_4px));
 }
 
 void blend_minimum(const uint32_t* src1,
@@ -382,9 +382,9 @@ static inline void blend_sub_src1_from_src2_rgb0_8_c(const uint32_t* src1,
 static inline void blend_sub_src1_from_src2_rgb0_8_x86v128(const uint32_t* src1,
                                                            const uint32_t* src2,
                                                            uint32_t* dest) {
-    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
-    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
-    _mm_store_si128((__m128i*)dest, _mm_subs_epu8(src2_4px, src1_4px));
+    __m128i src1_4px = _mm_loadu_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_loadu_si128((__m128i*)src2);
+    _mm_storeu_si128((__m128i*)dest, _mm_subs_epu8(src2_4px, src1_4px));
 }
 
 void blend_sub_src1_from_src2(const uint32_t* src1,
@@ -419,9 +419,9 @@ static inline void blend_sub_src2_from_src1_rgb0_8_c(const uint32_t* src1,
 static inline void blend_sub_src2_from_src1_rgb0_8_x86v128(const uint32_t* src1,
                                                            const uint32_t* src2,
                                                            uint32_t* dest) {
-    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
-    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
-    _mm_store_si128((__m128i*)dest, _mm_subs_epu8(src1_4px, src2_4px));
+    __m128i src1_4px = _mm_loadu_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_loadu_si128((__m128i*)src2);
+    _mm_storeu_si128((__m128i*)dest, _mm_subs_epu8(src1_4px, src2_4px));
 }
 
 void blend_sub_src2_from_src1(const uint32_t* src1,
@@ -455,15 +455,15 @@ static inline void blend_sub_src1_from_src2_abs_rgb0_8_c(const uint32_t* src1,
 static inline void blend_sub_src1_from_src2_abs_rgb0_8_x86v128(const uint32_t* src1,
                                                                const uint32_t* src2,
                                                                uint32_t* dest) {
-    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
-    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
+    __m128i src1_4px = _mm_loadu_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_loadu_si128((__m128i*)src2);
     // abs(x - y)  <=>  (x ⊢ y)  | (y ⊢ x) (where ⊢ is minus-with-saturation)
-    _mm_store_si128((__m128i*)dest,
-                    _mm_or_si128(_mm_subs_epu8(src2_4px, src1_4px),
-                                 _mm_subs_epu8(src1_4px, src2_4px)));
+    _mm_storeu_si128((__m128i*)dest,
+                     _mm_or_si128(_mm_subs_epu8(src2_4px, src1_4px),
+                                  _mm_subs_epu8(src1_4px, src2_4px)));
     // alternatively: TODO[performance]: test if this is faster
     // abs(x - y)  <=>  max(x, y) - min(x, y)
-    // _mm_store_si128((__m128i*)dest,
+    // _mm_storeu_si128((__m128i*)dest,
     //                 _mm_subs_epu8(_mm_max_epu8(src2_4px, src1_4px),
     //                               _mm_min_epu8(src2_4px, src1_4px)));
 }
@@ -495,9 +495,9 @@ static inline void blend_xor_rgb0_8_c(const uint32_t* src1,
 static inline void blend_xor_rgb0_8_x86v128(const uint32_t* src1,
                                             const uint32_t* src2,
                                             uint32_t* dest) {
-    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
-    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
-    _mm_store_si128((__m128i*)dest, _mm_xor_si128(src1_4px, src2_4px));
+    __m128i src1_4px = _mm_loadu_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_loadu_si128((__m128i*)src2);
+    _mm_storeu_si128((__m128i*)dest, _mm_xor_si128(src1_4px, src2_4px));
 }
 
 void blend_xor(const uint32_t* src1,
@@ -617,8 +617,8 @@ static inline void blend_adjustable_rgb0_8_x86v128(const uint32_t* src1,
                                                    const uint32_t* src2,
                                                    uint32_t* dest,
                                                    uint32_t param) {
-    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
-    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
+    __m128i src1_4px = _mm_loadu_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_loadu_si128((__m128i*)src2);
     __m128i zero = _mm_setzero_si128();
     __m128i src1_lo_2px = _mm_unpacklo_epi8(src1_4px, zero);
     __m128i src1_hi_2px = _mm_unpackhi_epi8(src1_4px, zero);
@@ -635,7 +635,7 @@ static inline void blend_adjustable_rgb0_8_x86v128(const uint32_t* src1,
     __m128i lo_norm = _mm_srli_epi16(lo, 8);
     __m128i hi_norm = _mm_srli_epi16(hi, 8);
     __m128i packed = _mm_packus_epi16(lo_norm, hi_norm);
-    _mm_store_si128((__m128i*)dest, packed);
+    _mm_storeu_si128((__m128i*)dest, packed);
 }
 
 void blend_adjustable(const uint32_t* src1,
@@ -716,7 +716,7 @@ static inline void blend_buffer_rgb0_8_x86v128(const uint32_t* src1,
                                                const uint32_t* buf,
                                                bool invert) {
     __m128i zero = _mm_setzero_si128();
-    __m128i buf_4px = _mm_load_si128((__m128i*)buf);
+    __m128i buf_4px = _mm_loadu_si128((__m128i*)buf);
     // argb.argb.argb.argb -> [0a0r0g0b.0a0r0g0b, 0a0r0g0b.0a0r0g0b]
     __m128i buf_hi_2px = _mm_unpackhi_epi8(buf_4px, zero);
     __m128i buf_lo_2px = _mm_unpacklo_epi8(buf_4px, zero);
@@ -732,7 +732,7 @@ static inline void blend_buffer_rgb0_8_x86v128(const uint32_t* src1,
         0x8080800080008000,
         0x8080800880088008,
     };
-    __m128i buf_shuffle_mask = _mm_load_si128((__m128i*)buf_shuffle_mask_values);
+    __m128i buf_shuffle_mask = _mm_loadu_si128((__m128i*)buf_shuffle_mask_values);
     // spread the maximum back to the channels:
     // ______0m.______0m -> 000m0m0m.000m0m0m
     buf_hi_2px = _mm_shuffle_epi8(buf_hi_2px, buf_shuffle_mask);
@@ -752,8 +752,8 @@ static inline void blend_buffer_rgb0_8_x86v128(const uint32_t* src1,
         buf_lo_inv_2px = _mm_xor_si128(buf_lo_2px, invert255_mask);
     }
 
-    __m128i src1_4px = _mm_load_si128((__m128i*)src1);
-    __m128i src2_4px = _mm_load_si128((__m128i*)src2);
+    __m128i src1_4px = _mm_loadu_si128((__m128i*)src1);
+    __m128i src2_4px = _mm_loadu_si128((__m128i*)src2);
     __m128i src1_hi_2px = _mm_unpackhi_epi8(src1_4px, zero);
     __m128i src1_lo_2px = _mm_unpacklo_epi8(src1_4px, zero);
     __m128i src2_hi_2px = _mm_unpackhi_epi8(src2_4px, zero);
@@ -770,7 +770,7 @@ static inline void blend_buffer_rgb0_8_x86v128(const uint32_t* src1,
     __m128i his8 = _mm_srli_epi16(hi, 8);
     __m128i los8 = _mm_srli_epi16(lo, 8);
     __m128i packed = _mm_packus_epi16(los8, his8);
-    _mm_store_si128((__m128i*)dest, packed);
+    _mm_storeu_si128((__m128i*)dest, packed);
 }
 
 void blend_buffer(const uint32_t* src1,
@@ -829,7 +829,7 @@ static inline uint32_t blend_bilinear_2x2_rgb0_8_c(const uint32_t* src,
 
 static inline void print_m128i(__m128i a) {
     uint32_t debug[] = {0, 0, 0, 0};
-    _mm_store_si128((__m128i*)debug, a);
+    _mm_storeu_si128((__m128i*)debug, a);
     printf(":: %08x %08x %08x %08x\n", debug[3], debug[2], debug[1], debug[0]);
 }
 
@@ -860,7 +860,7 @@ static inline uint32_t blend_bilinear_2x2_rgb0_8_x86v128(const uint32_t* src,
     //    +0  | 0  1-y 1-y 1-y    0  1-y 1-y 1-y  ───▶ lerp_2px_y0
     //    +w  | 0   y   y   y     0   y   y   y   ───▶ lerp_2px_y1
     static uint64_t inv_values[] = {0x000000ff00ff00ff, 0};
-    static __m128i inv_x = _mm_load_si128((__m128i*)inv_values);
+    static __m128i inv_x = _mm_loadu_si128((__m128i*)inv_values);
     static __m128i inv_y0 = _mm_set1_epi64x(inv_values[0]);
     static __m128i zero = _mm_setzero_si128();
     __m128i lerp_2px_x = _mm_xor_si128(_mm_set1_epi16(lerp_x), inv_x);
