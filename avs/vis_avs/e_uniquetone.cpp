@@ -31,8 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_uniquetone.h"
 
-#include "r_defs.h"
-
+#include "blend.h"
 #include "effect_common.h"
 
 #include <stdlib.h>
@@ -88,8 +87,8 @@ int E_UniqueTone::render(char[2][2][576],
                          int w,
                          int h) {
     int i = w * h;
-    int* p = framebuffer;
-    int c, d;
+    auto p = (uint32_t*)framebuffer;
+    uint32_t c, d;
 
     if (is_beat & 0x80000000) {
         return 0;
@@ -99,14 +98,14 @@ int E_UniqueTone::render(char[2][2][576],
         while (i--) {
             d = this->depth_of(*p);
             c = this->table_b[d] | (this->table_g[d] << 8) | (this->table_r[d] << 16);
-            *p = BLEND(*p, c);
+            blend_add_1px(&c, p, p);
             ++p;
         }
     } else if (this->config.blend_mode == BLEND_SIMPLE_5050) {
         while (i--) {
             d = this->depth_of(*p);
             c = this->table_b[d] | (this->table_g[d] << 8) | (this->table_r[d] << 16);
-            *p = BLEND_AVG(*p, c);
+            blend_5050_1px(&c, p, p);
             ++p;
         }
     } else {  // BLEND_SIMPLE_REPLACE
@@ -118,6 +117,8 @@ int E_UniqueTone::render(char[2][2][576],
     }
     return 0;
 }
+
+void E_UniqueTone::on_load() { rebuild_table(); }
 
 void E_UniqueTone::load_legacy(unsigned char* data, int len) {
     int pos = 0;

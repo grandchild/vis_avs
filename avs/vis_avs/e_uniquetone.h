@@ -41,6 +41,7 @@ class E_UniqueTone : public Configurable_Effect<UniqueTone_Info, UniqueTone_Conf
                        int* fbout,
                        int w,
                        int h);
+    virtual void on_load();
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
     virtual E_UniqueTone* clone() { return new E_UniqueTone(*this); }
