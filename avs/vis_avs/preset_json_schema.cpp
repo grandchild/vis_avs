@@ -31,11 +31,13 @@ static json config_schema(const Parameter* parameters, uint32_t num_parameters) 
             case AVS_PARAM_INT: type_name = "number"; break;
             case AVS_PARAM_FLOAT: type_name = "number"; break;
             case AVS_PARAM_COLOR: type_name = "string"; break;
-            case AVS_PARAM_STRING: type_name = "string"; break;
+            case AVS_PARAM_STRING: /* set string or list of strings $ref below */ break;
             case AVS_PARAM_SELECT: type_name = "string"; break;
             case AVS_PARAM_RESOURCE: type_name = "string"; break;
         }
-        s["properties"][p.name]["type"] = type_name;
+        if (type_name != nullptr) {
+            s["properties"][p.name]["type"] = type_name;
+        }
         if (p.description) {
             s["properties"][p.name]["description"] = p.description;
         }
@@ -59,6 +61,9 @@ static json config_schema(const Parameter* parameters, uint32_t num_parameters) 
             s["properties"][p.name]["pattern"] =
                 R"(^(#[0-9a-fA-F]{6}))"
                 R"(|(rgb0_8 *\( *\d{1,3} *, *\d{1,3} *, *\d{1,3} *\))$)";
+        }
+        if (p.type == AVS_PARAM_STRING) {
+            s["properties"][p.name]["$ref"] = "#/$defs/type:string-or-list-of-strings";
         }
         if (p.type == AVS_PARAM_SELECT && p.get_options != nullptr) {
             s["properties"][p.name]["enum"] = json::array();
@@ -103,13 +108,22 @@ std::string preset_json_schema(std::string uri_domain) {
     s["properties"]["components"]["$ref"] = "#/$defs/effects";
     s["required"] = {"preset format version", "components"};
 
+    s["$defs"]["type:string-or-list-of-strings"]["anyOf"] = json::array();
+    s["$defs"]["type:string-or-list-of-strings"]["anyOf"].push_back(json::object());
+    s["$defs"]["type:string-or-list-of-strings"]["anyOf"].back()["type"] = "string";
+    s["$defs"]["type:string-or-list-of-strings"]["anyOf"].push_back(json::object());
+    s["$defs"]["type:string-or-list-of-strings"]["anyOf"].back()["type"] = "array";
+    s["$defs"]["type:string-or-list-of-strings"]["anyOf"].back()["items"]["type"] =
+        "string";
+
     s["$defs"]["effects"]["type"] = "array";
     s["$defs"]["effects"]["items"]["type"] = "object";
     s["$defs"]["effects"]["items"]["properties"]["enabled"]["type"] = "boolean";
     s["$defs"]["effects"]["items"]["properties"]["enabled"]["default"] = true;
     s["$defs"]["effects"]["items"]["properties"]["enabled"]["description"] =
         "If false, skip effect during rendering";
-    s["$defs"]["effects"]["items"]["properties"]["comment"]["type"] = "string";
+    s["$defs"]["effects"]["items"]["properties"]["comment"]["$ref"] =
+        "#/$defs/type:string-or-list-of-strings";
     s["$defs"]["effects"]["items"]["properties"]["comment"]["default"] = "";
     s["$defs"]["effects"]["items"]["properties"]["comment"]["description"] =
         "General comment about the effect";
