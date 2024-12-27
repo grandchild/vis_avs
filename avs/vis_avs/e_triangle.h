@@ -103,8 +103,6 @@ class E_Triangle
                               int h,
                               Vertex vertices[3],
                               bool use_depthbuffer,
-                              unsigned int blendmode,
-                              unsigned int adjustable_blend,
                               unsigned int color);
     inline void draw_line(int* framebuffer,
                           int fb_index,
@@ -113,12 +111,6 @@ class E_Triangle
                           uint64_t z,
                           int w,
                           bool use_depthbuffer,
-                          unsigned int blendmode,
-                          unsigned int adjustable_blend,
                           unsigned int color);
-    inline void draw_pixel(int* pixel,
-                           unsigned int blendmode,
-                           unsigned int adjustable_blend,
-                           unsigned int color);
     inline void sort_vertices(Vertex vertices[3]);
 };

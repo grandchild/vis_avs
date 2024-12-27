@@ -1,8 +1,7 @@
 #include "e_triangle.h"
 
-#include "r_defs.h"
-
 #include "avs_eelif.h"
+#include "blend.h"
 #include "effect_common.h"
 
 #include <math.h>
@@ -107,8 +106,6 @@ int E_Triangle::render(char visdata[2][2][576],
     this->depth_buffer->reset_if_needed(w, h, *this->vars.zbclear != 0.0);
     int triangle_count = round(*this->vars.n);
     if (triangle_count > 0) {
-        unsigned int blendmode = g_line_blend_mode & 0xff;
-        unsigned int adjustable_blend = g_line_blend_mode >> 8 & 0xff;
         double step = 1.0;
         if (triangle_count > 1) {
             step = 1.0 / (triangle_count - 1.0);
@@ -141,14 +138,8 @@ int E_Triangle::render(char visdata[2][2][576],
             color_bytes[1] = col_to_int(*this->vars.green1);
             color_bytes[2] = col_to_int(*this->vars.red1);
 
-            this->draw_triangle(framebuffer,
-                                w,
-                                h,
-                                vertices,
-                                *this->vars.zbuf != 0.0f,
-                                blendmode,
-                                adjustable_blend,
-                                color);
+            this->draw_triangle(
+                framebuffer, w, h, vertices, *this->vars.zbuf != 0.0f, color);
 
             i += step;
             *this->vars.i = i;
@@ -187,8 +178,6 @@ void E_Triangle::draw_triangle(int* framebuffer,
                                int h,
                                Vertex vertices[3],
                                bool use_depthbuffer,
-                               unsigned int blendmode,
-                               unsigned int adjustable_blend,
                                unsigned int color) {
     this->sort_vertices(vertices);
     Vertex v1 = vertices[0];
@@ -205,30 +194,14 @@ void E_Triangle::draw_triangle(int* framebuffer,
     for (; y <= midy; fb_index += w, y++) {
         int startx = ((v2.x - v1.x) * (y - v1.y)) / (v2.y - v1.y) + v1.x;
         int endx = ((v3.x - v1.x) * (y - v1.y)) / (v3.y - v1.y) + v1.x;
-        this->draw_line(framebuffer,
-                        fb_index,
-                        startx,
-                        endx,
-                        v1.z,
-                        w,
-                        use_depthbuffer,
-                        blendmode,
-                        adjustable_blend,
-                        color);
+        this->draw_line(
+            framebuffer, fb_index, startx, endx, v1.z, w, use_depthbuffer, color);
     }
     for (; y < endy; fb_index += w, y++) {
         int startx = ((v3.x - v2.x) * (y - v2.y)) / (v3.y - v2.y) + v2.x;
         int endx = ((v3.x - v1.x) * (y - v1.y)) / (v3.y - v1.y) + v1.x;
-        this->draw_line(framebuffer,
-                        fb_index,
-                        startx,
-                        endx,
-                        v1.z,
-                        w,
-                        use_depthbuffer,
-                        blendmode,
-                        adjustable_blend,
-                        color);
+        this->draw_line(
+            framebuffer, fb_index, startx, endx, v1.z, w, use_depthbuffer, color);
     }
 }
 
@@ -239,8 +212,6 @@ inline void E_Triangle::draw_line(int* framebuffer,
                                   uint64_t z,
                                   int w,
                                   bool use_depthbuffer,
-                                  unsigned int blendmode,
-                                  unsigned int adjustable_blend,
                                   unsigned int color) {
     if (startx > endx) {
         int tmp = startx;
@@ -254,66 +225,17 @@ inline void E_Triangle::draw_line(int* framebuffer,
     endx = min(endx, w - 1);
     fb_index += startx;
     int fb_endx = fb_index + (endx - startx);
-    for (; fb_index < fb_endx; fb_index++) {
-        if (use_depthbuffer) {
+    if (use_depthbuffer) {
+        for (; fb_index < fb_endx; fb_index++) {
             if (z >= this->depth_buffer->buffer[fb_index]) {
                 this->depth_buffer->buffer[fb_index] = z;
                 framebuffer[fb_index] = color;
             } else {
                 continue;
             }
-        } else {
-            this->draw_pixel(
-                &framebuffer[fb_index], blendmode, adjustable_blend, color);
         }
-    }
-}
-
-inline void E_Triangle::draw_pixel(int* pixel,
-                                   unsigned int blendmode,
-                                   unsigned int adjustable_blend,
-                                   unsigned int color) {
-    switch (blendmode) {
-        case BLEND_REPLACE: {
-            *pixel = color;
-            break;
-        }
-        case BLEND_ADDITIVE: {
-            *pixel = BLEND(color, *pixel);
-            break;
-        }
-        case BLEND_MAXIMUM: {
-            *pixel = BLEND_MAX(color, *pixel);
-            break;
-        }
-        case BLEND_5050: {
-            *pixel = BLEND_AVG(color, *pixel);
-            break;
-        }
-        case BLEND_SUB1: {
-            *pixel = BLEND_SUB(*pixel, color);
-            break;
-        }
-        case BLEND_SUB2: {
-            *pixel = BLEND_SUB(color, *pixel);
-            break;
-        }
-        case BLEND_MULTIPLY: {
-            *pixel = BLEND_MUL(color, *pixel);
-            break;
-        }
-        case BLEND_ADJUSTABLE: {
-            *pixel = BLEND_ADJ_NOMMX(*pixel, color, adjustable_blend);
-            break;
-        }
-        case BLEND_XOR: {
-            *pixel = color ^ *pixel;
-            break;
-        }
-        case BLEND_MINIMUM: {
-            *pixel = BLEND_MIN(color, *pixel);
-            break;
-        }
+    } else {
+        blend_default_fill(color, (uint32_t*)&framebuffer[fb_index], endx - startx);
     }
 }
 
