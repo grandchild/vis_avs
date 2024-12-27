@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_dynamicshift.h"
 
-#include "r_defs.h"
+#include "blend.h"
 
 #include <math.h>
 
@@ -100,9 +100,9 @@ int E_DynamicShift::render(char visdata[2][2][576],
             doblend = 0;
         }
     }
-    int* inptr = framebuffer;
-    int* blendptr = framebuffer;
-    int* outptr = fbout;
+    auto inptr = (uint32_t*)framebuffer;
+    auto blendptr = (uint32_t*)framebuffer;
+    auto outptr = (uint32_t*)fbout;
     int xa = (int)*this->vars.x;
     int ya = (int)*this->vars.y;
 
@@ -125,20 +125,20 @@ int E_DynamicShift::render(char visdata[2][2][576],
         if (xa > w) {
             xa = w;
         }
-        for (y = 0; y < ya; y++) {
-            x = w;
-            if (!doblend) {
-                while (x--) {
-                    *outptr++ = 0;
-                }
+        if (ya > 0) {
+            if (doblend) {
+                blend_adjustable_fill(0, blendptr, outptr, ialpha, ya * w);
             } else {
-                while (x--) {
-                    *outptr++ = BLEND_ADJ(0, *blendptr++, ialpha);
-                }
+                blend_replace_fill(0, outptr, ya * w);
             }
+            blendptr += ya * w;
+            outptr += ya * w;
+            y = ya;
+        } else {
+            y = 0;
         }
         for (; y < endy; y++) {
-            int* ip = inptr;
+            uint32_t* ip = inptr;
             if (xa < 0) {
                 inptr += -xa;
             }
@@ -153,28 +153,29 @@ int E_DynamicShift::render(char visdata[2][2][576],
                     *outptr++ = 0;
                 }
             } else {
-                for (x = 0; x < xa; x++) {
-                    *outptr++ = BLEND_ADJ(0, *blendptr++, ialpha);
+                if (xa > 0) {
+                    blend_adjustable_fill(0, blendptr, outptr, ialpha, xa);
+                    blendptr += xa;
+                    outptr += xa;
+                } else {
+                    xa = 0;
                 }
-                for (; x < endx; x++) {
-                    *outptr++ = BLEND_ADJ(*inptr++, *blendptr++, ialpha);
-                }
-                for (; x < w; x++) {
-                    *outptr++ = BLEND_ADJ(0, *blendptr++, ialpha);
+                blend_adjustable(inptr, blendptr, outptr, ialpha, endx - xa, 1);
+                blendptr += endx - xa;
+                outptr += endx - xa;
+                if (endx < w) {
+                    blend_adjustable_fill(0, blendptr, outptr, ialpha, w - endx);
+                    blendptr += w - endx;
+                    outptr += w - endx;
                 }
             }
             inptr = ip + w;
         }
-        for (; y < h; y++) {
-            x = w;
-            if (!doblend) {
-                while (x--) {
-                    *outptr++ = 0;
-                }
+        if (y < h) {
+            if (doblend) {
+                blend_adjustable_fill(0, blendptr, outptr, ialpha, (h - y) * w);
             } else {
-                while (x--) {
-                    *outptr++ = BLEND_ADJ(0, *blendptr++, ialpha);
-                }
+                blend_replace_fill(0, outptr, (h - y) * w);
             }
         }
     } else {  // bilinear filtering version
@@ -240,20 +241,20 @@ int E_DynamicShift::render(char visdata[2][2][576],
         if (endy < 0) {
             endy = 0;
         }
-        for (y = 0; y < ya; y++) {
-            x = w;
-            if (!doblend) {
-                while (x--) {
-                    *outptr++ = 0;
-                }
+        if (ya > 0) {
+            if (doblend) {
+                blend_adjustable_fill(0, blendptr, outptr, ialpha, ya * w);
             } else {
-                while (x--) {
-                    *outptr++ = BLEND_ADJ(0, *blendptr++, ialpha);
-                }
+                blend_replace_fill(0, outptr, ya * w);
             }
+            blendptr += ya * w;
+            outptr += ya * w;
+            y = ya;
+        } else {
+            y = 0;
         }
         for (; y < endy; y++) {
-            int* ip = inptr;
+            uint32_t* ip = inptr;
             if (xa < 0) {
                 inptr += -xa;
             }
@@ -262,37 +263,37 @@ int E_DynamicShift::render(char visdata[2][2][576],
                     *outptr++ = 0;
                 }
                 for (; x < endx; x++) {
-                    *outptr++ = BLEND4((unsigned int*)inptr++, w, xpart, ypart);
+                    *outptr++ = blend_bilinear_2x2(inptr++, w, xpart, ypart);
                 }
                 for (; x < w; x++) {
                     *outptr++ = 0;
                 }
             } else {
-                for (x = 0; x < xa; x++) {
-                    *outptr++ = BLEND_ADJ(0, *blendptr++, ialpha);
+                if (xa > 0) {
+                    blend_adjustable_fill(0, blendptr, outptr, ialpha, xa);
+                    blendptr += xa;
+                    outptr += xa;
+                    x = xa;
+                } else {
+                    x = 0;
                 }
                 for (; x < endx; x++) {
-                    *outptr++ =
-                        BLEND_ADJ(BLEND4((unsigned int*)inptr++, w, xpart, ypart),
-                                  *blendptr++,
-                                  ialpha);
+                    auto src_bilinear = blend_bilinear_2x2(inptr++, w, xpart, ypart);
+                    blend_adjustable_1px(&src_bilinear, blendptr++, outptr++, ialpha);
                 }
-                for (; x < w; x++) {
-                    *outptr++ = BLEND_ADJ(0, *blendptr++, ialpha);
+                if (endx < w) {
+                    blend_adjustable_fill(0, blendptr, outptr, ialpha, w - endx);
+                    blendptr += w - endx;
+                    outptr += w - endx;
                 }
             }
             inptr = ip + w;
         }
-        for (; y < h; y++) {
-            x = w;
-            if (!doblend) {
-                while (x--) {
-                    *outptr++ = 0;
-                }
+        if (y < h) {
+            if (doblend) {
+                blend_adjustable_fill(0, blendptr, outptr, ialpha, (h - y) * w);
             } else {
-                while (x--) {
-                    *outptr++ = BLEND_ADJ(0, *blendptr++, ialpha);
-                }
+                blend_replace_fill(0, outptr, (h - y) * w);
             }
         }
     }
