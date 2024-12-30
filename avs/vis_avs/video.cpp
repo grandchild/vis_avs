@@ -29,7 +29,8 @@ uint32_t AVS_Video::frame_cache_thread_func(void* this_video) {
 AVS_Video::AVS_Video(const char* filename,
                      int64_t max_cache_length,
                      int64_t backward_cache_length)
-    : error(NULL),
+    : filename(filename),
+      error(NULL),
       av(new LibAV()),
       cache(max_cache_length, backward_cache_length, 0),
       need_frames(signal_create_single()),
@@ -41,7 +42,7 @@ AVS_Video::AVS_Video(const char* filename,
             !LibAV::load_error.empty() ? LibAV::load_error.c_str() : "libav not loaded";
         return;
     }
-    if (!this->init(filename)) {
+    if (!this->init()) {
         return;
     }
     this->caching_thread = thread_create(frame_cache_thread_func, this);
@@ -60,7 +61,7 @@ AVS_Video::~AVS_Video() {
     delete this->av;
 }
 
-bool AVS_Video::init(const char* filename) {
+bool AVS_Video::init() {
     if (this->av->demuxer != NULL) {
         this->close();
     }
@@ -69,7 +70,8 @@ bool AVS_Video::init(const char* filename) {
         this->error = "demuxer context alloc failed";
         return false;
     }
-    if (LibAV::open_input(&this->av->demuxer, filename, NULL, NULL) != 0) {
+    if (LibAV::open_input(&this->av->demuxer, this->filename.c_str(), NULL, NULL)
+        != 0) {
         this->error = "open input failed";
         return false;
     }
@@ -139,7 +141,8 @@ bool AVS_Video::init_codec() {
         // Parse video and count frames & accumulate duration.
         // Takes up to ~1 second per hour of video.
         log_info(
-            "video frame count and/or duration not in metadata, counting manually");
+            "%s: video frame count and/or duration not in metadata, counting manually",
+            this->filename.c_str());
         while (LibAV::read_frame(this->av->demuxer, this->av->packet) >= 0) {
             if (this->av->packet->stream_index == this->video_stream) {
                 this->length++;

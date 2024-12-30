@@ -5,6 +5,7 @@
 #include "../platform.h"
 
 #include <deque>
+#include <string>
 #include <vector>
 
 /**
@@ -34,6 +35,7 @@
  */
 class AVS_Video {
    public:
+    std::string filename;
     size_t pixel_size;
     int64_t length;
     int64_t play_head;
@@ -168,7 +170,7 @@ class AVS_Video {
 
 #ifndef NO_FFMPEG
    private:
-    bool init(const char* filename);
+    bool init();
     void close();
     bool init_codec();
     void close_codec();
