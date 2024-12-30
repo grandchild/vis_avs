@@ -2,6 +2,7 @@
 #include "e_texer2_macros.h"
 
 #include "avs_eelif.h"
+#include "blend.h"
 #include "files.h"
 #include "image.h"
 #include "instance.h"
