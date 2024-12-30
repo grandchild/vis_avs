@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_video.h"
 
+#include "blend.h"
 #include "files.h"
 #include "instance.h"
 
@@ -142,7 +143,6 @@ int E_Video::render(char[2][2][576],
                     int* fbout,
                     int w,
                     int h) {
-    int *p, *d;
     int i, j;
     int persist_count = 0;
 
@@ -179,25 +179,17 @@ int E_Video::render(char[2][2][576],
         persist_count--;
     }
 
-    p = fbout;
-    d = framebuffer;
+    auto src = (uint32_t*)fbout;
+    auto dest = (uint32_t*)framebuffer;
     if (this->config.blend_mode == VIDEO_BLEND_ADD
         || (this->config.blend_mode == VIDEO_BLEND_FIFTY_FIFTY_ONBEAT_ADD
             && (is_beat || persist_count > 0))) {
-        for (i = 0; i < h * w; i++) {
-            *d = BLEND(*p, *d);
-            d++;
-            p++;
-        }
+        blend_add(src, dest, dest, w, h);
     } else if (this->config.blend_mode == VIDEO_BLEND_FIFTY_FIFTY
                || this->config.blend_mode == VIDEO_BLEND_FIFTY_FIFTY_ONBEAT_ADD) {
-        for (i = 0; i < h * w; i++) {
-            *d = BLEND_AVG(*p, *d);
-            d++;
-            p++;
-        }
+        blend_5050(src, dest, dest, w, h);
     } else {  // VIDEO_BLEND_REPLACE
-        memcpy(d, p, w * h * 4);
+        blend_replace(src, dest, w, h);
     }
     return 0;
 }
