@@ -359,10 +359,12 @@ bool AVS_Video::resample_and_cache_frame() {
     auto stream = this->av->demuxer->streams[this->video_stream];
     auto frame_time_ms =
         1000 * this->av->frame->pts * stream->time_base.num / stream->time_base.den;
+    bool is_upside_down = this->av->frame->linesize[0] < 0;
     Frame& new_frame = this->cache.new_frame(this->resampler.dest.pixel_format,
                                              this->resampler.dest.width,
                                              this->resampler.dest.height,
-                                             frame_time_ms);
+                                             frame_time_ms,
+                                             is_upside_down);
     if (new_frame.data == NULL) {
         this->error = "out of memory for new cache frame";
         return false;
@@ -453,12 +455,17 @@ bool AVS_Video::copy(Frame* src, void* dest, AVS_Pixel_Format pixel_format) {
         return false;
     }
     // TODO [feature]: Make this ready for different pixel formats
-    auto line_length = src->width * pixel_size(pixel_format);
-    auto src_end = src->width * (src->height - 1);
     pixel_rgb0_8* src_data = (pixel_rgb0_8*)src->data;
     pixel_rgb0_8* dest_data = (pixel_rgb0_8*)dest;
-    for (int line = 0; line < src->height * src->width; line += src->width) {
-        memcpy(&dest_data[line], &src_data[src_end - line], line_length);
+    if (src->is_upside_down) {
+        auto line_length = src->width * pixel_size(pixel_format);
+        auto src_end = src->width * (src->height - 1);
+        for (int line = 0; line < src->height * src->width; line += src->width) {
+            memcpy(&dest_data[line], &src_data[src_end - line], line_length);
+        }
+    } else {
+        memcpy(
+            dest_data, src_data, src->height * src->width * pixel_size(pixel_format));
     }
     return true;
 }
@@ -504,11 +511,20 @@ bool AVS_Video::copy_with_aspect_ratio(Frame* src,
     auto src_data = (pixel_rgb0_8*)src->data;
     auto dest_data = (pixel_rgb0_8*)dest;
     if (background == NULL) {
-        for (int32_t src_p = src_y_start * src->width - src_x_start,
-                     dest_p = dest_y_start * dest_w + dest_x_start;
-             src_p <= src_end && dest_p < dest_end;
-             src_p += src->width, dest_p += dest_w) {
-            memcpy(&dest_data[dest_p], &src_data[src_end - src_p], line_length);
+        if (src->is_upside_down) {
+            for (int32_t src_p = src_y_start * src->width - src_x_start,
+                         dest_p = dest_y_start * dest_w + dest_x_start;
+                 src_p <= src_end && dest_p < dest_end;
+                 src_p += src->width, dest_p += dest_w) {
+                memcpy(&dest_data[dest_p], &src_data[src_end - src_p], line_length);
+            }
+        } else {
+            for (int32_t src_p = src_y_start * src->width - src_x_start,
+                         dest_p = dest_y_start * dest_w + dest_x_start;
+                 src_p <= src_end && dest_p < dest_end;
+                 src_p += src->width, dest_p += dest_w) {
+                memcpy(&dest_data[dest_p], &src_data[src_p], line_length);
+            }
         }
     } else {
         auto background_color = (pixel_rgb0_8*)background;
@@ -519,18 +535,35 @@ bool AVS_Video::copy_with_aspect_ratio(Frame* src,
                 memcpy(&dest_data[dest_p + x], background_color, px_size);
             }
         }
-        for (src_p = src_y_start * src->width - src_x_start,
-            dest_p = dest_y_start * dest_w + dest_x_start;
-             src_p <= src_end && dest_p < dest_end;
-             src_p += src->width, dest_p += dest_w) {
-            int32_t x;
-            for (x = dest_p - dest_x_start; x < dest_p; x++) {
-                memcpy(&dest_data[x], background_color, px_size);
+        if (src->is_upside_down) {
+            for (src_p = src_y_start * src->width - src_x_start,
+                dest_p = dest_y_start * dest_w + dest_x_start;
+                 src_p <= src_end && dest_p < dest_end;
+                 src_p += src->width, dest_p += dest_w) {
+                int32_t x;
+                for (x = dest_p - dest_x_start; x < dest_p; x++) {
+                    memcpy(&dest_data[x], background_color, px_size);
+                }
+                memcpy(&dest_data[dest_p], &src_data[src_end - src_p], line_length);
+                auto dest_line_end = dest_p - dest_x_start + dest_w;
+                for (x += src_x_length; x < dest_line_end; x++) {
+                    memcpy(&dest_data[x], background_color, px_size);
+                }
             }
-            memcpy(&dest_data[dest_p], &src_data[src_end - src_p], line_length);
-            auto dest_line_end = dest_p - dest_x_start + dest_w;
-            for (x += src_x_length; x < dest_line_end; x++) {
-                memcpy(&dest_data[x], background_color, px_size);
+        } else {
+            for (src_p = src_y_start * src->width - src_x_start,
+                dest_p = dest_y_start * dest_w + dest_x_start;
+                 src_p <= src_end && dest_p < dest_end;
+                 src_p += src->width, dest_p += dest_w) {
+                int32_t x;
+                for (x = dest_p - dest_x_start; x < dest_p; x++) {
+                    memcpy(&dest_data[x], background_color, px_size);
+                }
+                memcpy(&dest_data[dest_p], &src_data[src_p], line_length);
+                auto dest_line_end = dest_p - dest_x_start + dest_w;
+                for (x += src_x_length; x < dest_line_end; x++) {
+                    memcpy(&dest_data[x], background_color, px_size);
+                }
             }
         }
         for (; dest_p < dest_end; dest_p += dest_w) {
@@ -596,8 +629,9 @@ void AVS_Video::print_info() {
 AVS_Video::Frame::Frame(AVS_Pixel_Format pixel_format,
                         int32_t width,
                         int32_t height,
-                        int64_t timestamp_ms)
-    : timestamp_ms(timestamp_ms) {
+                        int64_t timestamp_ms,
+                        bool is_upside_down)
+    : timestamp_ms(timestamp_ms), is_upside_down(is_upside_down) {
     if (width > 0 && height > 0) {
         this->pixel_format = pixel_format;
         this->width = width;
@@ -628,9 +662,10 @@ AVS_Video::Cache::~Cache() { lock_destroy(this->lock); }
 AVS_Video::Frame& AVS_Video::Cache::new_frame(AVS_Pixel_Format pixel_format,
                                               int32_t width,
                                               int32_t height,
-                                              int64_t timestamp) {
+                                              int64_t timestamp,
+                                              bool is_upside_down) {
     lock_lock(this->lock);
-    this->frames.emplace_back(pixel_format, width, height, timestamp);
+    this->frames.emplace_back(pixel_format, width, height, timestamp, is_upside_down);
     AVS_Video::Frame& out = this->frames.back();
     lock_unlock(this->lock);
     return out;

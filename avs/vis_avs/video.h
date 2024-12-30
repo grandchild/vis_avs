@@ -24,8 +24,8 @@
  * can set the required size and pixel format as well as the resampling mode used for
  * scaling.
  *
- * Note that the video frame image data is upside down. `copy()` and
- * `copy_with_aspect_ratio()` will take care of this for you.
+ * Note that the video frame image data may sometimes be upside down. `copy()` and
+ * `copy_with_aspect_ratio()` will take care of this for you, if it is the case.
  *
  * You can use the `cache_state()` method to inspect the current cache state.
  *
@@ -56,11 +56,13 @@ class AVS_Video {
          * `AVS_Video` instance.
          */
         int64_t timestamp_ms;
+        bool is_upside_down;
 
         Frame(AVS_Pixel_Format pixel_format,
               int32_t width,
               int32_t height,
-              int64_t timestamp_ms);
+              int64_t timestamp_ms,
+              bool is_upside_down);
         ~Frame();
     };
 
@@ -193,7 +195,8 @@ class AVS_Video {
         AVS_Video::Frame& new_frame(AVS_Pixel_Format pixel_format,
                                     int32_t width,
                                     int32_t height,
-                                    int64_t timestamp);
+                                    int64_t timestamp,
+                                    bool is_upside_down);
         AVS_Video::Frame* get_frame(int64_t index);
         void prune(int64_t head_index);
         void reset(int64_t head_index = 0);

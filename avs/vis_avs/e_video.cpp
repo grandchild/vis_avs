@@ -180,34 +180,24 @@ int E_Video::render(char[2][2][576],
     }
 
     p = fbout;
-    d = framebuffer + w * (h - 1);
+    d = framebuffer;
     if (this->config.blend_mode == VIDEO_BLEND_ADD
         || (this->config.blend_mode == VIDEO_BLEND_FIFTY_FIFTY_ONBEAT_ADD
             && (is_beat || persist_count > 0))) {
-        for (i = 0; i < h; i++) {
-            for (j = 0; j < w; j++) {
-                *d = BLEND(*p, *d);
-                d++;
-                p++;
-            }
-            d -= w * 2;
+        for (i = 0; i < h * w; i++) {
+            *d = BLEND(*p, *d);
+            d++;
+            p++;
         }
     } else if (this->config.blend_mode == VIDEO_BLEND_FIFTY_FIFTY
                || this->config.blend_mode == VIDEO_BLEND_FIFTY_FIFTY_ONBEAT_ADD) {
-        for (i = 0; i < h; i++) {
-            for (j = 0; j < w; j++) {
-                *d = BLEND_AVG(*p, *d);
-                d++;
-                p++;
-            }
-            d -= w * 2;
+        for (i = 0; i < h * w; i++) {
+            *d = BLEND_AVG(*p, *d);
+            d++;
+            p++;
         }
     } else {  // VIDEO_BLEND_REPLACE
-        for (i = 0; i < h; i++) {
-            memcpy(d, p, w * 4);
-            p += w;
-            d -= w;
-        }
+        memcpy(d, p, w * h * 4);
     }
     return 0;
 }
