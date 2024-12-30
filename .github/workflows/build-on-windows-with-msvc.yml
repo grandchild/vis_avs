@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: microsoft/setup-msbuild@v1.1.3
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Configure
         shell: cmd

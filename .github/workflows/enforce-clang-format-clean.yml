@@ -9,7 +9,7 @@ jobs:
     name: Enforce clang-format clean
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install clang-format
         run: |-
