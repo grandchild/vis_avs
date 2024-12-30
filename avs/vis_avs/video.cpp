@@ -98,11 +98,6 @@ bool AVS_Video::init_codec() {
     if (this->av->decoder != NULL) {
         this->close_codec();
     }
-    auto stream = this->av->demuxer->streams[this->video_stream];
-    this->length = stream->nb_frames;
-    this->cache.video_length = this->length;
-    this->duration_ms = ((double)1000.0) * stream->duration * stream->time_base.num
-                        / stream->time_base.den;
     this->av->codec = LibAV::find_decoder(
         this->av->demuxer->streams[this->video_stream]->codecpar->codec_id);
     if (this->av->codec == NULL) {
@@ -134,6 +129,28 @@ bool AVS_Video::init_codec() {
         this->error = "cannot allocate decoder frame";
         return false;
     }
+    auto stream = this->av->demuxer->streams[this->video_stream];
+    int64_t duration = 0;
+    if (stream->nb_frames > 0 && stream->duration > 0) {
+        this->length = stream->nb_frames;
+        duration = stream->duration;
+    } else {
+        // The video container header doesn't record frame count and/or duration :(
+        // Parse video and count frames & accumulate duration.
+        // Takes up to ~1 second per hour of video.
+        log_info(
+            "video frame count and/or duration not in metadata, counting manually");
+        while (LibAV::read_frame(this->av->demuxer, this->av->packet) >= 0) {
+            if (this->av->packet->stream_index == this->video_stream) {
+                this->length++;
+                duration += this->av->packet->duration;
+            }
+            LibAV::packet_unref(this->av->packet);
+        }
+    }
+    this->cache.video_length = this->length;
+    this->duration_ms =
+        ((double)1000.0) * duration * stream->time_base.num / stream->time_base.den;
     return true;
 }
 
