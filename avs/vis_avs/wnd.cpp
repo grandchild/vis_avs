@@ -31,8 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "wnd.h"
 
-#include "r_defs.h"
-
 #include "avs_eelif.h"
 #include "c__defs.h"
 #include "cfgwin.h"

@@ -52,3 +52,5 @@ extern int cfg_render_prio;
 
 extern char config_pres_subdir[MAX_PATH];
 extern HWND g_hwndDlg;
+
+extern int g_reset_vars_on_recompile;
