@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "c_transition.h"
 
+#include "blend.h"
 #include "constants.h"
 #include "render.h"
 
@@ -320,9 +321,9 @@ int Transition::render(char visdata[2][2][576],
                                h)
         & 1;
 
-    int* p = this->framebuffers_secondary[this->fb_select_secondary];
-    int* d = this->framebuffers_primary[this->fb_select_primary];
-    int* o = framebuffer;
+    auto p = (uint32_t*)this->framebuffers_secondary[this->fb_select_secondary];
+    auto d = (uint32_t*)this->framebuffers_primary[this->fb_select_primary];
+    auto dest = (uint32_t*)framebuffer;
 
     int64_t ttime = this->config.time_ms;
     if (ttime < 100) {
@@ -342,7 +343,7 @@ int Transition::render(char visdata[2][2][576],
     // sintrans does a smooth sine curve from 0 to 1
     float sintrans = (float)(sin(((float)n / 255) * PI - PI / 2) / 2 + 0.5);
     switch (this->current_effect) {
-        case TRANSITION_CROSS_DISSOLVE: mmx_adjblend_block(o, d, p, w * h, n); break;
+        case TRANSITION_CROSS_DISSOLVE: blend_adjustable(d, p, dest, n, w, h); break;
         case TRANSITION_PUSH_LEFT_RIGHT: {
             int i = (int)(sintrans * (float)w);
             int j;
@@ -435,7 +436,7 @@ int Transition::render(char visdata[2][2][576],
                     int xp = 0;
                     int dxp = ((w / 2) << 16) / xl;
                     int* ot = framebuffer + (j * w);
-                    int* it = d + (j * w);
+                    uint32_t* it = d + (j * w);
                     while (xl--) {
                         *ot++ = it[xp >> 16];
                         xp += dxp;
@@ -447,7 +448,7 @@ int Transition::render(char visdata[2][2][576],
                     int xp = 0;
                     int dxp = (w << 16) / xl;
                     int* ot = framebuffer + (j * w) + i;
-                    int* it = p + (j * w);
+                    uint32_t* it = p + (j * w);
                     while (xl--) {
                         *ot++ = it[xp >> 16];
                         xp += dxp;
@@ -458,7 +459,7 @@ int Transition::render(char visdata[2][2][576],
                     int xp = 0;
                     int dxp = ((w / 2) << 16) / xl;
                     int* ot = framebuffer + (j * w) + w - i;
-                    int* it = d + (j * w) + w / 2;
+                    uint32_t* it = d + (j * w) + w / 2;
                     while (xl--) {
                         *ot++ = it[xp >> 16];
                         xp += dxp;
@@ -515,8 +516,8 @@ int Transition::render(char visdata[2][2][576],
                     t = 0;
                     int t2 = 0;
                     int* of = framebuffer + j * w;
-                    int* p2 = (dir ? p : d) + j * w;
-                    int* d2 = (dir ? d : p) + j * w;
+                    uint32_t* p2 = (dir ? p : d) + j * w;
+                    uint32_t* d2 = (dir ? d : p) + j * w;
                     while (x--) {
                         if (t2++ == i) {
                             of[0] = p2[0];

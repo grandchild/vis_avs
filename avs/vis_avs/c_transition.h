@@ -31,8 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 
-#include "r_defs.h"
-
 #include "effect.h"
 #include "effect_info.h"
 #include "undo.h"
