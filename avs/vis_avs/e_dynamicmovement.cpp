@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_dynamicmovement.h"
 
+#include "blend.h"
 #include "instance.h"
 
 #include <math.h>
@@ -288,9 +289,9 @@ void E_DynamicMovement::smp_render(int this_thread,
     int* interptab =
         this->tab + this->XRES * this->YRES * 3 + this_thread * (this->XRES * 6 + 6);
     int* rdtab = this->tab;
-    unsigned int* in = (unsigned int*)fbin;
-    unsigned int* blendin = (unsigned int*)framebuffer;
-    unsigned int* out = (unsigned int*)fbout;
+    auto in = (uint32_t*)fbin;
+    auto blendin = (uint32_t*)framebuffer;
+    auto out = (uint32_t*)fbout;
     int yseek = 1;
     int xc_dpos, yc_pos = 0, yc_dpos;
     xc_dpos = (w << 16) / (this->XRES - 1);
@@ -439,33 +440,35 @@ void E_DynamicMovement::smp_render(int this_thread,
 
 #endif
 
-#define LOOPS(DO)                                                               \
-    if (this->blend && this->bilinear)                                          \
-        DO(CHECK* out++ = BLEND_ADJ(                                            \
-               BLEND4_16(in + (xp >> 16) + (this->w_mul[yp >> 16]), w, xp, yp), \
-               *blendin++,                                                      \
-               ap >> 16);                                                       \
-           ap += d_a)                                                           \
-    else if (this->blend)                                                       \
-        DO(CHECK* out++ = BLEND_ADJ(                                            \
-               in[(xp >> 16) + (this->w_mul[yp >> 16])], *blendin++, ap >> 16); \
-           ap += d_a)                                                           \
-    else if (this->bilinear)                                                    \
-        DO(CHECK* out++ =                                                       \
-               BLEND4_16(in + (xp >> 16) + (this->w_mul[yp >> 16]), w, xp, yp)) \
-    else                                                                        \
+#define LOOPS(DO)                                                                      \
+    if (this->blend && this->bilinear)                                                 \
+        DO(CHECK uint32_t src_bilinear = blend_bilinear_2x2(                           \
+               in + (xp >> 16) + (this->w_mul[yp >> 16]), w, xp, yp);                  \
+           blend_adjustable_1px(&src_bilinear, blendin++, out++, ap >> 16);            \
+           ap += d_a)                                                                  \
+    else if (this->blend)                                                              \
+        DO(CHECK blend_adjustable_1px(                                                 \
+               &in[(xp >> 16) + (this->w_mul[yp >> 16])], blendin++, out++, ap >> 16); \
+           ap += d_a)                                                                  \
+    else if (this->bilinear)                                                           \
+        DO(CHECK* out++ = blend_bilinear_2x2(                                          \
+               in + (xp >> 16) + (this->w_mul[yp >> 16]), w, xp, yp))                  \
+    else                                                                               \
         DO(CHECK* out++ = in[(xp >> 16) + (this->w_mul[yp >> 16])])
 
                             if (this->alpha_only) {
                                 if (fbin != framebuffer) {
                                     while (seek--) {
-                                        *blendin = BLEND_ADJ(*in++, *blendin, ap >> 16);
+                                        blend_adjustable_1px(
+                                            in++, blendin, blendin, ap >> 16);
                                         ap += d_a;
                                         blendin++;
                                     }
                                 } else {
+                                    uint32_t zero = 0;
                                     while (seek--) {
-                                        *blendin = BLEND_ADJ(0, *blendin, ap >> 16);
+                                        blend_adjustable_1px(
+                                            &zero, blendin, blendin, ap >> 16);
                                         ap += d_a;
                                         blendin++;
                                     }
