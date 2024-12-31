@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_interleave.h"
 
-#include "r_defs.h"
+#include "blend.h"
 
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
@@ -96,7 +96,8 @@ int E_Interleave::render(char[2][2][576],
     bool fill_x = true;
     bool fill_y = true;
 
-    int* cur_px = framebuffer;
+    auto dest = (uint32_t*)framebuffer;
+    uint32_t src = this->config.color & 0x00ffffff;
     if (!stride_y) {
         fill_y = false;
     }
@@ -117,28 +118,12 @@ int E_Interleave::render(char[2][2][576],
 
             if (fill_y) {
                 switch (this->config.blend_mode) {
-                    case BLEND_SIMPLE_ADDITIVE: {
-                        while (x--) {
-                            *cur_px = BLEND(*cur_px, this->config.color);
-                            cur_px++;
-                        }
-                        break;
-                    }
-                    case BLEND_SIMPLE_5050: {
-                        while (x--) {
-                            *cur_px = BLEND_AVG(*cur_px, this->config.color);
-                            cur_px++;
-                        }
-                        break;
-                    }
+                    case BLEND_SIMPLE_ADDITIVE: blend_add_fill(src, dest, w); break;
+                    case BLEND_SIMPLE_5050: blend_5050_fill(src, dest, w); break;
                     default:
-                    case BLEND_SIMPLE_REPLACE: {
-                        while (x--) {
-                            *cur_px++ = (int32_t)this->config.color;
-                        }
-                        break;
-                    }
+                    case BLEND_SIMPLE_REPLACE: blend_replace_fill(src, dest, w); break;
                 }
+                dest += w;
             } else if (stride_x) {
                 switch (this->config.blend_mode) {
                     case BLEND_SIMPLE_ADDITIVE: {
@@ -148,13 +133,9 @@ int E_Interleave::render(char[2][2][576],
                             edge_correction = 0;
                             x -= cur_stride_x;
                             if (fill_x) {
-                                while (cur_stride_x--) {
-                                    *cur_px = BLEND(*cur_px, this->config.color);
-                                    cur_px++;
-                                }
-                            } else {
-                                cur_px += cur_stride_x;
+                                blend_add_fill(src, dest, cur_stride_x);
                             }
+                            dest += cur_stride_x;
                             fill_x = !fill_x;
                         }
                         break;
@@ -166,13 +147,9 @@ int E_Interleave::render(char[2][2][576],
                             edge_correction = 0;
                             x -= cur_stride_x;
                             if (fill_x) {
-                                while (cur_stride_x--) {
-                                    *cur_px = BLEND_AVG(*cur_px, this->config.color);
-                                    cur_px++;
-                                }
-                            } else {
-                                cur_px += cur_stride_x;
+                                blend_5050_fill(src, dest, cur_stride_x);
                             }
+                            dest += cur_stride_x;
                             fill_x = !fill_x;
                         }
                         break;
@@ -185,19 +162,16 @@ int E_Interleave::render(char[2][2][576],
                             edge_correction = 0;
                             x -= cur_stride_x;
                             if (fill_x) {
-                                while (cur_stride_x--) {
-                                    *cur_px++ = (int32_t)this->config.color;
-                                }
-                            } else {
-                                cur_px += cur_stride_x;
+                                blend_replace_fill(src, dest, cur_stride_x);
                             }
+                            dest += cur_stride_x;
                             fill_x = !fill_x;
                         }
                         break;
                     }
                 }
             } else {
-                cur_px += w;
+                dest += w;
             }
         }
     }
