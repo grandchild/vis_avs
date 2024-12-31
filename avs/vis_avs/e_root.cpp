@@ -168,8 +168,9 @@ int E_Root::save_legacy(unsigned char* data) {
             if (legacy_effect_id == -1) {
                 PUT_INT(DLLRENDERBASE);
                 pos += 4;
-                char ape_id_buf[LEGACY_APE_ID_LENGTH];
-                memset(ape_id_buf, 0, LEGACY_APE_ID_LENGTH);
+                // +1 so strncpy below doesn't complain
+                char ape_id_buf[LEGACY_APE_ID_LENGTH + 1];
+                memset(ape_id_buf, 0, LEGACY_APE_ID_LENGTH + 1);
                 strncpy(ape_id_buf, effect->get_legacy_ape_id(), LEGACY_APE_ID_LENGTH);
                 memcpy(data + pos, ape_id_buf, LEGACY_APE_ID_LENGTH);
                 pos += LEGACY_APE_ID_LENGTH;
