@@ -7,7 +7,7 @@
 #endif
 
 std::string uuid4() {
-    auto uuid_str = (char*)malloc(37);
+    char uuid_str[37];
     uuid_str[36] = '\0';
 #ifdef _WIN32
     UUID uuid;
@@ -18,7 +18,5 @@ std::string uuid4() {
     uuid_generate(uuid);
     uuid_unparse_lower(uuid, uuid_str);
 #endif
-    auto retval = std::string(uuid_str);
-    free(uuid_str);
-    return retval;
+    return uuid_str;
 }
