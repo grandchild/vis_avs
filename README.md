@@ -219,8 +219,8 @@ comment, possibly using a secondary flag to categorize the suggestion:
 Thanks to _Warrior of the Light_ for assembling the source from various edits and patch
 versions that floated around soon after the code publication.
 
-Thanks to [Jan](https://github.com/idleberg) for maintaining [Visbot]
-(https://visbot.net) & invaluable feedback and brainstorming over the years.
+Thanks to [Jan](https://github.com/idleberg) for maintaining [Visbot
+](https://visbot.net) & invaluable feedback and brainstorming over the years.
 
 Thanks to [Sebastian](https://github.com/hartwork) for many hours of eartime and code
 minutiae discussions and the CI script.
