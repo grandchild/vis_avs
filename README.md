@@ -19,7 +19,15 @@ integrated as builtin effects instead.
 
 ### Current Status
 
-* 🎉 Builds with MinGW-w64 GCC into a running `vis_avs.dll`, loadable with Winamp.
+* 🪓 Split into a new `libavs` and the Winamp plugin frontend. Check out the APIs in the
+  libavs [header](avs/vis_avs/avs.h) [files](avs/vis_avs/avs_editor.h).
+* 🎉 Builds for Windows both with MSVC & MinGW-w64 GCC into a running `vis_avs.dll`,
+  loadable with Winamp, as well as `libavs.dll`.
+* 🐧 Builds for Linux as `libavs.so`, with pipewire audio input. EEL functions don't
+  work yet, but basic EEL code does.  A (very) basic cli frontend and a more interesting
+  WIP Rust frontend are also available, both for rendering only, not editing.
+* 💾 New JSON file format, which is more accessible for direct editing and inspection.
+  The old binary format is still fully supported.
 * 💃 Runs most presets (unless they use rare APEs).
 * ❤️ Sources of original effects integrated as builtin-APEs, thanks to donations to free
   software by their authors:
@@ -46,11 +54,9 @@ integrated as builtin effects instead.
 
 ### The Future
 
-* 🪓 Separate Windows UI code from the renderer
-* 📟 Standalone port (probably SDL2-based)
-* 🐧 Linux port
+* 🧮 64-bit support
+* 📟 Standalone port
 * ✅ Automated output testing
-* 💾 JSON file format support
 
 These are near-future goals, and most are tracked on the
 [issues board](https://github.com/users/grandchild/projects/1). For further development
