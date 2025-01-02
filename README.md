@@ -65,11 +65,14 @@ of AVS itself there are _many_ ideas for improvement and known bugs. Have a look
 new.
 
 
-## Building & Running on Linux
+## Cross-Compiling & Running on Linux & Wine
 
 ### Build
 
 First, install a 32bit MingW-w64 GCC (with C++ support) and and a cross-compiler CMake.
+
+If you want Video support through FFmpeg, you'll need to install 32bit FFmpeg packages
+too. This is highly variable depending on your distro, and not described below.
 
 Choose your Linux distro, and run the respective commands to install the build
 dependencies and cross-compile AVS:
@@ -127,8 +130,13 @@ cp vis_avs.dll /my/path/to/Winamp/Plugins/
 
 # Not all of these might exist on your system, that's okay, you can ignore errors for
 # some of the files.
-# You only need to copy these files once, they don't change.
-cp /usr/i686-w64-mingw32/bin/lib{gcc_s_dw2-1,ssp-0,stdc++-6,winpthread-1}.dll /my/path/to/Winamp/
+# You only need to copy these files once in a while, they don't change that often.
+cp \
+  /usr/i686-w64-mingw32/bin/lib{gcc_s_dw2-1,ssp-0,stdc++-6,winpthread-1}.dll \
+  /my/path/to/Winamp/
+
+# If you built with FFmpeg support, you'll need to copy the FFmpeg DLLs too. If you
+# don't, AVS will still work, but again without video support.
 
 # Run Winamp
 wine /my/path/to/Winamp/winamp.exe
@@ -147,7 +155,7 @@ rustup target add i686-unknown-linux-gnu
 
 # Compile
 cmake -B build_linux --toolchain CMake-Linux32cross-toolchain.txt
-cmake --build build_linux --parallel 15
+cmake --build build_linux --parallel $(nproc)
 ```
 
 Then run either the C version:
@@ -159,7 +167,7 @@ build_linux/avs-cli
 
 or the Rust version:
 ```sh
-RUSTFLAGS="-L build_linux" LD_LIBRARY_PATH=build_linux build_linux/avs video.avs-preset
+RUSTFLAGS="-L build_linux" LD_LIBRARY_PATH=build_linux build_linux/avs /path/to/some/preset.avs
 # opens a window if given a preset file as first parameter.
 ```
 
