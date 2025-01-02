@@ -29,8 +29,9 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "r_defs.h"
+#include "g__defs.h"
 
+#include "c__defs.h"
 #include "resource.h"
 
 #include <windows.h>
@@ -46,10 +47,12 @@ void loadComboBox(HWND dlg, char* ext, char* selectedName) {
     HANDLE ff;
     WIN32_FIND_DATA fd;
 
-    wsprintf(path, "%s\\%s", g_path, ext);
+    wsprintf(path, "%s/%s", g_path, ext);
 
     ff = FindFirstFile(path, &fd);
-    if (ff == INVALID_HANDLE_VALUE) return;
+    if (ff == INVALID_HANDLE_VALUE) {
+        return;
+    }
 
     do {
         SendMessage(dlg, CB_ADDSTRING, 0, (LPARAM)(fd.cFileName));
@@ -57,7 +60,9 @@ void loadComboBox(HWND dlg, char* ext, char* selectedName) {
     FindClose(ff);
 
     a = SendMessage(dlg, CB_FINDSTRINGEXACT, 0, (LPARAM)(selectedName));
-    if (a != CB_ERR) SendMessage(dlg, CB_SETCURSEL, (WPARAM)a, 0);
+    if (a != CB_ERR) {
+        SendMessage(dlg, CB_SETCURSEL, (WPARAM)a, 0);
+    }
 }
 
 void GR_SelectColor(HWND hwnd, int* a) {
@@ -109,7 +114,7 @@ static void _dosetsel(HWND hwndDlg) {
 
     m_help_lastpage = sel;
 
-    if (sel == 0)
+    if (sel == 0) {
         text =
             "Many AVS effects allow you to write simple expressions to control\r\n"
             "visualization. Here is a brief summary of how to write AVS code.\r\n"
@@ -143,7 +148,7 @@ static void _dosetsel(HWND hwndDlg) {
             "\r\n"
             "It is worth noting that extra whitespace (spaces, newlines) is\r\n"
             "ignored, so if you need to space things out for clarity, you can.\r\n";
-    else if (sel == 1)
+    } else if (sel == 1) {
         text =
             "The following operators are available:\r\n"
             "=\r\n"
@@ -178,7 +183,7 @@ static void _dosetsel(HWND hwndDlg) {
             "  converts two values to integer, returns bitwise AND of both values\r\n"
             "  example:  var=var2&31;\r\n"
             "\r\n";
-    else if (sel == 2)
+    } else if (sel == 2) {
         text =
             "Functions available from code:\r\n"
             "abs(value)\r\n"
@@ -336,7 +341,7 @@ static void _dosetsel(HWND hwndDlg) {
             "\r\n"
 #endif
             ;
-    else if (sel == 3)
+    } else if (sel == 3) {
         text =
             "Constants\r\n"
             "   '$PI' can be used in place of '3.14159'\r\n"
@@ -346,8 +351,9 @@ static void _dosetsel(HWND hwndDlg) {
             "     (i.e. '5' or '5.0' or '5.00001')\r\n"
 
             ;
-    else if (sel == 4 && m_localtext)
+    } else if (sel == 4 && m_localtext) {
         text = m_localtext;
+    }
 
     SetDlgItemText(hwndDlg, IDC_EDIT1, text);
 }
@@ -375,33 +381,149 @@ static BOOL CALLBACK evalHelpDlgProc(HWND hwndDlg,
                 item.pszText = (char*)lParam;
                 m_localtext = item.pszText + strlen(item.pszText) + 1;
                 TabCtrl_InsertItem(tabwnd, 4, &item);
-            } else if (m_help_lastpage > 3)
+            } else if (m_help_lastpage > 3) {
                 m_help_lastpage = 0;
+            }
 
             TabCtrl_SetCurSel(tabwnd, m_help_lastpage);
             _dosetsel(hwndDlg);
         }
             return 0;
         case WM_COMMAND:
-            if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+            if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL) {
                 EndDialog(hwndDlg, 1);
+            }
             return 0;
         case WM_NOTIFY: {
             LPNMHDR p = (LPNMHDR)lParam;
-            if (p->idFrom == IDC_TAB1 && p->code == TCN_SELCHANGE) _dosetsel(hwndDlg);
+            if (p->idFrom == IDC_TAB1 && p->code == TCN_SELCHANGE) {
+                _dosetsel(hwndDlg);
+            }
         }
             return 0;
     }
     return 0;
 }
 
-void compilerfunctionlist(HWND hwndDlg, char* localinfo) {
+void compilerfunctionlist(HWND hwndDlg, const char* title, const char* text) {
     extern HINSTANCE g_hInstance;
+    std::string info(title);
+    info += '\0';
+    info += text;
     DialogBoxParam(g_hInstance,
                    MAKEINTRESOURCE(IDD_EVAL_HELP),
                    hwndDlg,
                    evalHelpDlgProc,
-                   (LONG)localinfo);
+                   (LONG)info.c_str());
+}
+
+void init_ranged_slider(const Parameter& param,
+                        int64_t value,
+                        HWND hwndDlg,
+                        uint32_t control_handle,
+                        uint32_t tick_freq /*default: 0*/) {
+    SendDlgItemMessage(hwndDlg, control_handle, TBM_SETRANGEMIN, 0, param.int_min);
+    SendDlgItemMessage(hwndDlg, control_handle, TBM_SETRANGEMAX, 0, param.int_max);
+    SendDlgItemMessage(hwndDlg, control_handle, TBM_SETPOS, 1, value);
+    if (tick_freq) {
+        SendDlgItemMessage(hwndDlg, control_handle, TBM_SETTICFREQ, tick_freq, 0);
+    }
+}
+
+void init_ranged_slider_float(const Parameter& param,
+                              double value,
+                              double factor,
+                              HWND hwndDlg,
+                              uint32_t control_handle,
+                              double tick_freq /*default: 0*/) {
+    int64_t min_val = (int64_t)(param.float_min * factor);
+    int64_t max_val = (int64_t)(param.float_max * factor);
+    int64_t value_i = (int64_t)(value * factor);
+    SendDlgItemMessage(hwndDlg, control_handle, TBM_SETRANGEMIN, 0, min_val);
+    SendDlgItemMessage(hwndDlg, control_handle, TBM_SETRANGEMAX, 0, max_val);
+    SendDlgItemMessage(hwndDlg, control_handle, TBM_SETPOS, 1, value_i);
+    if (tick_freq) {
+        int64_t tick_freq_i = (int64_t)(tick_freq * factor);
+        SendDlgItemMessage(hwndDlg, control_handle, TBM_SETTICFREQ, tick_freq_i, 0);
+    }
+}
+
+void init_select(const Parameter& param,
+                 int64_t value,
+                 HWND hwndDlg,
+                 uint32_t control_handle) {
+    int64_t options_length;
+    const char* const* options = param.get_options(&options_length);
+    for (int64_t i = 0; i < options_length; ++i) {
+        SendDlgItemMessage(
+            hwndDlg, control_handle, CB_ADDSTRING, 0, (LPARAM)options[i]);
+    }
+    if (value >= 0 && value < options_length) {
+        SendDlgItemMessage(hwndDlg, control_handle, CB_SETCURSEL, value, 0);
+    }
+}
+
+void init_select_radio(const Parameter& param,
+                       int64_t value,
+                       HWND hwndDlg,
+                       uint32_t* control_handles,
+                       size_t num_controls) {
+    int64_t options_length;
+    param.get_options(&options_length);
+    if (num_controls < options_length) {
+        printf(
+            "Warning: %lld less control(s) than options in '%s',"
+            " some options unreachable.\n",
+            options_length - num_controls,
+            param.name);
+    }
+    if (num_controls > options_length) {
+        printf(
+            "Warning: %lld more control(s) than options in '%s',"
+            " some options invalid.\n",
+            options_length - num_controls,
+            param.name);
+    }
+    bool found = false;
+    for (int64_t i = 0; i < options_length; ++i) {
+        CheckDlgButton(hwndDlg, control_handles[i], value == i);
+        if (value == i) {
+            found = true;
+        }
+    }
+    if (!found) {
+        printf("Radio option %lld for parameter '%s' not found.?\n", value, param.name);
+    }
+}
+
+void init_resource(const Parameter& param,
+                   const char* value,
+                   HWND hwndDlg,
+                   int32_t control_handle,
+                   size_t max_str_len) {
+    int64_t options_length;
+    const char* const* options = param.get_options(&options_length);
+    bool resource_available = false;
+    for (int64_t i = 0; i < options_length; ++i) {
+        SendDlgItemMessage(
+            hwndDlg, control_handle, CB_ADDSTRING, 0, (LPARAM)options[i]);
+        if (strncmp(value, options[i], max_str_len) == 0) {
+            resource_available = true;
+            SendDlgItemMessage(hwndDlg, control_handle, CB_SETCURSEL, i, 0);
+        }
+    }
+    if (!resource_available && strnlen(value, max_str_len) > 0) {
+        std::string value_plus_missing(value);
+        value_plus_missing += "  [missing!]";
+        auto position = SendDlgItemMessage(hwndDlg,
+                                           control_handle,
+                                           CB_ADDSTRING,
+                                           0,
+                                           (LPARAM)value_plus_missing.c_str());
+        if (position != CB_ERR && position != CB_ERRSPACE) {
+            SendDlgItemMessage(hwndDlg, control_handle, CB_SETCURSEL, position, 0);
+        }
+    }
 }
 
 #if 0  // syntax highlighting

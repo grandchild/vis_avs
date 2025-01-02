@@ -32,12 +32,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _R_DEFS_H_
 #define _R_DEFS_H_
 
-#include "c__base.h"
-#include "c__defs.h"
+#include "matrix.h"
 
 #include "../platform.h"
 
 #include <string.h>  // Many if not all components need strcpy or memcpy.
+
+#define M_PI 3.14159265358979323846
+#define NBUF 8
 
 // 64k is the maximum component size in AVS
 #define MAX_CODE_LEN         (1 << 16)
@@ -46,43 +48,33 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Same as MAX_PATH now, but while MAX_PATH could be anything, LEGACY_SAVE_PATH_LEN is
 // fixed as part of the legacy preset file format.
 #define LEGACY_SAVE_PATH_LEN 260
+// Maximum number of threads
+#define MAX_SMP_THREADS      8
+// Length of the APE ID string which includes trailing null-bytes if any
+#define LEGACY_APE_ID_LENGTH 32
 
 #ifndef RGB
-#define RGB(r, g, b) ((((r)&0xff) << 16) | (((g)&0xff) << 8) | ((b)&0xff))
+#define RGB(r, g, b) ((((r) & 0xff) << 16) | (((g) & 0xff) << 8) | ((b) & 0xff))
 #endif
 
 // defined in main.cpp, render.cpp
 extern unsigned char g_blendtable[256][256];
 
-extern int g_reset_vars_on_recompile;
-
 // use this function to get a global buffer, and the last flag says whether or not to
 // allocate it if it's not valid...
 void* getGlobalBuffer(int w, int h, int n, int do_alloc);
 
-// matrix.cpp
-void matrixRotate(float matrix[], char m, float Deg);
-void matrixTranslate(float m[], float x, float y, float z);
-void matrixMultiply(float* dest, float src[]);
-void matrixApply(float* m,
-                 float x,
-                 float y,
-                 float z,
-                 float* outx,
-                 float* outy,
-                 float* outz);
-
-// linedraw.cpp
+/**
+ * struct line_blend_mode {
+ *     uint8_t blendmode;         // 0 - 9
+ *     uint8_t adjustable_value;  // 0 - 255
+ *     uint8_t linesize;          // 0 - 255
+ *     // (_special & 0x80) != 0 ? pre-render call on transition, skip rendering.
+ *     // Within SetRenderMode, bit 32 is used to signal effect disabled (if set!)
+ *     uint8_t _special;
+ * }
+ */
 extern int g_line_blend_mode;
-void line(int* fb,
-          int x1,
-          int y1,
-          int x2,
-          int y2,
-          int width,
-          int height,
-          int color,
-          int lw);
 
 // inlines
 static unsigned int __inline BLEND(unsigned int a, unsigned int b) {
@@ -256,41 +248,23 @@ static unsigned int __inline BLEND_MUL(unsigned int a, unsigned int b) {
 
 static __inline void BLEND_LINE(int* fb, int color) {
     switch (g_line_blend_mode & 0xff) {
-        case 1:
-            *fb = BLEND(*fb, color);
-            break;
-        case 2:
-            *fb = BLEND_MAX(*fb, color);
-            break;
-        case 3:
-            *fb = BLEND_AVG(*fb, color);
-            break;
-        case 4:
-            *fb = BLEND_SUB(*fb, color);
-            break;
-        case 5:
-            *fb = BLEND_SUB(color, *fb);
-            break;
-        case 6:
-            *fb = BLEND_MUL(*fb, color);
-            break;
+        case 1: *fb = BLEND(*fb, color); break;
+        case 2: *fb = BLEND_MAX(*fb, color); break;
+        case 3: *fb = BLEND_AVG(*fb, color); break;
+        case 4: *fb = BLEND_SUB(*fb, color); break;
+        case 5: *fb = BLEND_SUB(color, *fb); break;
+        case 6: *fb = BLEND_MUL(*fb, color); break;
         case 7:
             *fb = BLEND_ADJ_NOMMX(*fb, color, (g_line_blend_mode >> 8) & 0xff);
             break;
-        case 8:
-            *fb = *fb ^ color;
-            break;
-        case 9:
-            *fb = BLEND_MIN(*fb, color);
-            break;
-        default:
-            *fb = color;
-            break;
+        case 8: *fb = *fb ^ color; break;
+        case 9: *fb = BLEND_MIN(*fb, color); break;
+        default: *fb = color; break;
     }
 }
-extern unsigned int const mmx_blend4_revn[2];
+extern uint64_t const mmx_blend4_revn;
 extern int const mmx_blend4_zero;
-extern int const mmx_blendadj_mask[2];
+extern uint64_t const mmx_blendadj_mask;
 // NOTE. WHEN USING THIS FUNCTION, BE SURE TO DO 'if (g_mmx_available) __asm emms;'
 // before calling any fpu code, or before returning.
 
@@ -335,11 +309,11 @@ static unsigned int __inline BLEND_ADJ(unsigned int a, unsigned int b, int v) {
         "packuswb  %%mm3, %%mm3\n\t"
         "movd      %%mm1, [%[b]]\n\t"
         "punpcklwd %%mm3, %%mm3\n\t"
-        "movq      %%mm4, [%[mmx_blend4_revn]]\n\t"
+        "movq      %%mm4, %[mmx_blend4_revn]\n\t"
         "punpckldq %%mm3, %%mm3\n\t"
-        "punpcklbw %%mm0, [%[mmx_blend4_zero]]\n\t"
-        "pand      %%mm3, [%[mmx_blendadj_mask]]\n\t"
-        "punpcklbw %%mm1, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm0, %[mmx_blend4_zero]\n\t"
+        "pand      %%mm3, %[mmx_blendadj_mask]\n\t"
+        "punpcklbw %%mm1, %[mmx_blend4_zero]\n\t"
         "psubw     %%mm4, %%mm3\n\t"
         "pmullw    %%mm0, %%mm3      \n\t"
         "pmullw    %%mm1, %%mm4\n\t"
@@ -421,30 +395,30 @@ static __inline unsigned int BLEND4(unsigned int* p1, unsigned int w, int xp, in
     pmullw mm3, mm6
 
     paddw mm0, mm1
-          // stall (mm0)
+         // stall (mm0)
 
     psrlw mm0, 8
-      // stall (waiting for mm3/mm2)
+     // stall (waiting for mm3/mm2)
 
     paddw mm2, mm3
     pmullw mm0, mm5
 
     psrlw mm2, 8
-      // stall (mm2)
+     // stall (mm2)
 
     pmullw mm2, mm7
-          // stall
+         // stall
 
-          // stall (mm2)
+         // stall (mm2)
 
     paddw mm0, mm2
-          // stall
+         // stall
 
     psrlw mm0, 8
-      // stall
+     // stall
 
     packuswb mm0, mm0
-          // stall
+         // stall
 
     movd eax, mm0
     }
@@ -464,14 +438,14 @@ static __inline unsigned int BLEND4(unsigned int* p1, unsigned int w, int xp, in
         "movd      %%mm1, [%%eax + 4]\n\t"
         "punpckldq %%mm7,%%mm7\n\t"
         "movd      %%mm2, [%%eax + %%esi * 4]\n\t"
-        "punpcklbw %%mm0, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm0, %[mmx_blend4_zero]\n\t"
         "movd      %%mm3, [%%eax + %%esi * 4 + 4]\n\t"
         "psubw     %%mm4, %%mm6\n\t"
-        "punpcklbw %%mm1, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm1, %[mmx_blend4_zero]\n\t"
         "pmullw    %%mm0, %%mm4\n\t"
-        "punpcklbw %%mm2, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm2, %[mmx_blend4_zero]\n\t"
         "pmullw    %%mm1, %%mm6\n\t"
-        "punpcklbw %%mm3, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm3, %[mmx_blend4_zero]\n\t"
         "psubw     %%mm5, %%mm7\n\t"
         "pmullw    %%mm2, %%mm4\n\t"
         "pmullw    %%mm3, %%mm6\n\t"
@@ -567,30 +541,30 @@ static __inline unsigned int BLEND4_16(unsigned int* p1,
     pmullw mm3, mm6
 
     paddw mm0, mm1
-          // stall (mm0)
+         // stall (mm0)
 
     psrlw mm0, 8
-      // stall (waiting for mm3/mm2)
+     // stall (waiting for mm3/mm2)
 
     paddw mm2, mm3
     pmullw mm0, mm5
 
     psrlw mm2, 8
-      // stall (mm2)
+     // stall (mm2)
 
     pmullw mm2, mm7
-          // stall
+         // stall
 
-          // stall (mm2)
+         // stall (mm2)
 
     paddw mm0, mm2
-          // stall
+         // stall
 
     psrlw mm0, 8
-      // stall
+     // stall
 
     packuswb mm0, mm0
-          // stall
+         // stall
 
     movd eax, mm0
     }
@@ -613,13 +587,13 @@ static __inline unsigned int BLEND4_16(unsigned int* p1,
         "punpckldq %%mm6,%%mm6\n\t"
         "movd      %%mm3, [%%eax + %%esi * 4 + 4]\n\t"
         "punpckldq %%mm7,%%mm7\n\t"
-        "punpcklbw %%mm0, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm0, %[mmx_blend4_zero]\n\t"
         "psubw     %%mm4, %%mm6\n\t"
-        "punpcklbw %%mm1, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm1, %[mmx_blend4_zero]\n\t"
         "pmullw    %%mm0, %%mm4\n\t"
-        "punpcklbw %%mm2, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm2, %[mmx_blend4_zero]\n\t"
         "pmullw    %%mm1, %%mm6\n\t"
-        "punpcklbw %%mm3, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm3, %[mmx_blend4_zero]\n\t"
         "psubw     %%mm5, %%mm7\n\t"
         "pmullw    %%mm2, %%mm4\n\t"
         "pmullw    %%mm3, %%mm6\n\t"
@@ -848,12 +822,12 @@ mmx_mulblend_loop:
         "movd      %%mm0, [%%eax]\n\t"
         "movd      %%mm1, [%%edi]\n\t"
         "movd      %%mm2, [%%eax + 4]\n\t"
-        "punpcklbw %%mm0, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm0, %[mmx_blend4_zero]\n\t"
         "movd      %%mm3, [%%edi+4]\n\t"
-        "punpcklbw %%mm1, [%[mmx_blend4_zero]]\n\t"
-        "punpcklbw %%mm2, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm1, %[mmx_blend4_zero]\n\t"
+        "punpcklbw %%mm2, %[mmx_blend4_zero]\n\t"
         "pmullw    %%mm0, %%mm1\n\t"
-        "punpcklbw %%mm3, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm3, %[mmx_blend4_zero]\n\t"
         "psrlw     %%mm0, 8\n\t"
         "pmullw    %%mm2, %%mm3\n\t"
         "packuswb  %%mm0, %%mm0\n\t"
@@ -948,15 +922,16 @@ _mmx_adjblend_loop:
 #else            // _MSC_VER, GCC asm
     /* See remark before GCC asm block in mmx_avgblend_block() above. */
     __asm__ __volatile__(
-        "movd      %%mm3, [%[v]]\n\t"
+        "push      %%edi\n\t"
+        "movd      %%mm3, %[v]\n\t"
         "mov       %%ecx, %[len]\n\t"
         "packuswb  %%mm3, %%mm3\n\t"
         "mov       %%edx, %[o]\n\t"
         "punpcklwd %%mm3, %%mm3\n\t"
         "mov       %%esi, %[in1]\n\t"
-        "movq      %%mm4, [%[mmx_blend4_revn]]\n\t"
+        "movq      %%mm4, %[mmx_blend4_revn]\n\t"
         "punpckldq %%mm3, %%mm3\n\t"
-        "pand      %%mm3, [%[mmx_blendadj_mask]]\n\t"
+        "pand      %%mm3, %[mmx_blendadj_mask]\n\t"
         "mov       %%edi, %[in2]\n\t"
         "shr       %%ecx, 1\n\t"
         "psubw     %%mm4, %%mm3\n\t"
@@ -964,13 +939,13 @@ _mmx_adjblend_loop:
         "_mmx_adjblend_loop%=:\n\t"
         "movd      %%mm0, [%%esi]\n\t"
         "movd      %%mm1, [%%edi]\n\t"
-        "punpcklbw %%mm0, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm0, %[mmx_blend4_zero]\n\t"
         "movd      %%mm6, [%%esi + 4]\n\t"
-        "punpcklbw %%mm1, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm1, %[mmx_blend4_zero]\n\t"
         "movd      %%mm7, [%%edi + 4]\n\t"
-        "punpcklbw %%mm6, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm6, %[mmx_blend4_zero]\n\t"
         "pmullw    %%mm0, %%mm3\n\t"
-        "punpcklbw %%mm7, [%[mmx_blend4_zero]]\n\t"
+        "punpcklbw %%mm7, %[mmx_blend4_zero]\n\t"
         "pmullw    %%mm1, %%mm4\n\t"
         "pmullw    %%mm6, %%mm3\n\t"
         "pmullw    %%mm7, %%mm4\n\t"
@@ -987,6 +962,7 @@ _mmx_adjblend_loop:
         "add       %%edx, 8\n\t"
         "dec       %%ecx\n\t"
         "jnz       _mmx_adjblend_loop%=\n\t"
+        "pop       %%edi\n\t"
         "emms     \n\t"
         : /* no outputs */
         : [v] "m"(v),
@@ -997,7 +973,7 @@ _mmx_adjblend_loop:
           [mmx_blend4_revn] "m"(mmx_blend4_revn),
           [mmx_blendadj_mask] "m"(mmx_blendadj_mask),
           [mmx_blend4_zero] "m"(mmx_blend4_zero)
-        : "ecx", "edx", "esi", "edi");
+        : "ecx", "edx", "esi");
 #endif           // _MSC_VER
 #endif
 }

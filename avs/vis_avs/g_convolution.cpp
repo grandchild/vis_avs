@@ -1,4 +1,4 @@
-#include "c_convolution.h"
+#include "e_convolution.h"
 
 #include "g__defs.h"
 #include "g__lib.h"
@@ -7,362 +7,167 @@
 
 #include <windows.h>
 
+// Desired behavior:
+//   - UI-to-config on (valid) change
+//   - Config-to-UI only on de-focus
+//     Values may change internally when clamping to range or resetting scale=0 to 1.
+//   - Empty field -> 0
+void edit_num_field(HWND hwndDlg,
+                    int control_id,
+                    UINT event,
+                    E_Convolution* g_this,
+                    AVS_Parameter_Handle param,
+                    std::vector<int64_t> param_path = {}) {
+    if (event == EN_CHANGE) {
+        BOOL int_parse_success = false;
+        auto value =
+            (int32_t)GetDlgItemInt(hwndDlg, control_id, &int_parse_success, true);
+        if (int_parse_success) {
+            g_this->set_int(param, value, param_path);
+        } else if (GetWindowTextLength(GetDlgItem(hwndDlg, control_id)) == 0) {
+            g_this->set_int(param, 0, param_path);
+        }
+    } else if (event == EN_KILLFOCUS) {
+        SetDlgItemInt(hwndDlg, control_id, g_this->get_int(param, param_path), true);
+    }
+}
+
 int win32_dlgproc_convolution(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
-    C_CONVOLUTION* g_Filter = (C_CONVOLUTION*)g_current_render;
-    char value[16];
-    int val;
-    unsigned int objectcode, objectmessage;
-    HWND hwndEdit;
-    OPENFILENAME file_box;
-    HANDLE filehandle;
+    auto g_this = (E_Convolution*)g_current_render;
+    AVS_Parameter_Handle p_wrap = Convolution_Info::parameters[0].handle;
+    AVS_Parameter_Handle p_absolute = Convolution_Info::parameters[1].handle;
+    AVS_Parameter_Handle p_two_pass = Convolution_Info::parameters[2].handle;
+    AVS_Parameter_Handle p_bias = Convolution_Info::parameters[3].handle;
+    AVS_Parameter_Handle p_scale = Convolution_Info::parameters[4].handle;
+    AVS_Parameter_Handle p_kernel_value = Convolution_Info::kernel_params[0].handle;
+    AVS_Parameter_Handle p_save_file = Convolution_Info::parameters[6].handle;
+    AVS_Parameter_Handle p_autoscale = Convolution_Info::parameters[7].handle;
+    AVS_Parameter_Handle p_clear = Convolution_Info::parameters[8].handle;
+    AVS_Parameter_Handle p_save = Convolution_Info::parameters[9].handle;
+    AVS_Parameter_Handle p_load = Convolution_Info::parameters[10].handle;
+
+    static bool ignore_command_messages = false;
     switch (uMsg) {
-        case WM_INITDIALOG:  // init e.g. fill in boxes
-            CheckDlgButton(hwndDlg, IDC_CONVOLUTION_CHECK1, g_Filter->enabled);
-            CheckDlgButton(hwndDlg, IDC_CONVOLUTION_CHECK2, g_Filter->wraparound);
-            CheckDlgButton(hwndDlg, IDC_CONVOLUTION_CHECK3, g_Filter->absolute);
-            CheckDlgButton(hwndDlg, IDC_CONVOLUTION_CHECK4, g_Filter->twopass);
-            if (g_Filter->farray[50] == 0) g_Filter->farray[50] = 1;
-            for (int i = 0; i < 51; i++) {
-                hwndEdit = GetDlgItem(hwndDlg, IDC_CONVOLUTION_EDIT1 + i);
-                _itoa(g_Filter->farray[i], value, 10);
-                SetWindowText(hwndEdit, value);
+        case WM_INITDIALOG: {
+            ignore_command_messages = true;
+            CheckDlgButton(hwndDlg, IDC_CONVOLUTION_ENABLED, g_this->enabled);
+            CheckDlgButton(hwndDlg, IDC_CONVOLUTION_WRAP, g_this->get_bool(p_wrap));
+            CheckDlgButton(
+                hwndDlg, IDC_CONVOLUTION_ABSOLUTE, g_this->get_bool(p_absolute));
+            CheckDlgButton(
+                hwndDlg, IDC_CONVOLUTION_TWOPASS, g_this->get_bool(p_two_pass));
+
+            for (int i = 0; i < CONVO_KERNEL_SIZE; i++) {
+                SetDlgItemInt(hwndDlg,
+                              IDC_CONVOLUTION_EDIT1 + i,
+                              g_this->get_int(p_kernel_value, {i}),
+                              true);
             }
+
+            SetDlgItemInt(hwndDlg, IDC_CONVOLUTION_BIAS, g_this->get_int(p_bias), true);
+            SetDlgItemInt(
+                hwndDlg, IDC_CONVOLUTION_SCALE, g_this->get_int(p_scale), true);
+            ignore_command_messages = false;
             return 1;
-        case WM_COMMAND:
-            objectcode = LOWORD(wParam);
-            objectmessage = HIWORD(wParam);
-            // see if the auto button's been clicked and if so do the calculations to
-            // work out scale's value
-            if ((objectcode == IDC_CONVOLUTION_BUTTON1)
-                && (objectmessage == BN_CLICKED)) {
-                hwndEdit = GetDlgItem(hwndDlg, IDC_CONVOLUTION_EDIT51);
-                val = 0;
-                for (int i = 0; i < 50; i++) val += g_Filter->farray[i];
-                val = (g_Filter->twopass) ? (2 * val) : val;
-                if (val == 0) val = 1;
-                g_Filter->farray[50] = val;
-                _itoa(val, value, 10);
-                SetWindowText(hwndEdit, value);
-                g_Filter->updatedraw = true;
+        }
+        case WM_COMMAND: {
+            if (ignore_command_messages) {
                 return 0;
             }
-            // see if the clear button's been clicked
-            if ((objectcode == IDC_CONVOLUTION_BUTTON4)
-                && (objectmessage == BN_CLICKED)) {
+            WORD control_id = LOWORD(wParam);
+            WORD message = HIWORD(wParam);
+            int32_t kernel_index = control_id - IDC_CONVOLUTION_EDIT1;
+            if (control_id == IDC_CONVOLUTION_ENABLED && message == BN_CLICKED) {
+                g_this->set_enabled(
+                    IsDlgButtonChecked(hwndDlg, IDC_CONVOLUTION_ENABLED));
+            } else if (control_id == IDC_CONVOLUTION_WRAP && message == BN_CLICKED) {
+                g_this->set_bool(p_wrap,
+                                 IsDlgButtonChecked(hwndDlg, IDC_CONVOLUTION_WRAP));
+                ignore_command_messages = true;
+                CheckDlgButton(
+                    hwndDlg, IDC_CONVOLUTION_ABSOLUTE, g_this->get_bool(p_absolute));
+                ignore_command_messages = false;
+            } else if (control_id == IDC_CONVOLUTION_ABSOLUTE
+                       && message == BN_CLICKED) {
+                g_this->set_bool(p_absolute,
+                                 IsDlgButtonChecked(hwndDlg, IDC_CONVOLUTION_ABSOLUTE));
+                ignore_command_messages = true;
+                CheckDlgButton(hwndDlg, IDC_CONVOLUTION_WRAP, g_this->get_bool(p_wrap));
+                ignore_command_messages = false;
+            } else if (control_id == IDC_CONVOLUTION_TWOPASS && message == BN_CLICKED) {
+                g_this->set_bool(p_two_pass,
+                                 IsDlgButtonChecked(hwndDlg, IDC_CONVOLUTION_TWOPASS));
+            } else if (control_id == IDC_CONVOLUTION_BIAS) {
+                ignore_command_messages = true;
+                edit_num_field(hwndDlg, IDC_CONVOLUTION_BIAS, message, g_this, p_bias);
+                ignore_command_messages = false;
+            } else if (control_id == IDC_CONVOLUTION_SCALE) {
+                ignore_command_messages = true;
+                edit_num_field(
+                    hwndDlg, IDC_CONVOLUTION_SCALE, message, g_this, p_scale);
+                ignore_command_messages = false;
+            } else if (kernel_index >= 0 && kernel_index < CONVO_KERNEL_SIZE) {
+                ignore_command_messages = true;
+                edit_num_field(hwndDlg,
+                               IDC_CONVOLUTION_EDIT1 + kernel_index,
+                               message,
+                               g_this,
+                               p_kernel_value,
+                               {kernel_index});
+                ignore_command_messages = false;
+            } else if (control_id == IDC_CONVOLUTION_AUTOSCALE
+                       && message == BN_CLICKED) {
+                g_this->run_action(p_autoscale);
+                ignore_command_messages = true;
+                SetDlgItemInt(
+                    hwndDlg, IDC_CONVOLUTION_SCALE, g_this->get_int(p_scale), true);
+                ignore_command_messages = false;
+            } else if (control_id == IDC_CONVOLUTION_CLEAR && message == BN_CLICKED) {
                 if (MessageBox(hwndDlg,
                                "Really clear all data?",
                                "convolution",
                                MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_APPLMODAL
                                    | MB_SETFOREGROUND)
                     == IDYES) {
-                    // set box array values
-                    for (int i = 0; i < 50; i++) g_Filter->farray[i] = 0;
-                    g_Filter->farray[50] = 1;
-                    g_Filter->farray[24] = 1;
-                    // enable
-                    g_Filter->enabled = true;
-                    g_Filter->wraparound = false;
-                    g_Filter->twopass = false;
-                    g_Filter->absolute = false;
-                    g_Filter->width = 0;
-                    g_Filter->height = 0;
-                    g_Filter->updatedraw = true;
-                    CheckDlgButton(hwndDlg, IDC_CONVOLUTION_CHECK1, BST_CHECKED);
-                    CheckDlgButton(hwndDlg, IDC_CONVOLUTION_CHECK2, BST_UNCHECKED);
-                    CheckDlgButton(hwndDlg, IDC_CONVOLUTION_CHECK3, BST_UNCHECKED);
-                    CheckDlgButton(hwndDlg, IDC_CONVOLUTION_CHECK4, BST_UNCHECKED);
-                    for (int i = 0; i < 51; i++) {
-                        hwndEdit = GetDlgItem(hwndDlg, IDC_CONVOLUTION_EDIT1 + i);
-                        _itoa(g_Filter->farray[i], value, 10);
-                        SetWindowText(hwndEdit, value);
-                    }
+                    g_this->run_action(p_clear);
+                    SendMessage(hwndDlg, WM_INITDIALOG, 0, 0);
                 }
-                return 0;
-            }
-            if ((objectcode == IDC_CONVOLUTION_BUTTON3
-                 || objectcode == IDC_CONVOLUTION_BUTTON2)
-                && objectmessage == BN_CLICKED) {
-                // file dialogue initialisation.
-                file_box.lStructSize = sizeof(OPENFILENAME);
-                file_box.hwndOwner = hwndDlg;
-                file_box.hInstance = NULL;
-                file_box.lpstrFilter =
+            } else if ((control_id == IDC_CONVOLUTION_SAVE
+                        || control_id == IDC_CONVOLUTION_LOAD)
+                       && message == BN_CLICKED) {
+                char filename_buf[1024];
+                strncpy(filename_buf,
+                        g_this->get_string(p_save_file),
+                        sizeof(filename_buf));
+                OPENFILENAME open_file = {};
+                open_file.lStructSize = sizeof(OPENFILENAME);
+                open_file.hwndOwner = hwndDlg;
+                open_file.lpstrFilter =
                     "Convolution Filter File (*.cff)\0*.cff\0All Files (*.*)\0*.*\0";
-                file_box.lpstrCustomFilter = NULL;
-                file_box.nMaxCustFilter = 0;
-                file_box.nFilterIndex = 1;
-                file_box.nMaxFile = sizeof(g_Filter->szFile);
-                file_box.lpstrFileTitle = NULL;
-                file_box.nMaxFileTitle = 0;
-                file_box.lpstrInitialDir = NULL;
-                file_box.lpstrFile = g_Filter->szFile;
-                file_box.lpstrTitle = NULL;
-                file_box.lpfnHook = NULL;
-                file_box.lpstrDefExt = "cff";
-                // see if the load button's been clicked
-                if (objectcode == IDC_CONVOLUTION_BUTTON3) {
-                    file_box.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | 0x02000000
-                                     | OFN_HIDEREADONLY;  // 0x02000000 is
-                                                          // OFN_DONTADDTORECENT for
-                                                          // some reason the compiler is
-                                                          // not recognising it.
-                    if (GetOpenFileName(&file_box)) {
-                        filehandle = CreateFile(file_box.lpstrFile,
-                                                GENERIC_READ,
-                                                0,
-                                                (LPSECURITY_ATTRIBUTES)NULL,
-                                                OPEN_EXISTING,
-                                                FILE_ATTRIBUTE_NORMAL,
-                                                (HANDLE)NULL);
-                        if (filehandle == INVALID_HANDLE_VALUE) {
-                            // display the error
-                            LPVOID lpMsgBuf;
-                            FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER
-                                              | FORMAT_MESSAGE_FROM_SYSTEM
-                                              | FORMAT_MESSAGE_IGNORE_INSERTS,
-                                          NULL,
-                                          GetLastError(),
-                                          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                                          (LPTSTR)&lpMsgBuf,
-                                          0,
-                                          NULL);
-                            MessageBox(NULL,
-                                       (LPCTSTR)lpMsgBuf,
-                                       "Unexpected file error.",
-                                       MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND);
-                            LocalFree(lpMsgBuf);
-                            return 0;
-                        } else {
-                            unsigned char* data;
-                            data = new unsigned char[MAX_FILENAME_SIZE];
-                            DWORD numbytesread;
-                            file_box.lpstrInitialDir = NULL;
-                            if (ReadFile(filehandle,
-                                         data,
-                                         MAX_FILENAME_SIZE,
-                                         &numbytesread,
-                                         NULL)
-                                    == 0
-                                && GetLastError() != ERROR_HANDLE_EOF) {
-                                // display the error
-                                LPVOID lpMsgBuf;
-                                FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER
-                                                  | FORMAT_MESSAGE_FROM_SYSTEM
-                                                  | FORMAT_MESSAGE_IGNORE_INSERTS,
-                                              NULL,
-                                              GetLastError(),
-                                              MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                                              (LPTSTR)&lpMsgBuf,
-                                              0,
-                                              NULL);
-                                MessageBox(
-                                    NULL,
-                                    (LPCTSTR)lpMsgBuf,
-                                    "Unexpected file error.",
-                                    MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND);
-                                LocalFree(lpMsgBuf);
-                            }
-                            g_Filter->load_config(data, (unsigned int)numbytesread);
-                            // refresh the dialogue with the new data
-                            CheckDlgButton(
-                                hwndDlg, IDC_CONVOLUTION_CHECK1, g_Filter->enabled);
-                            CheckDlgButton(
-                                hwndDlg, IDC_CONVOLUTION_CHECK2, g_Filter->wraparound);
-                            CheckDlgButton(
-                                hwndDlg, IDC_CONVOLUTION_CHECK3, g_Filter->absolute);
-                            CheckDlgButton(
-                                hwndDlg, IDC_CONVOLUTION_CHECK4, g_Filter->twopass);
-                            if (g_Filter->farray[50] == 0) g_Filter->farray[50] = 1;
-                            for (int i = 0; i < 51; i++) {
-                                hwndEdit =
-                                    GetDlgItem(hwndDlg, IDC_CONVOLUTION_EDIT1 + i);
-                                _itoa(g_Filter->farray[i], value, 10);
-                                SetWindowText(hwndEdit, value);
-                            }
-                            if (CloseHandle(filehandle) == 0) {
-                                // display the error
-                                LPVOID lpMsgBuf;
-                                FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER
-                                                  | FORMAT_MESSAGE_FROM_SYSTEM
-                                                  | FORMAT_MESSAGE_IGNORE_INSERTS,
-                                              NULL,
-                                              GetLastError(),
-                                              MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                                              (LPTSTR)&lpMsgBuf,
-                                              0,
-                                              NULL);
-                                MessageBox(
-                                    NULL,
-                                    (LPCTSTR)lpMsgBuf,
-                                    "Unexpected file error.",
-                                    MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND);
-                                LocalFree(lpMsgBuf);
-                            }
-                        }
+                open_file.nFilterIndex = 1;
+                open_file.nMaxFile = sizeof(filename_buf);
+                open_file.lpstrFile = filename_buf;
+                open_file.lpstrDefExt = "cff";
+                // 0x02000000 is OFN_DONTADDTORECENT
+                // for some reason the compiler is not recognising it.
+                open_file.Flags = 0x02000000 | OFN_HIDEREADONLY;
+
+                if (control_id == IDC_CONVOLUTION_SAVE) {
+                    if (GetSaveFileName(&(open_file))) {
+                        g_this->set_string(p_save_file, open_file.lpstrFile);
+                        g_this->run_action(p_save);
                     }
-                    return 0;
-                }
-                // see if the save button's been clicked
-                if (objectcode == IDC_CONVOLUTION_BUTTON2) {
-                    // 0x02000000 is OFN_DONTADDTORECENT
-                    // for some reason the compiler is not recognising it.
-                    file_box.Flags = 0x02000000 | OFN_HIDEREADONLY;
-                    if (GetSaveFileName(&(file_box))) {
-                        filehandle = CreateFile(file_box.lpstrFile,
-                                                GENERIC_WRITE,
-                                                0,
-                                                (LPSECURITY_ATTRIBUTES)NULL,
-                                                CREATE_NEW,
-                                                FILE_ATTRIBUTE_NORMAL,
-                                                (HANDLE)NULL);
-                        if ((filehandle == INVALID_HANDLE_VALUE)
-                            && (GetLastError() == ERROR_FILE_EXISTS)
-                            && (MessageBox(hwndDlg,
-                                           "This file already exists. Do you want to "
-                                           "overwrite it?",
-                                           "convolution",
-                                           MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2
-                                               | MB_APPLMODAL | MB_SETFOREGROUND)
-                                == IDYES))
-                            filehandle = CreateFile(file_box.lpstrFile,
-                                                    GENERIC_WRITE,
-                                                    0,
-                                                    (LPSECURITY_ATTRIBUTES)NULL,
-                                                    TRUNCATE_EXISTING,
-                                                    FILE_ATTRIBUTE_NORMAL,
-                                                    (HANDLE)NULL);
-                        if (filehandle == INVALID_HANDLE_VALUE) {
-                            // display the error
-                            LPVOID lpMsgBuf;
-                            FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER
-                                              | FORMAT_MESSAGE_FROM_SYSTEM
-                                              | FORMAT_MESSAGE_IGNORE_INSERTS,
-                                          NULL,
-                                          GetLastError(),
-                                          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                                          (LPTSTR)&lpMsgBuf,
-                                          0,
-                                          NULL);
-                            MessageBox(NULL,
-                                       (LPCTSTR)lpMsgBuf,
-                                       "Unexpected file error.",
-                                       MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND);
-                            LocalFree(lpMsgBuf);
-                        } else {
-                            unsigned char* data;
-                            data = new unsigned char[MAX_FILENAME_SIZE];
-                            int numbytestowrite = g_Filter->save_config(data);
-                            DWORD numbyteswritten;
-                            file_box.lpstrInitialDir = NULL;
-                            if (WriteFile(filehandle,
-                                          data,
-                                          numbytestowrite,
-                                          &numbyteswritten,
-                                          NULL)
-                                == 0) {
-                                // display the error
-                                LPVOID lpMsgBuf;
-                                FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER
-                                                  | FORMAT_MESSAGE_FROM_SYSTEM
-                                                  | FORMAT_MESSAGE_IGNORE_INSERTS,
-                                              NULL,
-                                              GetLastError(),
-                                              MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                                              (LPTSTR)&lpMsgBuf,
-                                              0,
-                                              NULL);
-                                MessageBox(
-                                    NULL,
-                                    (LPCTSTR)lpMsgBuf,
-                                    "Unexpected file error.",
-                                    MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND);
-                                LocalFree(lpMsgBuf);
-                            }
-                            if (CloseHandle(filehandle) == 0) {
-                                // display the error
-                                LPVOID lpMsgBuf;
-                                FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER
-                                                  | FORMAT_MESSAGE_FROM_SYSTEM
-                                                  | FORMAT_MESSAGE_IGNORE_INSERTS,
-                                              NULL,
-                                              GetLastError(),
-                                              MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                                              (LPTSTR)&lpMsgBuf,
-                                              0,
-                                              NULL);
-                                MessageBox(
-                                    NULL,
-                                    (LPCTSTR)lpMsgBuf,
-                                    "Unexpected file error.",
-                                    MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND);
-                                LocalFree(lpMsgBuf);
-                            }
-                        }
+                } else {
+                    open_file.Flags |= OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+                    if (GetOpenFileName(&open_file)) {
+                        g_this->set_string(p_save_file, open_file.lpstrFile);
+                        g_this->run_action(p_load);
+                        SendMessage(hwndDlg, WM_INITDIALOG, 0, 0);
                     }
-                    return 0;
                 }
             }
-            // see if enable checkbox is checked
-            if (objectcode == IDC_CONVOLUTION_CHECK1) {
-                g_Filter->enabled =
-                    IsDlgButtonChecked(hwndDlg, IDC_CONVOLUTION_CHECK1) == 1;
-                g_Filter->updatedraw = true;
-                ;
-                return 0;
-            }
-            // see if wraparound checkbox is checked
-            if (objectcode == IDC_CONVOLUTION_CHECK2) {
-                if (IsDlgButtonChecked(hwndDlg, IDC_CONVOLUTION_CHECK2) == 1) {
-                    g_Filter->wraparound = true;
-                    g_Filter->absolute = false;
-                    CheckDlgButton(hwndDlg, IDC_CONVOLUTION_CHECK3, BST_UNCHECKED);
-                } else
-                    g_Filter->wraparound = false;
-                g_Filter->updatedraw = true;
-                ;
-                return 0;
-            }
-            // see if absolute checkbox is checked
-            if (objectcode == IDC_CONVOLUTION_CHECK3) {
-                if (IsDlgButtonChecked(hwndDlg, IDC_CONVOLUTION_CHECK3) == 1) {
-                    g_Filter->absolute = true;
-                    g_Filter->wraparound = false;
-                    CheckDlgButton(hwndDlg, IDC_CONVOLUTION_CHECK2, BST_UNCHECKED);
-                } else
-                    g_Filter->absolute = false;
-                g_Filter->updatedraw = true;
-                ;
-                return 0;
-            }
-            // see if twopass checkbox is checked
-            if (objectcode == IDC_CONVOLUTION_CHECK4) {
-                g_Filter->twopass =
-                    IsDlgButtonChecked(hwndDlg, IDC_CONVOLUTION_CHECK4) == 1;
-                g_Filter->updatedraw = true;
-                ;
-                return 0;
-            }
-            // get and put data from the boxes to farray
-            {
-                int i = objectcode - IDC_CONVOLUTION_EDIT1;
-                if (0 <= i && i < 51) {
-                    hwndEdit = GetDlgItem(hwndDlg, IDC_CONVOLUTION_EDIT1 + i);
-                    if (objectmessage == EN_CHANGE) {
-                        GetWindowText(hwndEdit, value, 16);
-                        val = atoi(value);
-                        if (i == 50) {
-                            g_Filter->farray[i] = (val == 0) ? 1 : val;
-                        } else
-                            g_Filter->farray[i] = val;
-                        g_Filter->updatedraw = true;
-                        ;
-                    } else if (objectmessage == EN_KILLFOCUS) {
-                        _itoa(g_Filter->farray[i], value, 10);
-                        SetWindowText(hwndEdit, value);
-                    }
-                    return 0;
-                }
-            }
+            return 0;
+        }
     }
     return 0;
 }

@@ -46,7 +46,7 @@ class C_UndoItem {
     C_UndoItem& operator=(const C_UndoItem& T);
     bool operator==(const C_UndoItem& T) const;
 
-    void set(void* data, int length, bool isdirty);
+    void set(const void* data, int length, bool isdirty);
     void* get() const { return data; }
     int size() const { return length; }
 
@@ -56,14 +56,16 @@ class C_UndoItem {
     bool isdirty;
 };
 
+class AVS_Instance;
+
 class C_UndoStack {
    public:
-    static void saveundo(int is2 = 0);
-    static void cleardirty();
-    static bool isdirty();
+    static void save_undo(AVS_Instance* avs, bool save_secondary = false);
+    static void clear_dirty();
+    static bool is_dirty();
 
-    static void undo();
-    static void redo();
+    static void undo(AVS_Instance* avs);
+    static void redo(AVS_Instance* avs);
 
     static int can_undo();
     static int can_redo();

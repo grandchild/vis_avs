@@ -47,10 +47,14 @@ void C_THISCLASS::reinit(int w, int h) {
     // Free anything if needed
     if (lw || lh) {
         SelectObject(hBitmapDC, hOldBitmap);
-        if (hOldFont) SelectObject(hBitmapDC, hOldFont);
+        if (hOldFont) {
+            SelectObject(hBitmapDC, hOldFont);
+        }
         DeleteDC(hBitmapDC);
         ReleaseDC(NULL, hDesktopDC);
-        if (myBuffer) free(myBuffer);
+        if (myBuffer) {
+            free(myBuffer);
+        }
     }
 
     // Alloc buffers, select objects, init structures
@@ -63,10 +67,11 @@ void C_THISCLASS::reinit(int w, int h) {
                  ((color & 0xFF0000) >> 16) | (color & 0xFF00) | (color & 0xFF) << 16);
     SetBkMode(hBitmapDC, TRANSPARENT);
     SetBkColor(hBitmapDC, 0);
-    if (myFont)
+    if (myFont) {
         hOldFont = (HFONT)SelectObject(hBitmapDC, myFont);
-    else
+    } else {
         hOldFont = NULL;
+    }
     bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bi.bmiHeader.biWidth = w;
     bi.bmiHeader.biHeight = h;
@@ -84,13 +89,21 @@ C_THISCLASS::~C_THISCLASS() {
     // Free up everything
     if (lw || lh) {
         SelectObject(hBitmapDC, hOldBitmap);
-        if (hOldFont) SelectObject(hBitmapDC, hOldFont);
+        if (hOldFont) {
+            SelectObject(hBitmapDC, hOldFont);
+        }
         DeleteDC(hBitmapDC);
         ReleaseDC(NULL, hDesktopDC);
-        if (myBuffer) free(myBuffer);
+        if (myBuffer) {
+            free(myBuffer);
+        }
     }
-    if (text) free(text);
-    if (myFont) DeleteObject(myFont);
+    if (text) {
+        free(text);
+    }
+    if (myFont) {
+        DeleteObject(myFont);
+    }
 }
 
 // configuration read/write
@@ -220,12 +233,16 @@ void C_THISCLASS::load_config(unsigned char* data, int len)  // read configurati
         pos += 4;
     }
     if (size > 0 && len - pos >= size) {
-        if (text) free(text);
+        if (text) {
+            free(text);
+        }
         text = (char*)malloc(size + 1);
         memcpy(text, data + pos, size);
         pos += size;
     } else {
-        if (text) free(text);
+        if (text) {
+            free(text);
+        }
         text = NULL;
     }
     myFont = CreateFontIndirect(&lf);
@@ -265,7 +282,7 @@ void C_THISCLASS::load_config(unsigned char* data, int len)  // read configurati
 }
 
 #define PUT_INT(y)                   \
-    data[pos] = (y)&255;             \
+    data[pos] = (y) & 255;           \
     data[pos + 1] = (y >> 8) & 255;  \
     data[pos + 2] = (y >> 16) & 255; \
     data[pos + 3] = (y >> 24) & 255
@@ -335,9 +352,13 @@ void C_THISCLASS::getWord(int n, char* buf, int maxlen) {
     char* p = text;
     char* d = buf;
     *d = 0;
-    if (!p) return;
+    if (!p) {
+        return;
+    }
     while (w < n && *p) {
-        if (*p == ';') w++;
+        if (*p == ';') {
+            w++;
+        }
         p++;
     }
 
@@ -349,9 +370,13 @@ void C_THISCLASS::getWord(int n, char* buf, int maxlen) {
             char buf[128];
             int islen = strnicmp(p, "$(playpos", 9);
             int add_dig = 0;
-            if (p[9] == '.') add_dig = atoi(p + 10);
+            if (p[9] == '.') {
+                add_dig = atoi(p + 10);
+            }
 
-            if (add_dig > 3) add_dig = 3;
+            if (add_dig > 3) {
+                add_dig = 3;
+            }
 
             int pos = 0;
 
@@ -363,10 +388,13 @@ void C_THISCLASS::getWord(int n, char* buf, int maxlen) {
                                         (LPARAM)105,
                                         SMTO_BLOCK,
                                         50,
-                                        (LPDWORD)&pos))
+                                        (LPDWORD)&pos)) {
                     pos = 0;
+                }
             }
-            if (islen) pos *= 1000;
+            if (islen) {
+                pos *= 1000;
+            }
             wsprintf(buf, "%d:%02d", pos / 60000, (pos / 1000) % 60);
             if (add_dig > 0) {
                 char fmt[16];
@@ -380,7 +408,9 @@ void C_THISCLASS::getWord(int n, char* buf, int maxlen) {
             }
 
             int l = strlen(buf);
-            if (l > maxlen) l = maxlen;
+            if (l > maxlen) {
+                l = maxlen;
+            }
             memcpy(d, buf, l);
             maxlen -= l;
             d += l;
@@ -414,11 +444,17 @@ void C_THISCLASS::getWord(int n, char* buf, int maxlen) {
                     char buf[9];
                     memcpy(buf, tpp, 8);
                     buf[8] = 0;
-                    if (!lstrcmpi(buf, "- Winamp")) break;
+                    if (!lstrcmpi(buf, "- Winamp")) {
+                        break;
+                    }
                     tpp--;
                 }
-                if (tpp >= this_title) tpp--;
-                while (tpp >= this_title && *tpp == ' ') tpp--;
+                if (tpp >= this_title) {
+                    tpp--;
+                }
+                while (tpp >= this_title && *tpp == ' ') {
+                    tpp--;
+                }
                 *++tpp = 0;
             }
 
@@ -438,19 +474,27 @@ void C_THISCLASS::getWord(int n, char* buf, int maxlen) {
             // use: $(reg00), $(reg00:4.5), $(title), $(title:32), $(title:n32)
 
             if (skipnum && *titleptr >= '0' && *titleptr <= '9') {
-                while (*titleptr >= '0' && *titleptr <= '9') titleptr++;
+                while (*titleptr >= '0' && *titleptr <= '9') {
+                    titleptr++;
+                }
                 if (*titleptr == '.') {
                     titleptr++;
                     if (*titleptr == ' ') {
                         titleptr++;
-                    } else
+                    } else {
                         titleptr = this_title;
-                } else
+                    }
+                } else {
                     titleptr = this_title;
+                }
             }
             int n = strlen(titleptr);
-            if (n > maxlen) n = maxlen;
-            if (max_fmtlen > 0 && max_fmtlen < n) n = max_fmtlen;
+            if (n > maxlen) {
+                n = maxlen;
+            }
+            if (max_fmtlen > 0 && max_fmtlen < n) {
+                n = max_fmtlen;
+            }
 
             memcpy(d, titleptr, n);
             maxlen -= n;
@@ -461,21 +505,28 @@ void C_THISCLASS::getWord(int n, char* buf, int maxlen) {
             char buf[128];
             char fmt[32];
             int wr = atoi(p + 5);
-            if (wr < 0) wr = 0;
-            if (wr > 99) wr = 99;
+            if (wr < 0) {
+                wr = 0;
+            }
+            if (wr > 99) {
+                wr = 99;
+            }
             p += 7;
             char* fmtptr = fmt;
             *fmtptr++ = '%';
             if (*p == ':') {
                 p++;
-                while (fmtptr - fmt < 16 && ((*p >= '0' && *p <= '9') || *p == '.'))
+                while (fmtptr - fmt < 16 && ((*p >= '0' && *p <= '9') || *p == '.')) {
                     *fmtptr++ = *p++;
+                }
             }
             *fmtptr++ = 'f';
             *fmtptr++ = 0;
 
             int l = sprintf(buf, fmt, NSEEL_getglobalregs()[wr]);
-            if (l > maxlen) l = maxlen;
+            if (l > maxlen) {
+                l = maxlen;
+            }
             memcpy(d, buf, l);
             maxlen -= l;
             d += l;
@@ -493,7 +544,9 @@ static int getNWords(char* buf) {
     char* p = buf;
     int n = 0;
     while (p && *p) {
-        if (*p == ';') n++;
+        if (*p == ';') {
+            n++;
+        }
         p++;
     }
     return n;
@@ -503,11 +556,11 @@ static int getNWords(char* buf) {
 // render should return 0 if it only used framebuffer, or 1 if the new output data is in
 // fbout. this is used when you want to do something that you'd otherwise need to make a
 // copy of the framebuffer. w and h are the width and height of the screen, in pixels.
-// isBeat is 1 if a beat has been detected.
+// is_beat is 1 if a beat has been detected.
 // visdata is in the format of [spectrum:0,wave:1][channel][band].
 
 int C_THISCLASS::render(char[2][2][576],
-                        int isBeat,
+                        int is_beat,
                         int* framebuffer,
                         int*,
                         int w,
@@ -517,9 +570,15 @@ int C_THISCLASS::render(char[2][2][576],
     int clipcolor;
     char thisText[256];
 
-    if (updating) return 0;
-    if (!enabled) return 0;
-    if (isBeat & 0x80000000) return 0;
+    if (updating) {
+        return 0;
+    }
+    if (!enabled) {
+        return 0;
+    }
+    if (is_beat & 0x80000000) {
+        return 0;
+    }
 
     if (forcealign) {
         forcealign = false;
@@ -534,13 +593,12 @@ int C_THISCLASS::render(char[2][2][576],
 
     // If not beat sensitive and time is up for this word
     // OR if beat sensitive and this frame is a beat and time is up for last beat
-    if ((!onbeat && nf >= normSpeed) || (onbeat && isBeat && !nb)) {  // Then choose
-                                                                      // which word to
-                                                                      // show
+    if ((!onbeat && nf >= normSpeed) || (onbeat && is_beat && !nb)) {
+        // Then choose which word to show
         if (!(insertBlank && !(oddeven % 2))) {
-            if (randomword)
+            if (randomword) {
                 curword = rand() % (getNWords(text) + 1);
-            else {
+            } else {
                 curword++;
                 curword %= (getNWords(text) + 1);
             }
@@ -550,20 +608,24 @@ int C_THISCLASS::render(char[2][2][576],
     }
 
     if (forceBeat) {
-        isBeat = 1;
+        is_beat = 1;
         forceBeat = 0;
     }
 
     // If beat sensitive and frame is a beat and last beat expired, start frame timer
     // for this beat
-    if (onbeat && isBeat && !nb) nb = onbeatSpeed;
+    if (onbeat && is_beat && !nb) {
+        nb = onbeatSpeed;
+    }
 
     // Get the word(s) to show
     getWord(curword, thisText, 256);
-    if (insertBlank && !oddeven) *thisText = 0;
+    if (insertBlank && !oddeven) {
+        *thisText = 0;
+    }
 
     // Same test as above but takes care of nb init
-    if ((!onbeat && nf >= normSpeed) || (onbeat && isBeat && nb == onbeatSpeed)) {
+    if ((!onbeat && nf >= normSpeed) || (onbeat && is_beat && nb == onbeatSpeed)) {
         nf = 0;
         if (randomPos && w && h)  // Handle random position
         {
@@ -572,11 +634,13 @@ int C_THISCLASS::render(char[2][2][576],
                 hBitmapDC, thisText, strlen(thisText), &size);  // Don't write outside
                                                                 // the screen
             _halign = DT_LEFT;
-            if (size.cx < w)
+            if (size.cx < w) {
                 _xshift = rand() % (int)(((float)(w - size.cx) / (float)w) * 100.0F);
+            }
             _valign = DT_TOP;
-            if (size.cy < h)
+            if (size.cy < h) {
                 _yshift = rand() % (int)(((float)(h - size.cy) / (float)h) * 100.0F);
+            }
             forceshift = 1;
         } else {  // Reset position to what is specified
             _halign = halign;
@@ -587,18 +651,20 @@ int C_THISCLASS::render(char[2][2][576],
     }
 
     // Choose cliping color
-    if (color != 0 && outlinecolor != 0)
+    if (color != 0 && outlinecolor != 0) {
         clipcolor = 0;
-    else if (color != 0x000008 && outlinecolor != 0x000008)
+    } else if (color != 0x000008 && outlinecolor != 0x000008) {
         clipcolor = 8;
-    else if (color != 0x0000010 && outlinecolor != 0x0000010)
+    } else if (color != 0x0000010 && outlinecolor != 0x0000010) {
         clipcolor = 10;
+    }
 
     // If size changed or if we're forced to shift the buffer
     if ((lw != w || lh != h) || forceshift) {
-        if (lw != w || lh != h)  // only if size changed then reinit buffer, not if its
-                                 // only a forcedshifting
+        if (lw != w || lh != h) {  // only if size changed then reinit buffer, not if
+                                   // its only a forcedshifting
             reinit(w, h);
+        }
         forceshift = 0;
         forceredraw = 1;  // do redraw!
         // remember last state
@@ -627,7 +693,7 @@ int C_THISCLASS::render(char[2][2][576],
         old_halign = _halign;
         old_valign = _valign;
         old_curword = curword;
-        if (thisText) strcpy(oldtxt, thisText);
+        strcpy(oldtxt, thisText);
         old_clipcolor = clipcolor;
         old_blend1 = (blend && !(onbeat && !nb));
         old_blend2 = (blendavg && !(onbeat && !nb));
@@ -747,48 +813,49 @@ int C_THISCLASS::render(char[2][2][576],
     p = myBuffer;
     d = framebuffer + w * (h - 1);
 
-    if (blend && !(onbeat && !nb))
+    if (blend && !(onbeat && !nb)) {
         for (i = 0; i < h; i++) {
             for (j = 0; j < w; j++) {
-                if (*p != clipcolor) *d = BLEND(*p, *d);
+                if (*p != clipcolor) {
+                    *d = BLEND(*p, *d);
+                }
                 d++;
                 p++;
             }
             d -= w * 2;
         }
-    else if (blendavg && !(onbeat && !nb))
+    } else if (blendavg && !(onbeat && !nb)) {
         for (i = 0; i < h; i++) {
             for (j = 0; j < w; j++) {
-                if (*p != clipcolor) *d = BLEND_AVG(*p, *d);
+                if (*p != clipcolor) {
+                    *d = BLEND_AVG(*p, *d);
+                }
                 d++;
                 p++;
             }
             d -= w * 2;
         }
-    else if (!(onbeat && !nb))
+    } else if (!(onbeat && !nb)) {
         for (i = 0; i < h; i++) {
             for (j = 0; j < w; j++) {
-                if (*p != clipcolor) *d = *p;
+                if (*p != clipcolor) {
+                    *d = *p;
+                }
                 d++;
                 p++;
             }
             d -= w * 2;
         }
+    }
 
     // Advance frame counter
-    if (!onbeat) nf++;
+    if (!onbeat) {
+        nf++;
+    }
     // Decrease frametimer
-    if (onbeat && nb) nb--;
+    if (onbeat && nb) {
+        nb--;
+    }
 
     return 0;
-}
-
-C_RBASE* R_Text(char* desc)  // creates a new effect object if desc is NULL, otherwise
-                             // fills in desc with description
-{
-    if (desc) {
-        strcpy(desc, MOD_NAME);
-        return NULL;
-    }
-    return (C_RBASE*)new C_THISCLASS();
 }

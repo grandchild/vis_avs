@@ -1,4 +1,4 @@
-#include "c_fadeout.h"
+#include "e_fadeout.h"
 
 #include "g__defs.h"
 #include "g__lib.h"
@@ -9,40 +9,40 @@
 #include <commctrl.h>
 
 int win32_dlgproc_fade(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    C_THISCLASS* g_this = (C_THISCLASS*)g_current_render;
+    E_Fadeout* g_this = (E_Fadeout*)g_current_render;
+    const Parameter& p_fadelen = g_this->info.parameters[0];
+    const AVS_Parameter_Handle p_color = g_this->info.parameters[1].handle;
 
     switch (uMsg) {
         case WM_DRAWITEM: {
             DRAWITEMSTRUCT* di = (DRAWITEMSTRUCT*)lParam;
             switch (di->CtlID) {
                 case IDC_LC:
-                    GR_DrawColoredButton(di, g_this->color);
+                    GR_DrawColoredButton(di, g_this->get_color(p_color));
                     break;
             }
-        }
             return 0;
-        case WM_INITDIALOG:
-            SendDlgItemMessage(hwndDlg, IDC_SLIDER1, TBM_SETRANGEMIN, 0, 0);
-            SendDlgItemMessage(hwndDlg, IDC_SLIDER1, TBM_SETRANGEMAX, 0, 92);
-            SendDlgItemMessage(hwndDlg, IDC_SLIDER1, TBM_SETPOS, 1, g_this->fadelen);
-
+        }
+        case WM_INITDIALOG: {
+            auto fadelen = g_this->get_int(p_fadelen.handle);
+            init_ranged_slider(p_fadelen, fadelen, hwndDlg, IDC_SLIDER1);
             return 1;
-
+        }
         case WM_HSCROLL: {
             HWND swnd = (HWND)lParam;
             int t = (int)SendMessage(swnd, TBM_GETPOS, 0, 0);
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER1)) {
-                g_this->fadelen = t;
-                g_this->maketab();
+                g_this->set_int(p_fadelen.handle, t);
             }
-        }
             return 0;
+        }
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
                 case IDC_LC:
-                    GR_SelectColor(hwndDlg, &g_this->color);
+                    int out_color;
+                    GR_SelectColor(hwndDlg, &out_color);
+                    g_this->set_color(p_color, out_color);
                     InvalidateRect(GetDlgItem(hwndDlg, LOWORD(wParam)), NULL, FALSE);
-                    g_this->maketab();
                     return 0;
             }
             return 0;

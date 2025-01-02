@@ -9,7 +9,7 @@ was made open source software in May 2005, released under a BSD-style license. �
 
 ## Modern Toolchain Port
 
-This fork is a **MingW-w64 GCC 8+** as well as **MSVC 19+** port of AVS.
+This fork is a **MingW-w64 GCC 9+** as well as **MSVC 19+** port of AVS.
 
 The goal was to create a **v2.81d**-compliant *vis_avs.dll* version that can be built
 with a modern toolchain, which was largely successful. One notable exception being that
@@ -19,7 +19,15 @@ integrated as builtin effects instead.
 
 ### Current Status
 
-* 🎉 Builds with MinGW-w64 GCC into a running `vis_avs.dll`, loadable with Winamp.
+* 🪓 Split into a new `libavs` and the Winamp plugin frontend. Check out the APIs in the
+  libavs [header](avs/vis_avs/avs.h) [files](avs/vis_avs/avs_editor.h).
+* 🎉 Builds for Windows both with MSVC & MinGW-w64 GCC into a running `vis_avs.dll`,
+  loadable with Winamp, as well as `libavs.dll`.
+* 🐧 Builds for Linux as `libavs.so`, with pipewire audio input. EEL functions don't
+  work yet, but basic EEL code does.  A (very) basic cli frontend and a more interesting
+  WIP Rust frontend are also available, both for rendering only, not editing.
+* 💾 New JSON file format, which is more accessible for direct editing and inspection.
+  The old binary format is still fully supported.
 * 💃 Runs most presets (unless they use rare APEs).
 * ❤️ Sources of original effects integrated as builtin-APEs, thanks to donations to free
   software by their authors:
@@ -42,17 +50,13 @@ integrated as builtin effects instead.
   * _Texer_, originally by [Steven Wittens](https://acko.net).
 * 🥵 Performance is generally the same as the official build, but can be a bit slower
   for some effects. A few effects have gained faster SSE3-enabled versions.
-* 🧨 APE files are crashing AVS or preventing it from starting. Rename or remove .ape
-  files for now.
 
 
 ### The Future
 
-* 🪓 Separate Windows UI code from the renderer
-* 📟 Standalone port (probably SDL2-based)
-* 🐧 Linux port
+* 🧮 64-bit support
+* 📟 Standalone port
 * ✅ Automated output testing
-* 💾 JSON file format support
 
 These are near-future goals, and most are tracked on the
 [issues board](https://github.com/users/grandchild/projects/1). For further development
@@ -61,11 +65,14 @@ of AVS itself there are _many_ ideas for improvement and known bugs. Have a look
 new.
 
 
-## Building & Running on Linux
+## Cross-Compiling & Running on Linux & Wine
 
 ### Build
 
 First, install a 32bit MingW-w64 GCC (with C++ support) and and a cross-compiler CMake.
+
+If you want Video support through FFmpeg, you'll need to install 32bit FFmpeg packages
+too. This is highly variable depending on your distro, and not described below.
 
 Choose your Linux distro, and run the respective commands to install the build
 dependencies and cross-compile AVS:
@@ -123,12 +130,49 @@ cp vis_avs.dll /my/path/to/Winamp/Plugins/
 
 # Not all of these might exist on your system, that's okay, you can ignore errors for
 # some of the files.
-# You only need to copy these files once, they don't change.
-cp /usr/i686-w64-mingw32/bin/lib{gcc_s_dw2-1,ssp-0,stdc++-6,winpthread-1}.dll /my/path/to/Winamp/
+# You only need to copy these files once in a while, they don't change that often.
+cp \
+  /usr/i686-w64-mingw32/bin/lib{gcc_s_dw2-1,ssp-0,stdc++-6,winpthread-1}.dll \
+  /my/path/to/Winamp/
+
+# If you built with FFmpeg support, you'll need to copy the FFmpeg DLLs too. If you
+# don't, AVS will still work, but again without video support.
 
 # Run Winamp
 wine /my/path/to/Winamp/winamp.exe
 ```
+
+### Building & Running Linux native
+
+There's two slightly different test programs for Linux support. One in C, one in Rust.
+Both are built automatically with the current CMake setup.
+
+Prepare & build first:
+
+```sh
+# Install Rust 32bit linux toolchain
+rustup target add i686-unknown-linux-gnu
+
+# Compile
+cmake -B build_linux --toolchain CMake-Linux32cross-toolchain.txt
+cmake --build build_linux --parallel $(nproc)
+```
+
+Then run either the C version:
+
+```sh
+build_linux/avs-cli
+# prints a static image to the terminal,
+```
+
+or the Rust version:
+```sh
+RUSTFLAGS="-L build_linux" LD_LIBRARY_PATH=build_linux build_linux/avs /path/to/some/preset.avs
+# opens a window if given a preset file as first parameter.
+```
+
+On Linux the Rust program also opens an audio input device, if the system uses Pipewire.
+
 
 ## Building & Running on Windows
 
@@ -175,6 +219,14 @@ comment, possibly using a secondary flag to categorize the suggestion:
 Thanks to _Warrior of the Light_ for assembling the source from various edits and patch
 versions that floated around soon after the code publication.
 
+Thanks to [Jan](https://github.com/idleberg) for maintaining [Visbot]
+(https://visbot.net) & invaluable feedback and brainstorming over the years.
+
+Thanks to [Sebastian](https://github.com/hartwork) for many hours of eartime and code
+minutiae discussions and the CI script.
+
+Thanks to [Lukas](https://exo-cortex.github.io/) for some code help, but mostly ideas
+and feedback.
 
 ## License
 

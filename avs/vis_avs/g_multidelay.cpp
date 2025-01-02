@@ -1,4 +1,4 @@
-#include "c_multidelay.h"
+#include "e_multidelay.h"
 
 #include "g__defs.h"
 #include "g__lib.h"
@@ -8,86 +8,98 @@
 #include <windows.h>
 
 int win32_dlgproc_multidelay(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
-    C_DELAY* g_Delay = (C_DELAY*)g_current_render;
-    char value[16];
-    unsigned int objectcode, objectmessage;
-    HWND hwndEdit;
+    E_MultiDelay* g_this = (E_MultiDelay*)g_current_render;
+    const AVS_Parameter_Handle p_mode = g_this->info.parameters[0].handle;
+    const AVS_Parameter_Handle p_active_buffer = g_this->info.parameters[1].handle;
+
+    const AVS_Parameter_Handle p_use_beats = g_this->info.buffer_parameters[0].handle;
+    const AVS_Parameter_Handle p_delay = g_this->info.buffer_parameters[1].handle;
+
+    static bool init = false;
     switch (uMsg) {
-        case WM_INITDIALOG:  // init
-        {
-            int i;
-            for (i = 0; i < 3; i++)
-                CheckDlgButton(hwndDlg, 1100 + i, g_Delay->mode == i);
-            for (i = 0; i < MULTIDELAY_NUM_BUFFERS; i++) {
-                CheckDlgButton(hwndDlg, 1000 + i, g_Delay->activebuffer == i);
-                CheckDlgButton(hwndDlg, 1020 + i, g_Delay->usebeats(i));
-                CheckDlgButton(hwndDlg, 1030 + i, !g_Delay->usebeats(i));
-                hwndEdit = GetDlgItem(hwndDlg, 1010 + i);
-                _itoa(g_Delay->delay(i), value, 10);
-                SetWindowText(hwndEdit, value);
+        case WM_INITDIALOG: {
+            init = true;
+            if (!g_this->enabled) {
+                CheckDlgButton(hwndDlg, IDC_MULTIDELAY_MODE_DISABLED, true);
+            } else {
+                CheckDlgButton(
+                    hwndDlg, IDC_MULTIDELAY_MODE_INPUT + g_this->get_int(p_mode), true);
             }
-        }
+            int64_t active = g_this->get_int(p_active_buffer);
+            for (int64_t i = 0; i < MULTIDELAY_NUM_BUFFERS; i++) {
+                CheckDlgButton(hwndDlg, IDC_MULTIDELAY_BUFFER_A + i, active == i);
+                bool use_beats = g_this->get_bool(p_use_beats, {i});
+                CheckDlgButton(hwndDlg, IDC_MULTIDELAY_A_BEATS + i, use_beats);
+                CheckDlgButton(hwndDlg, IDC_MULTIDELAY_A_FRAMES + i, !use_beats);
+                int64_t delay = g_this->get_int(p_delay, {i});
+                SetDlgItemInt(hwndDlg, IDC_MULTIDELAY_A_DELAY + i, delay, false);
+            }
+            init = false;
             return 1;
+        }
         case WM_COMMAND:
-            objectcode = LOWORD(wParam);
-            objectmessage = HIWORD(wParam);
-            // mode stuff
-            if (objectcode >= 1100) {
-                if (IsDlgButtonChecked(hwndDlg, objectcode) == 1) {
-                    g_Delay->mode = objectcode - 1100;
-                    for (unsigned int i = 1100; i < 1103; i++)
-                        if (objectcode != i) CheckDlgButton(hwndDlg, i, BST_UNCHECKED);
+            uint16_t element = LOWORD(wParam);
+            if (element == IDC_MULTIDELAY_MODE_DISABLED) {
+                g_this->set_enabled(
+                    !IsDlgButtonChecked(hwndDlg, IDC_MULTIDELAY_MODE_DISABLED));
+            }
+
+            else if (element == IDC_MULTIDELAY_MODE_INPUT
+                     || element == IDC_MULTIDELAY_MODE_OUTPUT) {
+                if (IsDlgButtonChecked(hwndDlg, element)) {
+                    g_this->set_enabled(true);
+                    g_this->set_int(p_mode, element - IDC_MULTIDELAY_MODE_INPUT);
                 }
-                return 0;
-            }
-            // frames stuff
-            if (objectcode >= 1030) {
-                if (IsDlgButtonChecked(hwndDlg, objectcode) == 1) {
-                    g_Delay->usebeats(objectcode - 1030, false);
-                    CheckDlgButton(hwndDlg, objectcode - 10, BST_UNCHECKED);
-                    g_Delay->framedelay(objectcode - 1030,
-                                        g_Delay->delay(objectcode - 1030) + 1);
-                } else
-                    g_Delay->usebeats(objectcode - 1030, true);
-                return 0;
-            }
-            // beats stuff
-            if (objectcode >= 1020) {
-                if (IsDlgButtonChecked(hwndDlg, objectcode) == 1) {
-                    g_Delay->usebeats(objectcode - 1020, true);
-                    CheckDlgButton(hwndDlg, objectcode + 10, BST_UNCHECKED);
-                    g_Delay->framedelay(objectcode - 1020,
-                                        g_Delay->framesperbeat() + 1);
-                } else
-                    g_Delay->usebeats(objectcode - 1020, false);
-                return 0;
-            }
-            // edit box stuff
-            if (objectcode >= 1010) {
-                hwndEdit = GetDlgItem(hwndDlg, objectcode);
-                if (objectmessage == EN_CHANGE) {
-                    GetWindowText(hwndEdit, value, 16);
-                    g_Delay->delay(objectcode - 1010, max(atoi(value), 0));
-                    g_Delay->framedelay(objectcode - 1010,
-                                        (g_Delay->usebeats(objectcode - 1010)
-                                             ? g_Delay->framesperbeat()
-                                             : g_Delay->delay(objectcode - 1010))
-                                            + 1);
-                } else if (objectmessage == EN_KILLFOCUS) {
-                    _itoa(g_Delay->delay(objectcode - 1010), value, 10);
-                    SetWindowText(hwndEdit, value);
+            } else if ((element == IDC_MULTIDELAY_BUFFER_A
+                        || element == IDC_MULTIDELAY_BUFFER_B
+                        || element == IDC_MULTIDELAY_BUFFER_C
+                        || element == IDC_MULTIDELAY_BUFFER_D
+                        || element == IDC_MULTIDELAY_BUFFER_E
+                        || element == IDC_MULTIDELAY_BUFFER_F)
+                       && IsDlgButtonChecked(hwndDlg, element)) {
+                g_this->set_int(p_active_buffer, element - IDC_MULTIDELAY_BUFFER_A);
+            } else if (element == IDC_MULTIDELAY_A_DELAY
+                       || element == IDC_MULTIDELAY_B_DELAY
+                       || element == IDC_MULTIDELAY_C_DELAY
+                       || element == IDC_MULTIDELAY_D_DELAY
+                       || element == IDC_MULTIDELAY_E_DELAY
+                       || element == IDC_MULTIDELAY_F_DELAY) {
+                if (init) {
+                    return 1;
                 }
-                return 0;
-            }
-            // active buffer stuff
-            if (objectcode >= 1000) {
-                if (IsDlgButtonChecked(hwndDlg, objectcode) == 1) {
-                    g_Delay->activebuffer = objectcode - 1000;
-                    for (unsigned int i = 1000; i < 1006; i++)
-                        if (objectcode != i) CheckDlgButton(hwndDlg, i, BST_UNCHECKED);
+                uint16_t message = HIWORD(wParam);
+                if (message == EN_CHANGE) {
+                    int success = false;
+                    uint32_t delay_value;
+                    delay_value = GetDlgItemInt(hwndDlg, element, &success, false);
+                    if (success) {
+                        g_this->set_int(
+                            p_delay, delay_value, {element - IDC_MULTIDELAY_A_DELAY});
+                    }
+                } else if (message == EN_KILLFOCUS) {
+                    int64_t delay =
+                        g_this->get_int(p_delay, {element - IDC_MULTIDELAY_A_DELAY});
+                    SetDlgItemInt(hwndDlg, element, delay, false);
                 }
-                return 0;
+            } else if ((element == IDC_MULTIDELAY_A_BEATS
+                        || element == IDC_MULTIDELAY_B_BEATS
+                        || element == IDC_MULTIDELAY_C_BEATS
+                        || element == IDC_MULTIDELAY_D_BEATS
+                        || element == IDC_MULTIDELAY_E_BEATS
+                        || element == IDC_MULTIDELAY_F_BEATS)
+                       && IsDlgButtonChecked(hwndDlg, element)) {
+                g_this->set_bool(p_use_beats, true, {element - IDC_MULTIDELAY_A_BEATS});
+            } else if ((element == IDC_MULTIDELAY_A_FRAMES
+                        || element == IDC_MULTIDELAY_B_FRAMES
+                        || element == IDC_MULTIDELAY_C_FRAMES
+                        || element == IDC_MULTIDELAY_D_FRAMES
+                        || element == IDC_MULTIDELAY_E_FRAMES
+                        || element == IDC_MULTIDELAY_F_FRAMES)
+                       && IsDlgButtonChecked(hwndDlg, element)) {
+                g_this->set_bool(
+                    p_use_beats, false, {element - IDC_MULTIDELAY_A_FRAMES});
             }
+            return 0;
     }
     return 0;
 }

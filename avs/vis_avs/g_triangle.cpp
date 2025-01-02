@@ -1,4 +1,4 @@
-#include "c_triangle.h"
+#include "e_triangle.h"
 
 #include "g__defs.h"
 #include "g__lib.h"
@@ -9,7 +9,12 @@
 #include <windows.h>
 
 int win32_dlgproc_triangle(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    C_Triangle* config_this = (C_Triangle*)g_current_render;
+    E_Triangle* g_this = (E_Triangle*)g_current_render;
+    AVS_Parameter_Handle h_init = g_this->info.parameters[0].handle;
+    AVS_Parameter_Handle h_frame = g_this->info.parameters[1].handle;
+    AVS_Parameter_Handle h_beat = g_this->info.parameters[2].handle;
+    AVS_Parameter_Handle h_point = g_this->info.parameters[3].handle;
+
     switch (uMsg) {
         case WM_COMMAND: {
             int wNotifyCode = HIWORD(wParam);
@@ -21,36 +26,26 @@ int win32_dlgproc_triangle(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                 GetWindowText(h, buf, l);
 
                 switch (LOWORD(wParam)) {
-                    case IDC_TRIANGLE_INIT:
-                        config_this->code.init.set(buf, l);
-                        break;
-                    case IDC_TRIANGLE_FRAME:
-                        config_this->code.frame.set(buf, l);
-                        break;
-                    case IDC_TRIANGLE_BEAT:
-                        config_this->code.beat.set(buf, l);
-                        break;
-                    case IDC_TRIANGLE_POINT:
-                        config_this->code.point.set(buf, l);
-                        break;
-                    default:
-                        break;
+                    case IDC_TRIANGLE_INIT: g_this->set_string(h_init, buf); break;
+                    case IDC_TRIANGLE_FRAME: g_this->set_string(h_frame, buf); break;
+                    case IDC_TRIANGLE_BEAT: g_this->set_string(h_beat, buf); break;
+                    case IDC_TRIANGLE_POINT: g_this->set_string(h_point, buf); break;
+                    default: break;
                 }
-                delete buf;
+                delete[] buf;
             }
             return 1;
         }
 
         case WM_INITDIALOG: {
-            SetDlgItemText(hwndDlg, IDC_TRIANGLE_INIT, config_this->code.init.string);
-            SetDlgItemText(hwndDlg, IDC_TRIANGLE_FRAME, config_this->code.frame.string);
-            SetDlgItemText(hwndDlg, IDC_TRIANGLE_BEAT, config_this->code.beat.string);
-            SetDlgItemText(hwndDlg, IDC_TRIANGLE_POINT, config_this->code.point.string);
+            SetDlgItemText(hwndDlg, IDC_TRIANGLE_INIT, g_this->get_string(h_init));
+            SetDlgItemText(hwndDlg, IDC_TRIANGLE_FRAME, g_this->get_string(h_frame));
+            SetDlgItemText(hwndDlg, IDC_TRIANGLE_BEAT, g_this->get_string(h_beat));
+            SetDlgItemText(hwndDlg, IDC_TRIANGLE_POINT, g_this->get_string(h_point));
             return 1;
         }
 
-        case WM_DESTROY:
-            return 1;
+        case WM_DESTROY: return 1;
     }
     return 0;
 }

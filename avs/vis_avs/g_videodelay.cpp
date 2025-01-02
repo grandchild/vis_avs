@@ -1,4 +1,4 @@
-#include "c_videodelay.h"
+#include "e_videodelay.h"
 
 #include "g__defs.h"
 #include "g__lib.h"
@@ -8,71 +8,57 @@
 #include <windows.h>
 
 int win32_dlgproc_videodelay(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
-    C_DELAY* g_Delay = (C_DELAY*)g_current_render;
-    char value[16];
-    int val;
-    unsigned int objectcode, objectmessage;
-    HWND hwndEdit;
+    E_VideoDelay* g_this = (E_VideoDelay*)g_current_render;
+    const AVS_Parameter_Handle p_use_beats = g_this->info.parameters[0].handle;
+    const AVS_Parameter_Handle p_delay = g_this->info.parameters[1].handle;
+
+    char delay_value_str[16];
+    int delay_value;
     switch (uMsg) {
-        case WM_INITDIALOG:  // init
-            CheckDlgButton(hwndDlg, IDC_CHECK1, g_Delay->enabled);
-            CheckDlgButton(hwndDlg, IDC_RADIO1, g_Delay->usebeats);
-            CheckDlgButton(hwndDlg, IDC_RADIO2, !g_Delay->usebeats);
-            hwndEdit = GetDlgItem(hwndDlg, IDC_EDIT1);
-            _itoa(g_Delay->delay, value, 10);
-            SetWindowText(hwndEdit, value);
+        case WM_INITDIALOG:
+            CheckDlgButton(hwndDlg, IDC_CHECK1, g_this->enabled);
+            CheckDlgButton(hwndDlg, IDC_RADIO1, g_this->get_bool(p_use_beats));
+            CheckDlgButton(hwndDlg, IDC_RADIO2, !g_this->get_bool(p_use_beats));
+            itoa(g_this->get_int(p_delay), delay_value_str, 10);
+            SetWindowText(GetDlgItem(hwndDlg, IDC_EDIT1), delay_value_str);
             return 1;
         case WM_COMMAND:
-            objectcode = LOWORD(wParam);
-            objectmessage = HIWORD(wParam);
-            // see if enable checkbox is checked
-            if (objectcode == IDC_CHECK1) {
-                g_Delay->enabled = IsDlgButtonChecked(hwndDlg, IDC_CHECK1) == 1;
+            if (LOWORD(wParam) == IDC_CHECK1) {
+                g_this->set_enabled(IsDlgButtonChecked(hwndDlg, IDC_CHECK1));
                 return 0;
             }
-            // see if beats radiobox is checked
-            if (objectcode == IDC_RADIO1) {
+            if (LOWORD(wParam) == IDC_RADIO1) {
                 if (IsDlgButtonChecked(hwndDlg, IDC_RADIO1) == 1) {
-                    g_Delay->usebeats = true;
+                    g_this->set_bool(p_use_beats, true);
                     CheckDlgButton(hwndDlg, IDC_RADIO2, BST_UNCHECKED);
-                    g_Delay->framedelay = 0;
-                    g_Delay->framessincebeat = 0;
-                    hwndEdit = GetDlgItem(hwndDlg, IDC_EDIT1);  // new
-                    if (g_Delay->delay > 16) {                  // new
-                        g_Delay->delay = 16;                    // new
-                        SetWindowText(hwndEdit, "16");          // new
-                    }                                           // new
-                } else
-                    g_Delay->usebeats = false;
+                    if (g_this->get_int(p_delay) > 16) {
+                        g_this->set_int(p_delay, 16);
+                        SetWindowText(GetDlgItem(hwndDlg, IDC_EDIT1), "16");
+                    }
+                } else {
+                    g_this->set_bool(p_use_beats, false);
+                }
                 return 0;
             }
-            // see if frames radiobox is checked
-            if (objectcode == IDC_RADIO2) {
+            if (LOWORD(wParam) == IDC_RADIO2) {
                 if (IsDlgButtonChecked(hwndDlg, IDC_RADIO2) == 1) {
-                    g_Delay->usebeats = false;
+                    g_this->set_bool(p_use_beats, false);
                     CheckDlgButton(hwndDlg, IDC_RADIO1, BST_UNCHECKED);
-                    g_Delay->framedelay = g_Delay->delay;
-                } else
-                    g_Delay->usebeats = true;
+                } else {
+                    g_this->set_bool(p_use_beats, true);
+                }
                 return 0;
             }
-            // get and put data from the delay box
-            if (objectcode == IDC_EDIT1) {
-                hwndEdit = GetDlgItem(hwndDlg, IDC_EDIT1);
-                if (objectmessage == EN_CHANGE) {
-                    GetWindowText(hwndEdit, value, 16);
-                    val = atoi(value);
-                    if (g_Delay->usebeats) {
-                        if (val > 16) val = 16;
-                    }  // new
-                    else {
-                        if (val > 200) val = 200;
-                    }  // new
-                    g_Delay->delay = val;
-                    g_Delay->framedelay = g_Delay->usebeats ? 0 : g_Delay->delay;
-                } else if (objectmessage == EN_KILLFOCUS) {
-                    _itoa(g_Delay->delay, value, 10);
-                    SetWindowText(hwndEdit, value);
+            if (LOWORD(wParam) == IDC_EDIT1) {
+                if (HIWORD(wParam) == EN_CHANGE) {
+                    int success = false;
+                    delay_value = GetDlgItemInt(hwndDlg, IDC_EDIT1, &success, false);
+                    if (success) {
+                        g_this->set_int(p_delay, delay_value);
+                    }
+                } else if (HIWORD(wParam) == EN_KILLFOCUS) {
+                    itoa(g_this->get_int(p_delay), delay_value_str, 10);
+                    SetWindowText(GetDlgItem(hwndDlg, IDC_EDIT1), delay_value_str);
                 }
                 return 0;
             }

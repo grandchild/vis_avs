@@ -24,7 +24,7 @@
 #define IDD_CFG_COLORFADE               118
 #define IDD_CFG_COLORCLIP               119
 #define IDD_CFG_ROTSTAR                 120
-#define IDD_CFG_OSCRING                 121
+#define IDD_CFG_RING                    121
 #define IDD_CFG_TRANS                   122
 #define IDB_BITMAP1                     122
 #define IDD_GCFG_PRESET                 123
@@ -46,7 +46,7 @@
 #define IDD_CFG_MOSAIC                  139
 #define IDD_CFG_WATERBUMP               140
 #define IDR_MENU1                       140
-#define IDD_CFG_AVI                     141
+#define IDD_CFG_VIDEO                   141
 #define IDD_CFG_UNKN                    142
 #define IDD_GCFG_TRANS                  143
 #define IDD_CFG_BPM                     144
@@ -88,10 +88,11 @@
 #define IDD_CFG_PICTUREII               184
 #define IDD_CFG_FPSLIMITER              185
 #define IDD_CFG_TEXER                   186
+#define IDD_CFG_DOTFOUNTAIN             187
 #define IDC_EFFECTS                     1000
 #define IDC_ENABLED                     1001
 #define IDC_FBCLEAR                     1002
-#define IDC_DISSOC                      1003
+#define IDC_SEPARATE                    1003
 #define IDC_DAMP                        1004
 #define OBJ_COMBO                       1005
 #define IDC_EFFECTRECT                  1006
@@ -158,7 +159,7 @@
 #define IDC_BBLUE                       1047
 #define IDC_SPEED                       1048
 #define IDC_DOTS                        1049
-#define IDC_SA                          1050
+#define IDC_VIDEO_RESAMPLE              1050
 #define IDC_DISTANCE                    1051
 #define IDC_METHOD_SLUDGE               1052
 #define IDC_PERSIST_TEXT1               1053
@@ -395,7 +396,7 @@
 #define IDC_STATIC_TRANS_NONE           1207
 #define IDC_THREADS                     1208
 #define IDC_THREADSBORDER               1209
-#define IDC_CONVOLUTION_CHECK1          1210
+#define IDC_CONVOLUTION_ENABLED         1210
 #define IDC_CONVOLUTION_EDIT1           1211
 #define IDC_CONVOLUTION_EDIT2           1212
 #define IDC_CONVOLUTION_EDIT3           1213
@@ -445,17 +446,15 @@
 #define IDC_CONVOLUTION_EDIT47          1257
 #define IDC_CONVOLUTION_EDIT48          1258
 #define IDC_CONVOLUTION_EDIT49          1259
-#define IDC_CONVOLUTION_EDIT50          1260
-#define IDC_CONVOLUTION_EDIT51          1261
-#define IDC_CONVOLUTION_EDIT52          1262
-#define IDC_CONVOLUTION_EDIT53          1263
-#define IDC_CONVOLUTION_CHECK2          1264
-#define IDC_CONVOLUTION_CHECK3          1265
-#define IDC_CONVOLUTION_CHECK4          1266
-#define IDC_CONVOLUTION_BUTTON1         1267
-#define IDC_CONVOLUTION_BUTTON2         1268
-#define IDC_CONVOLUTION_BUTTON3         1269
-#define IDC_CONVOLUTION_BUTTON4         1270
+#define IDC_CONVOLUTION_BIAS            1260
+#define IDC_CONVOLUTION_SCALE           1261
+#define IDC_CONVOLUTION_WRAP            1264
+#define IDC_CONVOLUTION_ABSOLUTE        1265
+#define IDC_CONVOLUTION_TWOPASS         1266
+#define IDC_CONVOLUTION_AUTOSCALE       1267
+#define IDC_CONVOLUTION_SAVE            1268
+#define IDC_CONVOLUTION_LOAD            1269
+#define IDC_CONVOLUTION_CLEAR           1270
 #define IDC_TEXERII_INIT                1271
 #define IDC_TEXERII_FRAME               1272
 #define IDC_TEXERII_BEAT                1273
@@ -488,7 +487,7 @@
 #define IDC_COLORMAP_COLOR_POSITION     1300
 #define IDC_ADDBORDERS_ENABLE           1301
 #define IDC_ADDBORDERS_COLOR            1302
-#define IDC_ADDBORDERS_WIDTH            1303
+#define IDC_ADDBORDERS_SIZE             1303
 #define IDC_TRIANGLE_INIT               1304
 #define IDC_TRIANGLE_FRAME              1305
 #define IDC_TRIANGLE_BEAT               1306
@@ -547,6 +546,34 @@
 #define IDC_TEXER_NUM_PARTICLES         1359
 #define IDC_TEXER_NUM_PARTICLES_LABEL   1360
 #define IDC_TEXER_ERROR                 1361
+#define IDC_MULTIDELAY_MODE_DISABLED    1362
+#define IDC_MULTIDELAY_MODE_INPUT       1363
+#define IDC_MULTIDELAY_MODE_OUTPUT      1364
+#define IDC_MULTIDELAY_BUFFER_A         1365
+#define IDC_MULTIDELAY_BUFFER_B         1366
+#define IDC_MULTIDELAY_BUFFER_C         1367
+#define IDC_MULTIDELAY_BUFFER_D         1368
+#define IDC_MULTIDELAY_BUFFER_E         1369
+#define IDC_MULTIDELAY_BUFFER_F         1370
+#define IDC_MULTIDELAY_A_DELAY          1371
+#define IDC_MULTIDELAY_B_DELAY          1372
+#define IDC_MULTIDELAY_C_DELAY          1373
+#define IDC_MULTIDELAY_D_DELAY          1374
+#define IDC_MULTIDELAY_E_DELAY          1375
+#define IDC_MULTIDELAY_F_DELAY          1376
+#define IDC_MULTIDELAY_A_BEATS          1377
+#define IDC_MULTIDELAY_B_BEATS          1378
+#define IDC_MULTIDELAY_C_BEATS          1379
+#define IDC_MULTIDELAY_D_BEATS          1380
+#define IDC_MULTIDELAY_E_BEATS          1381
+#define IDC_MULTIDELAY_F_BEATS          1382
+#define IDC_MULTIDELAY_A_FRAMES         1383
+#define IDC_MULTIDELAY_B_FRAMES         1384
+#define IDC_MULTIDELAY_C_FRAMES         1385
+#define IDC_MULTIDELAY_D_FRAMES         1386
+#define IDC_MULTIDELAY_E_FRAMES         1387
+#define IDC_MULTIDELAY_F_FRAMES         1388
+#define IDC_PICTURE_ERROR               1389
 #define IDM_DISPLAY                     40001
 #define IDM_PRESETS                     40002
 #define IDM_TRANS                       40003
@@ -566,9 +593,9 @@
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE 187
+#define _APS_NEXT_RESOURCE_VALUE 188
 #define _APS_NEXT_COMMAND_VALUE  40015
-#define _APS_NEXT_CONTROL_VALUE  1362
+#define _APS_NEXT_CONTROL_VALUE  1390
 #define _APS_NEXT_SYMED_VALUE    101
 #endif
 #endif

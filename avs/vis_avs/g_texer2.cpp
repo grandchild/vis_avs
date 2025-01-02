@@ -1,4 +1,4 @@
-#include "c_texer2.h"
+#include "e_texer2.h"
 
 #include "g__defs.h"
 #include "g__lib.h"
@@ -8,10 +8,23 @@
 
 #include <windows.h>
 
-void load_examples(C_Texer2* texer2, HWND dialog, HWND button);
+#define TEXERII_EXAMPLES_FIRST_ID 31337
+
+void load_examples(E_Texer2* texer2, HWND dialog, HWND button);
 
 int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    C_Texer2* config_this = (C_Texer2*)g_current_render;
+    E_Texer2* g_this = (E_Texer2*)g_current_render;
+    const Parameter& p_image = g_this->info.parameters[1];
+    const AVS_Parameter_Handle p_resize = g_this->info.parameters[2].handle;
+    const AVS_Parameter_Handle p_wrap = g_this->info.parameters[3].handle;
+    const AVS_Parameter_Handle p_colorize = g_this->info.parameters[4].handle;
+    const AVS_Parameter_Handle p_init = g_this->info.parameters[5].handle;
+    const AVS_Parameter_Handle p_frame = g_this->info.parameters[6].handle;
+    const AVS_Parameter_Handle p_beat = g_this->info.parameters[7].handle;
+    const AVS_Parameter_Handle p_point = g_this->info.parameters[8].handle;
+    const Parameter& p_example = g_this->info.parameters[9];
+    const AVS_Parameter_Handle p_load_example = g_this->info.parameters[10].handle;
+
     switch (uMsg) {
         case WM_COMMAND: {
             int wNotifyCode = HIWORD(wParam);
@@ -20,130 +33,109 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (wNotifyCode == CBN_SELCHANGE) {
                 switch (LOWORD(wParam)) {
                     case IDC_TEXERII_TEXTURE:
-                        HWND h = (HWND)lParam;
-                        int p = SendMessage(h, CB_GETCURSEL, 0, 0);
-                        if (p >= 1) {
-                            SendMessage(
-                                h, CB_GETLBTEXT, p, (LPARAM)config_this->config.image);
-                            config_this->load_image();
-                        } else {
-                            config_this->config.image[0] = 0;
-                            config_this->load_image();
+                        int sel = SendDlgItemMessage(
+                            hwndDlg, IDC_TEXERII_TEXTURE, CB_GETCURSEL, 0, 0);
+                        if (sel < 0) {
+                            break;
                         }
+                        size_t filename_length =
+                            SendDlgItemMessage(
+                                hwndDlg, IDC_TEXERII_TEXTURE, CB_GETLBTEXTLEN, sel, 0)
+                            + 1;
+                        char* buf = (char*)calloc(filename_length, sizeof(char));
+                        SendDlgItemMessage(hwndDlg,
+                                           IDC_TEXERII_TEXTURE,
+                                           CB_GETLBTEXT,
+                                           sel,
+                                           (LPARAM)buf);
+                        g_this->set_string(p_image.handle, buf);
+                        free(buf);
                         break;
                 }
             } else if (wNotifyCode == BN_CLICKED) {
-                config_this->config.wrap =
-                    IsDlgButtonChecked(hwndDlg, IDC_TEXERII_WRAP) == BST_CHECKED;
-                config_this->config.resize =
-                    IsDlgButtonChecked(hwndDlg, IDC_TEXERII_RESIZE) == BST_CHECKED;
-                config_this->config.mask =
-                    IsDlgButtonChecked(hwndDlg, IDC_TEXERII_MASK) == BST_CHECKED;
+                g_this->set_bool(p_resize,
+                                 IsDlgButtonChecked(hwndDlg, IDC_TEXERII_RESIZE));
+                g_this->set_bool(p_wrap, IsDlgButtonChecked(hwndDlg, IDC_TEXERII_WRAP));
+                g_this->set_bool(p_colorize,
+                                 IsDlgButtonChecked(hwndDlg, IDC_TEXERII_MASK));
 
                 if (LOWORD(wParam) == IDC_TEXERII_ABOUT) {
-                    compilerfunctionlist(hwndDlg, config_this->help_text);
+                    compilerfunctionlist(
+                        hwndDlg, g_this->info.get_name(), g_this->info.get_help());
                 } else if (LOWORD(wParam) == IDC_TEXERII_EXAMPLE) {
-                    HWND examplesButton = GetDlgItem(hwndDlg, IDC_TEXERII_EXAMPLE);
-                    load_examples(config_this, hwndDlg, examplesButton);
+                    RECT r;
+                    GetWindowRect(GetDlgItem(hwndDlg, IDC_TEXERII_EXAMPLE), &r);
+
+                    HMENU m = CreatePopupMenu();
+                    if (m == NULL) {
+                        return 1;
+                    }
+                    int64_t options_length;
+                    const char* const* options = p_example.get_options(&options_length);
+                    for (int i = 0; i < options_length; i++) {
+                        AppendMenu(
+                            m, MF_STRING, TEXERII_EXAMPLES_FIRST_ID + i, options[i]);
+                    }
+                    int ret = TrackPopupMenu(
+                        m, TPM_RETURNCMD, r.left + 1, r.bottom + 1, 0, hwndDlg, 0);
+                    if (ret < TEXERII_EXAMPLES_FIRST_ID
+                        || ret >= (TEXERII_EXAMPLES_FIRST_ID + options_length)) {
+                        return 1;
+                    }
+                    g_this->set_int(p_example.handle, ret - TEXERII_EXAMPLES_FIRST_ID);
+                    g_this->run_action(p_load_example);
+                    SetDlgItemText(
+                        hwndDlg, IDC_TEXERII_INIT, g_this->get_string(p_init));
+                    SetDlgItemText(
+                        hwndDlg, IDC_TEXERII_FRAME, g_this->get_string(p_frame));
+                    SetDlgItemText(
+                        hwndDlg, IDC_TEXERII_BEAT, g_this->get_string(p_beat));
+                    SetDlgItemText(
+                        hwndDlg, IDC_TEXERII_POINT, g_this->get_string(p_point));
+                    CheckDlgButton(
+                        hwndDlg, IDC_TEXERII_RESIZE, g_this->get_bool(p_resize));
+                    CheckDlgButton(hwndDlg, IDC_TEXERII_WRAP, g_this->get_bool(p_wrap));
+                    CheckDlgButton(
+                        hwndDlg, IDC_TEXERII_MASK, g_this->get_bool(p_colorize));
+
+                    // select the default texture image
+                    g_this->set_string(p_image.handle, TEXER_II_DEFAULT_IMAGE_STRING);
+                    SendDlgItemMessage(
+                        hwndDlg, IDC_TEXERII_TEXTURE, CB_SETCURSEL, 0, 0);
+                    DestroyMenu(m);
                 }
             } else if (wNotifyCode == EN_CHANGE) {
                 char* buf;
-                int l = GetWindowTextLength(h);
-                buf = new char[l + 1];
-                GetWindowText(h, buf, l + 1);
+                int l = GetWindowTextLength(h) + 1;
+                buf = new char[l];
+                GetWindowText(h, buf, l);
 
                 switch (LOWORD(wParam)) {
-                    case IDC_TEXERII_INIT:
-                        config_this->code.init.set(buf, l + 1);
-                        break;
-                    case IDC_TEXERII_FRAME:
-                        config_this->code.frame.set(buf, l + 1);
-                        break;
-                    case IDC_TEXERII_BEAT:
-                        config_this->code.beat.set(buf, l + 1);
-                        break;
-                    case IDC_TEXERII_POINT:
-                        config_this->code.point.set(buf, l + 1);
-                        break;
-                    default:
-                        break;
+                    case IDC_TEXERII_INIT: g_this->set_string(p_init, buf); break;
+                    case IDC_TEXERII_FRAME: g_this->set_string(p_frame, buf); break;
+                    case IDC_TEXERII_BEAT: g_this->set_string(p_beat, buf); break;
+                    case IDC_TEXERII_POINT: g_this->set_string(p_point, buf); break;
+                    default: break;
                 }
-                delete buf;
+                delete[] buf;
             }
             return 1;
         }
 
         case WM_INITDIALOG: {
-            SendDlgItemMessage(hwndDlg,
-                               IDC_TEXERII_TEXTURE,
-                               CB_ADDSTRING,
-                               0,
-                               (LPARAM) "(default image)");
-            bool found = false;
-            for (auto file : config_this->file_list) {
-                int p = SendDlgItemMessage(
-                    hwndDlg, IDC_TEXERII_TEXTURE, CB_ADDSTRING, 0, (LPARAM)file);
-
-                if (strncmp(file, config_this->config.image, MAX_PATH) == 0) {
-                    SendDlgItemMessage(
-                        hwndDlg, IDC_TEXERII_TEXTURE, CB_SETCURSEL, p, 0);
-                    found = true;
-                }
-            }
-            if (!found) {
-                SendDlgItemMessage(hwndDlg, IDC_TEXERII_TEXTURE, CB_SETCURSEL, 0, 0);
-            }
-            SetDlgItemText(hwndDlg, IDC_TEXERII_INIT, config_this->code.init.string);
-            SetDlgItemText(hwndDlg, IDC_TEXERII_FRAME, config_this->code.frame.string);
-            SetDlgItemText(hwndDlg, IDC_TEXERII_BEAT, config_this->code.beat.string);
-            SetDlgItemText(hwndDlg, IDC_TEXERII_POINT, config_this->code.point.string);
-            CheckDlgButton(hwndDlg, IDC_TEXERII_WRAP, config_this->config.wrap);
-            CheckDlgButton(hwndDlg, IDC_TEXERII_MASK, config_this->config.mask);
-            CheckDlgButton(hwndDlg, IDC_TEXERII_RESIZE, config_this->config.resize);
+            auto image = g_this->get_string(p_image.handle);
+            init_resource(p_image, image, hwndDlg, IDC_TEXERII_TEXTURE, MAX_PATH);
+            SetDlgItemText(hwndDlg, IDC_TEXERII_INIT, g_this->get_string(p_init));
+            SetDlgItemText(hwndDlg, IDC_TEXERII_FRAME, g_this->get_string(p_frame));
+            SetDlgItemText(hwndDlg, IDC_TEXERII_BEAT, g_this->get_string(p_beat));
+            SetDlgItemText(hwndDlg, IDC_TEXERII_POINT, g_this->get_string(p_point));
+            CheckDlgButton(hwndDlg, IDC_TEXERII_RESIZE, g_this->get_bool(p_resize));
+            CheckDlgButton(hwndDlg, IDC_TEXERII_WRAP, g_this->get_bool(p_wrap));
+            CheckDlgButton(hwndDlg, IDC_TEXERII_MASK, g_this->get_bool(p_colorize));
             return 1;
         }
 
-        case WM_DESTROY:
-            return 1;
+        case WM_DESTROY: return 1;
     }
     return 0;
-}
-
-void load_examples(C_Texer2* texer2, HWND dialog, HWND button) {
-    RECT r;
-    if (GetWindowRect(button, &r) == 0) {
-        return;
-    }
-
-    HMENU m = CreatePopupMenu();
-    if (m == NULL) {
-        return;
-    }
-    for (int i = 0; i < TEXERII_NUM_EXAMPLES; i++) {
-        AppendMenu(
-            m, MF_STRING, TEXERII_EXAMPLES_FIRST_ID + i, texer2->examples[i].name);
-    }
-    int ret = TrackPopupMenu(m, TPM_RETURNCMD, r.left + 1, r.bottom + 1, 0, button, 0);
-    if (ret < TEXERII_EXAMPLES_FIRST_ID
-        || ret >= (TEXERII_EXAMPLES_FIRST_ID + TEXERII_NUM_EXAMPLES)) {
-        return;
-    }
-    Texer2Example* example = &(texer2->examples[ret - TEXERII_EXAMPLES_FIRST_ID]);
-    texer2->code.init.set(example->init, strnlen(example->init, 65534) + 1);
-    texer2->code.frame.set(example->frame, strnlen(example->frame, 65534) + 1);
-    texer2->code.beat.set(example->beat, strnlen(example->beat, 65534) + 1);
-    texer2->code.point.set(example->point, strnlen(example->point, 65534) + 1);
-    texer2->config.resize = example->resize;
-    texer2->config.wrap = example->wrap;
-    texer2->config.mask = example->mask;
-    CheckDlgButton(dialog, IDC_TEXERII_WRAP, texer2->config.wrap);
-    CheckDlgButton(dialog, IDC_TEXERII_MASK, texer2->config.mask);
-    CheckDlgButton(dialog, IDC_TEXERII_RESIZE, texer2->config.resize);
-    SetDlgItemText(dialog, IDC_TEXERII_INIT, texer2->code.init.string);
-    SetDlgItemText(dialog, IDC_TEXERII_FRAME, texer2->code.frame.string);
-    SetDlgItemText(dialog, IDC_TEXERII_BEAT, texer2->code.beat.string);
-    SetDlgItemText(dialog, IDC_TEXERII_POINT, texer2->code.point.string);
-    // select the default texture image
-    SendDlgItemMessage(dialog, IDC_TEXERII_TEXTURE, CB_SETCURSEL, 0, 0);
-    texer2->load_image();
 }

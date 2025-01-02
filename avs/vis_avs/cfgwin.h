@@ -32,11 +32,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <windows.h>
 
 void CfgWnd_Create(struct winampVisModule* this_mod);
-void CfgWnd_Destroy(void);
+void CfgWnd_Destroy();
 
 void CfgWnd_Populate(int force = 0);
 void CfgWnd_Unpopulate(int force = 0);
-void CfgWnd_RePopIfNeeded(void);
+void CfgWnd_RePopIfNeeded();
 
 extern int cfg_fs_w, cfg_fs_h, cfg_fs_d, cfg_fs_bpp, cfg_fs_fps, cfg_fs_rnd,
     cfg_fs_flip, cfg_fs_height, cfg_speed, cfg_fs_rnd_time;
@@ -52,3 +52,5 @@ extern int cfg_render_prio;
 
 extern char config_pres_subdir[MAX_PATH];
 extern HWND g_hwndDlg;
+
+extern int g_reset_vars_on_recompile;

@@ -51,6 +51,8 @@ Interface
     * Allow the AVS editor to be resized (only resizing the preset-treeview is enough)
     * Bug: When AVS is at the bottom right of the screen, and a user switches to a lower resolution, AVS becomes inaccessible (editing the .ini fixes this). Add a check to the saved x,y coordinates?
     * Add an option for AVS to start in fullscreen mode.
+    * Don't swallow '&' in preset filenames as mnemonic/"menu access" keys.
+    * Bug: Mouse cursor is visible in fullscreen after workspace switch
 
 
 
@@ -161,6 +163,11 @@ Render / TexerII
     * Rotate sprites. ("r" per-point variable?)
     * Why not "rz" right away, and add "rx" & "ry" to skew the image? Which perspective to use?
     * Bug: image filenames starting with "_" are buggy (because they are sorted before the default image).
+
+
+Trans / Convolution Filter
+
+    * Select mulitple kernel fields (or rows/coloumns) and edit them together.
 
 
 Input / Audio handling

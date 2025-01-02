@@ -1,13 +1,11 @@
 #pragma once
 
-#include "c__base.h"
-
 #include <windows.h>
 
 #define MOD_NAME    "Render / Text"
 #define C_THISCLASS C_TextClass
 
-class C_THISCLASS : public C_RBASE {
+class C_THISCLASS {
    protected:
    public:
     C_THISCLASS();
@@ -19,7 +17,7 @@ class C_THISCLASS : public C_RBASE {
     void CreateStar(int A);
     virtual ~C_THISCLASS();
     virtual int render(char visdata[2][2][576],
-                       int isBeat,
+                       int is_beat,
                        int* framebuffer,
                        int* fbout,
                        int w,

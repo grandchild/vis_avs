@@ -31,8 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "bpm.h"
 
-#include "r_defs.h"
-
 #include "cfgwin.h"
 #include "draw.h"
 #include "render.h"
@@ -50,7 +48,7 @@ extern CRITICAL_SECTION g_title_cs;
 extern char g_title[2048];
 #endif
 
-int refineBeat(int isBeat);
+int refineBeat(int is_beat);
 BOOL TCHistStep(BeatType* t,
                 int* _halfDiscriminated,
                 int* _hdPos,
@@ -127,17 +125,22 @@ BOOL CALLBACK DlgProc_Bpm(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
             oldDisplayConfidence = -1;
             oldInSlide = -1;
             oldOutSlide = -1;
-            if (cfg_smartbeat)
+            if (cfg_smartbeat) {
                 CheckDlgButton(hwndDlg, IDC_BPMADV, BST_CHECKED);
-            else
+            } else {
                 CheckDlgButton(hwndDlg, IDC_BPMSTD, BST_CHECKED);
-            if (cfg_smartbeatsticky) CheckDlgButton(hwndDlg, IDC_STICKY, BST_CHECKED);
-            if (cfg_smartbeatresetnewsong)
+            }
+            if (cfg_smartbeatsticky) {
+                CheckDlgButton(hwndDlg, IDC_STICKY, BST_CHECKED);
+            }
+            if (cfg_smartbeatresetnewsong) {
                 CheckDlgButton(hwndDlg, IDC_NEWRESET, BST_CHECKED);
-            else
+            } else {
                 CheckDlgButton(hwndDlg, IDC_NEWADAPT, BST_CHECKED);
-            if (cfg_smartbeatonlysticky)
+            }
+            if (cfg_smartbeatonlysticky) {
                 CheckDlgButton(hwndDlg, IDC_ONLYSTICKY, BST_CHECKED);
+            }
             SendDlgItemMessage(hwndDlg, IDC_IN, TBM_SETTICFREQ, 1, 0);
             SendDlgItemMessage(hwndDlg, IDC_IN, TBM_SETRANGE, TRUE, MAKELONG(0, 8));
             SendDlgItemMessage(hwndDlg, IDC_OUT, TBM_SETTICFREQ, 1, 0);
@@ -217,9 +220,15 @@ BOOL CALLBACK DlgProc_Bpm(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                                         ShowWindow(GetDlgItem(hwndDlg, IDC_RESET),
                    cfg_smartbeat ? SW_NORMAL : SW_HIDE);*/
             }
-            if (LOWORD(wParam) == IDC_2X) doubleBeat();
-            if (LOWORD(wParam) == IDC_DIV2) halfBeat();
-            if (LOWORD(wParam) == IDC_RESET) ResetAdapt();
+            if (LOWORD(wParam) == IDC_2X) {
+                doubleBeat();
+            }
+            if (LOWORD(wParam) == IDC_DIV2) {
+                halfBeat();
+            }
+            if (LOWORD(wParam) == IDC_RESET) {
+                ResetAdapt();
+            }
             if (LOWORD(wParam) == IDC_STICK) {
                 sticked = 1;
                 stickyConfidenceCount = 0;
@@ -229,15 +238,15 @@ BOOL CALLBACK DlgProc_Bpm(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                 stickyConfidenceCount = 0;
             }
             return 0;
-        case WM_DESTROY:
-            KillTimer(hwndDlg, 0);
-            return 0;
+        case WM_DESTROY: KillTimer(hwndDlg, 0); return 0;
     }
     return 0;
 }
 
 void initBpm(void) {
-    if (g_fakeinit) return;
+    if (g_fakeinit) {
+        return;
+    }
     TCUsed = 0;
     *txt = 0;
     betterConfidenceCount = 0;
@@ -333,8 +342,12 @@ void ResetAdapt(void) {
 
 // Insert a beat in history table. May be either real beat or guessed
 void InsertHistStep(BeatType* t, DWORD TC, int Type, int i) {
-    if (i >= TCHistSize) return;
-    if (t == TCHist && insertionCount < TCHistSize * 2) insertionCount++;
+    if (i >= TCHistSize) {
+        return;
+    }
+    if (t == TCHist && insertionCount < TCHistSize * 2) {
+        insertionCount++;
+    }
     memmove(t + i + 1, t + i, sizeof(BeatType) * (TCHistSize - (i + 1)));
     t[0].TC = TC;
     t[0].Type = Type;
@@ -345,11 +358,17 @@ void doubleBeat(void) {
     int i;
     int iv[8];
 
-    if (sticked && Bpm > MIN_BPM) return;
+    if (sticked && Bpm > MIN_BPM) {
+        return;
+    }
 
-    for (i = 0; i < TCHistSize - 1; i++) iv[i] = TCHist[i].TC - TCHist[i + 1].TC;
+    for (i = 0; i < TCHistSize - 1; i++) {
+        iv[i] = TCHist[i].TC - TCHist[i + 1].TC;
+    }
 
-    for (i = 1; i < TCHistSize; i++) TCHist[i].TC = TCHist[i - 1].TC - iv[i - 1] / 2;
+    for (i = 1; i < TCHistSize; i++) {
+        TCHist[i].TC = TCHist[i - 1].TC - iv[i - 1] / 2;
+    }
 
     Avg /= 2;
     Bpm *= 2;
@@ -364,11 +383,17 @@ void halfBeat(void) {
     int i;
     int iv[8];
 
-    if (sticked && Bpm < MIN_BPM) return;
+    if (sticked && Bpm < MIN_BPM) {
+        return;
+    }
 
-    for (i = 0; i < TCHistSize - 1; i++) iv[i] = TCHist[i].TC - TCHist[i + 1].TC;
+    for (i = 0; i < TCHistSize - 1; i++) {
+        iv[i] = TCHist[i].TC - TCHist[i + 1].TC;
+    }
 
-    for (i = 1; i < TCHistSize; i++) TCHist[i].TC = TCHist[i - 1].TC - iv[i - 1] * 2;
+    for (i = 1; i < TCHistSize; i++) {
+        TCHist[i].TC = TCHist[i - 1].TC - iv[i - 1] * 2;
+    }
 
     Avg *= 2;
     Bpm /= 2;
@@ -377,7 +402,7 @@ void halfBeat(void) {
     memset(halfDiscriminated, 0, TCHistSize * sizeof(int));
 }
 
-// Called whenever isBeat was true in render
+// Called whenever is_beat was true in render
 BOOL TCHistStep(BeatType* t,
                 int* _halfDiscriminated,
                 int* _hdPos,
@@ -394,8 +419,10 @@ BOOL TCHistStep(BeatType* t,
         if (learning) {
             if (abs((int)(Avg - (TC - t[1].TC)))
                 < abs((int)(Avg - (t[0].TC - t[1].TC)))) {
-                /* if (predictionLastTC && t[0].Type == BEAT_GUESSED
-                   && Type == BEAT_REAL) predictionLastTC += (TC - t[0].TC)/2; */
+                /*
+                if (predictionLastTC && t[0].Type == BEAT_GUESSED && Type == BEAT_REAL)
+                    predictionLastTC += (TC - t[0].TC)/2;
+                */
                 t[0].TC = TC;
                 t[0].Type = Type;
                 return TRUE;
@@ -404,10 +431,10 @@ BOOL TCHistStep(BeatType* t,
         return FALSE;
     }
 
-    if (learning)
-        for (offI = 2; offI < offIMax; offI++)  // Try to see if this beat is in the
-                                                // middle of our current Bpm, or maybe
-                                                // 1/3, 1/4 etc... to offIMax
+    if (learning) {
+        for (offI = 2; offI < offIMax; offI++) {  // Try to see if this beat is in the
+                                                  // middle of our current Bpm, or maybe
+                                                  // 1/3, 1/4 etc... to offIMax
             if ((float)abs((int)((Avg / offI) - thisLen)) < (float)(Avg / offI) * 0.2) {
                 _halfDiscriminated[(*_hdPos)++] = 1;  // Should test if offI==2 before
                                                       // doing that, but seems to have
@@ -416,6 +443,8 @@ BOOL TCHistStep(BeatType* t,
                 (*_hdPos) %= 8;
                 return FALSE;
             }
+        }
+    }
 
     // This beat is accepted, so set this discrimination entry to false
     _halfDiscriminated[hdPos++] = 0;
@@ -443,8 +472,11 @@ BOOL TCHistStep(BeatType* t,
 // Am i ready to learn ?
 BOOL ReadyToLearn(void) {
     int i;
-    for (i = 0; i < TCHistSize; i++)
-        if (TCHist[i].TC == 0) return FALSE;
+    for (i = 0; i < TCHistSize; i++) {
+        if (TCHist[i].TC == 0) {
+            return FALSE;
+        }
+    }
     return TRUE;
 }
 
@@ -461,12 +493,15 @@ int GetBpm(void) {
     int smN = 0;
     int smSum = 0;
     // Calculate smoothed Bpm
-    for (i = 0; i < smSize; i++)
+    for (i = 0; i < smSize; i++) {
         if (Smoother[i] > 0) {
             smSum += Smoother[i];
             smN++;
         }
-    if (smN) return smSum / smN;
+    }
+    if (smN) {
+        return smSum / smN;
+    }
     return 0;
 }
 
@@ -482,16 +517,23 @@ void CalcBPM(void) {
     int mx = 0;
     float et;
 
-    if (!ReadyToLearn()) return;
+    if (!ReadyToLearn()) {
+        return;
+    }
 
     // First calculate average beat
-    for (i = 0; i < TCHistSize - 1; i++) totalTC += TCHist[i].TC - TCHist[i + 1].TC;
+    for (i = 0; i < TCHistSize - 1; i++) {
+        totalTC += TCHist[i].TC - TCHist[i + 1].TC;
+    }
 
     Avg = totalTC / (TCHistSize - 1);
 
     // Count how many of then are real as opposed to guessed
-    for (i = 0; i < TCHistSize; i++)
-        if (TCHist[i].Type == BEAT_REAL) r++;
+    for (i = 0; i < TCHistSize; i++) {
+        if (TCHist[i].Type == BEAT_REAL) {
+            r++;
+        }
+    }
 
     // Calculate part 1 of confidence
     rC = (float)min((float)((float)r / (float)TCHistSize) * 2, 1);
@@ -521,18 +563,22 @@ void CalcBPM(void) {
             totalTC += v;
             totalN++;
             v = 0;
-        } else if ((float)v > Avg)
+        } else if ((float)v > Avg) {
             v = 0;
+        }
     }
     TCUsed = totalN;
     // If no beat was within typical drift (how would it be possible? well lets cover
     // our ass) then keep the simple average calculated earlier, else recalculate
     // average of beats within range
-    if (totalN) Avg = totalTC / totalN;
+    if (totalN) {
+        Avg = totalTC / totalN;
+    }
 
     if (ReadyToGuess()) {
-        if (Avg)  // Avg = 0 ? Ahem..
+        if (Avg) {  // Avg = 0 ? Ahem..
             Bpm = 60000 / Avg;
+        }
 
         if (Bpm != lastBPM) {
             newBpm(Bpm);  // If realtime Bpm has changed since last time, then insert it
@@ -543,16 +589,22 @@ void CalcBPM(void) {
                 && Confidence >= ((predictionBpm < 90) ? STICKY_THRESHOLD_LOW
                                                        : STICKY_THRESHOLD)) {
                 stickyConfidenceCount++;
-                if (stickyConfidenceCount >= MIN_STICKY) sticked = 1;
-            } else
+                if (stickyConfidenceCount >= MIN_STICKY) {
+                    sticked = 1;
+                }
+            } else {
                 stickyConfidenceCount = 0;
+            }
         }
 
         Bpm = GetBpm();
 
         // Count how many beats we discriminated
-        for (i = 0; i < TCHistSize; i++)
-            if (halfDiscriminated[i]) hdCount++;
+        for (i = 0; i < TCHistSize; i++) {
+            if (halfDiscriminated[i]) {
+                hdCount++;
+            }
+        }
 
         if (hdCount >= TCHistSize / 2)  // If we removed at least half of our beats,
                                         // then we are off course. We should double our
@@ -571,38 +623,46 @@ void CalcBPM(void) {
             ResetAdapt();
         }
         if (Bpm < MIN_BPM) {
-            if (++doubleCount > 4)  // We're going too slow, lets double our bpm
+            if (++doubleCount > 4) {  // We're going too slow, lets double our bpm
                 doubleBeat();
-        } else
+            }
+        } else {
             doubleCount = 0;
+        }
         if (Bpm > MAX_BPM)  // We're going too fast, lets slow our bpm by a factor of 2
         {
-            if (++halfCount > 4) halfBeat();
-        } else
+            if (++halfCount > 4) {
+                halfBeat();
+            }
+        } else {
             halfCount = 0;
+        }
     }
 }
 
 void SliderStep(int Ctl, int* slide) {
     *slide += Ctl == IDC_IN ? inInc : outInc;
-    if (!*slide || *slide == 8) (Ctl == IDC_IN ? inInc : outInc) *= -1;
+    if (!*slide || *slide == 8) {
+        (Ctl == IDC_IN ? inInc : outInc) *= -1;
+    }
 }
 
 // render function
 // render should return 0 if it only used framebuffer, or 1 if the new output data is in
 // fbout. this is used when you want to do something that you'd otherwise need to make a
 // copy of the framebuffer. w and h are the width and height of the screen, in pixels.
-// isBeat is 1 if a beat has been detected.
+// is_beat is 1 if a beat has been detected.
 // visdata is in the format of [spectrum:0,wave:1][channel][band].
 
-int refineBeat(int isBeat) {
+int refineBeat(int is_beat) {
     BOOL accepted = FALSE;
     BOOL predicted = FALSE;
     BOOL resyncin = FALSE;
     BOOL resyncout = FALSE;
 
-    if (isBeat)  // Show the beat received from AVS
+    if (is_beat) {  // Show the beat received from AVS
         SliderStep(IDC_IN, &inSlide);
+    }
 
     DWORD TCNow = GetTickCount();
 
@@ -610,16 +670,21 @@ int refineBeat(int isBeat) {
         bestConfidence = (int)((float)bestConfidence * 0.5);
         sticked = 0;
         stickyConfidenceCount = 0;
-        if (cfg_smartbeatresetnewsong) ResetAdapt();
+        if (cfg_smartbeatresetnewsong) {
+            ResetAdapt();
+        }
     }
 
     // Try to predict if this frame should be a beat
-    if (Bpm && TCNow > predictionLastTC + (60000 / Bpm)) predicted = TRUE;
+    if (Bpm && TCNow > predictionLastTC + (60000 / Bpm)) {
+        predicted = TRUE;
+    }
 
-    if (isBeat)  // If it is a real beat, do discrimination/guessing and computations,
-                 // then see if it is accepted
+    if (is_beat) {  // If it is a real beat, do discrimination/guessing and
+                    // computations, then see if it is accepted
         accepted =
             TCHistStep(TCHist, halfDiscriminated, &hdPos, &lastTC, TCNow, BEAT_REAL);
+    }
 
     // Calculate current Bpm
     CalcBPM();
@@ -655,7 +720,9 @@ int refineBeat(int isBeat) {
         }
     }
 
-    if (!sticked) predictionBpm = Bpm;
+    if (!sticked) {
+        predictionBpm = Bpm;
+    }
     Bpm = predictionBpm;
 
     /*   resync = (predictionBpm &&
@@ -686,18 +753,19 @@ int refineBeat(int isBeat) {
         return ((cfg_smartbeat && !cfg_smartbeatonlysticky)
                 || (cfg_smartbeat && cfg_smartbeatonlysticky && sticked))
                    ? 1
-                   : isBeat;
+                   : is_beat;
     }
     if (predicted) {
         predictionLastTC = TCNow;
-        if (Confidence > 25)
+        if (Confidence > 25) {
             TCHistStep(TCHist, halfDiscriminated, &hdPos, &lastTC, TCNow, BEAT_GUESSED);
+        }
         SliderStep(IDC_OUT, &outSlide);
         doResyncBpm = FALSE;
         return ((cfg_smartbeat && !cfg_smartbeatonlysticky)
                 || (cfg_smartbeat && cfg_smartbeatonlysticky && sticked))
                    ? 1
-                   : isBeat;
+                   : is_beat;
     }
     if (resyncout) {
         predictionLastTC = TCNow;
@@ -705,11 +773,11 @@ int refineBeat(int isBeat) {
         return ((cfg_smartbeat && !cfg_smartbeatonlysticky)
                 || (cfg_smartbeat && cfg_smartbeatonlysticky && sticked))
                    ? 0
-                   : isBeat;
+                   : is_beat;
     }
 
     return ((cfg_smartbeat && !cfg_smartbeatonlysticky)
             || (cfg_smartbeat && cfg_smartbeatonlysticky && sticked))
-               ? (predictionBpm ? 0 : isBeat)
-               : isBeat;
+               ? (predictionBpm ? 0 : is_beat)
+               : is_beat;
 }

@@ -2,7 +2,7 @@
 #ifndef _TIMING_H_
 #define _TIMING_H_
 
-//#define TIMING
+// #define TIMING
 
 #if defined(TIMING) && !defined(__alpha)
 #ifdef __cplusplus

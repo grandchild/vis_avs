@@ -65,14 +65,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define BLUE_SHIFT  0
 
 #define AlphaByte(x) (((x)) >> ALPHA_SHIFT)
-#define RedByte(x)   (((x)&RED_MASK) >> RED_SHIFT)
-#define GreenByte(x) (((x)&GREEN_MASK) >> GREEN_SHIFT)
-#define BlueByte(x)  (((x)&BLUE_MASK) >> BLUE_SHIFT)
+#define RedByte(x)   (((x) & RED_MASK) >> RED_SHIFT)
+#define GreenByte(x) (((x) & GREEN_MASK) >> GREEN_SHIFT)
+#define BlueByte(x)  (((x) & BLUE_MASK) >> BLUE_SHIFT)
 
 // files should be renamed from .DLL to .SVP
 
+#ifdef _WIN32
 #ifndef DLLEXPORT
 #define DLLEXPORT __declspec(dllexport)
+#endif
+#else
+#define DLLEXPORT
 #endif
 
 #define VI_WAVEFORM 0x0001  // set if you need the waveform

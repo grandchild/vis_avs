@@ -29,8 +29,9 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "r_defs.h"
+#include "e_effectlist.h"
 
+#include "blend.h"
 #include "bpm.h"
 #include "cfgwin.h"
 #include "draw.h"
@@ -108,23 +109,20 @@ static winampVisModule* getModule(int which) {
                                   render,
                                   quit,
                                   NULL};
-    if (which == 0) return &mod;
+    if (which == 0) {
+        return &mod;
+    }
     return 0;
 }
 #endif
 
 BOOL CALLBACK aboutProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     switch (uMsg) {
-        case WM_INITDIALOG:
-            SetDlgItemText(hwndDlg, IDC_VERSTR, verstr);
-
-            return 1;
+        case WM_INITDIALOG: SetDlgItemText(hwndDlg, IDC_VERSTR, verstr); return 1;
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
                 case IDOK:
-                case IDCANCEL:
-                    EndDialog(hwndDlg, 0);
-                    return 0;
+                case IDCANCEL: EndDialog(hwndDlg, 0); return 0;
             }
             return 0;
     }
@@ -142,9 +140,9 @@ static void config(struct winampVisModule* this_mod) {
     }
 }
 
-lock_t* g_render_cs;
 static int g_is_beat;
 char g_path[1024];
+AVS_Instance* g_single_instance;
 
 int beat_peak1, beat_peak2, beat_cnt, beat_peak1_peak;
 
@@ -182,24 +180,15 @@ static int init(struct winampVisModule* this_mod) {
     GetModuleFileName(g_hInstance, g_path, MAX_PATH);
 #endif
     char* p = g_path + strlen(g_path);
-    while (p > g_path && *p != '\\') p--;
+    while (p > g_path && *p != '\\') {
+        p--;
+    }
     *p = 0;
 
 #ifdef WA2_EMBED
     if (SendMessage(this_mod->hwndParent, WM_USER, 0, 0) < 0x2900) {
         MessageBox(this_mod->hwndParent,
                    "This version of AVS requires Winamp 2.9+",
-                   "AVS ERROR",
-                   MB_OK | MB_ICONSTOP);
-        return 1;
-    }
-#endif
-
-#ifndef NO_MMX
-    extern int is_mmx(void);
-    if (!is_mmx()) {
-        MessageBox(this_mod->hwndParent,
-                   "NO MMX SUPPORT FOUND - CANNOT RUN AVS - GET THE NON-MMX VERSION.",
                    "AVS ERROR",
                    MB_OK | MB_ICONSTOP);
         return 1;
@@ -216,21 +205,30 @@ static int init(struct winampVisModule* this_mod) {
 #ifndef WA3_COMPONENT
     g_cs = lock_init();
 #endif
-    g_render_cs = lock_init();
     g_ThreadQuit = 0;
     g_visdata_pstat = 1;
 
+    g_single_instance = new AVS_Instance(g_path, AVS_AUDIO_INTERNAL, AVS_BEAT_INTERNAL);
+
     AVS_EEL_IF_init();
 
-    if (Wnd_Init(this_mod)) return 1;
+    make_blend_LUTs();
+
+    if (Wnd_Init(this_mod)) {
+        return 1;
+    }
 
     {
         int x;
         for (x = 0; x < 256; x++) {
             double a = log(x * 60.0 / 255.0 + 1.0) / log(60.0);
             int t = (int)(a * 255.0);
-            if (t < 0) t = 0;
-            if (t > 255) t = 255;
+            if (t < 0) {
+                t = 0;
+            }
+            if (t > 255) {
+                t = 255;
+            }
             g_logtab[x] = (unsigned char)t;
         }
     }
@@ -252,24 +250,29 @@ static int init(struct winampVisModule* this_mod) {
 static int render(struct winampVisModule* this_mod) {
 #ifndef WA3_COMPONENT
     int x, avs_beat = 0, b;
-    if (g_ThreadQuit) return 1;
-    lock(g_cs);
+    if (g_ThreadQuit) {
+        return 1;
+    }
+    lock_lock(g_cs);
     if (g_ThreadQuit) {
         lock_unlock(g_cs);
         return 1;
     }
-    if (g_visdata_pstat)
+    if (g_visdata_pstat) {
         // TODO [bugfix][cleanup]:
         //    The loop conditions are x<576*2, but spectrumData has size [2][576], so
         //    the code probably relied on the two channel arrays lying consecutively in
         //    memory. Make it explicit (fixes a warning), but investigate more later.
-        for (x = 0; x < 576 * 2; x++)
+        for (x = 0; x < 576 * 2; x++) {
             g_visdata[0][x / 576][x % 576] =
                 g_logtab[(unsigned char)this_mod->spectrumData[x / 576][x % 576]];
-    else {
+        }
+    } else {
         for (x = 0; x < 576 * 2; x++) {
             int t = g_logtab[(unsigned char)this_mod->spectrumData[x / 576][x % 576]];
-            if (g_visdata[0][x / 576][x % 576] < t) g_visdata[0][x / 576][x % 576] = t;
+            if (g_visdata[0][x / 576][x % 576] < t) {
+                g_visdata[0][x / 576][x % 576] = t;
+            }
         }
     }
     memcpy(&g_visdata[1][0][0], this_mod->waveformData, 576 * 2);
@@ -282,7 +285,9 @@ static int render(struct winampVisModule* this_mod) {
             for (x = 0; x < 576; x++) {
                 int r = *f++ ^ 128;
                 r -= 128;
-                if (r < 0) r = -r;
+                if (r < 0) {
+                    r = -r;
+                }
                 lt[ch] += r;
             }
         }
@@ -301,11 +306,14 @@ static int render(struct winampVisModule* this_mod) {
             beat_peak1_peak = lt[0];
         } else if (lt[0] > beat_peak2) {
             beat_peak2 = lt[0];
-        } else
+        } else {
             beat_peak2 = (beat_peak2 * 14) / 16;
+        }
     }
     b = refineBeat(avs_beat);
-    if (b) g_is_beat = 1;
+    if (b) {
+        g_is_beat = 1;
+    }
     g_visdata_pstat = 0;
     lock_unlock(g_cs);
 #endif
@@ -343,16 +351,18 @@ static void quit(struct winampVisModule*) {
 #ifndef WA3_COMPONENT
         lock_destroy(g_cs);
 #endif
-        lock_destroy(g_render_cs);
 
         DS("smp_cleanupthreads\n");
-        C_RenderListClass::smp_cleanupthreads();
+        E_EffectList::smp_cleanup_threads();
     }
 #undef DS
 #if 0  // syntax highlighting
   if (hRich) FreeLibrary(hRich);
   hRich=0;
 #endif
+
+    delete g_single_instance;
+    g_single_instance = NULL;
 }
 
 #ifdef WA3_COMPONENT
@@ -398,8 +408,12 @@ static unsigned int WINAPI RenderThread(LPVOID) {
         } else {
             int x;
             unsigned char* v = (unsigned char*)visdata;
-            for (x = 0; x < 576 * 2; x++) vis_data[0][0][x] = g_logtab[*v++];
-            for (x = 0; x < 576 * 2; x++) ((unsigned char*)vis_data[1][0])[x] = *v++;
+            for (x = 0; x < 576 * 2; x++) {
+                vis_data[0][0][x] = g_logtab[*v++];
+            }
+            for (x = 0; x < 576 * 2; x++) {
+                ((unsigned char*)vis_data[1][0])[x] = *v++;
+            }
 
             v = (unsigned char*)visdata + 1152;
             {
@@ -409,7 +423,9 @@ static unsigned int WINAPI RenderThread(LPVOID) {
                     for (x = 0; x < 576; x++) {
                         int r = *v++ ^ 128;
                         r -= 128;
-                        if (r < 0) r = -r;
+                        if (r < 0) {
+                            r = -r;
+                        }
                         lt[ch] += r;
                     }
                 }
@@ -427,16 +443,17 @@ static unsigned int WINAPI RenderThread(LPVOID) {
                     beat_peak1_peak = lt[0];
                 } else if (lt[0] > beat_peak2) {
                     beat_peak2 = lt[0];
-                } else
+                } else {
                     beat_peak2 = (beat_peak2 * 14) / 16;
+                }
             }
-            //     lock(g_title_cs);
+            //     lock_lock(g_title_cs);
             beat = refineBeat(beat);
             //      lock_unlock(g_title_cs);
         }
 
 #else
-        lock(g_cs);
+        lock_lock(g_cs);
         memcpy(&vis_data[0][0][0], &g_visdata[0][0][0], 576 * 2 * 2);
         g_visdata_pstat = 1;
         beat = g_is_beat;
@@ -445,20 +462,27 @@ static unsigned int WINAPI RenderThread(LPVOID) {
 #endif
 
         if (!g_ThreadQuit) {
-            if (IsWindow(g_hwnd) && !g_in_destroy)
+            if (IsWindow(g_hwnd) && !g_in_destroy) {
                 DDraw_Enter(&w, &h, &fb, &fb2);
-            else
+            } else {
                 break;
+            }
             if (fb && fb2) {
                 extern int g_dlg_w, g_dlg_h, g_dlg_fps;
 
-                lock(g_render_cs);
-                int t = g_render_transition->render(
+                lock_lock(g_single_instance->render_lock);
+                g_single_instance->init_global_buffers_if_needed(
+                    w, h, AVS_PIXEL_RGB0_8);
+                int t = g_single_instance->root.render(
                     vis_data, beat, s ? fb2 : fb, s ? fb : fb2, w, h);
-                lock_unlock(g_render_cs);
-                if (t & 1) s ^= 1;
+                lock_unlock(g_single_instance->render_lock);
+                if (t & 1) {
+                    s ^= 1;
+                }
 
-                if (IsWindow(g_hwnd)) DDraw_Exit(s);
+                if (IsWindow(g_hwnd)) {
+                    DDraw_Exit(s);
+                }
 
                 int lastt = framedata[framedata_pos];
                 int thist = GetTickCount();
@@ -470,8 +494,9 @@ static unsigned int WINAPI RenderThread(LPVOID) {
                         sizeof(framedata) / sizeof(framedata[0]), 10000, thist - lastt);
                 }
                 framedata_pos++;
-                if (framedata_pos >= sizeof(framedata) / sizeof(framedata[0]))
+                if (framedata_pos >= sizeof(framedata) / sizeof(framedata[0])) {
                     framedata_pos = 0;
+                }
             }
             int fs = DDraw_IsFullScreen();
             int sv = (fs ? (cfg_speed >> 8) : cfg_speed) & 0xff;

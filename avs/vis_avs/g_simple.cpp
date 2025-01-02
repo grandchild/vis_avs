@@ -1,4 +1,4 @@
-#include "c_simple.h"
+#include "e_simple.h"
 
 #include "g__defs.h"
 #include "g__lib.h"
@@ -8,28 +8,25 @@
 #include <windows.h>
 
 int win32_dlgproc_simple(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    C_THISCLASS* g_this = (C_THISCLASS*)g_current_render;
+    auto g_this = (E_Simple*)g_current_render;
+    const AVS_Parameter_Handle p_audio_source = Simple_Info::parameters[0].handle;
+    const AVS_Parameter_Handle p_draw_mode = Simple_Info::parameters[1].handle;
+    const AVS_Parameter_Handle p_audio_channel = Simple_Info::parameters[2].handle;
+    const AVS_Parameter_Handle p_position = Simple_Info::parameters[3].handle;
+    const AVS_Parameter_Handle p_colors = Simple_Info::parameters[4].handle;
+    const AVS_Parameter_Handle p_color = Simple_Info::color_params[0].handle;
 
-    const static int chex[8] = {
-        IDC_SA,
-        IDC_SOLID,
-        IDC_SA,
-        IDC_LINES,
-        IDC_OSC,
-        IDC_LINES,
-        IDC_OSC,
-        IDC_SOLID,
-    };
     switch (uMsg) {
         case WM_DRAWITEM: {
             DRAWITEMSTRUCT* di = (DRAWITEMSTRUCT*)lParam;
-            if (di->CtlID == IDC_DEFCOL && g_this->num_colors > 0) {
-                int x;
+            auto num_colors = g_this->parameter_list_length(p_colors);
+            if (di->CtlID == IDC_DEFCOL && num_colors > 0) {
+                size_t x;
                 int w = di->rcItem.right - di->rcItem.left;
                 int l = 0, nl;
-                for (x = 0; x < g_this->num_colors; x++) {
-                    unsigned int color = g_this->colors[x];
-                    nl = (w * (x + 1)) / g_this->num_colors;
+                for (x = 0; x < num_colors; x++) {
+                    uint32_t color = g_this->get_color(p_color, {x});
+                    nl = (w * (x + 1)) / num_colors;
                     color = ((color >> 16) & 0xff) | (color & 0xff00)
                             | ((color << 16) & 0xff0000);
 
@@ -52,103 +49,72 @@ int win32_dlgproc_simple(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     l = nl;
                 }
             }
-        }
             return 0;
+        }
         case WM_INITDIALOG:
-            if ((g_this->effect >> 6) & 1) {
-                CheckDlgButton(hwndDlg, IDC_DOT, BST_CHECKED);
-                if (g_this->effect & 2)
-                    CheckDlgButton(hwndDlg, IDC_OSC, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_SA, BST_CHECKED);
-            } else {
-                CheckDlgButton(hwndDlg, chex[(g_this->effect & 3) * 2], BST_CHECKED);
-                CheckDlgButton(
-                    hwndDlg, chex[(g_this->effect & 3) * 2 + 1], BST_CHECKED);
+            switch (g_this->get_int(p_audio_source)) {
+                default:
+                case AUDIO_WAVEFORM: CheckDlgButton(hwndDlg, IDC_OSC, true); break;
+                case AUDIO_SPECTRUM: CheckDlgButton(hwndDlg, IDC_SPEC, true); break;
             }
-
-            switch ((g_this->effect >> 2) & 3) {
-                case 0:
-                    CheckDlgButton(hwndDlg, IDC_LEFTCH, BST_CHECKED);
-                    break;
-                case 1:
-                    CheckDlgButton(hwndDlg, IDC_RIGHTCH, BST_CHECKED);
-                    break;
-                case 2:
-                    CheckDlgButton(hwndDlg, IDC_MIDCH, BST_CHECKED);
-                    break;
+            switch (g_this->get_int(p_draw_mode)) {
+                default:
+                case DRAW_SOLID: CheckDlgButton(hwndDlg, IDC_SOLID, true); break;
+                case DRAW_LINES: CheckDlgButton(hwndDlg, IDC_LINES, true); break;
+                case DRAW_DOTS: CheckDlgButton(hwndDlg, IDC_DOT, true); break;
             }
-            switch ((g_this->effect >> 4) & 3) {
-                case 0:
-                    CheckDlgButton(hwndDlg, IDC_TOP, BST_CHECKED);
-                    break;
-                case 1:
-                    CheckDlgButton(hwndDlg, IDC_BOTTOM, BST_CHECKED);
-                    break;
-                case 2:
-                    CheckDlgButton(hwndDlg, IDC_CENTER, BST_CHECKED);
-                    break;
+            switch (g_this->get_int(p_audio_channel)) {
+                case AUDIO_LEFT: CheckDlgButton(hwndDlg, IDC_LEFTCH, true); break;
+                case AUDIO_RIGHT: CheckDlgButton(hwndDlg, IDC_RIGHTCH, true); break;
+                default:
+                case AUDIO_CENTER: CheckDlgButton(hwndDlg, IDC_MIDCH, true); break;
             }
-            SetDlgItemInt(hwndDlg, IDC_NUMCOL, g_this->num_colors, FALSE);
+            switch (g_this->get_int(p_position)) {
+                case VPOS_TOP: CheckDlgButton(hwndDlg, IDC_TOP, true); break;
+                case VPOS_BOTTOM: CheckDlgButton(hwndDlg, IDC_BOTTOM, true); break;
+                default:
+                case VPOS_CENTER: CheckDlgButton(hwndDlg, IDC_CENTER, true); break;
+            }
+            SetDlgItemInt(
+                hwndDlg, IDC_NUMCOL, g_this->parameter_list_length(p_colors), false);
             return 1;
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
-                case IDC_DOT:
-                case IDC_SA:
-                case IDC_SOLID:
-                case IDC_OSC:
-                case IDC_LINES:
-                    if (!IsDlgButtonChecked(hwndDlg, IDC_DOT)) {
-                        int c;
+                case IDC_SOLID: g_this->set_int(p_draw_mode, DRAW_SOLID); break;
+                case IDC_LINES: g_this->set_int(p_draw_mode, DRAW_LINES); break;
+                case IDC_DOT: g_this->set_int(p_draw_mode, DRAW_DOTS); break;
 
-                        g_this->effect &= ~(1 << 6);
-                        for (c = 0; c < 4; c++) {
-                            if (IsDlgButtonChecked(hwndDlg, chex[c * 2])
-                                && IsDlgButtonChecked(hwndDlg, chex[c * 2 + 1]))
-                                break;
-                        }
-                        if (c != 4) {
-                            g_this->effect &= ~3;
-                            g_this->effect |= c;
-                        }
-                    } else {
-                        g_this->effect &= ~3;
-                        if (!IsDlgButtonChecked(hwndDlg, IDC_SA)) g_this->effect |= 2;
-                        g_this->effect |= 1 << 6;
-                    }
-                    break;
-                case IDC_LEFTCH:
-                    g_this->effect &= ~12;
-                    break;
-                case IDC_RIGHTCH:
-                    g_this->effect &= ~12;
-                    g_this->effect |= 4;
-                    break;
-                case IDC_MIDCH:
-                    g_this->effect &= ~12;
-                    g_this->effect |= 8;
-                    break;
-                case IDC_TOP:
-                    g_this->effect &= ~48;
-                    break;
-                case IDC_BOTTOM:
-                    g_this->effect &= ~48;
-                    g_this->effect |= 16;
-                    break;
-                case IDC_CENTER:
-                    g_this->effect &= ~48;
-                    g_this->effect |= 32;
-                    break;
+                case IDC_OSC: g_this->set_int(p_audio_source, AUDIO_WAVEFORM); break;
+                case IDC_SPEC: g_this->set_int(p_audio_source, AUDIO_SPECTRUM); break;
+
+                case IDC_LEFTCH: g_this->set_int(p_audio_channel, AUDIO_LEFT); break;
+                case IDC_RIGHTCH: g_this->set_int(p_audio_channel, AUDIO_RIGHT); break;
+                case IDC_MIDCH: g_this->set_int(p_audio_channel, AUDIO_CENTER); break;
+
+                case IDC_TOP: g_this->set_int(p_position, VPOS_TOP); break;
+                case IDC_BOTTOM: g_this->set_int(p_position, VPOS_BOTTOM); break;
+                case IDC_CENTER: g_this->set_int(p_position, VPOS_CENTER); break;
+
                 case IDC_NUMCOL: {
-                    int p;
-                    BOOL tr = FALSE;
-                    p = GetDlgItemInt(hwndDlg, IDC_NUMCOL, &tr, FALSE);
-                    if (tr) {
-                        if (p > 16) p = 16;
-                        g_this->num_colors = p;
-                        InvalidateRect(GetDlgItem(hwndDlg, IDC_DEFCOL), NULL, TRUE);
+                    BOOL success = false;
+                    bool check_for_negative = false;
+                    uint32_t p = GetDlgItemInt(
+                        hwndDlg, IDC_NUMCOL, &success, check_for_negative);
+                    if (success) {
+                        int64_t length = g_this->parameter_list_length(p_colors);
+                        if (length < p) {
+                            for (; length < p; length++) {
+                                g_this->parameter_list_entry_add(p_colors, -1, {});
+                            }
+                        } else {
+                            for (; length > p; length--) {
+                                g_this->parameter_list_entry_remove(p_colors, -1);
+                            }
+                        }
+                        InvalidateRect(GetDlgItem(hwndDlg, IDC_DEFCOL), nullptr, true);
                     }
-                } break;
+                    break;
+                }
                 case IDC_DEFCOL: {
                     int wc = -1, w, h;
                     POINT p;
@@ -160,12 +126,15 @@ int win32_dlgproc_simple(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     w = r.right - r.left;
                     h = r.bottom - r.top;
                     if (p.x >= 0 && p.x < w && p.y >= 0 && p.y < h) {
-                        wc = (p.x * g_this->num_colors) / w;
+                        wc = (p.x * g_this->parameter_list_length(p_colors)) / w;
                     }
                     if (wc >= 0) {
-                        GR_SelectColor(hwndDlg, g_this->colors + wc);
-                        InvalidateRect(GetDlgItem(hwndDlg, IDC_DEFCOL), NULL, TRUE);
+                        int32_t color;
+                        GR_SelectColor(hwndDlg, &color);
+                        g_this->set_color(p_color, (uint64_t)color, {wc});
+                        InvalidateRect(GetDlgItem(hwndDlg, IDC_DEFCOL), nullptr, true);
                     }
+                    break;
                 }
             }
     }

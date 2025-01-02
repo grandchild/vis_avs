@@ -11,7 +11,7 @@ ColumnLimit: 88
 IndentWidth: 4
 UseTab: Never
 
-# Pointers are aligned with the type, not the variable/parameter name. 
+# Pointers are aligned with the type, not the variable/parameter name.
 PointerAlignment: Left
 # Clang-format homogenizes alignment to whatever was most used in the file before, but
 # we want to enforce our alignment so we have to turn that off explicitly.
@@ -96,6 +96,31 @@ BinPackParameters: false
 #     };
 #
 InsertTrailingCommas: Wrapped
+
+# Insert braces around control flow statements. Single-line if/for/while-bodies are
+# often prone to become multiline statements later. This prevents the common error of
+# not adding the braces when this happens.
+#
+# So this:
+#
+#     for(int i=0; i < length; i++)
+#         foo(i);
+#
+# becomes:
+#
+#     for(int i=0; i < length; i++) {
+#         foo(i);
+#     }
+#
+# The documentation warns about possibly invalid code resulting from this option, but so
+# far, no issues were found.
+InsertBraces: true
+
+# Ensure that all files have a trailing newline.
+InsertNewlineAtEOF: true
+
+# Remove unneded semicolons after function definitions.
+RemoveSemicolon: true
 
 # For an AVS effect in r_foo.cpp the main #includes are c_foo.h and (sometimes) r_foo.h.
 # Make clang-format aware of these, so that it sorts them at the top. But clang-format
@@ -182,3 +207,7 @@ PenaltyBreakComment: 1
 #     #define BAR_BAZ 2
 #
 AlignConsecutiveMacros: AcrossComments
+
+# Compact switch-case blocks can be a boon to readability if the case lines are very
+# similar.
+AllowShortCaseLabelsOnASingleLine: true

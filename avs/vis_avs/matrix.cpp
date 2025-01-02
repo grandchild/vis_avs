@@ -29,10 +29,10 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "r_defs.h"
+#include "matrix.h"
 
-#include <windows.h>
 #include <math.h>
+#include <string.h>  // memcpy, memset
 
 void matrixRotate(float matrix[], char m, float Deg) {
     char m1, m2;

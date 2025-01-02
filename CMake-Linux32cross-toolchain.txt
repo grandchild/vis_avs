@@ -1,0 +1,25 @@
+# Set the toolchain target-triplet (<arch>-<vendor>-<os>) and the path prefix for the
+# toolchain. We want to target 32bit Linux.
+#
+# Normally you'd only have to edit these two variables here, if at all. Refer to your
+# distro's documentation on how to set up a Linux-32bit cross-compiler, and check for
+# their naming convention.
+SET(LIB32 /usr/lib32)
+SET(ENV{PKG_CONFIG_LIBDIR} ${LIB32}/pkgconfig)
+
+# the name of the target operating system
+set(CMAKE_SYSTEM_NAME Linux)
+
+# which compilers to use for C and C++
+set(CMAKE_C_COMPILER gcc)
+set(CMAKE_CXX_COMPILER g++)
+# target 32-bit
+set(CMAKE_C_FLAGS -m32)
+set(CMAKE_CXX_FLAGS -m32)
+
+# adjust the default behaviour of the FIND_XXX() commands:
+# search headers and libraries in the target environment, search
+# programs in the host environment
+# set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+# set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+# set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)

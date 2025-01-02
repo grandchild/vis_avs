@@ -34,7 +34,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../ns-eel/ns-eel-addfuncs.h"
 #include "../platform.h"
 
+#include <stdlib.h>
+#include <string.h>
+
+#ifdef CAN_TALK_TO_WINAMP
 #include <windows.h>
+#endif
 
 #ifdef AVS_MEGABUF_SUPPORT
 #include "../ns-eel/megabuf.h"
@@ -55,16 +60,24 @@ static char* g_evallib_visdata;
 static double getvis(unsigned char* visdata, int bc, int bw, int ch, int xorv) {
     int x;
     int accum = 0;
-    if (ch && ch != 1 && ch != 2) return 0.0;
+    if (ch && ch != 1 && ch != 2) {
+        return 0.0;
+    }
 
-    if (bw < 1) bw = 1;
+    if (bw < 1) {
+        bw = 1;
+    }
     bc -= bw / 2;
     if (bc < 0) {
         bw += bc;
         bc = 0;
     }
-    if (bc > 575) bc = 575;
-    if (bc + bw > 576) bw = 576 - bc;
+    if (bc > 575) {
+        bc = 575;
+    }
+    if (bc + bw > 576) {
+        bw = 576 - bc;
+    }
 
     if (!ch) {
         for (x = 0; x < bw; x++) {
@@ -74,14 +87,20 @@ static double getvis(unsigned char* visdata, int bc, int bw, int ch, int xorv) {
         }
         return (double)accum / ((double)bw * 255.0);
     } else {
-        if (ch == 2) visdata += 576;
-        for (x = 0; x < bw; x++) accum += (visdata[bc++] ^ xorv) - xorv;
+        if (ch == 2) {
+            visdata += 576;
+        }
+        for (x = 0; x < bw; x++) {
+            accum += (visdata[bc++] ^ xorv) - xorv;
+        }
         return (double)accum / ((double)bw * 127.5);
     }
 }
 
 static double getspec(double band, double bandw, double chan) {
-    if (!g_evallib_visdata) return 0.0;
+    if (!g_evallib_visdata) {
+        return 0.0;
+    }
     return getvis((unsigned char*)g_evallib_visdata,
                   (int)(band * 576.0),
                   (int)(bandw * 576.0),
@@ -91,7 +110,9 @@ static double getspec(double band, double bandw, double chan) {
 }
 
 static double getosc(double band, double bandw, double chan) {
-    if (!g_evallib_visdata) return 0.0;
+    if (!g_evallib_visdata) {
+        return 0.0;
+    }
     return getvis((unsigned char*)g_evallib_visdata + 576 * 2,
                   (int)(band * 576.0),
                   (int)(bandw * 576.0),
@@ -100,6 +121,7 @@ static double getosc(double band, double bandw, double chan) {
 }
 
 static double gettime(double sc) {
+#ifdef CAN_TALK_TO_WINAMP
     int ispos;
     if ((ispos = (sc > -1.001 && sc < -0.999)) || (sc > -2.001 && sc < -1.999)) {
         int pos = 0;
@@ -112,14 +134,17 @@ static double gettime(double sc) {
                                     (LPARAM)105,
                                     SMTO_BLOCK,
                                     50,
-                                    (LPDWORD)&pos))
+                                    (LPDWORD)&pos)) {
                 pos = 0;
+            }
         }
-        if (!ispos) return (double)pos;
+        if (!ispos) {
+            return (double)pos;
+        }
         return pos / 1000.0;
     }
-
-    return GetTickCount() / 1000.0 - sc;
+#endif  // CAN_TALK_TO_WINAMP
+    return timer_ms() / 1000.0 - sc;
 }
 
 static double setmousepos(double x, double y) {
@@ -128,21 +153,30 @@ static double setmousepos(double x, double y) {
     return 0.0;
 }
 
-extern double DDraw_translatePoint(POINT p, int isY);
-
 static double getmouse(double which) {
     int w = (int)(which + 0.5);
 
-    if (w > 5) return (GetAsyncKeyState(w) & 0x8000) ? 1.0 : 0.0;
+#ifdef CAN_TALK_TO_WINAMP
+    if (w > 5) {
+        return (GetAsyncKeyState(w) & 0x8000) ? 1.0 : 0.0;
+    }
 
     if (w == 1 || w == 2) {
         POINT p;
         GetCursorPos(&p);
+        extern double DDraw_translatePoint(POINT p, int isY);
         return DDraw_translatePoint(p, w == 2);
     }
-    if (w == 3) return (GetAsyncKeyState(MK_LBUTTON) & 0x8000) ? 1.0 : 0.0;
-    if (w == 4) return (GetAsyncKeyState(MK_RBUTTON) & 0x8000) ? 1.0 : 0.0;
-    if (w == 5) return (GetAsyncKeyState(MK_MBUTTON) & 0x8000) ? 1.0 : 0.0;
+    if (w == 3) {
+        return (GetAsyncKeyState(MK_LBUTTON) & 0x8000) ? 1.0 : 0.0;
+    }
+    if (w == 4) {
+        return (GetAsyncKeyState(MK_RBUTTON) & 0x8000) ? 1.0 : 0.0;
+    }
+    if (w == 5) {
+        return (GetAsyncKeyState(MK_MBUTTON) & 0x8000) ? 1.0 : 0.0;
+    }
+#endif  // CAN_TALK_TO_WINAMP
     return 0.0;
 }
 
@@ -205,7 +239,9 @@ static void movestringover(char* str, int amount) {
 
     memcpy(tmp, str, l + 1);
 
-    while (l >= 0 && tmp[l] != '\n') l--;
+    while (l >= 0 && tmp[l] != '\n') {
+        l--;
+    }
     l++;
 
     tmp[l] = 0;  // ensure we null terminate
@@ -215,14 +251,16 @@ static void movestringover(char* str, int amount) {
 
 int AVS_EEL_IF_Compile(int context, char* code) {
     NSEEL_CODEHANDLE ret;
-    lock(g_eval_cs);
+    lock_lock(g_eval_cs);
     ret = NSEEL_code_compile((NSEEL_VMCTX)context, code);
     if (!ret) {
         if (g_log_errors) {
             char* expr = NSEEL_code_getcodeerror((NSEEL_VMCTX)context);
             if (expr) {
                 int l = strlen(expr);
-                if (l > 512) l = 512;
+                if (l > 512) {
+                    l = 512;
+                }
                 movestringover(last_error_string, l + 2);
                 memcpy(last_error_string, expr, l);
                 last_error_string[l] = '\r';
@@ -236,7 +274,7 @@ int AVS_EEL_IF_Compile(int context, char* code) {
 
 void AVS_EEL_IF_Execute(void* handle, char visdata[2][2][576]) {
     if (handle) {
-        lock(g_eval_cs);
+        lock_lock(g_eval_cs);
         g_evallib_visdata = (char*)visdata;
         NSEEL_code_execute((NSEEL_CODEHANDLE)handle);
         g_evallib_visdata = NULL;
@@ -268,7 +306,9 @@ static double* gmb_blocks[MEGABUF_BLOCKS];
 static void gmegabuf_cleanup() {
     int x;
     for (x = 0; x < MEGABUF_BLOCKS; x++) {
-        if (gmb_blocks[x]) free(gmb_blocks[x]);
+        if (gmb_blocks[x]) {
+            free(gmb_blocks[x]);
+        }
         gmb_blocks[x] = 0;
     }
 }
@@ -285,7 +325,9 @@ static double* gmegabuf(double which) {
             gmb_blocks[whichblock] =
                 (double*)calloc(MEGABUF_ITEMSPERBLOCK, sizeof(double));
         }
-        if (gmb_blocks[whichblock]) return &gmb_blocks[whichblock][whichentry];
+        if (gmb_blocks[whichblock]) {
+            return &gmb_blocks[whichblock][whichentry];
+        }
     }
 
     return &error;
@@ -315,7 +357,7 @@ NAKED void _asm_gmegabuf(void) {
         "call %%eax\n\t"               // call gmegabuf(index)
         "mov  %%esp, %%ebp\n\t"        // pop stack frame
         :
-        : [gmegabuf] "i"(gmegabuf)
+        : [gmegabuf] "r"(gmegabuf)
         : "eax");
 #endif
 }

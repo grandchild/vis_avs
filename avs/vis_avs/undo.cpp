@@ -33,19 +33,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "render.h"
 
-#include <windows.h>
-
 unsigned int C_UndoStack::list_pos;
 C_UndoItem* C_UndoStack::list[256];
 
-C_UndoItem::C_UndoItem() : data(NULL), length(0), isdirty(true) {}
+C_UndoItem::C_UndoItem() : data(nullptr), length(0), isdirty(true) {}
 
-C_UndoItem::C_UndoItem(const C_UndoItem& T) : data(NULL), length(0), isdirty(true) {
+C_UndoItem::C_UndoItem(const C_UndoItem& T) : data(nullptr), length(0), isdirty(true) {
     *this = T;
 }
 
 C_UndoItem::C_UndoItem(void* _data, int _length, bool _isdirty)
-    : data(NULL), length(_length), isdirty(_isdirty) {
+    : data(nullptr), length(_length), isdirty(_isdirty) {
     data = calloc(length, 1);
     memcpy(data, _data, length);
 }
@@ -57,13 +55,15 @@ C_UndoItem::~C_UndoItem() {
 }
 
 C_UndoItem& C_UndoItem::operator=(const C_UndoItem& T) {
-    length = T.length;
-    isdirty = T.isdirty;
-    if (data) {
-        free(data);
+    if (this != &T) {
+        length = T.length;
+        isdirty = T.isdirty;
+        if (data) {
+            free(data);
+        }
+        data = calloc(length, 1);
+        memcpy(data, T.data, length);
     }
-    data = calloc(length, 1);
-    memcpy(data, T.data, length);
     return *this;
 }
 
@@ -75,26 +75,24 @@ bool C_UndoItem::operator==(const C_UndoItem& T) const {
     return retval;
 }
 
-void C_UndoItem::set(void* _data, int _length, bool _isdirty) {
-    length = _length;
-    isdirty = _isdirty;
-    if (data) {
+void C_UndoItem::set(const void* _data, int _length, bool _isdirty) {
+    if (this->length < _length || data == nullptr) {
         free(data);
+        data = calloc(_length, sizeof(uint8_t));
     }
-    data = calloc(length, 1);
-    memcpy(data, _data, length);
+    this->length = _length;
+    this->isdirty = _isdirty;
+    memcpy(this->data, _data, this->length);
 }
 
-void C_UndoStack::saveundo(int is2) {
+void C_UndoStack::save_undo(AVS_Instance* avs, bool save_secondary) {
     // Save to the undo buffer (sets the dirty bit for this item)
-    C_UndoItem* item = new C_UndoItem;
+    auto item = new C_UndoItem;
     C_UndoItem* old = list[list_pos];
 
-    if (is2) {
-        g_render_effects2->__SavePresetToUndo(*item);
-    } else {
-        g_render_effects->__SavePresetToUndo(*item);
-    }
+    size_t size = 0;
+    auto data = avs->preset_save_legacy(&size, /*secondary*/ save_secondary);
+    item->set(data, (int)size, false);
 
     // Only add it to the stack if it has changed.
     if (!old || !(*old == *item)) {
@@ -104,20 +102,22 @@ void C_UndoStack::saveundo(int is2) {
             list_pos--;
         }
         list[++list_pos] = item;
-    } else
+    } else {
         delete item;
-}
-
-void C_UndoStack::cleardirty() {
-    // If we're clearing the dirty bit, we only clear it on the current item.
-    if (list_pos < sizeof(list) / sizeof(list[0]) && list[list_pos]) {
-        list[list_pos]->isdirty = 0;
     }
 }
 
-bool C_UndoStack::isdirty() {
-    if (list_pos < sizeof(list) / sizeof(list[0]) && list[list_pos])
+void C_UndoStack::clear_dirty() {
+    // If we're clearing the dirty bit, we only clear it on the current item.
+    if (list_pos < sizeof(list) / sizeof(list[0]) && list[list_pos]) {
+        list[list_pos]->isdirty = false;
+    }
+}
+
+bool C_UndoStack::is_dirty() {
+    if (list_pos < sizeof(list) / sizeof(list[0]) && list[list_pos]) {
         return list[list_pos]->isdirty;
+    }
     return false;
 }
 
@@ -127,15 +127,15 @@ int C_UndoStack::can_redo() {
     return list_pos < sizeof(list) / sizeof(list[0]) - 1 && list[list_pos + 1];
 }
 
-void C_UndoStack::undo() {
+void C_UndoStack::undo(AVS_Instance* avs) {
     if (list_pos > 0 && list[list_pos - 1]) {
-        g_render_transition->LoadPreset(NULL, 0, list[--list_pos]);
+        avs->transition.load_preset(nullptr, TRANSITION_SWITCH_LOAD, list[--list_pos]);
     }
 }
 
-void C_UndoStack::redo() {
+void C_UndoStack::redo(AVS_Instance* avs) {
     if (list_pos < sizeof(list) / sizeof(list[0]) - 1 && list[list_pos + 1]) {
-        g_render_transition->LoadPreset(NULL, 0, list[++list_pos]);
+        avs->transition.load_preset(nullptr, TRANSITION_SWITCH_LOAD, list[++list_pos]);
     }
 }
 

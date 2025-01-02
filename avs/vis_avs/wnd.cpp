@@ -31,9 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "wnd.h"
 
-#include "r_defs.h"
-
 #include "avs_eelif.h"
+#include "c__defs.h"
 #include "cfgwin.h"
 #include "draw.h"
 #include "render.h"
@@ -72,7 +71,7 @@ char g_title[2048];
 
 struct winampVisModule* g_mod;
 extern volatile int g_ThreadQuit;
-extern int /*g_preset_dirty,*/ config_prompt_save_preset, config_reuseonresize;
+extern int /*g_preset_dirty,*/ config_prompt_save_preset, g_config_reuseonresize;
 int g_saved_preset_dirty;
 extern int cfg_cancelfs_on_deactivate;
 
@@ -103,7 +102,7 @@ HWND last_parent;
 #endif
 
 extern int cfg_fs_use_overlay;
-extern int g_config_seh;
+int g_config_seh;
 
 void toggleWharfAmpDock(HWND hwnd);
 
@@ -111,7 +110,7 @@ void toggleWharfAmpDock(HWND hwnd);
 
 int g_in_destroy = 0, g_minimized = 0, g_fakeinit = 0;
 
-int g_rnd_cnt;
+extern int g_rnd_cnt;
 char g_skin_name[MAX_PATH];
 
 int debug_reg[8];
@@ -131,41 +130,31 @@ void GetClientRect_adj(HWND hwnd, RECT* r) {
 HWND g_hwnd;
 
 HWND hwnd_WinampParent;
-extern HWND g_hwndDlg;
 extern char last_preset[2048];
-char* scanstr_back(char* str, char* toscan, char* defval) {
-    char* s = str + strlen(str) - 1;
-    if (strlen(str) < 1) return defval;
-    if (strlen(toscan) < 1) return defval;
-    while (1) {
-        char* t = toscan;
-        while (*t)
-            if (*t++ == *s) return s;
-        t = CharPrev(str, s);
-        if (t == s) return defval;
-        s = t;
-    }
-}
 
 HWND GetWinampHwnd(void) { return hwnd_WinampParent; }
 
 int LoadPreset(int preset) {
     char temp[MAX_PATH];
     wsprintf(temp, "%s\\PRESET%02d.APH", g_path, preset);
-    if (g_render_transition->LoadPreset(temp, 1)) return 0;
-    if (preset < 12)
+    if (!g_single_instance->preset_load_file(temp)) {
+        return 0;
+    }
+    PostMessage(g_hwndDlg, WM_USER + 20, 0, 0);
+    if (preset < 12) {
         wsprintf(last_preset, "\\F%d.aph", preset + 1);
-    else if (preset < 22)
+    } else if (preset < 22) {
         wsprintf(last_preset, "\\%d.aph", preset - 12);
-    else if (preset < 32)
+    } else if (preset < 32) {
         wsprintf(last_preset, "\\Shift-%d.aph", preset - 22);
+    }
     return 1;
 }
 
 void WritePreset(int preset) {
     char temp[MAX_PATH];
     wsprintf(temp, "%s\\PRESET%02d.APH", g_path, preset);
-    g_render_effects->__SavePreset(temp);
+    g_single_instance->preset_save_file_legacy(temp);
 }
 
 void my_getViewport(RECT* r, RECT* sr) {
@@ -204,12 +193,16 @@ void SetTransparency(HWND hWnd, int enable, int amount) {
 #ifdef WA2_EMBED
     // disable transparency if hosted in gen_ff
     HWND w = myWindowState.me;
-    while (GetWindowLong(w, GWL_STYLE) & WS_CHILD) w = GetParent(w);
+    while (GetWindowLong(w, GWL_STYLE) & WS_CHILD) {
+        w = GetParent(w);
+    }
     char classname[256];
     GetClassName(w, classname, 255);
     classname[255] = 0;
-    if (!stricmp(classname, "BaseWindow_RootWnd")) return;
-        // --
+    if (!stricmp(classname, "BaseWindow_RootWnd")) {
+        return;
+    }
+    // --
 #endif
 
     DWORD dwLong;
@@ -220,30 +213,38 @@ void SetTransparency(HWND hWnd, int enable, int amount) {
 
     dwLong = GetWindowLong(hWnd, GWL_EXSTYLE);
     if (amount == 255 || !enable) {
-        if (dwLong & WS_EX_LAYERED)
+        if (dwLong & WS_EX_LAYERED) {
             SetWindowLong(hWnd, GWL_EXSTYLE, dwLong & ~WS_EX_LAYERED);
+        }
     } else {
-        if (!(dwLong & WS_EX_LAYERED))
+        if (!(dwLong & WS_EX_LAYERED)) {
             SetWindowLong(hWnd, GWL_EXSTYLE, dwLong | WS_EX_LAYERED);
+        }
         h = LoadLibrary("USER32.DLL");
         if (h != NULL) {
             a = FORCE_FUNCTION_CAST(void(__stdcall*)(HWND, int, int, int))
                 GetProcAddress(h, "SetLayeredWindowAttributes");
-            if (a != NULL) a(hWnd, RGB(0, 0, 0), amount, LWA_ALPHA);
+            if (a != NULL) {
+                a(hWnd, RGB(0, 0, 0), amount, LWA_ALPHA);
+            }
             FreeLibrary(h);
         }
     }
 }
 
 int readyToLoadPreset(HWND parent, int isnew) {
-    if (config_prompt_save_preset && C_UndoStack::isdirty()) {
+    if (config_prompt_save_preset && C_UndoStack::is_dirty()) {
         static int here;
-        if (here) return 0;
+        if (here) {
+            return 0;
+        }
         here = 1;
 
         // strange bugfix, ick
         void Wnd_GoWindowed(HWND hwnd);
-        if (DDraw_IsFullScreen()) Wnd_GoWindowed(g_hwnd);
+        if (DDraw_IsFullScreen()) {
+            Wnd_GoWindowed(g_hwnd);
+        }
 
         int ret = MessageBox(
             parent,
@@ -261,10 +262,12 @@ int readyToLoadPreset(HWND parent, int isnew) {
             int dosavePreset(HWND hwndDlg);
             int r = 1;
             //      if (last_preset[0])
-            //      r=g_render_effects->SavePreset(last_preset);
+            //      r = g_single_instance->preset_save_file_legacy(last_preset);
 
             if (r) {
-                if (dosavePreset(parent)) return 0;
+                if (dosavePreset(parent)) {
+                    return 0;
+                }
             }
         }
     }
@@ -275,9 +278,15 @@ int readyToLoadPreset(HWND parent, int isnew) {
 
 char* extension(char* fn) {
     char* s = fn + strlen(fn);
-    while (s >= fn && *s != '.' && *s != '\\') s--;
-    if (s < fn) return fn;
-    if (*s == '\\') return fn;
+    while (s >= fn && *s != '.' && *s != '\\') {
+        s--;
+    }
+    if (s < fn) {
+        return fn;
+    }
+    if (*s == '\\') {
+        return fn;
+    }
     return (s + 1);
 }
 
@@ -305,11 +314,15 @@ void Wnd_GoWindowed(HWND hwnd) {
                           | WS_OVERLAPPED);
         DDraw_SetFullScreen(0, last_windowed_w, last_windowed_h, cfg_fs_d & 2, 0);
         HWND w = myWindowState.me;
-        while (GetWindowLong(w, GWL_STYLE) & WS_CHILD) w = GetParent(w);
+        while (GetWindowLong(w, GWL_STYLE) & WS_CHILD) {
+            w = GetParent(w);
+        }
         ShowWindow(w, SW_SHOWNA);
 #endif
 
-        if (cfg_cancelfs_on_deactivate) ShowCursor(TRUE);
+        if (cfg_cancelfs_on_deactivate) {
+            ShowCursor(TRUE);
+        }
 
 #if defined(WA3_COMPONENT) || !defined(WA2_EMBED)
         int tm = (GetWindowLong(g_mod->hwndParent, GWL_EXSTYLE) & WS_EX_TOPMOST)
@@ -361,7 +374,9 @@ void Wnd_GoFullScreen(HWND hwnd) {
 
         if (!DDraw_IsMode(cfg_fs_w, cfg_fs_h, cfg_fs_bpp)) {
             int DDraw_PickMode(int* w, int* h, int* bpp);
-            if (!DDraw_PickMode(&cfg_fs_w, &cfg_fs_h, &cfg_fs_bpp)) return;
+            if (!DDraw_PickMode(&cfg_fs_w, &cfg_fs_h, &cfg_fs_bpp)) {
+                return;
+            }
         }
 
         {
@@ -374,9 +389,13 @@ void Wnd_GoFullScreen(HWND hwnd) {
                 toggleWharfAmpDock(hwnd);
             }
             SetTransparency(hwnd, 0, 0);
-            if (cfg_cancelfs_on_deactivate) ShowCursor(FALSE);
+            if (cfg_cancelfs_on_deactivate) {
+                ShowCursor(FALSE);
+            }
             GetWindowRect(hwnd, &tr);
-            if (cfg_cfgwnd_open) ShowWindow(g_hwndDlg, SW_HIDE);
+            if (cfg_cfgwnd_open) {
+                ShowWindow(g_hwndDlg, SW_HIDE);
+            }
             if (!cfg_fs_use_overlay) {
 #ifdef WA3_COMPONENT
                 if (!last_parent) {
@@ -388,7 +407,9 @@ void Wnd_GoFullScreen(HWND hwnd) {
                 SetWindowLong(hwnd, GWL_STYLE, WS_VISIBLE);
                 SetParent(hwnd, NULL);
                 HWND w = myWindowState.me;
-                while (GetWindowLong(w, GWL_STYLE) & WS_CHILD) w = GetParent(w);
+                while (GetWindowLong(w, GWL_STYLE) & WS_CHILD) {
+                    w = GetParent(w);
+                }
                 ShowWindow(w, SW_HIDE);
 #endif
                 DDraw_SetFullScreen(1, cfg_fs_w, cfg_fs_h, cfg_fs_d & 1, cfg_fs_bpp);
@@ -401,7 +422,9 @@ void Wnd_GoFullScreen(HWND hwnd) {
                 SetWindowLong(hwnd, GWL_STYLE, WS_VISIBLE);
                 SetParent(hwnd, NULL);
                 HWND w = myWindowState.me;
-                while (GetWindowLong(w, GWL_STYLE) & WS_CHILD) w = GetParent(w);
+                while (GetWindowLong(w, GWL_STYLE) & WS_CHILD) {
+                    w = GetParent(w);
+                }
                 ShowWindow(w, SW_HIDE);
 #endif
                 DDraw_SetFullScreen(1, cfg_fs_w, cfg_fs_h, cfg_fs_d & 1, 0);
@@ -450,9 +473,14 @@ int Wnd_Init(struct winampVisModule* this_mod) {
         INI_FILE = reinterpret_cast<char*>(calloc(WA_MAX_PATH, sizeof(char)));
         char* p = INI_FILE;
         GetModuleFileName(NULL, INI_FILE, sizeof(INI_FILE));
-        if (p[0])
-            while (p[1]) p++;
-        while (p >= INI_FILE && *p != '.') p--;
+        if (p[0]) {
+            while (p[1]) {
+                p++;
+            }
+        }
+        while (p >= INI_FILE && *p != '.') {
+            p--;
+        }
         *++p = 'i';
         *++p = 'n';
         *++p = 'i';
@@ -519,14 +547,17 @@ int Wnd_Init(struct winampVisModule* this_mod) {
                                 last_preset,
                                 sizeof(last_preset),
                                 INI_FILE);
-        cfg_transitions = GetPrivateProfileInt(
-            AVS_SECTION, "cfg_transitions_en", cfg_transitions, INI_FILE);
-        cfg_transitions2 = GetPrivateProfileInt(
-            AVS_SECTION, "cfg_transitions_preinit", cfg_transitions2, INI_FILE);
-        cfg_transitions_speed = GetPrivateProfileInt(
-            AVS_SECTION, "cfg_transitions_speed", cfg_transitions_speed, INI_FILE);
-        cfg_transition_mode = GetPrivateProfileInt(
-            AVS_SECTION, "cfg_transitions_mode", cfg_transition_mode, INI_FILE);
+        // g_single_instance->transition.apply_legacy_config(
+        //     // default: cross-dissolve & not-fullscreen
+        //     GetPrivateProfileInt(AVS_SECTION, "cfg_transitions_mode", 0x8001,
+        //     INI_FILE),
+        //     // default: on-random
+        //     GetPrivateProfileInt(AVS_SECTION, "cfg_transitions_en", 4, INI_FILE),
+        //     // default: preinit on-random & with low priority
+        //     GetPrivateProfileInt(AVS_SECTION, "cfg_transitions_preinit", 36,
+        //     INI_FILE),
+        //     // default: 2 seconds
+        //     GetPrivateProfileInt(AVS_SECTION, "cfg_transitions_speed", 8, INI_FILE));
         cfg_bkgnd_render = GetPrivateProfileInt(
             AVS_SECTION, "cfg_bkgnd_render", cfg_bkgnd_render, INI_FILE);
         cfg_bkgnd_render_color = GetPrivateProfileInt(
@@ -534,11 +565,11 @@ int Wnd_Init(struct winampVisModule* this_mod) {
         cfg_render_prio = GetPrivateProfileInt(
             AVS_SECTION, "cfg_render_prio", cfg_render_prio, INI_FILE);
         g_saved_preset_dirty = GetPrivateProfileInt(
-            AVS_SECTION, "g_preset_dirty", C_UndoStack::isdirty(), INI_FILE);
+            AVS_SECTION, "g_preset_dirty", C_UndoStack::is_dirty(), INI_FILE);
         config_prompt_save_preset = GetPrivateProfileInt(
             AVS_SECTION, "cfg_prompt_save_preset", config_prompt_save_preset, INI_FILE);
-        config_reuseonresize = GetPrivateProfileInt(
-            AVS_SECTION, "cfg_reuseonresize", config_reuseonresize, INI_FILE);
+        g_config_reuseonresize = GetPrivateProfileInt(
+            AVS_SECTION, "cfg_reuseonresize", g_config_reuseonresize, INI_FILE);
         g_log_errors =
             GetPrivateProfileInt(AVS_SECTION, "cfg_log_errors", g_log_errors, INI_FILE);
         g_reset_vars_on_recompile = GetPrivateProfileInt(
@@ -575,10 +606,18 @@ int Wnd_Init(struct winampVisModule* this_mod) {
         RECT ir = {cfg_x, cfg_y, cfg_w + cfg_x, cfg_y + cfg_h};
         RECT or_;
         my_getViewport(&or_, &ir);
-        if (cfg_x < or_.left) cfg_x = or_.left;
-        if (cfg_y < or_.top) cfg_y = or_.top;
-        if (cfg_x > or_.right - 16) cfg_x = or_.right - 16;
-        if (cfg_y > or_.bottom - 16) cfg_y = or_.bottom - 16;
+        if (cfg_x < or_.left) {
+            cfg_x = or_.left;
+        }
+        if (cfg_y < or_.top) {
+            cfg_y = or_.top;
+        }
+        if (cfg_x > or_.right - 16) {
+            cfg_x = or_.right - 16;
+        }
+        if (cfg_y > or_.bottom - 16) {
+            cfg_y = or_.bottom - 16;
+        }
         // determine bounding rectangle for window
     }
 #endif
@@ -592,13 +631,17 @@ int Wnd_Init(struct winampVisModule* this_mod) {
 #else
     int styles =
         WS_VISIBLE | WS_CHILDWINDOW | WS_OVERLAPPED | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
-    HWND (*e)(embedWindowState * v);
+    HWND (*e)(embedWindowState* v);
     *(void**)&e =
         (void*)SendMessage(this_mod->hwndParent, WM_WA_IPC, (LPARAM)0, IPC_GET_EMBEDIF);
     HWND par = 0;
-    if (e) par = e(&myWindowState);
+    if (e) {
+        par = e(&myWindowState);
+    }
 
-    if (par) SetWindowText(par, "AVS");
+    if (par) {
+        SetWindowText(par, "AVS");
+    }
 
     g_hWA2ParentWindow = par;
 #endif
@@ -664,8 +707,9 @@ void Wnd_Quit(void) {
         DestroyWindow(myWindowState.me);
     } else
 #endif
-        if (g_hwnd && IsWindow(g_hwnd))
+        if (g_hwnd && IsWindow(g_hwnd)) {
         DestroyWindow(g_hwnd);
+    }
     g_hwnd = NULL;
     UnregisterClass("avswnd", g_mod->hDllInstance);
     {
@@ -708,18 +752,27 @@ void Wnd_Quit(void) {
         WriteInt("cfg_smartbeatsticky", cfg_smartbeatsticky);
         WriteInt("cfg_smartbeatresetnewsong", cfg_smartbeatresetnewsong);
         WriteInt("cfg_smartbeatonlysticky", cfg_smartbeatonlysticky);
-        WriteInt("cfg_transitions_en", cfg_transitions);
-        WriteInt("cfg_transitions_preinit", cfg_transitions2);
-        WriteInt("cfg_transitions_speed", cfg_transitions_speed);
-        WriteInt("cfg_transitions_mode", cfg_transition_mode);
+        int32_t cfg_transition_switch;
+        int32_t cfg_transition_preinit;
+        int32_t cfg_transition_time;
+        int32_t cfg_transition_effect_and_keep_rendering;
+        g_single_instance->transition.make_legacy_config(
+            cfg_transition_effect_and_keep_rendering,
+            cfg_transition_switch,
+            cfg_transition_preinit,
+            cfg_transition_time);
+        WriteInt("cfg_transitions_en", cfg_transition_switch);
+        WriteInt("cfg_transitions_preinit", cfg_transition_preinit);
+        WriteInt("cfg_transitions_speed", cfg_transition_time);
+        WriteInt("cfg_transitions_mode", cfg_transition_effect_and_keep_rendering);
         WriteInt("cfg_bkgnd_render", cfg_bkgnd_render);
         WriteInt("cfg_bkgnd_render_color", cfg_bkgnd_render_color);
         WriteInt("cfg_render_prio", cfg_render_prio);
-        WriteInt("g_preset_dirty", C_UndoStack::isdirty());
+        WriteInt("g_preset_dirty", C_UndoStack::is_dirty());
         WriteInt("cfg_prompt_save_preset", config_prompt_save_preset);
         WritePrivateProfileString(
             AVS_SECTION, "last_preset_name", last_preset, INI_FILE);
-        WriteInt("cfg_reuseonresize", config_reuseonresize);
+        WriteInt("cfg_reuseonresize", g_config_reuseonresize);
         WriteInt("cfg_log_errors", g_log_errors);
         WriteInt("cfg_reset_vars", g_reset_vars_on_recompile);
         WriteInt("cfg_seh", g_config_seh);
@@ -733,14 +786,20 @@ void Wnd_Quit(void) {
     }
 #ifdef WA3_COMPONENT
     DeleteCriticalSection(&g_title_cs);
-    if (INI_FILE) free(INI_FILE);
+    if (INI_FILE) {
+        free(INI_FILE);
+    }
 #endif
 }
 
 void toggleWharfAmpDock(HWND hwnd) {
-    if (DDraw_IsFullScreen()) return;
+    if (DDraw_IsFullScreen()) {
+        return;
+    }
     HWND Wharf = g_hwndDlg ? GetDlgItem(g_hwndDlg, IDC_RRECT) : NULL;
-    if (!Wharf) return;
+    if (!Wharf) {
+        return;
+    }
 
     if (!inWharf) {
         RECT r, r2;
@@ -774,10 +833,11 @@ void toggleWharfAmpDock(HWND hwnd) {
         while (GetWindowLong(w, GWL_STYLE) & WS_CHILD) {
             w = GetParent(w);
         }
-        if (!SendMessage(g_mod->hwndParent, WM_WA_IPC, (int)w, IPC_FF_ISMAINWND))
+        if (!SendMessage(g_mod->hwndParent, WM_WA_IPC, (int)w, IPC_FF_ISMAINWND)) {
             ShowWindow(w, SW_HIDE);
-        else
+        } else {
             ShowWindow(g_hWA2ParentWindow, SW_HIDE);
+        }
 #endif
 #else
         ShowWindow(GetParent(last_parent), SW_HIDE);
@@ -830,8 +890,9 @@ void toggleWharfAmpDock(HWND hwnd) {
         while (GetWindowLong(w, GWL_STYLE) & WS_CHILD) {
             w = GetParent(w);
         }
-        if (SendMessage(g_mod->hwndParent, WM_WA_IPC, (int)w, IPC_FF_ISMAINWND))
+        if (SendMessage(g_mod->hwndParent, WM_WA_IPC, (int)w, IPC_FF_ISMAINWND)) {
             w = g_hWA2ParentWindow;
+        }
 
         PostMessage(GetParent(hwnd), WM_SIZE, 0, 0);
 
@@ -858,10 +919,16 @@ int findInMenu(HMENU parent, HMENU sub, UINT id, char* buf, int buf_len) {
         mi.cch = buf_len - (bufadd - buf + 2);
         GetMenuItemInfo(parent, x, TRUE, &mi);
         if (mi.hSubMenu) {
-            if (sub && mi.hSubMenu == sub) return 1;
-            if (findInMenu(mi.hSubMenu, sub, id, buf, buf_len)) return 1;
+            if (sub && mi.hSubMenu == sub) {
+                return 1;
+            }
+            if (findInMenu(mi.hSubMenu, sub, id, buf, buf_len)) {
+                return 1;
+            }
         } else {
-            if (!sub && id && mi.wID == id) return 1;
+            if (!sub && id && mi.wID == id) {
+                return 1;
+            }
         }
     }
     bufadd[0] = 0;
@@ -881,7 +948,7 @@ static int find_preset(char* parent_path,
     if (h != INVALID_HANDLE_VALUE) {
         do {
             if (!(d.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-                wsprintf(dirmask, "%s\\%s", parent_path, d.cFileName);
+                wsprintf(dirmask, "%s/%s", parent_path, d.cFileName);
 
                 if (lastpreset) {
                     if (*state) {
@@ -890,11 +957,14 @@ static int find_preset(char* parent_path,
                         return 1;
                     }
                     if (dir > 0) {
-                        if (!newpreset[0])  // save the first one we find, in case we
-                                            // fail (wrap)
+                        if (!newpreset[0]) {  // save the first one we find, in case we
+                                              // fail (wrap)
                             strcpy(newpreset, dirmask);
+                        }
 
-                        if (!stricmp(dirmask, lastpreset)) *state = 1;
+                        if (!stricmp(dirmask, lastpreset)) {
+                            *state = 1;
+                        }
                     }
                     if (dir < 0) {
                         if (!stricmp(dirmask, lastpreset)) {
@@ -909,7 +979,9 @@ static int find_preset(char* parent_path,
 
                 } else {
                     int cnt = ++(*state);
-                    if (cnt < 1) cnt = 1;
+                    if (cnt < 1) {
+                        cnt = 1;
+                    }
                     int r = ((rand() & 1023) << 10) | (rand() & 1023);
                     if (r < (1024 * 1024) / cnt) {
                         strcpy(newpreset, dirmask);
@@ -925,7 +997,7 @@ static int find_preset(char* parent_path,
         do {
             if (d.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY
                 && d.cFileName[0] != '.') {
-                wsprintf(dirmask, "%s\\%s", parent_path, d.cFileName);
+                wsprintf(dirmask, "%s/%s", parent_path, d.cFileName);
                 if (find_preset(dirmask, dir, lastpreset, newpreset, state)) {
                     FindClose(h);
                     return 1;
@@ -943,10 +1015,11 @@ void next_preset(HWND hwnd) {
     if (readyToLoadPreset(hwnd, 0)) {
         char dirmask[2048];
         char i_path[1024];
-        if (config_pres_subdir[0])
-            wsprintf(i_path, "%s\\%s", g_path, config_pres_subdir);
-        else
+        if (config_pres_subdir[0]) {
+            wsprintf(i_path, "%s/%s", g_path, config_pres_subdir);
+        } else {
             strcpy(i_path, g_path);
+        }
 
         dirmask[0] = 0;
 
@@ -954,8 +1027,10 @@ void next_preset(HWND hwnd) {
         find_preset(i_path, 1, last_preset, dirmask, &state);
 
         if (dirmask[0] && stricmp(last_preset, dirmask)) {
-            if (g_render_transition->LoadPreset(dirmask, 2) != 2)
+            if (g_single_instance->preset_load_file(dirmask)) {
                 lstrcpyn(last_preset, dirmask, sizeof(last_preset));
+                PostMessage(g_hwndDlg, WM_USER + 20, 0, 0);
+            }
         }
     }
 }
@@ -965,19 +1040,23 @@ void random_preset(HWND hwnd) {
     if (readyToLoadPreset(hwnd, 0)) {
         char dirmask[2048];
         char i_path[1024];
-        if (config_pres_subdir[0])
-            wsprintf(i_path, "%s\\%s", g_path, config_pres_subdir);
-        else
+        if (config_pres_subdir[0]) {
+            wsprintf(i_path, "%s/%s", g_path, config_pres_subdir);
+        } else {
             strcpy(i_path, g_path);
+        }
 
         dirmask[0] = 0;
 
         int state = 0;
         find_preset(i_path, 0, NULL, dirmask, &state);
 
-        if (dirmask[0]) {
-            if (g_render_transition->LoadPreset(dirmask, 4) != 2)
+        if (dirmask[0] && g_single_instance) {
+            // TODO[feature]: Reenable transitioning
+            if (g_single_instance->preset_load_file(dirmask)) {
                 lstrcpyn(last_preset, dirmask, sizeof(last_preset));
+                PostMessage(g_hwndDlg, WM_USER + 20, 0, 0);
+            }
         }
     }
 }
@@ -987,10 +1066,11 @@ void previous_preset(HWND hwnd) {
     if (readyToLoadPreset(hwnd, 0)) {
         char dirmask[2048];
         char i_path[1024];
-        if (config_pres_subdir[0])
-            wsprintf(i_path, "%s\\%s", g_path, config_pres_subdir);
-        else
+        if (config_pres_subdir[0]) {
+            wsprintf(i_path, "%s/%s", g_path, config_pres_subdir);
+        } else {
             strcpy(i_path, g_path);
+        }
 
         dirmask[0] = 0;
 
@@ -998,8 +1078,10 @@ void previous_preset(HWND hwnd) {
         find_preset(i_path, -1, last_preset, dirmask, &state);
 
         if (dirmask[0] && stricmp(last_preset, dirmask)) {
-            if (g_render_transition->LoadPreset(dirmask, 2) != 2)
+            if (g_single_instance->preset_load_file(dirmask)) {
                 lstrcpyn(last_preset, dirmask, sizeof(last_preset));
+                PostMessage(g_hwndDlg, WM_USER + 20, 0, 0);
+            }
         }
     }
 }
@@ -1015,7 +1097,9 @@ void DoPopupMenu() {
         WIN32_FIND_DATA d;
         char dirmask[1024];
 
-        if (presetTreeMenu) DestroyMenu(presetTreeMenu);
+        if (presetTreeMenu) {
+            DestroyMenu(presetTreeMenu);
+        }
 
         POINT p;
         int x;
@@ -1056,8 +1140,12 @@ void DoPopupMenu() {
         if (DDraw_IsFullScreen()) {
             CheckMenuItem(presetTreeMenu, 1024, MF_CHECKED);
         }
-        if (IsWindowVisible(g_hwndDlg)) CheckMenuItem(presetTreeMenu, 256, MF_CHECKED);
-        if (inWharf) CheckMenuItem(presetTreeMenu, 512, MF_CHECKED);
+        if (IsWindowVisible(g_hwndDlg)) {
+            CheckMenuItem(presetTreeMenu, 256, MF_CHECKED);
+        }
+        if (inWharf) {
+            CheckMenuItem(presetTreeMenu, 512, MF_CHECKED);
+        }
 
         wsprintf(dirmask, "%s\\*.*", g_path);
 
@@ -1105,9 +1193,12 @@ void DoPopupMenu() {
                            NULL);
         if (x == 1024) {
             if (DDraw_IsFullScreen()) {
-                if (!cfg_fs_use_overlay) Wnd_GoWindowed(g_hwnd);
-            } else
+                if (!cfg_fs_use_overlay) {
+                    Wnd_GoWindowed(g_hwnd);
+                }
+            } else {
                 Wnd_GoFullScreen(g_hwnd);
+            }
         } else if (x == 512) {
             if (!inWharf && !cfg_cfgwnd_open) {
                 cfg_cfgwnd_open = 1;
@@ -1124,11 +1215,13 @@ void DoPopupMenu() {
                 if (findInMenu(presetTreeMenu, 0, x, buf, 2048)) {
                     char temp[4096];
                     wsprintf(temp, "%s%s.avs", g_path, buf);
-                    if (g_render_transition->LoadPreset(temp, 1) != 2)
+                    if (g_single_instance->preset_load_file(temp)) {
                         lstrcpyn(last_preset, temp, sizeof(last_preset));
+                        PostMessage(g_hwndDlg, WM_USER + 20, 0, 0);
+                    }
                 } else {
-                    //            g_render_transition->LoadPreset
-                    //          wsprintf(temp,"%s\\%s",g_path,curfilename);
+                    // g_single_instance->transition.load_preset
+                    // wsprintf(temp,"%s/%s",g_path,curfilename);
                 }
             }
         }
@@ -1170,7 +1263,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
     }
     if (message == WM_LBUTTONDOWN) {
         SetFocus(g_hwnd);
-        if (inWharf) SetFocus(hwnd);
+        if (inWharf) {
+            SetFocus(hwnd);
+        }
         SetCapture(hwnd);
         return 0;
     }
@@ -1199,9 +1294,12 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
     if (message == WM_LBUTTONDBLCLK && !DDraw_IsFullScreen()) {
         if (cfg_fs_dblclk) {
             if (DDraw_IsFullScreen()) {
-                if (!cfg_fs_use_overlay) Wnd_GoWindowed(hwnd);
-            } else
+                if (!cfg_fs_use_overlay) {
+                    Wnd_GoWindowed(hwnd);
+                }
+            } else {
                 Wnd_GoFullScreen(hwnd);
+            }
         } else {
             if (inWharf) {
                 toggleWharfAmpDock(hwnd);
@@ -1229,10 +1327,11 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
         case WM_USER + 1666:
             if (wParam == 1 && lParam == 15) {
                 if (DDraw_IsFullScreen()) {
-                    if (cfg_fs_use_overlay)
+                    if (cfg_fs_use_overlay) {
                         SetFocus(hwnd);  // kill overlay window
-                    else
+                    } else {
                         Wnd_GoWindowed(hwnd);
+                    }
                 }
             }
             return 0;
@@ -1282,9 +1381,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
                 }
             }
             return 0;
-        case WM_RBUTTONUP:
-            DoPopupMenu();
-            return 0;
+        case WM_RBUTTONUP: DoPopupMenu(); return 0;
         case WM_USER + 33:
             DDraw_SetStatusText("", 100);
             if (inWharf) {
@@ -1298,9 +1395,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
                 CfgWnd_RePopIfNeeded();
             }
             return 0;
-        case WM_USER + 32:
-            Wnd_GoFullScreen(hwnd);
-            return 0;
+        case WM_USER + 32: Wnd_GoFullScreen(hwnd); return 0;
         case WM_SYSKEYDOWN:
         case WM_KEYDOWN:
             if ((GetAsyncKeyState(VK_CONTROL) & 0x8000) && wParam == VK_F4) {
@@ -1322,9 +1417,12 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
             } else if (wParam == VK_RETURN) {
                 if (GetAsyncKeyState(VK_MENU) & 0x8000) {
                     if (DDraw_IsFullScreen()) {
-                        if (!cfg_fs_use_overlay) Wnd_GoWindowed(hwnd);
-                    } else
+                        if (!cfg_fs_use_overlay) {
+                            Wnd_GoWindowed(hwnd);
+                        }
+                    } else {
                         Wnd_GoFullScreen(hwnd);
+                    }
                 }
             } else if (wParam == /* VK_T */ 0x54) {
                 extern int draw_title_p;
@@ -1344,36 +1442,47 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
                     st = "saved to";
                     WritePreset(wParam - VK_F1);
                 } else {
-                    if (!readyToLoadPreset(hwnd, 0)) return 0;
+                    if (!readyToLoadPreset(hwnd, 0)) {
+                        return 0;
+                    }
 
-                    if (LoadPreset(wParam - VK_F1))
+                    if (LoadPreset(wParam - VK_F1)) {
                         st = "loaded from";
-                    else
+                    } else {
                         st = "error loading from";
+                    }
                 }
                 wsprintf(s, "%s F%d", st, wParam - VK_F1 + 1);
                 DDraw_SetStatusText(s);
             } else if (wParam >= '0' && wParam <= '9') {
                 int n = 0;
                 char s[128], *st;
-                if (GetAsyncKeyState(VK_SHIFT) & (1 << 15)) n = 10;
+                if (GetAsyncKeyState(VK_SHIFT) & (1 << 15)) {
+                    n = 10;
+                }
                 if (GetAsyncKeyState(VK_CONTROL) & (1 << 15)) {
                     st = "saved to";
                     WritePreset(wParam - '0' + 12 + n);
                 } else {
-                    if (!readyToLoadPreset(hwnd, 0)) return 0;
-                    if (LoadPreset(wParam - '0' + 12 + n))
+                    if (!readyToLoadPreset(hwnd, 0)) {
+                        return 0;
+                    }
+                    if (LoadPreset(wParam - '0' + 12 + n)) {
                         st = "loaded from";
-                    else
+                    } else {
                         st = "error loading from";
+                    }
                 }
                 wsprintf(s, "%s %s%d", st, n ? "shift-" : "", wParam - '0');
                 DDraw_SetStatusText(s);
             } else {
                 if (wParam == 0x4B && DDraw_IsFullScreen()) {
-                    if (!cfg_fs_use_overlay) Wnd_GoWindowed(hwnd);
-                } else
+                    if (!cfg_fs_use_overlay) {
+                        Wnd_GoWindowed(hwnd);
+                    }
+                } else {
                     PostMessage(hwnd_WinampParent, message, wParam, lParam);
+                }
             }
             return 0;
         case WM_TIMER:
@@ -1405,8 +1514,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
                 if (!pitem
                     || api->metadb_getMetaData(
                            pitem, MT_NAME, g_title, 2047, MDT_STRINGZ)
-                           < 1)
+                           < 1) {
                     STRCPY(g_title, "");
+                }
                 LeaveCriticalSection(&g_title_cs);
 #endif
 
@@ -1426,8 +1536,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
                 if (g_rnd_cnt >= 0 && g_rnd_cnt++ >= max(cfg_fs_rnd_time, 1)) {
                     g_rnd_cnt = 0;
                     if ((!IsWindowVisible(g_hwndDlg) || DDraw_IsFullScreen())
-                        && cfg_fs_rnd)
+                        && cfg_fs_rnd) {
                         goto do_random;
+                    }
                 }
             }
             if (wParam == 30) {
@@ -1469,8 +1580,10 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
             DragQueryFile(hdrop, 0, temp, sizeof(temp));
             if (readyToLoadPreset(hwnd, 0)) {
                 if (!stricmp(extension(temp), "avs")) {
-                    if (g_render_transition->LoadPreset(temp, 1) != 2)
+                    if (g_single_instance->preset_load_file(temp)) {
                         lstrcpyn(last_preset, temp, sizeof(last_preset));
+                        PostMessage(g_hwndDlg, WM_USER + 20, 0, 0);
+                    }
                 }
             }
             DragFinish(hdrop);
@@ -1493,13 +1606,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
                                            0,
                                            LR_CREATEDIBSECTION | LR_LOADFROMFILE);
                 }
-                if (!hFrameBitmap)
+                if (!hFrameBitmap) {
                     hFrameBitmap = (HBITMAP)LoadImage(g_hInstance,
                                                       MAKEINTRESOURCE(IDB_BITMAP1),
                                                       IMAGE_BITMAP,
                                                       0,
                                                       0,
                                                       LR_CREATEDIBSECTION);
+                }
             }
             hFrameBitmap_old = (HBITMAP)SelectObject(hFrameDC, hFrameBitmap);
 #endif
@@ -1528,13 +1642,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
                                            0,
                                            LR_CREATEDIBSECTION | LR_LOADFROMFILE);
                 }
-                if (!hFrameBitmap)
+                if (!hFrameBitmap) {
                     hFrameBitmap = (HBITMAP)LoadImage(g_hInstance,
                                                       MAKEINTRESOURCE(IDB_BITMAP1),
                                                       IMAGE_BITMAP,
                                                       0,
                                                       0,
                                                       LR_CREATEDIBSECTION);
+                }
             }
             hFrameDC = (HDC)CreateCompatibleDC(NULL);
             hFrameBitmap_old = (HBITMAP)SelectObject(hFrameDC, hFrameBitmap);
@@ -1564,21 +1679,42 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
             int y = GET_Y_LPARAM(lParam);
             RECT r;
             GetWindowRect(hwnd, &r);
-            if (inWharf) return HTCLIENT;
+            if (inWharf) {
+                return HTCLIENT;
+            }
             if (DDraw_IsFullScreen()
                 || (x > r.right - 12 && x < r.right - 3 && y > r.top + 3
-                    && y < r.top + 13))
+                    && y < r.top + 13)) {
                 return HTCLIENT;
+            }
 #ifndef WA3_COMPONENT
-            if (x < r.left + 6 && y > r.bottom - 6) return HTBOTTOMLEFT;
-            if (x > r.right - 6 && y > r.bottom - 6) return HTBOTTOMRIGHT;
-            if (x < r.left + 6 && y < r.top + 6) return HTTOPLEFT;
-            if (x > r.right - 6 && y < r.top + 6) return HTTOPRIGHT;
-            if (y < r.top + 6) return HTTOP;
-            if (y > r.bottom - 6) return HTBOTTOM;
-            if (x < r.left + 6) return HTLEFT;
-            if (x > r.right - 6) return HTRIGHT;
-            if (y < r.top + 15) return HTCAPTION;
+            if (x < r.left + 6 && y > r.bottom - 6) {
+                return HTBOTTOMLEFT;
+            }
+            if (x > r.right - 6 && y > r.bottom - 6) {
+                return HTBOTTOMRIGHT;
+            }
+            if (x < r.left + 6 && y < r.top + 6) {
+                return HTTOPLEFT;
+            }
+            if (x > r.right - 6 && y < r.top + 6) {
+                return HTTOPRIGHT;
+            }
+            if (y < r.top + 6) {
+                return HTTOP;
+            }
+            if (y > r.bottom - 6) {
+                return HTBOTTOM;
+            }
+            if (x < r.left + 6) {
+                return HTLEFT;
+            }
+            if (x > r.right - 6) {
+                return HTRIGHT;
+            }
+            if (y < r.top + 15) {
+                return HTCAPTION;
+            }
 #endif
         }
             return HTCLIENT;
@@ -1624,22 +1760,23 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
                         RECT r2;
                         GetWindowRect(hwnd, &r2);
                         my_getViewport(&r, &r2);
-                    } else if (w == 1 && IsWindowVisible(hwnd_WinampParent))
+                    } else if (w == 1 && IsWindowVisible(hwnd_WinampParent)) {
                         GetWindowRect(hwnd_WinampParent, &r);
-                    else if (w == 2
-                             && (hw = FindWindowEx(NULL, NULL, "Winamp EQ", NULL))
-                             && IsWindowVisible(hw))
+                    } else if (w == 2
+                               && (hw = FindWindowEx(NULL, NULL, "Winamp EQ", NULL))
+                               && IsWindowVisible(hw)) {
                         GetWindowRect(hw, &r);
-                    else if (w == 3
-                             && (hw = FindWindowEx(NULL, NULL, "Winamp PE", NULL))
-                             && IsWindowVisible(hw))
+                    } else if (w == 3
+                               && (hw = FindWindowEx(NULL, NULL, "Winamp PE", NULL))
+                               && IsWindowVisible(hw)) {
                         GetWindowRect(hw, &r);
-                    else if (w == 4
-                             && (hw = FindWindowEx(NULL, NULL, "Winamp MB", NULL))
-                             && IsWindowVisible(hw))
+                    } else if (w == 4
+                               && (hw = FindWindowEx(NULL, NULL, "Winamp MB", NULL))
+                               && IsWindowVisible(hw)) {
                         GetWindowRect(hw, &r);
-                    else
+                    } else {
                         continue;
+                    }
 
 #define intersect(x1, x2, y1, y2)                                 \
     (((x1) > (y1) && (x1) < (y2)) || ((x2) > (y1) && (x2) < (y2)) \
@@ -1755,7 +1892,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
                 g_mod->Init(g_mod);
                 g_fakeinit = 0;
                 if ((GetWindowLong(g_mod->hwndParent, GWL_EXSTYLE) & WS_EX_TOPMOST)
-                    == WS_EX_TOPMOST)
+                    == WS_EX_TOPMOST) {
                     SetWindowPos(g_hwnd,
                                  HWND_TOPMOST,
                                  0,
@@ -1763,6 +1900,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
                                  0,
                                  0,
                                  SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                }
                 SetTimer(g_hwnd, 29, 500, NULL);
 #endif
             }
@@ -1881,12 +2019,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
         case WM_COMMAND: {
             int id = LOWORD(wParam);
             switch (id) {
-                case ID_VIS_NEXT:
-                    next_preset(hwnd);
-                    break;
-                case ID_VIS_PREV:
-                    previous_preset(hwnd);
-                    break;
+                case ID_VIS_NEXT: next_preset(hwnd); break;
+                case ID_VIS_PREV: previous_preset(hwnd); break;
                 case ID_VIS_RANDOM: {
                     int v = HIWORD(wParam) ? 1 : 0;
                     if (wParam >> 16 == 0xFFFF) {
@@ -1895,20 +2029,16 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
                         break;
                     }
                     cfg_fs_rnd = v;
-                    if (cfg_fs_rnd) random_preset(hwnd);
+                    if (cfg_fs_rnd) {
+                        random_preset(hwnd);
+                    }
                     DDraw_SetStatusText(cfg_fs_rnd ? "random presets on"
                                                    : "random presets off");
                     break;
                 }
-                case ID_VIS_FS:
-                    Wnd_GoFullScreen(hwnd);
-                    break;
-                case ID_VIS_CFG:
-                    SendMessage(hwnd, WM_USER + 33, 0, 0);
-                    break;
-                case ID_VIS_MENU:
-                    DoPopupMenu();
-                    break;
+                case ID_VIS_FS: Wnd_GoFullScreen(hwnd); break;
+                case ID_VIS_CFG: SendMessage(hwnd, WM_USER + 33, 0, 0); break;
+                case ID_VIS_MENU: DoPopupMenu(); break;
             }
             break;
         }

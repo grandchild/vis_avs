@@ -1,25 +1,78 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.18)
 
 project(vis_avs VERSION 2.82)
+
+include(CheckIncludeFiles)
+include(CheckLinkerFlag)
+include(ExternalProject)
 
 file(GLOB SRC_FILES_NS_EEL
     avs/ns-eel/*.c
 )
-file(GLOB SRC_FILES_VIS_AVS
-    avs/vis_avs/*.cpp
+file(GLOB SRC_FILES_AVS_COMMON
+    avs/vis_avs/audio.cpp
+    avs/vis_avs/avs*.cpp
+    avs/vis_avs/blend.cpp
+    avs/vis_avs/e_*.cpp
+    avs/vis_avs/effect*.cpp
     avs/vis_avs/*.c
-    avs/vis_avs/*.rc
+    avs/vis_avs/files.cpp
+    avs/vis_avs/handles.cpp
+    avs/vis_avs/image.cpp
+    avs/vis_avs/instance.cpp
+    avs/vis_avs/linedraw.cpp
+    avs/vis_avs/matrix.cpp
+    avs/vis_avs/preset_json_schema.cpp
+    avs/vis_avs/render_context.cpp
+    # avs/vis_avs/r_text.cpp
+    avs/vis_avs/r_transition.cpp
+    avs/vis_avs/text_win32.cpp
+    avs/vis_avs/video.cpp
+    avs/vis_avs/video_libav.cpp
     avs/platform.c
+    avs/uuid.cpp
+    avs/3rdparty/md_fft.cpp
 )
-set(SRC_FILES_VIS_AVS_TARGET
-    avs/platform_win32.c
+
+file(GLOB SRC_FILES_VIS_AVS
+    avs/vis_avs/g_*.cpp
+    avs/vis_avs/bpm.cpp
+    avs/vis_avs/cfgwin.cpp
+    avs/vis_avs/draw.cpp
+    avs/vis_avs/main.cpp
+    avs/vis_avs/render.cpp
+    avs/vis_avs/undo.cpp
+    avs/vis_avs/util.cpp
+    avs/vis_avs/wnd.cpp
+    avs/vis_avs/*.rc
 )
-set(SRC_FILES_VIS_AVS_COMPILER)
+if(WIN32)
+    list(APPEND SRC_FILES_AVS_COMMON
+        avs/platform_win32.c
+        avs/vis_avs/audio_in_windows_wasapi.cpp
+    )
+elseif(LINUX)
+    list(APPEND SRC_FILES_AVS_COMMON
+        avs/platform_linux.c
+        avs/vis_avs/audio_in_linux_pipewire.cpp
+        avs/3rdparty/pevents.cpp
+    )
+endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(
         /W4                 # Warning level 4 (maximum)
+        /wd4458             # Ignore warning about overriding member with local
+                            # parameter. Setters should be able to have a parameter
+                            # named exactly the same as the member it's setting. The
+                            # code style advocates for `this->` everywhere anyway.
+        /wd4244             # Ignore warning about type conversions with data loss.
+                            # They are simply too many at the moment and obscure other
+                            # warnings. TODO[cleanup]: Reenable and fix warnings.
+        /wd5051             # Ignore warning that [[fallthrough]] is ignored on C++<17.
+                            # It's still useful for readability.
         /MP                 # Multithreaded compilation
+        /std:c++14          # Pin to C++14 features
         /Zc:__cplusplus     # Define the actual C++ standard in __cplusplus, instead of
                             # a backwards-compatible "199711L".
                             # https://devblogs.microsoft.com/cppblog/msvc-now-correctly-reports-__cplusplus/
@@ -32,13 +85,15 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(
         -g
         -O2
+        -m32                # Compile for 32-bit x86.
         -masm=intel         # Use Intel instead of AT&T inline assembly syntax.
         -march=native       # Convolution-Filter uses inlined mmintrin.h functions, and
                             # a pentium4 arch seems to be roughly the minimum for that.
         -fcf-protection=return # Don't emit endbr32/-64 instructions at the beginning of
                                # functions. ("return" value means: not "branch".)
                                # We want clean naked functions.
-        # -flto               # Link-time optimization. No performance gain seen so far.
+        # -flto               # Link-time optimization. No performance gain, but halves
+                            # binary size.
         # -fprofile-generate  # Profile-guided optimization, pass 1
         # -fprofile-use       # Profile-guided optimization, pass 2
         -Wall -Wextra
@@ -50,7 +105,9 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
                             # into the base build directory.
     )
     # C++-specific flags
-    set(AVS_CXX_COMPILER_FLAGS)
+    set(AVS_CXX_COMPILER_FLAGS
+        -std=c++14          # Pin to C++14 features
+    )
     # (CMake generator expressions cannot be multiline, hence the AVS_CXX_COMPILE_FLAGS
     # variable in a foreach workaround.)
     foreach(FLAG ${AVS_CXX_COMPILER_FLAGS})
@@ -58,20 +115,6 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     endforeach()
 else() # TODO: Clang option
     message(SEND_ERROR "unsupported compiler ${CMAKE_CXX_COMPILER_ID}")
-endif()
-
-if(WIN32)
-    add_compile_definitions(
-        _WIN32_WINNT=_WIN32_WINNT_VISTA     # Minimum WinNT version (needed for
-                                            # GetTickCount64()).
-        NOMINMAX                            # Don't define min()/max() in windows.h on
-                                            # MSVC. Use our own functions everywhere.
-    )
-    if(NOT MSVC)
-        # googletest here because it doesn't work for MSVC
-    endif()
-else()
-    # link_libraries(#[[...]])
 endif()
 
 add_compile_definitions(
@@ -83,25 +126,68 @@ add_compile_definitions(
     # NO_MMX                # Use (usually slower) C equivalents for MMX assembly.
                             # (Initially enabled for quick porting but should be
                             # removed, now that all MMX sections are ported.)
+    WFMO                    # Enable `WaitForMultipleObjects()` in pevents.cpp.
+    _USE_MATH_DEFINES       # Let math.h declare M_PI.
 )
 
 set(CMAKE_SHARED_LIBRARY_PREFIX "")  # Remove "lib" prefix from output to get original
                                      # filename "vis_avs.dll".
-add_library(vis_avs SHARED
+
+add_library(avs_common OBJECT
     ${SRC_FILES_NS_EEL}
-    ${SRC_FILES_VIS_AVS}
-    ${SRC_FILES_VIS_AVS_TARGET}
-    ${SRC_FILES_VIS_AVS_COMPILER}
+    ${SRC_FILES_AVS_COMMON}
 )
 
-target_link_libraries(vis_avs
-    ddraw  # draw.cpp includes ddraw.h
-           # https://docs.microsoft.com/en-us/windows/win32/api/ddraw/nf-ddraw-directdrawcreate
-    vfw32  # r_avi.cpp includes vfw.h
-           # https://docs.microsoft.com/en-us/windows/win32/multimedia/avifile-functions-and-macros
+add_library(libavs SHARED $<TARGET_OBJECTS:avs_common>)
+
+check_include_files(
+    "libavcodec/avcodec.h;libavformat/avformat.h;libswscale/swscale.h"
+    HAVE_FFMPEG
 )
+if(NOT HAVE_FFMPEG OR NO_FFMPEG)
+    add_compile_definitions(NO_FFMPEG)
+    message(WARNING "FFmpeg not found. Building without video support!")
+endif()
 
 if(WIN32)
+    target_sources(libavs PRIVATE libavs.def)  # The function export list.
+    add_compile_definitions(
+        _WIN32_WINNT=_WIN32_WINNT_VISTA     # Minimum WinNT version (needed for
+                                            # GetTickCount64()).
+        NOMINMAX                            # Don't define min()/max() in windows.h on
+                                            # MSVC. Use our own functions everywhere.
+    )
+    add_library(vis_avs SHARED
+        $<TARGET_OBJECTS:avs_common>
+        ${SRC_FILES_VIS_AVS}
+    )
+    target_compile_definitions(vis_avs PUBLIC CAN_TALK_TO_WINAMP)
+
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        check_linker_flag(C "/NXCOMPAT:NO" HAS_DISABLE_NXCOMPAT)
+        set(NXCOMPAT_DISABLED_FLAG "/NXCOMPAT:NO")
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        check_linker_flag(C "-Wl,--disable-nxcompat" HAS_DISABLE_NXCOMPAT)
+        set(NXCOMPAT_DISABLED_FLAG "-Wl,--disable-nxcompat")
+    endif()
+    if(HAS_DISABLE_NXCOMPAT)
+        add_executable(avs-cli avs/avs-cli.c)
+        target_link_libraries(avs-cli libavs)
+        target_link_options(avs-cli PUBLIC ${NXCOMPAT_DISABLED_FLAG})
+    else()
+        message(WARNING "Linker flag --disable-nxcompat not supported."
+                        " No standalone Win32 C/C++ binaries possible (libs will work)."
+                        " Needs binutils 2.36 or higher.")
+    endif()
+    target_link_libraries(vis_avs
+        ddraw  # draw.cpp includes ddraw.h
+               # https://docs.microsoft.com/en-us/windows/win32/api/ddraw/nf-ddraw-directdrawcreate
+        rpcrt4 # UUIDs
+    )
+    target_link_libraries(libavs
+        rpcrt4 # UUIDs
+    )
+
     get_filename_component(WINAMP_DIR "[HKEY_CURRENT_USER\\SOFTWARE\\Winamp]" ABSOLUTE)
     if(WINAMP_DIR STREQUAL "")
         set(WINAMP_DIR "" CACHE PATH "Winamp installation directory (contains winamp.exe)." FORCE)
@@ -114,17 +200,80 @@ if(WIN32)
     else()
         message(WARNING "Winamp installation directory ('${WINAMP_DIR}') not found or not set. Skipped creating debug task.")
     endif()
+
+    #[[
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        # These dependent DLLs are introduced by mingw32 and should be next to winamp.exe.
+        configure_file(${CROSS_CC_PREFIX}/bin/libgcc_s_dw2-1.dll    . COPYONLY)
+        configure_file(${CROSS_CC_PREFIX}/bin/libssp-0.dll          . COPYONLY)
+        configure_file(${CROSS_CC_PREFIX}/bin/libstdc++-6.dll       . COPYONLY)
+        configure_file(${CROSS_CC_PREFIX}/bin/libwinpthread-1.dll   . COPYONLY)
+    endif()
+    #]]#
+
+    if(NOT MSVC)
+        # googletest here because it doesn't work for MSVC
+    endif()
+    set(AVS_DYLIB_EXTENSION "dll")
+elseif(LINUX)
+    include(FindPkgConfig)
+    pkg_search_module(PIPEWIRE REQUIRED libpipewire-0.3)
+    target_include_directories(avs_common PUBLIC ${PIPEWIRE_INCLUDE_DIRS})
+    target_link_libraries(libavs ${PIPEWIRE_LIBRARIES} uuid)
+    target_link_options(libavs PUBLIC -Wl,-m elf_i386)
+    set(AVS_DYLIB_EXTENSION "so")
+    add_executable(avs-cli avs/avs-cli.c)
+    target_link_libraries(avs-cli libavs)
 endif()
 
-#[[
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    # These dependent DLLs are introduced by mingw32 and should be next to winamp.exe.
-    configure_file(${CROSS_CC_PREFIX}/bin/libgcc_s_dw2-1.dll    . COPYONLY)
-    configure_file(${CROSS_CC_PREFIX}/bin/libssp-0.dll          . COPYONLY)
-    configure_file(${CROSS_CC_PREFIX}/bin/libstdc++-6.dll       . COPYONLY)
-    configure_file(${CROSS_CC_PREFIX}/bin/libwinpthread-1.dll   . COPYONLY)
+
+# Rust
+if(WIN32)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        set(RUST_TARGET "i686-pc-windows-msvc")
+    else()
+        set(RUST_TARGET "i686-pc-windows-gnu")
+    endif()
+elseif(LINUX)
+    set(RUST_TARGET "i686-unknown-linux-gnu")
 endif()
-#]]#
+find_program(RUSTC rustc)
+find_program(CARGO cargo)
+if(WIN32)  # Disable experimental Rust build on Windows for now, to make the CI green.
+    set(SKIP_RUST ON)
+elseif(NOT RUSTC)
+    message(WARNING "Rust compiler not found. Rust code skipped.")
+    set(SKIP_RUST ON)
+elseif(NOT CARGO)
+    message(WARNING "Cargo not found. Rust code skipped.")
+    set(SKIP_RUST ON)
+else()
+    execute_process(COMMAND ${RUSTC} --target ${RUST_TARGET} --print target-libdir
+        OUTPUT_VARIABLE RUST_LIBDIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(NOT IS_DIRECTORY ${RUST_LIBDIR})
+        message(WARNING "Rust toolchain for \"${RUST_TARGET}\" not found. Rust code skipped.")
+        set(SKIP_RUST ON)
+    endif()
+endif()
+if(NOT SKIP_RUST)
+    ExternalProject_Add(avsrs
+        DEPENDS libavs
+        SOURCE_DIR "${CMAKE_SOURCE_DIR}"
+        CONFIGURE_COMMAND ""  # default configure looks for the toolchain file in parent dir
+        BINARY_DIR "${CMAKE_SOURCE_DIR}"
+        BUILD_COMMAND ${CMAKE_COMMAND} -E env
+            "RUSTFLAGS=-L${CMAKE_BINARY_DIR}"
+            LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}
+            cargo build --target ${RUST_TARGET} --release --target-dir ${CMAKE_BINARY_DIR}
+        INSTALL_COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_BINARY_DIR}/${RUST_TARGET}/release/avs
+            ${CMAKE_BINARY_DIR}/
+        LOG_BUILD ON
+    )
+endif()
+
 
 if(NOT MSVC)
     # # tests

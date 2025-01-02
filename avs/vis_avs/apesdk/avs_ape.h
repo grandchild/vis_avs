@@ -5,7 +5,7 @@ class C_RBASE {
 	public:
 		C_RBASE() { }
 		virtual ~C_RBASE() { };
-		virtual int render(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h)=0; // returns 1 if fbout has dest, 0 if framebuffer has dest
+		virtual int render(char visdata[2][2][576], int is_beat, int *framebuffer, int *fbout, int w, int h)=0; // returns 1 if fbout has dest, 0 if framebuffer has dest
 		virtual char *get_desc()=0;
 		virtual void load_config(unsigned char *data, int len) { }
 		virtual int  save_config(unsigned char *data) { return 0; }
@@ -26,9 +26,9 @@ class C_RBASE2 : public C_RBASE {
 
     // returns # of threads you desire, <= max_threads, or 0 to not do anything
     // default should return max_threads if you are flexible
-    virtual int smp_begin(int max_threads, char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h) { return 0; }  
-    virtual void smp_render(int this_thread, int max_threads, char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h) { }; 
-    virtual int smp_finish(char visdata[2][2][576], int isBeat, int *framebuffer, int *fbout, int w, int h) { return 0; }; // return value is that of render() for fbstuff etc
+    virtual int smp_begin(int max_threads, char visdata[2][2][576], int is_beat, int *framebuffer, int *fbout, int w, int h) { return 0; }  
+    virtual void smp_render(int this_thread, int max_threads, char visdata[2][2][576], int is_beat, int *framebuffer, int *fbout, int w, int h) { }; 
+    virtual int smp_finish(char visdata[2][2][576], int is_beat, int *framebuffer, int *fbout, int w, int h) { return 0; }; // return value is that of render() for fbstuff etc
 
 };
 
