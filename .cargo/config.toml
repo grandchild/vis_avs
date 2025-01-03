@@ -1,9 +1,2 @@
-# default to 32-bit
 [build]
-target = "i686-unknown-linux-gnu"
-
-# pass linker search path -- DOES NOT WORK, need to run like:
-#   RUSTFLAGS="-L build_linux" cargo build/run/...
-# https://github.com/rust-lang/rust/issues/48409 closed without resolution
-[target.i686-unknown-linux-gnu.avs-window]
-rustc-link-search = ["native=build_linux"]
+target = ["i686-unknown-linux-gnu", "i686-pc-windows-gnu"]

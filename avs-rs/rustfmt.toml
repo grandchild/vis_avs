@@ -1,0 +1,13 @@
+max_width = 88
+
+# The "small heuristics" wrap certain constructs to within fractions of max_width.
+# They are meant for very large max_width values, but make less sense when max_width is
+# smaller than the default 100.
+use_small_heuristics = "Off"
+fn_call_width = 88
+attr_fn_like_width = 88
+struct_lit_width = 88
+struct_variant_width = 88
+array_width = 88
+chain_width = 88
+single_line_if_else_max_width = 88

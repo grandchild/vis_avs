@@ -264,12 +264,17 @@ if(NOT SKIP_RUST)
         CONFIGURE_COMMAND ""  # default configure looks for the toolchain file in parent dir
         BINARY_DIR "${CMAKE_SOURCE_DIR}"
         BUILD_COMMAND ${CMAKE_COMMAND} -E env
-            "RUSTFLAGS=-L${CMAKE_BINARY_DIR}"
+            "RUSTFLAGS=-L ${CMAKE_BINARY_DIR} -l avs"
             LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}
-            cargo build --target ${RUST_TARGET} --release --target-dir ${CMAKE_BINARY_DIR}
+            PKG_CONFIG_SYSROOT_DIR=/usr/lib32/
+            cargo build
+                --target ${RUST_TARGET}
+                --release
+                --target-dir ${CMAKE_BINARY_DIR}
+                --bin avs-cli
         INSTALL_COMMAND ${CMAKE_COMMAND} -E copy
-            ${CMAKE_BINARY_DIR}/${RUST_TARGET}/release/avs
-            ${CMAKE_BINARY_DIR}/
+            ${CMAKE_BINARY_DIR}/${RUST_TARGET}/release/avs-cli
+            ${CMAKE_BINARY_DIR}/avs
         LOG_BUILD ON
     )
 endif()

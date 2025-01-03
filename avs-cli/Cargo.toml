@@ -1,0 +1,14 @@
+[package]
+name = "avs-cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+avs-rs = { path = "../avs-rs" }
+anyhow = "1"
+inotify = "0"
+minifb = "0"
+argh = "0"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+linuxfb = "0"
