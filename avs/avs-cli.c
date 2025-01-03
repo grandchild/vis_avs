@@ -11,6 +11,34 @@
 #include <stdlib.h>
 #include <string.h>
 
+void print_framebuffer(void* framebuffer, size_t w, size_t h) {
+    uint32_t* first_line = (uint32_t*)calloc(w, sizeof(uint32_t));
+    for (size_t y = 0; y < h; y += 2) {
+        for (size_t x = 0; x < w; x++) {
+            first_line[x] = ((uint32_t*)framebuffer)[y * w + x];
+        }
+        for (size_t x = 0; x < w; x++) {
+            uint8_t r1 = (first_line[x] & 0xff0000) >> 16;
+            uint8_t g1 = (first_line[x] & 0xff00) >> 8;
+            uint8_t b1 = first_line[x] & 0xff;
+            uint32_t col = ((uint32_t*)framebuffer)[(y + 1) * w + x];
+            uint8_t r2 = (col & 0xff0000) >> 16;
+            uint8_t g2 = (col & 0xff00) >> 8;
+            uint8_t b2 = col & 0xff;
+            // By using the "▀" (half upper block) character, we can render two lines of
+            // pixels in one line of characters, with the effect of making the pixels
+            // more square (a character cell in a terminal has ~1:2 aspect ratio).
+            // The VT100 foreground color is used for the top half of the block, and set
+            // to the pixel color from the first of the two lines, and the background
+            // color is used for the bottom half of the block, and set to the pixel
+            // color from the second of the two lines.
+            printf("\x1b[38;2;%d;%d;%dm\x1b[48;2;%d;%d;%dm▀", r1, g1, b1, r2, g2, b2);
+        }
+        printf("\x1b[0m\n");
+    }
+    free(first_line);
+}
+
 int main(int argc, char const* argv[]) {
 #ifdef _WIN32
     DWORD flags;
@@ -136,43 +164,26 @@ int main(int argc, char const* argv[]) {
     //     avs, audio_left, audio_right, 1024, 44100, 2000 + 1024 * 1000 / 44100);
     // avs_audio_set(
     //     avs, audio_left, audio_right, 1024, 44100, 2000 + 2048 * 1000 / 44100);
-    size_t w = 100;
-    size_t h = 80;
+    size_t w = 32;
+    size_t h = 32;
     void* framebuffer = calloc(w * h, sizeof(uint32_t));
+    uint32_t frame_number = 0;
     for (int i = 0; i < 2; i++) {
         avs_render_frame(avs, framebuffer, w, h, 0, false, AVS_PIXEL_RGB0_8);
+        printf("frame %d\n", ++frame_number);
+        print_framebuffer(framebuffer, w, h);
         avs_render_frame(avs, framebuffer, w, h, 0, true, AVS_PIXEL_RGB0_8);
-        sleep(1);
+        printf("frame %d\n", ++frame_number);
+        print_framebuffer(framebuffer, w, h);
+        // sleep(1);
     }
     avs_render_frame(avs, framebuffer, w, h, 0, false, AVS_PIXEL_RGB0_8);
+    printf("frame %d\n", ++frame_number);
+    print_framebuffer(framebuffer, w, h);
     avs_render_frame(avs, framebuffer, w, h, 0, false, AVS_PIXEL_RGB0_8);
+    printf("frame %d\n", ++frame_number);
+    print_framebuffer(framebuffer, w, h);
 
-    uint32_t* first_line = (uint32_t*)calloc(w, sizeof(uint32_t));
-    for (size_t y = 0; y < h; y += 2) {
-        for (size_t x = 0; x < w; x++) {
-            first_line[x] = ((uint32_t*)framebuffer)[y * w + x];
-        }
-        for (size_t x = 0; x < w; x++) {
-            uint8_t r1 = (first_line[x] & 0xff0000) >> 16;
-            uint8_t g1 = (first_line[x] & 0xff00) >> 8;
-            uint8_t b1 = first_line[x] & 0xff;
-            uint32_t col = ((uint32_t*)framebuffer)[(y + 1) * w + x];
-            uint8_t r2 = (col & 0xff0000) >> 16;
-            uint8_t g2 = (col & 0xff00) >> 8;
-            uint8_t b2 = col & 0xff;
-            // By using the "▀" (half upper block) character, we can render two lines of
-            // pixels in one line of characters, with the effect of making the pixels
-            // more square (a character cell in a terminal has ~1:2 aspect ratio).
-            // The VT100 foreground color is used for the top half of the block, and set
-            // to the pixel color from the first of the two lines, and the background
-            // color is used for the bottom half of the block, and set to the pixel
-            // color from the second of the two lines.
-            printf("\x1b[38;2;%d;%d;%dm\x1b[48;2;%d;%d;%dm▀", r1, g1, b1, r2, g2, b2);
-            /*
-             */
-        }
-        printf("\x1b[0m\n");
-    }
     avs_free(avs);
 
     return 0;
