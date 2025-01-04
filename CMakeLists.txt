@@ -128,6 +128,8 @@ add_compile_definitions(
                             # removed, now that all MMX sections are ported.)
     WFMO                    # Enable `WaitForMultipleObjects()` in pevents.cpp.
     _USE_MATH_DEFINES       # Let math.h declare M_PI.
+    SIMD_MODE_X86_SSE       # Use SSE & SSSE3 SIMD optimizations where possible.
+                            # Plain C alternatives are provided and used if unset.
 )
 
 set(CMAKE_SHARED_LIBRARY_PREFIX "")  # Remove "lib" prefix from output to get original
