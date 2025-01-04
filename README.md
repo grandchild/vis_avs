@@ -158,17 +158,18 @@ cmake -B build_linux --toolchain CMake-Linux32cross-toolchain.txt
 cmake --build build_linux --parallel $(nproc)
 ```
 
-Then run either the C version:
+Then run either the C version, which prints individual low-res test frames to the
+terminal or the Rust version, which opens a window with realtime AVS. For both you need
+to set `LD_LIBRARY_PATH` to the build directory, so the binaries can find `libavs.so`:
 
 ```sh
-build_linux/avs-cli
-# prints a static image to the terminal,
+LD_LIBRARY_PATH=build_linux build_linux/avs-cli
 ```
 
 or the Rust version:
 ```sh
-RUSTFLAGS="-L build_linux" LD_LIBRARY_PATH=build_linux build_linux/avs /path/to/some/preset.avs
-# opens a window if given a preset file as first parameter.
+LD_LIBRARY_PATH=build_linux build_linux/avs /path/to/some/preset.avs
+# Press Q or Esc to quit, and Space to simulate a beat.
 ```
 
 On Linux the Rust program also opens an audio input device, if the system uses Pipewire.
