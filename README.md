@@ -150,6 +150,12 @@ Both are built automatically with the current CMake setup.
 Prepare & build first:
 
 ```sh
+# Install a 32bit util-linux package which provides libuuid.
+# For Archlinux that would be: $ sudo pacman -S lib32-util-linux
+
+# *Optionally* install a 32bit libpipewire for automatic audio input on Linux.
+# For Archlinux that would be: $ sudo pacman -S lib32-libpipewire
+
 # Install Rust 32bit linux toolchain
 rustup target add i686-unknown-linux-gnu
 
