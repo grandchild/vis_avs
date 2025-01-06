@@ -55,6 +55,7 @@ elseif(LINUX)
     list(APPEND SRC_FILES_AVS_COMMON
         avs/platform_linux.c
         avs/vis_avs/audio_in_linux_pipewire.cpp
+        avs/vis_avs/audio_libpipewire.cpp
         avs/3rdparty/pevents.cpp
     )
 endif()
@@ -221,7 +222,7 @@ elseif(LINUX)
     include(FindPkgConfig)
     pkg_search_module(PIPEWIRE REQUIRED libpipewire-0.3)
     target_include_directories(avs_common PUBLIC ${PIPEWIRE_INCLUDE_DIRS})
-    target_link_libraries(libavs ${PIPEWIRE_LIBRARIES} uuid)
+    target_link_libraries(libavs uuid)
     target_link_options(libavs PUBLIC -Wl,-m elf_i386)
     set(AVS_DYLIB_EXTENSION "so")
     add_executable(avs-cli avs/avs-cli.c)

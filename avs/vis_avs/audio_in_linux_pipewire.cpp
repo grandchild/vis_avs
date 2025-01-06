@@ -1,4 +1,5 @@
 #include "audio_in.h"
+#include "audio_libpipewire.h"
 
 #include "../platform.h"
 
@@ -9,30 +10,18 @@
 #include <pipewire/pipewire.h>
 #include <spa/param/audio/format-utils.h>
 
-struct UserCallbackData {
-    avs_audio_input_handler callback;
-    void* data;
-};
-
-struct LoopData {
-    pw_thread_loop* loop;
-    pw_stream* stream;
-    spa_audio_info format;
-    UserCallbackData user_callback_data;
-};
-
 static void on_process(void* data) {
-    auto loop_data = (LoopData*)data;
+    auto pw = (LibPipewire*)data;
     struct pw_buffer* b;
     struct spa_buffer* buf;
     float *samples, max;
     uint32_t c, n, n_channels, n_samples, peak;
 
-    if (loop_data->stream == nullptr) {
+    if (pw->stream == nullptr) {
         return;
     }
 
-    if ((b = pw_stream_dequeue_buffer(loop_data->stream)) == NULL) {
+    if ((b = pw->stream_dequeue_buffer(pw->stream)) == NULL) {
         return;
     }
 
@@ -41,45 +30,42 @@ static void on_process(void* data) {
         return;
     }
 
-    n_channels = loop_data->format.info.raw.channels;
+    n_channels = pw->format.info.raw.channels;
     n_samples = buf->datas[0].chunk->size / sizeof(float);
 
-    auto user_callback = loop_data->user_callback_data.callback;
-    auto user_data = loop_data->user_callback_data.data;
-    user_callback(
-        user_data, (AudioFrame*)samples, loop_data->format.info.raw.rate, n_samples);
+    pw->user_callback(
+        pw->user_data, (AudioFrame*)samples, pw->format.info.raw.rate, n_samples);
 
-    // for (c = 0; c < loop_data->format.info.raw.channels; c++) {
+    // for (c = 0; c < pw->format.info.raw.channels; c++) {
     //     max = 0.0f;
     //     for (n = c; n < n_samples; n += n_channels) {
     //         max = fmaxf(max, fabsf(samples[n]));
     //     }
     // }
 
-    pw_stream_queue_buffer(loop_data->stream, b);
+    pw->stream_queue_buffer(pw->stream, b);
 }
 
 static void on_stream_param_changed(void* data,
                                     uint32_t id,
                                     const struct spa_pod* param) {
-    auto loop_data = (LoopData*)data;
+    auto pw = (LibPipewire*)data;
 
     if (param == nullptr || id != SPA_PARAM_Format) {
         return;
     }
 
-    if (spa_format_parse(
-            param, &loop_data->format.media_type, &loop_data->format.media_subtype)
+    if (spa_format_parse(param, &pw->format.media_type, &pw->format.media_subtype)
         < 0) {
         return;
     }
 
-    if (loop_data->format.media_type != SPA_MEDIA_TYPE_audio
-        || loop_data->format.media_subtype != SPA_MEDIA_SUBTYPE_raw) {
+    if (pw->format.media_type != SPA_MEDIA_TYPE_audio
+        || pw->format.media_subtype != SPA_MEDIA_SUBTYPE_raw) {
         return;
     }
 
-    spa_format_audio_raw_parse(param, &loop_data->format.info.raw);
+    spa_format_audio_raw_parse(param, &pw->format.info.raw);
 }
 
 static const struct pw_stream_events stream_events = {
@@ -89,16 +75,19 @@ static const struct pw_stream_events stream_events = {
 };
 
 AVS_Audio_Input* audio_in_start(avs_audio_input_handler callback, void* data) {
-    auto loop_data = (LoopData*)calloc(1, sizeof(LoopData));
-    loop_data->user_callback_data.callback = callback;
-    loop_data->user_callback_data.data = data;
+    auto pw = new LibPipewire(callback, data);
+    if (!pw->loaded) {
+        log_err("failed to load pipewire: %s", pw->load_error.c_str());
+        free(pw);
+        return nullptr;
+    }
     const struct spa_pod* params[1];
     uint8_t buffer[1024];
     struct pw_properties* props;
     struct spa_pod_builder builder = SPA_POD_BUILDER_INIT(buffer, sizeof(buffer));
 
-    pw_init(0, nullptr);
-    loop_data->loop = pw_thread_loop_new("my thread", NULL);
+    pw->init(0, nullptr);
+    pw->loop = pw->thread_loop_new("my thread", NULL);
 
     /* If you plan to autoconnect your stream, you need to provide at least
      * media, category and role properties.
@@ -107,25 +96,22 @@ AVS_Audio_Input* audio_in_start(avs_audio_input_handler callback, void* data) {
      * you need to listen to is the process event where you need to produce
      * the data.
      */
-    props = pw_properties_new(PW_KEY_MEDIA_TYPE,
-                              "Audio",
-                              PW_KEY_CONFIG_NAME,
-                              "client-rt.conf",
-                              PW_KEY_MEDIA_CATEGORY,
-                              "Capture",
-                              PW_KEY_MEDIA_ROLE,
-                              "Music",
-                              nullptr);
+    props = pw->properties_new(PW_KEY_MEDIA_TYPE,
+                               "Audio",
+                               PW_KEY_CONFIG_NAME,
+                               "client-rt.conf",
+                               PW_KEY_MEDIA_CATEGORY,
+                               "Capture",
+                               PW_KEY_MEDIA_ROLE,
+                               "Music",
+                               nullptr);
     // uncomment if you want to capture from the sink monitor ports
     // TODO: make input device selectable both from the outside and from the inside
-    pw_properties_set(props, PW_KEY_STREAM_CAPTURE_SINK, "true");
-    loop_data->stream = pw_stream_new_simple(pw_thread_loop_get_loop(loop_data->loop),
-                                             "Visuals Audio",
-                                             props,
-                                             &stream_events,
-                                             loop_data);
+    // pw->properties_set(props, PW_KEY_STREAM_CAPTURE_SINK, "true");
+    pw->stream = pw->stream_new_simple(
+        pw->thread_loop_get_loop(pw->loop), "Visuals Audio", props, &stream_events, pw);
 
-    if (loop_data->stream == nullptr) {
+    if (pw->stream == nullptr) {
         log_err("failed to create stream");
         return nullptr;
     }
@@ -137,8 +123,8 @@ AVS_Audio_Input* audio_in_start(avs_audio_input_handler callback, void* data) {
     auto info = SPA_AUDIO_INFO_RAW_INIT(.format = SPA_AUDIO_FORMAT_F32);
     params[0] = spa_format_audio_raw_build(&builder, SPA_PARAM_EnumFormat, &info);
 
-    pw_stream_connect(
-        loop_data->stream,
+    pw->stream_connect(
+        pw->stream,
         PW_DIRECTION_INPUT,
         PW_ID_ANY,
         (pw_stream_flags)(PW_STREAM_FLAG_AUTOCONNECT | PW_STREAM_FLAG_MAP_BUFFERS
@@ -146,16 +132,16 @@ AVS_Audio_Input* audio_in_start(avs_audio_input_handler callback, void* data) {
         params,
         1);
 
-    pw_thread_loop_start(loop_data->loop);
-    return loop_data;
+    pw->thread_loop_start(pw->loop);
+    return pw;
 }
 
 void audio_in_stop(AVS_Audio_Input* audio_in) {
-    auto loop_data = (LoopData*)audio_in;
-    // pw_thread_loop_unlock(loop_data->loop);  // we don't lock the thread (yet?)
-    pw_thread_loop_stop(loop_data->loop);
-    pw_stream_destroy(loop_data->stream);
-    pw_thread_loop_destroy(loop_data->loop);
-    pw_deinit();
+    auto pw = (LibPipewire*)audio_in;
+    // pw->thread_loop_unlock(pw->loop);  // we don't lock the thread (yet?)
+    pw->thread_loop_stop(pw->loop);
+    pw->stream_destroy(pw->stream);
+    pw->thread_loop_destroy(pw->loop);
+    pw->deinit();
     free(audio_in);
 }
