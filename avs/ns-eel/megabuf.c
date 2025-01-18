@@ -31,8 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "megabuf.h"
 
-#include "../ns-eel/ns-eel-int.h"
-#include "../ns-eel/ns-eel.h"
+#include "../3rdparty/WDL-EEL2/eel2/ns-eel-int.h"
+#include "../3rdparty/WDL-EEL2/eel2/ns-eel.h"
 #include "../platform.h"
 
 #include <stdlib.h>

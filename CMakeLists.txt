@@ -6,8 +6,8 @@ include(CheckIncludeFiles)
 include(CheckLinkerFlag)
 include(ExternalProject)
 
-file(GLOB SRC_FILES_NS_EEL
-    avs/ns-eel/*.c
+file(GLOB SRC_FILES_EEL2
+    avs/3rdparty/WDL-EEL2/eel2/nseel-*.c
 )
 file(GLOB SRC_FILES_AVS_COMMON
     avs/vis_avs/audio.cpp
@@ -90,9 +90,6 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         -masm=intel         # Use Intel instead of AT&T inline assembly syntax.
         -march=native       # Convolution-Filter uses inlined mmintrin.h functions, and
                             # a pentium4 arch seems to be roughly the minimum for that.
-        -fcf-protection=return # Don't emit endbr32/-64 instructions at the beginning of
-                               # functions. ("return" value means: not "branch".)
-                               # We want clean naked functions.
         # -flto               # Link-time optimization. No performance gain, but halves
                             # binary size.
         # -fprofile-generate  # Profile-guided optimization, pass 1
@@ -119,8 +116,6 @@ else() # TODO: Clang option
 endif()
 
 add_compile_definitions(
-    AVS_MEGABUF_SUPPORT     # No reason to not enable this. Remove #ifdefs eventually.
-    NSEEL_LOOPFUNC_SUPPORT  # No reason to not enable this. Remove #ifdefs eventually.
     WA2_EMBED               # Enabling this shows the window decorations for AVS, at the
                             # cost of making the window resize a bit choppier. (Winamp2
                             # restricted window dimensions to certain multiples).
@@ -136,12 +131,14 @@ add_compile_definitions(
 set(CMAKE_SHARED_LIBRARY_PREFIX "")  # Remove "lib" prefix from output to get original
                                      # filename "vis_avs.dll".
 
-add_library(avs_common OBJECT
-    ${SRC_FILES_NS_EEL}
-    ${SRC_FILES_AVS_COMMON}
-)
+add_library(avs_eel OBJECT ${SRC_FILES_EEL2})
+target_compile_options(avs_eel PRIVATE -masm=att)
+add_library(avs_common OBJECT ${SRC_FILES_AVS_COMMON})
 
-add_library(libavs SHARED $<TARGET_OBJECTS:avs_common>)
+add_library(libavs SHARED
+    $<TARGET_OBJECTS:avs_eel>
+    $<TARGET_OBJECTS:avs_common>
+)
 
 check_include_files(
     "libavcodec/avcodec.h;libavformat/avformat.h;libswscale/swscale.h"
@@ -161,6 +158,7 @@ if(WIN32)
                                             # MSVC. Use our own functions everywhere.
     )
     add_library(vis_avs SHARED
+        $<TARGET_OBJECTS:avs_eel>
         $<TARGET_OBJECTS:avs_common>
         ${SRC_FILES_VIS_AVS}
     )

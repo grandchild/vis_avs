@@ -3,7 +3,7 @@
 
 #include "instance.h"
 
-#include "../ns-eel/ns-eel.h"
+#include "../3rdparty/WDL-EEL2/eel2/ns-eel.h"
 
 #include <stdio.h>  // for logging
 #include <vector>

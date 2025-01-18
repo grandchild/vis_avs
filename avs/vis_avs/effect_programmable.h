@@ -110,9 +110,10 @@ class Code_Section {
         if (!this->need_recompile) {
             return false;
         }
+        // log_info("Compiling code: %s", this->code_str.c_str());
         NSEEL_code_free(this->code);
         this->code =
-            NSEEL_code_compile(this->vm_context, (char*)this->code_str.c_str());
+            NSEEL_code_compile(this->vm_context, (char*)this->code_str.c_str(), 0);
         this->need_recompile = false;
         return true;
     }

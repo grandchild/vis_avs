@@ -32,11 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _AVS_EEL_IF_H_
 #define _AVS_EEL_IF_H_
 
-#include "../ns-eel/ns-eel.h"
-#ifdef AVS_MEGABUF_SUPPORT
-#include "../ns-eel/megabuf.h"
-#endif
-
+#include "../3rdparty/WDL-EEL2/eel2/ns-eel.h"
 #include "../platform.h"
 
 void AVS_EEL_IF_init();

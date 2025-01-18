@@ -318,7 +318,6 @@ static void _dosetsel(HWND hwndDlg) {
             "    which_parm = 5: mouse middle button state (0 up, 1 down)\r\n"
             "    which_parm > 5: (GetAsyncKeyState(which_parm)&0x8000)?1:0\r\n"
             "\r\n"
-#ifdef AVS_MEGABUF_SUPPORT
             "megabuf(index)\r\n"
             "  = can be used to get or set an item from the 1 million item temp "
             "buffer\r\n"
@@ -330,17 +329,13 @@ static void _dosetsel(HWND hwndDlg) {
             "    to get, use:   val=gmegabuf(index);\r\n"
             "    to set, use:   assign(gmegabuf(index),val);\r\n"
             "\r\n"
-#endif
-#ifdef NSEEL_LOOPFUNC_SUPPORT
             "loop(count, statement)\r\n"
             "  = executes <statement> <count> times. count is evaluated once and "
             "clamped\r\n"
-            "    to 0..4096. best used with exec2() and exec3() and assign(). Note "
+            "    to 0..1048576. best used with exec2() and exec3() and assign(). Note "
             "that\r\n"
             "    the return value of loop() is undefined and should not be used.\r\n"
-            "\r\n"
-#endif
-            ;
+            "\r\n";
     } else if (sel == 3) {
         text =
             "Constants\r\n"

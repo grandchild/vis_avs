@@ -9,7 +9,7 @@
 constexpr Parameter GlobalVariables_Info::parameters[];
 
 const int E_GlobalVariables::max_regs_index = 99;
-const int E_GlobalVariables::max_gmb_index = MEGABUF_BLOCKS * MEGABUF_ITEMSPERBLOCK - 1;
+const int E_GlobalVariables::max_gmb_index = 1024 * 1024 - 1;
 
 void GlobalVariables_Info::check_ranges(Effect* component,
                                         const Parameter* parameter,
@@ -133,7 +133,7 @@ void E_GlobalVariables::exec_code_from_file(char visdata[2][2][576]) {
     } else {
         return;
     }
-    file_code_handle = NSEEL_code_compile(this->vm_context, file_code);
+    file_code_handle = NSEEL_code_compile(this->vm_context, file_code, 0);
     if (file_code_handle) {
         AVS_EEL_IF_Execute(file_code_handle, visdata);
     }
@@ -193,8 +193,8 @@ double E_GlobalVariables::reg_value(int index) {
 }
 
 double E_GlobalVariables::buf_value(int index) {
-    if (index >= 0 && index < MEGABUF_BLOCKS * MEGABUF_ITEMSPERBLOCK) {
-        return AVS_EEL_IF_gmb_value(index);
+    if (index >= 0 && index <= E_GlobalVariables::max_gmb_index) {
+        // return AVS_EEL_IF_gmb_value(index);
     }
     return 0.0f;
 }

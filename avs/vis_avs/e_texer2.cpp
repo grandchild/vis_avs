@@ -206,7 +206,7 @@ void E_Texer2::load_default_image() {
     }
 }
 
-struct RECT {
+struct RECTi {
     int left;
     int top;
     int right;
@@ -253,7 +253,7 @@ void E_Texer2::DrawParticle(int* framebuffer,
         r.right = (iw - 1) * .5 * sizex + 0.5 + (x * .5 + .5) * w;
         r.bottom = (ih - 1) * .5 * sizey + 0.5 + (y * .5 + .5) * h;
 
-        RECT r2;
+        RECTi r2;
         r2.left = RoundToInt(r.left);
         r2.top = RoundToInt(r.top);
         r2.right = RoundToInt(r.right);
@@ -692,15 +692,15 @@ void E_Texer2::DrawParticle(int* framebuffer,
         /***************************************************************************/
         /***************************************************************************/
 
-        RECT r;
+        RECTi r;
         // Determine exact position, original size
         r.left = (RoundToInt((x * .5f + .5f) * w) - iw / 2);
         r.top = (RoundToInt((y * .5f + .5f) * h) - ih / 2);
         r.right = r.left + iw - 1;
         r.bottom = r.top + ih - 1;
 
-        RECT r2;
-        memcpy(&r2, &r, sizeof(RECT));
+        RECTi r2;
+        memcpy(&r2, &r, sizeof(RECTi));
 
         // Visiblity culling
         if ((r2.right < 0) || (r2.left > w) || (r2.bottom < 0) || (r2.top > h)) {
