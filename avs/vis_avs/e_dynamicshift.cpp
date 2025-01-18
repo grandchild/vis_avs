@@ -297,13 +297,6 @@ int E_DynamicShift::render(char visdata[2][2][576],
             }
         }
     }
-#ifndef NO_MMX
-#ifdef _MSC_VER  // MSVC asm
-    __asm emms;
-#else   // _MSC_VER, GCC asm
-    __asm__ __volatile__("emms");
-#endif  // _MSC_VER
-#endif
 
     return 1;
 }
