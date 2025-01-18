@@ -34,6 +34,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "timing.h"
 
+#include <immintrin.h>
+
 constexpr Parameter Fadeout_Info::parameters[];
 
 void maketab(Effect* component, const Parameter*, const std::vector<int64_t>&) {
@@ -128,14 +130,7 @@ int E_Fadeout::render(char[2][2][576],
     if (!this->config.fadelen) {
         return 0;
     }
-    timingEnter(1);
-    if (
-#ifdef NO_MMX
-        1
-#else
-        this->config.color
-#endif
-    ) {
+    if (this->config.color) {
         unsigned char* t = (unsigned char*)framebuffer;
         int x = w * h;
         while (x--) {
@@ -144,127 +139,15 @@ int E_Fadeout::render(char[2][2][576],
             t[2] = fadtab[2][t[2]];
             t += 4;
         }
-    }
-#ifndef NO_MMX
-    else {
-        int l = (w * h);
-        char fadj[8];
-        int x;
-        unsigned char* t = fadtab[0];
-        for (x = 0; x < 8; x++) {
-            fadj[x] = this->config.fadelen;
+    } else {
+        uint32_t fadelen_noalpha = this->config.fadelen | (this->config.fadelen << 8)
+                                   | (this->config.fadelen << 16);
+        __m128i adj = _mm_set1_epi32(fadelen_noalpha);
+        for (size_t i; i < w * h; i += 4) {
+            __m128i fb_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
+            _mm_storeu_si128((__m128i*)&framebuffer[i], _mm_subs_epu8(fb_4px, adj));
         }
-#ifdef _MSC_VER  // MSVC asm
-        __asm {
-			mov edx, l
-			mov edi, framebuffer
-			movq mm7, [fadj]
-			shr edx, 3
-      align 16
-		fadeout_l1:
-			movq mm0, [edi]
-
-			movq mm1, [edi+8]
-
-			movq mm2, [edi+16]
-			psubusb mm0, mm7
-
-			movq mm3, [edi+24]
-			psubusb mm1, mm7
-
-			movq [edi], mm0
-			psubusb mm2, mm7
-
-			movq [edi+8], mm1
-			psubusb mm3, mm7
-
-			movq [edi+16], mm2
-
-			movq [edi+24], mm3
-
-			add edi, 8*4
-
-			dec edx
-			jnz fadeout_l1
-
-			mov edx, l
-			sub eax, eax
-
-			and edx, 7
-			jz _l3
-
-			sub ebx, ebx
-			sub ecx, ecx
-
-			mov esi, t
-		fadeout_l2:
-			mov al, [edi]
-			mov bl, [edi+1]
-			mov cl, [edi+2]
-			sub al, [esi+eax]
-			sub bl, [esi+ebx]
-			sub cl, [esi+ecx]
-			mov [edi], al
-			mov [edi+1], bl
-			mov [edi+2], cl
-			add edi, 4
-			dec edx
-			jnz fadeout_l2
-		_l3:
-			emms
-        }
-#else   // _MSC_VER, GCC asm
-        __asm__ __volatile__(
-            "mov     %%edx, %[l]\n\t"
-            "mov     %%edi, %[framebuffer]\n\t"
-            "movq    %%mm7, [%[fadj]]\n\t"
-            "shr     %%edx, 3\n\t"
-            ".align  16\n"
-            "fadeout_l1:\n\t"
-            "movq    %%mm0, [%%edi]\n\t"
-            "movq    %%mm1, [%%edi + 8]\n\t"
-            "movq    %%mm2, [%%edi + 16]\n\t"
-            "psubusb %%mm0, %%mm7\n\t"
-            "movq    %%mm3, [%%edi + 24]\n\t"
-            "psubusb %%mm1, %%mm7\n\t"
-            "movq    [%%edi], %%mm0\n\t"
-            "psubusb %%mm2, %%mm7\n\t"
-            "movq    [%%edi + 8], %%mm1\n\t"
-            "psubusb %%mm3, %%mm7\n\t"
-            "movq    [%%edi + 16], %%mm2\n\t"
-            "movq    [%%edi + 24], %%mm3\n\t"
-            "add     %%edi, 8 * 4\n\t"
-            "dec     %%edx\n\t"
-            "jnz     fadeout_l1\n\t"
-            "mov     %%edx, %[l]\n\t"
-            "sub     %%eax, %%eax\n\t"
-            "and     %%edx, 7\n\t"
-            "jz      _l3\n\t"
-            "sub     %%ebx, %%ebx\n\t"
-            "sub     %%ecx, %%ecx\n\t"
-            "mov     %%esi, %[t]\n"
-            "fadeout_l2:\n\t"
-            "mov     al, [%%edi]\n\t"
-            "mov     bl, [%%edi + 1]\n\t"
-            "mov     cl, [%%edi + 2]\n\t"
-            "sub     al, [%%esi + %%eax]\n\t"
-            "sub     bl, [%%esi + %%ebx]\n\t"
-            "sub     cl, [%%esi + %%ecx]\n\t"
-            "mov     [%%edi], %%al\n\t"
-            "mov     [%%edi + 1], %%bl\n\t"
-            "mov     [%%edi + 2], %%cl\n\t"
-            "add     %%edi, 4\n\t"
-            "dec     %%edx\n\t"
-            "jnz     fadeout_l2\n"
-            "_l3:\n\t"
-            "emms\n\t"
-            : /* no outputs */
-            : [l] "m"(l), [framebuffer] "m"(framebuffer), [fadj] "m"(fadj), [t] "m"(t)
-            : "eax", "ebx", "ecx", "edx", "edi", "esi");
-#endif  // _MSC_VER
     }
-#endif
-    timingLeave(1);
     return 0;
 }
 
