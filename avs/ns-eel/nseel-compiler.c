@@ -270,6 +270,14 @@ static void* __newBlock(llBlock** start, int size) {
 #define X86_SHORT_JMP            0xEB
 #define X86_NEAR_JMP             0xE9
 #define SIZE_X86_NEAR_JMP        (1 /*opcode*/ + 4 /*address*/)
+#define X86_NEAR_CALL            0xE8
+#define SIZE_X86_NEAR_CALL       (1 /*opcode*/ + 4 /*address*/)
+#define X86_ADD_IMM_TO_EAX       0x05
+#define SIZE_X86_ADD_IMM_TO_EAX  (1 /*opcode*/ + 4 /*address*/)
+#define X86_ADD_IMM              0x81
+#define SIZE_X86_ADD_IMM         (1 /*opcode*/ + 1 /*dest*/ + 4 /*address*/)
+#define X86_LEA                  0x8D
+#define SIZE_X86_LEA             (1 /*opcode*/ + 1 /*dest*/ + 4 /*address*/)
 #define X86_INT3                 0xCC
 #define SIZE_X86_SHORT_JMP_BYTES 2
 #define UD2_FIRST_BYTE           0x0F
@@ -322,6 +330,41 @@ static int find_msvc_naked_function_size(unsigned char* fn) {
 }
 #endif
 
+#ifdef __linux__
+/* When compiling for Linux the compiler & linker add a prologue for relocatable code */
+static void* skip_linux_gcc_x86_thunk_prologue(void* fn) {
+    size_t offset = 0;
+    uint8_t* binary = (uint8_t*)fn;
+    if (binary[0] == X86_NEAR_CALL) {
+        // log_info("Found call");
+        offset += SIZE_X86_NEAR_CALL;
+    }
+    if (binary[offset] == X86_ADD_IMM_TO_EAX) {
+        // log_info("Found add-to-eax");
+        offset += SIZE_X86_ADD_IMM_TO_EAX;
+    } else if (binary[offset] == X86_ADD_IMM) {
+        // log_info("Found add");
+        offset += SIZE_X86_ADD_IMM;
+    }
+    if (binary[offset] == X86_LEA) {
+        // log_info("Found lea");
+        // offset += SIZE_X86_LEA;
+    }
+    if (offset) {
+        // log_info("skip_linux_gcc_x86_thunk_prologue:");
+        // log_info("      offset: %d", offset);
+        size_t i = 0;
+        for (; i < offset - 3; i += 4) {
+            // log_info("      : %08x", *((uint32_t*)fn + i));
+        }
+        for (; i < offset; i++) {
+            // log_info("      : %02x", *((uint8_t*)fn + i));
+        }
+    }
+    return fn + offset;
+}
+#endif  // linux
+
 static void* realAddress(void* fn, void* fn_e, int* size) {
 #ifdef DISABLED_DEBUG
     char* ptr = (char*)fn;
@@ -337,7 +380,10 @@ static void* realAddress(void* fn, void* fn_e, int* size) {
 #ifdef _MSC_VER
     fn = resolve_msvc_jumptable_function_address(fn);
     *size = find_msvc_naked_function_size(fn);
-#else
+#else  // GCC
+#if __linux__
+    fn = skip_linux_gcc_x86_thunk_prologue(fn);
+#endif
     *size = (int)fn_e - (int)fn;
 #endif
     return fn;
