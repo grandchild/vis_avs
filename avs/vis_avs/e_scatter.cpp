@@ -32,8 +32,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // alphachannel safe 11/21/99
 #include "e_scatter.h"
 
-#include "timing.h"
-
 #define PUT_INT(y)                   \
     data[pos] = (y) & 255;           \
     data[pos + 1] = (y >> 8) & 255;  \

@@ -36,9 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "blend.h"
 
-// TODO: doesn't complain if not included. -> research.
-#include "timing.h"
-
 #define PUT_INT(y)                   \
     data[pos] = (y) & 255;           \
     data[pos + 1] = (y >> 8) & 255;  \

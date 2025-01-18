@@ -31,14 +31,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "render.h"
 
-#include "timing.h"
 #include "undo.h"
 #include "wa_ipc.h"
 #include "wnd.h"
 
 void Render_Init() {
-    timingInit();
-
     char INI_FILE[MAX_PATH];
     char* p = INI_FILE;
     strncpy(INI_FILE,
@@ -76,6 +73,4 @@ void Render_Quit() {
         strcpy(p, "\\plugins\\vis_avs.dat");
         g_single_instance->preset_save_file_legacy(INI_FILE);
     }
-
-    timingPrint();
 }

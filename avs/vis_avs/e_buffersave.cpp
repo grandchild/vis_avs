@@ -34,7 +34,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "blend.h"
 #include "instance.h"
-#include "timing.h"
 
 #define PUT_INT(y)                   \
     data[pos] = (y) & 255;           \
