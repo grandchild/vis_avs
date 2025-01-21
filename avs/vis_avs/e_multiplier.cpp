@@ -48,9 +48,9 @@ E_Multiplier::~E_Multiplier() {}
             uint32_t r = (framebuffer[i] & 0xff0000) OP TIMES;            \
             uint32_t g = (framebuffer[i] & 0xff00) OP TIMES;              \
             uint32_t b = (framebuffer[i] & 0xff) OP TIMES;                \
-            r = r > 0xff0000 ? 0xff0000 : r;                              \
-            g = g > 0xff00 ? 0xff00 : g;                                  \
-            b = b > 0xff ? 0xff : b;                                      \
+            r = r > 0xff0000 ? 0xff0000 : r & 0xff0000;                   \
+            g = g > 0xff00 ? 0xff00 : g & 0xff00;                         \
+            b = b > 0xff ? 0xff : b & 0xff;                               \
             framebuffer[i] = r | g | b;                                   \
         }                                                                 \
     }
