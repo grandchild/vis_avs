@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_multiplier.h"
 
-#ifdef SIMD_MODE_X68_SSE
+#ifdef SIMD_MODE_X86_SSE
 #include <immintrin.h>
 #endif
 
@@ -79,7 +79,7 @@ inline static void multiply_infsquare_rgb0_8_c(uint32_t* framebuffer, size_t len
     }
 }
 
-#ifdef SIMD_MODE_X68_SSE
+#ifdef SIMD_MODE_X86_SSE
 #define REPEAT_1(code)  code
 #define REPEAT_2(code)  code code
 #define REPEAT_3(code)  code code code
@@ -137,7 +137,7 @@ inline static void multiply_infsquare_rgb0_8_x86v128(uint32_t* framebuffer,
         _mm_storeu_si128((__m128i*)&framebuffer[i], fb_4px);
     }
 }
-#endif  // SIMD_MODE_X68_SSE
+#endif  // SIMD_MODE_X86_SSE
 
 int E_Multiplier::render(char[2][2][576],
                          int is_beat,
@@ -152,7 +152,7 @@ int E_Multiplier::render(char[2][2][576],
     size_t length = w * h;
     auto fb = (uint32_t*)framebuffer;
     switch (config.multiply) {
-#ifdef SIMD_MODE_X68_SSE
+#ifdef SIMD_MODE_X86_SSE
         case MULTIPLY_INF_ROOT: multiply_infroot_rgb0_8_x86v128(fb, length); break;
         case MULTIPLY_X8: multiply_x8_rgb0_8_x86v128(fb, length); break;
         case MULTIPLY_X4: multiply_x4_rgb0_8_x86v128(fb, length); break;
