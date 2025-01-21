@@ -726,10 +726,10 @@ static inline void blend_buffer_rgb0_8_x86v128(const uint32_t* src1,
     __m128i buf_lo_2px = _mm_unpacklo_epi8(buf_4px, zero);
     // 0a0r0g0b.0a0r0g0b -> 00____0m.0____0m (where "m" is the maximum of the
     // channels)
-    buf_hi_2px = _mm_max_epu16(buf_hi_2px, _mm_srli_si128(buf_hi_2px, 2));
-    buf_lo_2px = _mm_max_epu16(buf_lo_2px, _mm_srli_si128(buf_lo_2px, 2));
-    buf_hi_2px = _mm_max_epu16(buf_hi_2px, _mm_srli_si128(buf_hi_2px, 4));
-    buf_lo_2px = _mm_max_epu16(buf_lo_2px, _mm_srli_si128(buf_lo_2px, 4));
+    buf_hi_2px = _mm_max_epu16(buf_hi_2px, _mm_srli_si128(buf_hi_2px, 2 /*bytes*/));
+    buf_lo_2px = _mm_max_epu16(buf_lo_2px, _mm_srli_si128(buf_lo_2px, 2 /*bytes*/));
+    buf_hi_2px = _mm_max_epu16(buf_hi_2px, _mm_srli_si128(buf_hi_2px, 4 /*bytes*/));
+    buf_lo_2px = _mm_max_epu16(buf_lo_2px, _mm_srli_si128(buf_lo_2px, 4 /*bytes*/));
     // alpha 0 & 3x 16bit values from hi:0 (0x80) + lo:index0 (0x00) = mask: 0x8000
     // alpha 0 & 3x 16bit values from hi:0 (0x80) + lo:index8 (0x08) = mask: 0x8008
     static uint64_t buf_shuffle_mask_values[2] = {
@@ -888,8 +888,8 @@ static inline uint32_t blend_bilinear_2x2_rgb0_8_x86v128(const uint32_t* src,
     src_2corners_y1 =
         _mm_mulhi_epu16(src_2corners_y1, _mm_mullo_epi16(lerp_2px_x, lerp_2px_y1));
     __m128i result = _mm_add_epi16(src_2corners_y0, src_2corners_y1);
-    result = _mm_srli_epi16(result, 8);
-    result = _mm_add_epi16(result, _mm_srli_si128(result, 8));
+    result = _mm_srli_epi16(result, 8 /*bits*/);
+    result = _mm_add_epi16(result, _mm_srli_si128(result, 8 /*bytes*/));
     result = _mm_packus_epi16(result, zero);
     uint32_t iresult;
     _mm_storeu_si32(&iresult, result);
