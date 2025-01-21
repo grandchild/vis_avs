@@ -100,7 +100,7 @@ inline static void multiply_infsquare_rgb0_8_c(uint32_t* framebuffer, size_t len
         __m128i mask = _mm_set1_epi32(MASK);                                    \
         for (size_t i = 0; i < length; i += 4) {                                \
             __m128i fb_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);        \
-            fb_4px = _mm_srli_si128(fb_4px, TIMES);                             \
+            fb_4px = _mm_srli_epi32(fb_4px, TIMES);                             \
             fb_4px = _mm_and_si128(fb_4px, mask);                               \
             _mm_storeu_si128((__m128i*)&framebuffer[i], fb_4px);                \
         }                                                                       \
