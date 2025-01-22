@@ -132,7 +132,9 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")  # Remove "lib" prefix from output to get or
                                      # filename "vis_avs.dll".
 
 add_library(avs_eel OBJECT ${SRC_FILES_EEL2})
-target_compile_options(avs_eel PRIVATE -masm=att)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(avs_eel PRIVATE -masm=att)
+endif()
 add_library(avs_common OBJECT ${SRC_FILES_AVS_COMMON})
 
 add_library(libavs SHARED
