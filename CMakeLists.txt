@@ -146,7 +146,7 @@ check_include_files(
 )
 if(NOT HAVE_FFMPEG OR NO_FFMPEG)
     add_compile_definitions(NO_FFMPEG)
-    message(WARNING "FFmpeg not found. Building without video support!")
+    message(WARNING "FFmpeg headers not found. Building without video support!")
 endif()
 
 if(WIN32)
