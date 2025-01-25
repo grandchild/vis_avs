@@ -90,6 +90,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         -masm=intel         # Use Intel instead of AT&T inline assembly syntax.
         -march=native       # Convolution-Filter uses inlined mmintrin.h functions, and
                             # a pentium4 arch seems to be roughly the minimum for that.
+        -fvisibility=hidden # Hide all symbols by default, only export API symbols.
         # -flto               # Link-time optimization. No performance gain, but halves
                             # binary size.
         # -fprofile-generate  # Profile-guided optimization, pass 1
