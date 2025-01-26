@@ -38,6 +38,9 @@ void Wnd_Quit(void);
 void SetTransparency(HWND hWnd, int enable, int amount);
 HWND GetWinampHwnd(void);
 
+class AVS_Instance;  // instance.h
+
+extern AVS_Instance* g_single_instance;
 extern HWND g_hwnd;
 extern HINSTANCE g_hInstance;
 extern int g_in_destroy;

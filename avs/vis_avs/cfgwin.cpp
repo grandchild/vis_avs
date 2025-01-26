@@ -44,6 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "constants.h"
 #include "draw.h"
 #include "effect_library.h"
+#include "instance.h"
 #include "render.h"
 #include "resource.h"
 #include "undo.h"
@@ -846,7 +847,7 @@ static BOOL CALLBACK debugProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
             }
             SetTimer(hwndDlg, 1, 250, nullptr);
         }
-            if (g_log_errors) {
+            if (g_single_instance->eel_state.log_errors) {
                 CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
             }
             if (g_reset_vars_on_recompile) {
@@ -871,16 +872,18 @@ static BOOL CALLBACK debugProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                     SetDlgItemText(hwndDlg, IDC_DEBUGREG_1 + x * 2 + 1, buf);
                 }
 
-                if (g_log_errors) {
+                if (g_single_instance->eel_state.log_errors) {
                     // IDC_EDIT1
-                    lock_lock(g_eval_cs);
-                    char buf[1025];
-                    GetDlgItemText(hwndDlg, IDC_EDIT1, buf, sizeof(buf) - 1);
-                    buf[sizeof(buf) - 1] = 0;
-                    if (strncmp(buf, last_error_string, sizeof(buf)) != 0) {
-                        SetDlgItemText(hwndDlg, IDC_EDIT1, last_error_string);
+                    static size_t last_error_state = SIZE_MAX;
+                    size_t error_state = g_single_instance->eel_state.error_state();
+                    if (error_state != last_error_state) {
+                        char* buf;
+                        size_t len;
+                        g_single_instance->eel_state.errors_to_str(&buf, &len);
+                        SetDlgItemText(hwndDlg, IDC_EDIT1, buf);
+                        free(buf);
+                        last_error_state = error_state;
                     }
-                    lock_unlock(g_eval_cs);
                 }
 
                 {
@@ -901,7 +904,8 @@ static BOOL CALLBACK debugProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
                 case IDC_CHECK1:
-                    g_log_errors = !!IsDlgButtonChecked(hwndDlg, IDC_CHECK1);
+                    g_single_instance->eel_state.log_errors =
+                        !!IsDlgButtonChecked(hwndDlg, IDC_CHECK1);
                     return 0;
                 case IDC_CHECK2:
                     g_reset_vars_on_recompile =
@@ -911,10 +915,8 @@ static BOOL CALLBACK debugProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                     g_config_seh = !IsDlgButtonChecked(hwndDlg, IDC_CHECK3);
                     return 0;
                 case IDC_BUTTON1:
-                    lock_lock(g_eval_cs);
-                    last_error_string[0] = 0;
+                    g_single_instance->eel_state.clear_errors();
                     SetDlgItemText(hwndDlg, IDC_EDIT1, "");
-                    lock_unlock(g_eval_cs);
                     return 0;
                 case IDOK:
                 case IDCANCEL: DestroyWindow(hwndDlg); return 0;

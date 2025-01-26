@@ -92,6 +92,29 @@ class AVS_Instance {
 
     lock_t* render_lock;
 
+    struct EelState {
+        EelState() : errors_lock(lock_init()) {}
+        ~EelState() { lock_destroy(this->errors_lock); }
+        /* Global memory for such things as gmegabuf & regXX vars. Usually shared among
+           all EEL VMs (i.e. an intra-effect shared code context) but we need separation
+           per AVS instance. */
+        void* global_ram;
+        char visdata[2][2][AUDIO_BUFFER_LEN];
+        bool log_errors;
+
+        void error(const char* error_str);
+        void clear_errors();
+        void errors_to_str(char** out, size_t* out_len);
+        size_t error_state() { return this->error_ring_head; }
+
+       private:
+        lock_t* errors_lock;
+        static constexpr size_t num_errors = 16;
+        std::string error_ring[num_errors];
+        size_t error_ring_head = 0;
+    };
+    EelState eel_state;
+
    private:
     static constexpr char const* legacy_file_magic = "Nullsoft AVS Preset 0.2\x1a";
     static constexpr size_t num_global_buffers = 8;

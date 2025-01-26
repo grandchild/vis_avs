@@ -8,6 +8,8 @@
 #include "pixel_format.h"
 #include "render_context.h"
 
+#include "../3rdparty/WDL-EEL2/eel2/ns-eel.h"
+
 #include <cstdio>
 
 AVS_Instance::AVS_Instance(const char* base_path,
@@ -34,6 +36,7 @@ AVS_Instance::~AVS_Instance() {
     for (auto& effect : this->scrap) {
         delete effect;
     }
+    NSEEL_VM_FreeGRAM(&this->eel_state.global_ram);
     lock_destroy(this->render_lock);
     delete this->global_buffers;
     free(this->preset_legacy_save_buffer);
@@ -362,4 +365,54 @@ bool AVS_Instance::set_mouse_button_state(int button, bool state) {
         return true;
     }
     return false;
+}
+
+void AVS_Instance::EelState::error(const char* error_str) {
+    lock_lock(this->errors_lock);
+    this->error_ring[this->error_ring_head] = error_str;
+    if (++this->error_ring_head >= this->num_errors) {
+        this->error_ring_head = 0;
+    }
+    lock_unlock(this->errors_lock);
+}
+
+void AVS_Instance::EelState::clear_errors() {
+    lock_lock(this->errors_lock);
+    for (size_t i = 0; i < this->num_errors; i++) {
+        this->error_ring[i].clear();
+    }
+    this->error_ring_head = 0;
+    lock_unlock(this->errors_lock);
+}
+
+void AVS_Instance::EelState::errors_to_str(char** errors_out, size_t* out_len) {
+    lock_lock(this->errors_lock);
+    size_t len = 0;
+    for (size_t i = 0; i < this->num_errors; i++) {
+        len += this->error_ring[i].size() + 1;
+    }
+    if (len == 0) {
+        *errors_out = nullptr;
+        *out_len = 0;
+        lock_unlock(this->errors_lock);
+        return;
+    }
+    *errors_out = (char*)calloc(len + this->num_errors, 1);
+    if (*errors_out == nullptr) {
+        *out_len = 0;
+        lock_unlock(this->errors_lock);
+        return;
+    }
+    char* out = *errors_out;
+    for (size_t i = 0; i < this->num_errors; i++) {
+        auto error = this->error_ring[(this->error_ring_head + i) % this->num_errors];
+        if (error.empty()) {
+            continue;
+        }
+        memcpy(out, error.c_str(), error.size());
+        out += error.size() + 1;
+        out[-1] = '\n';
+    }
+    *out_len = len;
+    lock_unlock(this->errors_lock);
 }

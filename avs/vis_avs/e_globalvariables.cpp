@@ -133,9 +133,9 @@ void E_GlobalVariables::exec_code_from_file(char visdata[2][2][576]) {
     } else {
         return;
     }
-    file_code_handle = NSEEL_code_compile(this->vm_context, file_code, 0);
+    file_code_handle = AVS_EEL_IF_Compile(this->avs, this->vm_context, file_code);
     if (file_code_handle) {
-        AVS_EEL_IF_Execute(file_code_handle, visdata);
+        AVS_EEL_IF_Execute(this->avs, file_code_handle, visdata);
     }
     NSEEL_code_free(file_code_handle);
     free(file_code);

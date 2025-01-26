@@ -29,7 +29,25 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+
+/**
+ * EEL has a single global init/quit state, and multiple "VM contexts" which in turn may
+ * have multiple "compile contexts". In AVS an EEL VM is reused within one effect. An
+ * effect may have one or more code sections. Each code section is a compile context.
+ * A VM shares local variable state among all code sections/compile contexts. On top of
+ * that EEL has global state (`regXX` vars and the `gmegabuf`/`gmem` array), which is
+ * shared between all VMs.
+ *
+ * To really separate AVS instances, we need to make use of an optional EEL feature,
+ * global RAM separation, by manually providing a global RAM section on every compile
+ * call, depending on which AVS instance its effect belongs to. Each AVS_Instance keeps
+ * an EelState member, which contain the global RAM sections, along with other
+ * configuration.
+ */
+
 #include "avs_eelif.h"
+
+#include "instance.h"
 
 #include "../3rdparty/WDL-EEL2/eel2/ns-eel-addfuncs.h"
 #include "../platform.h"
@@ -40,11 +58,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef CAN_TALK_TO_WINAMP
 #include <windows.h>
 #endif
-
-char last_error_string[1024];
-int g_log_errors;
-lock_t* g_eval_cs;
-static char* g_evallib_visdata;
 
 /////////////////////// begin AVS specific script functions
 
@@ -63,23 +76,23 @@ static double getvis(unsigned char* visdata, int bc, int bw, int ch, int xorv) {
         bw += bc;
         bc = 0;
     }
-    if (bc > 575) {
-        bc = 575;
+    if (bc > (AUDIO_BUFFER_LEN - 1)) {
+        bc = AUDIO_BUFFER_LEN - 1;
     }
-    if (bc + bw > 576) {
-        bw = 576 - bc;
+    if (bc + bw > AUDIO_BUFFER_LEN) {
+        bw = AUDIO_BUFFER_LEN - bc;
     }
 
-    if (!ch) {
+    if (ch == 0) {  // Center
         for (x = 0; x < bw; x++) {
             accum += (visdata[bc] ^ xorv) - xorv;
-            accum += (visdata[bc + 576] ^ xorv) - xorv;
+            accum += (visdata[bc + AUDIO_BUFFER_LEN] ^ xorv) - xorv;
             bc++;
         }
         return (double)accum / ((double)bw * 255.0);
     } else {
         if (ch == 2) {
-            visdata += 576;
+            visdata += AUDIO_BUFFER_LEN;
         }
         for (x = 0; x < bw; x++) {
             accum += (visdata[bc++] ^ xorv) - xorv;
@@ -88,33 +101,27 @@ static double getvis(unsigned char* visdata, int bc, int bw, int ch, int xorv) {
     }
 }
 
-static double getspec(double band, double bandw, double chan) {
-    if (!g_evallib_visdata) {
-        return 0.0;
-    }
-    return getvis((unsigned char*)g_evallib_visdata,
-                  (int)(band * 576.0),
-                  (int)(bandw * 576.0),
-                  (int)(chan + 0.5),
+static double getspec(AVS_Instance* avs, double* band, double* bandw, double* chan) {
+    return getvis((unsigned char*)avs->eel_state.visdata,
+                  (int)(*band * AUDIO_BUFFER_LEN),
+                  (int)(*bandw * AUDIO_BUFFER_LEN),
+                  (int)(*chan + 0.5),
                   0)
            * 0.5;
 }
 
-static double getosc(double band, double bandw, double chan) {
-    if (!g_evallib_visdata) {
-        return 0.0;
-    }
-    return getvis((unsigned char*)g_evallib_visdata + 576 * 2,
-                  (int)(band * 576.0),
-                  (int)(bandw * 576.0),
-                  (int)(chan + 0.5),
+static double getosc(AVS_Instance* avs, double* band, double* bandw, double* chan) {
+    return getvis((unsigned char*)&avs->eel_state.visdata[AUDIO_BUFFER_LEN * 2],
+                  (int)(*band * AUDIO_BUFFER_LEN),
+                  (int)(*bandw * AUDIO_BUFFER_LEN),
+                  (int)(*chan + 0.5),
                   128);
 }
 
-static double gettime(double sc) {
+static double gettime(AVS_Instance* avs, double* sc) {
 #ifdef CAN_TALK_TO_WINAMP
     int ispos;
-    if ((ispos = (sc > -1.001 && sc < -0.999)) || (sc > -2.001 && sc < -1.999)) {
+    if ((ispos = (*sc > -1.001 && *sc < -0.999)) || (*sc > -2.001 && *sc < -1.999)) {
         int pos = 0;
 
         extern HWND hwnd_WinampParent;
@@ -135,17 +142,11 @@ static double gettime(double sc) {
         return pos / 1000.0;
     }
 #endif  // CAN_TALK_TO_WINAMP
-    return timer_ms() / 1000.0 - sc;
+    return avs->get_current_time_in_ms() / 1000.0 - *sc;
 }
 
-static double setmousepos(double x, double y) {
-    // fucko: implement me
-    (void)x, (void)y;
-    return 0.0;
-}
-
-static double getmouse(double which) {
-    int w = (int)(which + 0.5);
+static double getmouse(AVS_Instance* avs, double* which) {
+    int w = (int)(*which + 0.5);
 
 #ifdef CAN_TALK_TO_WINAMP
     if (w > 5) {
@@ -167,78 +168,57 @@ static double getmouse(double which) {
     if (w == 5) {
         return (GetAsyncKeyState(MK_MBUTTON) & 0x8000) ? 1.0 : 0.0;
     }
-#endif  // CAN_TALK_TO_WINAMP
+#else
+    switch (w) {
+        case 1: return avs->get_mouse_pos(/*get_y*/ false) * 2.0 - 1.0;
+        case 2: return avs->get_mouse_pos(/*get_y*/ true) * 2.0 - 1.0;
+        case 3: [[fallthrough]];
+        case 4: [[fallthrough]];
+        case 5: return avs->get_mouse_button_state(w) ? 1.0 : 0.0;
+        default: return avs->get_key_state(w) ? 1.0 : 0.0;
+    }
     return 0.0;
+#endif  // CAN_TALK_TO_WINAMP
 }
 
 /////////////////////// end AVS specific script functions
 
-void AVS_EEL_IF_init() {
-    g_eval_cs = lock_init();
+void AVS_EEL_IF_init(AVS_Instance* avs) {
     NSEEL_init();
     NSEEL_addfunc_retval("getosc", 3, NSEEL_PProc_THIS, (void*)getosc);
     NSEEL_addfunc_retval("getspec", 3, NSEEL_PProc_THIS, (void*)getspec);
     NSEEL_addfunc_retval("gettime", 1, NSEEL_PProc_THIS, (void*)gettime);
     NSEEL_addfunc_retval("getkbmouse", 1, NSEEL_PProc_THIS, (void*)getmouse);
-    NSEEL_addfunc_retval("setmousepos", 2, NSEEL_PProc_THIS, (void*)setmousepos);
 }
-void AVS_EEL_IF_quit() {
-    lock_destroy(g_eval_cs);
-    NSEEL_quit();
-}
+void AVS_EEL_IF_quit(AVS_Instance* avs) { NSEEL_quit(); }
 
-static void movestringover(char* str, int amount) {
-    char tmp[1024 + 8];
-
-    // l = min(1024-amount-1, strlen(str));
-    int l = strnlen(str, 1024 - amount - 1);
-
-    memcpy(tmp, str, l + 1);
-
-    while (l >= 0 && tmp[l] != '\n') {
-        l--;
-    }
-    l++;
-
-    tmp[l] = 0;  // ensure we null terminate
-
-    memcpy(str + amount, tmp, l + 1);
-}
-
-int AVS_EEL_IF_Compile(int context, char* code) {
-    NSEEL_CODEHANDLE ret;
-    lock_lock(g_eval_cs);
-    ret = NSEEL_code_compile((NSEEL_VMCTX)context, code, 0);
-    if (!ret) {
-        if (g_log_errors) {
-            char* expr = NSEEL_code_getcodeerror((NSEEL_VMCTX)context);
-            if (expr) {
-                int l = strlen(expr);
-                if (l > 512) {
-                    l = 512;
-                }
-                movestringover(last_error_string, l + 2);
-                memcpy(last_error_string, expr, l);
-                last_error_string[l] = '\r';
-                last_error_string[l + 1] = '\n';
-            }
+NSEEL_CODEHANDLE AVS_EEL_IF_Compile(AVS_Instance* avs,
+                                    NSEEL_VMCTX context,
+                                    char* code) {
+    NSEEL_VM_SetGRAM(context, &avs->eel_state.global_ram);
+    NSEEL_VM_SetCustomFuncThis(context, avs);
+    NSEEL_CODEHANDLE handle = NSEEL_code_compile((NSEEL_VMCTX)context, code, 0);
+    if (!handle && avs->eel_state.log_errors) {
+        char* err = NSEEL_code_getcodeerror((NSEEL_VMCTX)context);
+        if (err) {
+            log_warn("EEL compile error: %s", err);
+            avs->eel_state.error(err);
+        } else if (code && code[0]) {
+            log_warn("EEL unknown compile error on '%s'", code);
+            avs->eel_state.error("EEL unknown compile error");
         }
     }
-    lock_unlock(g_eval_cs);
-    return (int)ret;
+    return handle;
 }
 
-void AVS_EEL_IF_Execute(void* handle, char visdata[2][2][576]) {
+void AVS_EEL_IF_Execute(AVS_Instance* avs,
+                        NSEEL_CODEHANDLE handle,
+                        char visdata[2][2][AUDIO_BUFFER_LEN]) {
     if (handle) {
-        lock_lock(g_eval_cs);
-        g_evallib_visdata = (char*)visdata;
-        NSEEL_code_execute((NSEEL_CODEHANDLE)handle);
-        g_evallib_visdata = NULL;
-        lock_unlock(g_eval_cs);
+        avs->audio.to_legacy_visdata(avs->eel_state.visdata);
+        NSEEL_code_execute(handle);
     }
 }
-
-void AVS_EEL_IF_Free(int handle) { NSEEL_code_free((NSEEL_CODEHANDLE)handle); }
 
 void AVS_EEL_IF_resetvars(NSEEL_VMCTX ctx) { NSEEL_VM_remove_all_nonreg_vars(ctx); }
 

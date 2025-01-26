@@ -29,34 +29,16 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#ifndef _AVS_EEL_IF_H_
-#define _AVS_EEL_IF_H_
+#pragma once
 
 #include "../3rdparty/WDL-EEL2/eel2/ns-eel.h"
-#include "../platform.h"
 
-void AVS_EEL_IF_init();
-void AVS_EEL_IF_quit();
+class AVS_Instance;  // instance.h
 
-int AVS_EEL_IF_Compile(int context, char* code);
-void AVS_EEL_IF_Execute(void* handle, char visdata[2][2][576]);
+void AVS_EEL_IF_init(AVS_Instance* avs);
+void AVS_EEL_IF_quit(AVS_Instance* avs);
+
+NSEEL_CODEHANDLE AVS_EEL_IF_Compile(AVS_Instance* avs, NSEEL_VMCTX context, char* code);
+void AVS_EEL_IF_Execute(AVS_Instance* avs, void* handle, char visdata[2][2][576]);
 void AVS_EEL_IF_resetvars(NSEEL_VMCTX ctx);
 void AVS_EEL_IF_VM_free(NSEEL_VMCTX ctx);
-double AVS_EEL_IF_gmb_value(int index);
-extern char last_error_string[1024];
-extern int g_log_errors;
-extern lock_t* g_eval_cs;
-
-// our old-style interface
-#define compileCode(exp)  AVS_EEL_IF_Compile(AVS_EEL_CONTEXTNAME, (exp))
-#define executeCode(x, y) AVS_EEL_IF_Execute((void*)(x), (y))
-#define freeCode(h)       NSEEL_code_free((NSEEL_CODEHANDLE)(h))
-#define resetVars(x)      FIXME++ ++ ++ ++ +
-#define registerVar(x)    NSEEL_VM_regvar((NSEEL_VMCTX)AVS_EEL_CONTEXTNAME, (x))
-#define clearVars()       AVS_EEL_IF_resetvars((NSEEL_VMCTX)AVS_EEL_CONTEXTNAME)
-
-#define AVS_EEL_INITINST() AVS_EEL_CONTEXTNAME = (int)NSEEL_VM_alloc()
-
-#define AVS_EEL_QUITINST() AVS_EEL_IF_VM_free((NSEEL_VMCTX)AVS_EEL_CONTEXTNAME)
-
-#endif  //_AVS_EEL_IF_H_

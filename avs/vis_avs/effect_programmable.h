@@ -68,6 +68,7 @@ struct Variables {
 
 class Code_Section {
    private:
+    AVS_Instance* avs;
     void*& vm_context;
     void* code = nullptr;
     std::string& code_str;
@@ -76,21 +77,25 @@ class Code_Section {
    public:
     bool need_recompile = false;
 
-    Code_Section(void*& vm_context, std::string& code_str, lock_t* code_lock)
-        : vm_context(vm_context), code_str(code_str), code_lock(code_lock) {};
+    Code_Section(AVS_Instance* avs,
+                 void*& vm_context,
+                 std::string& code_str,
+                 lock_t* code_lock)
+        : avs(avs), vm_context(vm_context), code_str(code_str), code_lock(code_lock) {}
     ~Code_Section() { NSEEL_code_free(this->code); }
     Code_Section(const Code_Section& other)
-        : vm_context(other.vm_context),
+        : avs(other.avs),
+          vm_context(other.vm_context),
           code_str(other.code_str),
           code_lock(other.code_lock),
-          need_recompile(other.need_recompile) {};
+          need_recompile(other.need_recompile) {}
     Code_Section& operator=(const Code_Section& other) {
         Code_Section tmp(other);
         this->swap(tmp);
         return *this;
     }
     Code_Section(Code_Section&& other) noexcept
-        : vm_context(other.vm_context), code_str(other.code_str) {
+        : avs(other.avs), vm_context(other.vm_context), code_str(other.code_str) {
         this->swap(other);
     }
 
@@ -99,6 +104,7 @@ class Code_Section {
         return *this;
     }
     void swap(Code_Section& other) noexcept {
+        std::swap(this->avs, other.avs);
         std::swap(this->vm_context, other.vm_context);
         std::swap(this->code, other.code);
         std::swap(this->code_str, other.code_str);
@@ -112,8 +118,8 @@ class Code_Section {
         }
         // log_info("Compiling code: %s", this->code_str.c_str());
         NSEEL_code_free(this->code);
-        this->code =
-            NSEEL_code_compile(this->vm_context, (char*)this->code_str.c_str(), 0);
+        this->code = AVS_EEL_IF_Compile(
+            this->avs, this->vm_context, (char*)this->code_str.c_str());
         this->need_recompile = false;
         return true;
     }
@@ -122,7 +128,7 @@ class Code_Section {
             return;
         }
         lock_lock(this->code_lock);
-        AVS_EEL_IF_Execute(this->code, visdata);
+        AVS_EEL_IF_Execute(this->avs, this->code, visdata);
         lock_unlock(this->code_lock);
     }
     bool is_valid() { return this->code != NULL; }
@@ -153,10 +159,11 @@ class Programmable_Effect
     explicit Programmable_Effect(AVS_Instance* avs)
         : Super(avs),
           code_lock(lock_init()),
-          code_init(this->vm_context, this->config.init, this->code_lock),
-          code_frame(this->vm_context, this->config.frame, this->code_lock),
-          code_beat(this->vm_context, this->config.beat, this->code_lock),
-          code_point(this->vm_context, this->config.point, this->code_lock) {};
+          code_init(this->avs, this->vm_context, this->config.init, this->code_lock),
+          code_frame(this->avs, this->vm_context, this->config.frame, this->code_lock),
+          code_beat(this->avs, this->vm_context, this->config.beat, this->code_lock),
+          code_point(this->avs, this->vm_context, this->config.point, this->code_lock) {
+    }
     ~Programmable_Effect() {
         AVS_EEL_IF_VM_free(this->vm_context);
         lock_destroy(this->code_lock);
@@ -164,10 +171,10 @@ class Programmable_Effect
     Programmable_Effect(const Programmable_Effect& other)
         : Super(other),
           code_lock(lock_init()),
-          code_init(this->vm_context, this->config.init, this->code_lock),
-          code_frame(this->vm_context, this->config.init, this->code_lock),
-          code_beat(this->vm_context, this->config.init, this->code_lock),
-          code_point(this->vm_context, this->config.init, this->code_lock) {}
+          code_init(this->avs, this->vm_context, this->config.init, this->code_lock),
+          code_frame(this->avs, this->vm_context, this->config.init, this->code_lock),
+          code_beat(this->avs, this->vm_context, this->config.init, this->code_lock),
+          code_point(this->avs, this->vm_context, this->config.init, this->code_lock) {}
     Programmable_Effect& operator=(const Programmable_Effect& other) {
         Programmable_Effect tmp(other);
         this->swap(tmp);

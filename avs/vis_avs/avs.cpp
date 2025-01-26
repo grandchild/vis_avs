@@ -43,7 +43,6 @@ AVS_API
 AVS_Handle avs_init(const char* base_path,
                     AVS_Audio_Source audio_source,
                     AVS_Beat_Source beat_source) {
-    AVS_EEL_IF_init();
     if (g_instances.empty()) {
         make_effect_lib();
         make_blend_LUTs();
@@ -62,6 +61,7 @@ AVS_Handle avs_init(const char* base_path,
         return 0;
     }
     g_instances[new_instance->handle] = new_instance;
+    AVS_EEL_IF_init(new_instance);
     g_error = NULL;
     return new_instance->handle;
 }

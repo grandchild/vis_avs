@@ -210,7 +210,7 @@ static int init(struct winampVisModule* this_mod) {
 
     g_single_instance = new AVS_Instance(g_path, AVS_AUDIO_INTERNAL, AVS_BEAT_INTERNAL);
 
-    AVS_EEL_IF_init();
+    AVS_EEL_IF_init(g_single_instance);
 
     make_blend_LUTs();
 
@@ -345,7 +345,7 @@ static void quit(struct winampVisModule*) {
         g_hThread = NULL;
 
         DS("calling eel quit\n");
-        AVS_EEL_IF_quit();
+        AVS_EEL_IF_quit(g_single_instance);
 
         DS("cleaning up critsections\n");
 #ifndef WA3_COMPONENT

@@ -570,8 +570,11 @@ int Wnd_Init(struct winampVisModule* this_mod) {
             AVS_SECTION, "cfg_prompt_save_preset", config_prompt_save_preset, INI_FILE);
         g_config_reuseonresize = GetPrivateProfileInt(
             AVS_SECTION, "cfg_reuseonresize", g_config_reuseonresize, INI_FILE);
-        g_log_errors =
-            GetPrivateProfileInt(AVS_SECTION, "cfg_log_errors", g_log_errors, INI_FILE);
+        g_single_instance->eel_state.log_errors =
+            GetPrivateProfileInt(AVS_SECTION,
+                                 "cfg_log_errors",
+                                 g_single_instance->eel_state.log_errors,
+                                 INI_FILE);
         g_reset_vars_on_recompile = GetPrivateProfileInt(
             AVS_SECTION, "cfg_reset_vars", g_reset_vars_on_recompile, INI_FILE);
         g_config_seh =
@@ -773,7 +776,7 @@ void Wnd_Quit(void) {
         WritePrivateProfileString(
             AVS_SECTION, "last_preset_name", last_preset, INI_FILE);
         WriteInt("cfg_reuseonresize", g_config_reuseonresize);
-        WriteInt("cfg_log_errors", g_log_errors);
+        WriteInt("cfg_log_errors", g_single_instance->eel_state.log_errors);
         WriteInt("cfg_reset_vars", g_reset_vars_on_recompile);
         WriteInt("cfg_seh", g_config_seh);
 
