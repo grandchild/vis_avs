@@ -46,6 +46,7 @@ bool AVS_Instance::render_frame(void* framebuffer,
                                 size_t height,
                                 AVS_Pixel_Format pixel_format) {
     this->init_global_buffers_if_needed(width, height, pixel_format);
+    this->update_time(time_in_ms);
     auto render_context = RenderContext(
         width, height, pixel_format, *this->global_buffers, this->audio, framebuffer);
     this->audio.get();
@@ -83,6 +84,45 @@ void AVS_Instance::init_global_buffers_if_needed(size_t width,
             Buffer(width, height, pixel_format),
             Buffer(width, height, pixel_format),
             Buffer(width, height, pixel_format)};
+    }
+}
+
+void AVS_Instance::update_time(int64_t time_in_ms) {
+    if (time_in_ms >= 0) {  // Video Mode
+        if (this->last_time_mode == AVS_TIME_MODE_REALTIME) {
+            // Switching time mode during rendering should be rare, but in case it does
+            // happen, we want to ensure that
+            //   a) time always advances, and
+            //   b) the next frame is a meaningful timestep away from the previous one.
+            // When switching from realtime to video mode, offset by the previous time,
+            // add the new given timestamp and finally subtract 1 so that the first
+            // video-mode frame doesn't have the same time as the last realtime frame.
+            this->time_mode_switch_offset = -this->current_time_in_ms + time_in_ms - 1;
+            log_info("Time mode switch: Realtime -> Video, offset: %lld, time: %lld",
+                     this->time_mode_switch_offset,
+                     this->current_time_in_ms);
+        }
+        this->last_time_mode = AVS_TIME_MODE_VIDEO;
+        if (time_in_ms > this->current_time_in_ms) {
+            this->current_time_in_ms = time_in_ms - this->time_mode_switch_offset;
+        } else {
+            // This 2ms increment (when the caller doesn't increment) is specified in
+            // the API contract in avs.h. Changing this value requires amending the
+            // comment in avs.h and probably a version bump too.
+            this->current_time_in_ms += 2;
+        }
+    } else {  // Realtime Mode
+        if (this->last_time_mode == AVS_TIME_MODE_VIDEO) {
+            // See above about switching time modes.
+            // When switching from video to realtime mode, similar requirements apply.
+            // Offset by the previous time, add the current realtime and subtract 1.
+            this->time_mode_switch_offset = -this->current_time_in_ms + timer_ms() - 1;
+            log_info("Time mode switch: Video -> Realtime, offset: %lld, time: %lld",
+                     this->time_mode_switch_offset,
+                     this->current_time_in_ms);
+        }
+        this->last_time_mode = AVS_TIME_MODE_REALTIME;
+        this->current_time_in_ms = timer_ms() - this->time_mode_switch_offset;
     }
 }
 

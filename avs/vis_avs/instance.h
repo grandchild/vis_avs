@@ -65,6 +65,8 @@ class AVS_Instance {
                                        size_t height,
                                        AVS_Pixel_Format pixel_format);
 
+    void update_time(int64_t time_in_ms);
+
     AVS_Handle handle;
 
     std::string base_path;
@@ -88,4 +90,13 @@ class AVS_Instance {
     std::array<Buffer, num_global_buffers>* global_buffers = nullptr;
     std::string preset_save_buffer;
     uint8_t* preset_legacy_save_buffer = nullptr;
+
+    enum AVS_TimeMode {
+        AVS_TIME_MODE_UNKNOWN = -1,
+        AVS_TIME_MODE_REALTIME = 0,
+        AVS_TIME_MODE_VIDEO = 1,
+    };
+    int64_t current_time_in_ms = -1;
+    int last_time_mode = AVS_TIME_MODE_UNKNOWN;
+    int64_t time_mode_switch_offset = 0;
 };
