@@ -67,6 +67,14 @@ class AVS_Instance {
 
     void update_time(int64_t time_in_ms);
 
+    int64_t get_current_time_in_ms();
+    bool get_key_state(int key);
+    bool set_key_state(int key, bool state);
+    double get_mouse_pos(bool get_y);
+    void set_mouse_pos(double x, double y);
+    bool get_mouse_button_state(int button);
+    bool set_mouse_button_state(int button, bool state);
+
     AVS_Handle handle;
 
     std::string base_path;
@@ -99,4 +107,9 @@ class AVS_Instance {
     int64_t current_time_in_ms = -1;
     int last_time_mode = AVS_TIME_MODE_UNKNOWN;
     int64_t time_mode_switch_offset = 0;
+
+    bool key_states[108];
+    double mouse_x = 0.0;
+    double mouse_y = 0.0;
+    bool mouse_button_states[8];
 };
