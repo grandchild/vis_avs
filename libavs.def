@@ -7,6 +7,9 @@ EXPORTS
     avs_audio_device_count
     avs_audio_device_names
     avs_audio_device_set
+    avs_input_key_set
+    avs_input_mouse_pos_set
+    avs_input_mouse_button_set
     avs_preset_load
     avs_preset_set
     avs_preset_save

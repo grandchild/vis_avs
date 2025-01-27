@@ -144,6 +144,32 @@ bool avs_audio_device_set(AVS_Handle avs, int32_t device) {
 }
 
 AVS_API
+bool avs_input_key_set(AVS_Handle avs, int key, bool state) {
+    AVS_Instance* instance = get_instance_from_handle(avs);
+    if (instance == NULL) {
+        return false;
+    }
+    return instance->set_key_state(key, state);
+}
+AVS_API
+bool avs_input_mouse_pos_set(AVS_Handle avs, double x, double y) {
+    AVS_Instance* instance = get_instance_from_handle(avs);
+    if (instance == NULL) {
+        return false;
+    }
+    instance->set_mouse_pos(x, y);
+    return true;
+}
+AVS_API
+bool avs_input_mouse_button_set(AVS_Handle avs, int button, bool state) {
+    AVS_Instance* instance = get_instance_from_handle(avs);
+    if (instance == NULL) {
+        return false;
+    }
+    return instance->set_mouse_button_state(button, state);
+}
+
+AVS_API
 bool avs_preset_load(AVS_Handle avs, const char* file_path) {
     AVS_Instance* instance = get_instance_from_handle(avs);
     if (instance == nullptr) {

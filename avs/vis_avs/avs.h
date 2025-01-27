@@ -7,6 +7,8 @@
  *   Rendering:    avs_render_frame()
  *   Audio:        avs_audio_set(), avs_audio_device_count(),
  *                 avs_audio_device_names() & avs_audio_device_set()
+ *   Input:        avs_input_key_set(), avs_input_mouse_pos_set() &
+ *                 avs_input_mouse_button_set()
  *   Preset files: avs_preset_load(), avs_preset_set(),
  *                 avs_preset_save(), avs_preset_get(),
  *                 avs_preset_set_legacy(), avs_preset_get_legacy() &
@@ -253,6 +255,47 @@ const char* const* avs_audio_device_names(AVS_Handle avs);
  * the device handle is invalid or some other error occurred.
  */
 bool avs_audio_device_set(AVS_Handle avs, int32_t device);
+
+/**
+ * Set a keyboard key state to either pressed, `true`, or released, `false`.
+ *
+ * Presets may make use of keyboard interactivity. AVS itself does not use keyboard
+ * input. The key code mapping follows the Windows API "virtual key codes". Its up to
+ * you to provide a mapping from your host platform. A list of available key codes can
+ * be found at:
+ * https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+ *
+ * Note that the Winamp plugin UI used a few keys to control AVS itself and didn't pass
+ * these through, so legacy presets will use other keys. On the other hand, your AVS
+ * frontend may do the same, but with different keys and at different times. In general,
+ * interactive presets were a niche thing in the past. Commonly used keys were:
+ *   Control, arrow keys, Backspace, Space (although this was also the random-preset
+ *   hotkey), Shift, Home, End, Next, Previous, Menu, Tab, Delete
+ *
+ * Returns `true` if the key state was successfully set or `false` if `key` is out of
+ * range or some other error occurred.
+ */
+bool avs_input_key_set(AVS_Handle avs, int key, bool state);
+
+/**
+ * Set the mouse position. The position is given in the range [0, 1] for both x and y.
+ * The origin is the top-left corner of the window, and (1, 1) is the bottom-right.
+ * Values may go outside this range.
+ *
+ * Returns `true` if the mouse position was successfully set or `false` if some other
+ * error occurred.
+ */
+bool avs_input_mouse_pos_set(AVS_Handle avs, double x, double y);
+
+/**
+ * Set a mouse button state to either pressed, `true`, or released, `false`. AVS's EEL
+ * script language only makes use of left, middle and right mouse buttons. However 8
+ * buttons are currently supported, and effects may make use of them.
+ *
+ * Returns `true` if the button state was successfully set or `false` if `button` is out
+ * of range or some other error occurred.
+ */
+bool avs_input_mouse_button_set(AVS_Handle avs, int button, bool state);
 
 /**
  * Load a preset file from the given location and return `true` on success. You may call
