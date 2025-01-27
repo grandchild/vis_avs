@@ -149,6 +149,9 @@ AVS_Handle avs_init(const char* base_path,
  *       Neither does exact time-matching the frame and the audio signal: Latency must
  *       be minimal at all costs, and the latest audio is always the best.
  *
+ *       For realtime mode, set `time_in_ms` to any negative value. Its absolute value
+ *       is ignored (for now) and the internal time is set by the actual system time.
+ *
  *       In video mode frames are rendered at certain (usually equidistant) time
  *       intervals. Resolutions will often be higher than in realtime mode, rendering
  *       may happen at less-than-realtime speeds and you'll probably be recording frames
@@ -163,6 +166,10 @@ AVS_Handle avs_init(const char* base_path,
  *
  *       There's really no need to worry about overflow, since a millisecond-resolution
  *       63-bit counter will last for more than 290 million years.
+ *
+ *       You _can_ switch between realtime- and video mode during rendering. An offset
+ *       will be calculated for the internal time, so that it always advances and the
+ *       following timestamps or system time changes are applied meaningfully.
  *
  *   `is_beat`
  *       If AVS was initialized with `beat_source=AVS_BEAT_EXTERNAL`, and `is_beat` is
