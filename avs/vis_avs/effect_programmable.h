@@ -144,8 +144,6 @@ class Programmable_Effect
 
    protected:
     void* vm_context = nullptr;
-
-   private:
     lock_t* code_lock;
 
    public:

@@ -133,11 +133,13 @@ void E_GlobalVariables::exec_code_from_file(char visdata[2][2][576]) {
     } else {
         return;
     }
+    lock_lock(this->code_lock);
     file_code_handle = AVS_EEL_IF_Compile(this->avs, this->vm_context, file_code);
     if (file_code_handle) {
         AVS_EEL_IF_Execute(this->avs, file_code_handle, visdata);
     }
     NSEEL_code_free(file_code_handle);
+    lock_unlock(this->code_lock);
     free(file_code);
 }
 
