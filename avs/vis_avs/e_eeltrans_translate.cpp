@@ -50,9 +50,7 @@ class Translator {
     Translator(TranslateMode mode,
                bool translate_firstlevel,
                const std::string& avs_base_path)
-        : mode(mode),
-          trans_first(translate_firstlevel),
-          avs_base_path(avs_base_path) {};
+        : mode(mode), trans_first(translate_firstlevel), avs_base_path(avs_base_path) {}
     std::string translate(const std::string& prefix_code, std::string input);
 };
 
@@ -604,6 +602,6 @@ std::string translate(const std::string& prefix_code,
                       char const* input,
                       bool translate_firstlevel,
                       const std::string& avs_base_path) {
-    Translator translator(MODE_EXEC, translate_firstlevel, avs_base_path);
+    Translator translator(MODE_LINEAR, translate_firstlevel, avs_base_path);
     return translator.translate(prefix_code, input);
 }
