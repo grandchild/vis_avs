@@ -523,21 +523,32 @@ class Configurable_Effect : public Effect {
     }
 
     struct Global {
-        AVS_Instance* avs;
         Global_Config_T config;
         std::set<Configurable_Effect*> instances;
-        Global(AVS_Instance* avs) : avs(avs) {};
     };
     std::shared_ptr<Global> global = nullptr;
 
-   protected:  // TODO [clean]: Make this private as soon as NSEEL & EELTrans are fixed
-    static std::vector<std::weak_ptr<Global>> globals;
+   protected:
+    static Global* get_global_for_instance(AVS_Instance* avs) {
+        for (auto& g : Configurable_Effect::globals) {
+            if (g.second.expired()) {
+                continue;
+            }
+            auto tmp = g.second.lock();
+            if (g.first == avs) {
+                return tmp.get();
+            }
+        }
+        return nullptr;
+    }
+    // TODO [clean]: Make this private as soon as NSEEL & EELTrans are fixed
+    static std::map<AVS_Instance*, std::weak_ptr<Global>> globals;
 
    private:
     static void prune_empty_globals() {
         for (auto it = Configurable_Effect::globals.begin();
              it != Configurable_Effect::globals.end();) {
-            if (it->expired()) {
+            if (it->second.expired()) {
                 it = Configurable_Effect::globals.erase(it);
             } else {
                 it++;
@@ -551,18 +562,18 @@ class Configurable_Effect : public Effect {
         {  // This scope is needed for the shared_ptr to get deallocated at the end.
             std::shared_ptr<Global> tmp;
             for (auto& g : Configurable_Effect::globals) {
-                if (g.expired()) {
+                if (g.second.expired()) {
                     continue;
                 }
-                tmp = g.lock();
-                if (tmp->avs == avs) {
-                    this->global = g.lock();
+                tmp = g.second.lock();
+                if (g.first == avs) {
+                    this->global = g.second.lock();
                     this->global->instances.insert(this);
                     return;
                 }
             }
-            tmp = std::make_shared<Global>(avs);
-            this->globals.emplace_back(tmp);
+            tmp = std::make_shared<Global>();
+            this->globals.emplace(avs, tmp);
             this->global = tmp;
             this->global->instances.insert(this);
         }
@@ -690,6 +701,7 @@ Info_T Configurable_Effect<Info_T, Config_T, Global_Config_T>::info;
 template <class Info_T, class Config_T, class Global_Config_T>
 std::string Configurable_Effect<Info_T, Config_T, Global_Config_T>::desc;
 template <class Info_T, class Config_T, class Global_Config_T>
-std::vector<std::weak_ptr<
-    typename Configurable_Effect<Info_T, Config_T, Global_Config_T>::Global>>
+std::map<AVS_Instance*,
+         std::weak_ptr<
+             typename Configurable_Effect<Info_T, Config_T, Global_Config_T>::Global>>
     Configurable_Effect<Info_T, Config_T, Global_Config_T>::globals;

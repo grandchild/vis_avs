@@ -92,7 +92,7 @@ char* E_EelTrans::pre_compile_hook(void* ctx, char* expression) {
     // TODO [bug][feature]: NSEEL-per-AVS-instance. See above for details.
     // This line simply selects the first available global config. Should be fixed to
     // select one based on the AVS-instance the NSEEL compiler instance is for.
-    auto g = E_EelTrans::globals.begin()->lock();
+    auto g = E_EelTrans::globals.begin()->second.lock();
     if (g->config.log_enabled) {
         if (ctx == lastctx) {
             num = (num % 4) + 1;
