@@ -51,6 +51,7 @@ class E_EelTrans : public Configurable_Effect<EelTrans_Info,
                        int* fbout,
                        int w,
                        int h);
+    virtual void on_load();
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
     virtual E_EelTrans* clone() { return new E_EelTrans(*this); }

@@ -144,6 +144,8 @@ int E_EelTrans::render(char[2][2][576], int, int*, int*, int, int) {
     return 0;
 }
 
+void E_EelTrans::on_load() { this->global->config.translate_enabled |= this->enabled; }
+
 void E_EelTrans::load_legacy(unsigned char* data, int len) {
     int pos = 0;
 
