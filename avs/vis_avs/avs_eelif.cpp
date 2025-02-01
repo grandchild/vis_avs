@@ -196,6 +196,8 @@ NSEEL_CODEHANDLE AVS_EEL_IF_Compile(AVS_Instance* avs,
                                     NSEEL_VMCTX context,
                                     char* code) {
     NSEEL_VM_SetGRAM(context, &avs->eel_state.global_ram);
+    NSEEL_VM_SetCompileHooks(
+        context, avs->eel_state.pre_compile_hook, avs->eel_state.post_compile_hook);
     NSEEL_VM_SetCustomFuncThis(context, avs);
     NSEEL_CODEHANDLE handle = NSEEL_code_compile((NSEEL_VMCTX)context, code, 0);
     if (!handle && avs->eel_state.log_errors) {

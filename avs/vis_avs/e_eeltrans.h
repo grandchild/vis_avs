@@ -2,7 +2,6 @@
 
 #include "effect.h"
 #include "effect_info.h"
-#include "effect_programmable.h"
 
 struct EelTrans_Config : public Effect_Config {
     std::string code = "";
@@ -57,8 +56,10 @@ class E_EelTrans : public Configurable_Effect<EelTrans_Info,
     virtual E_EelTrans* clone() { return new E_EelTrans(*this); }
     virtual void on_enable(bool enabled);
 
-    static char* pre_compile_hook(void* ctx, char* expression);
-    static void post_compile_hook();
+    static const char* pre_compile_hook(void* ctx,
+                                        char* expression,
+                                        void* avs_instance);
+    static void post_compile_hook(void* avs_instance);
 
     bool is_first_instance;
 };

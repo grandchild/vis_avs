@@ -101,6 +101,8 @@ class AVS_Instance {
         void* global_ram;
         char visdata[2][2][AUDIO_BUFFER_LEN];
         bool log_errors;
+        const char* (*pre_compile_hook)(void* ctx, char* code, void* avs_instance);
+        void (*post_compile_hook)(void* avs_instance);
 
         void error(const char* error_str);
         void clear_errors();

@@ -149,9 +149,6 @@ typedef struct
 } namespaceInformation;
 
 
-static char* (*nseel_precompile_hook)(NSEEL_VMCTX ctx, char *code);
-static void (*nseel_postcompile_hook)(void);
-
 
 
 static int nseel_evallib_stats[5]; // source bytes, static code bytes, call code bytes, data bytes, segments
@@ -4527,15 +4524,10 @@ static void movestringover(char *str, int amount)
 }
 #endif
 
-void NSEEL_set_compile_hooks(char*(*precompile_hook)(NSEEL_VMCTX ctx, char* expression), void(*postcompile_hook)(void)) {
-  if(precompile_hook || postcompile_hook) {
-    nseel_precompile_hook = precompile_hook;
-    nseel_postcompile_hook = postcompile_hook;
-  }
-}
-void NSEEL_unset_compile_hooks() {
-  nseel_precompile_hook = NULL;
-  nseel_postcompile_hook = NULL;
+void NSEEL_VM_SetCompileHooks(NSEEL_VMCTX _ctx, const char*(*pre_compile_hook)(NSEEL_VMCTX ctx, char* expression, void* caller_this), void(*post_compile_hook)(void* caller_this)) {
+  compileContext *ctx = (compileContext *)_ctx;
+  ctx->pre_compile_hook = pre_compile_hook;
+  ctx->post_compile_hook = post_compile_hook;
 }
 
 
@@ -4609,9 +4601,9 @@ NSEEL_CODEHANDLE NSEEL_code_compile_ex(NSEEL_VMCTX _ctx, const char *_expression
   ctx->last_error_string[0]=0;
 
   if (!_expression || !*_expression) return 0;
-  
-  if (nseel_precompile_hook != NULL) {
-    _expression = nseel_precompile_hook(_ctx, _expression);
+
+  if (ctx->pre_compile_hook != NULL) {
+    _expression = ctx->pre_compile_hook(_ctx, _expression, ctx->caller_this);
   }
 
   _expression_end = _expression + strlen(_expression);
@@ -5201,8 +5193,8 @@ had_error:
   }
   memset(ctx->l_stats,0,sizeof(ctx->l_stats));
 
-  if (nseel_postcompile_hook != NULL) {
-    nseel_postcompile_hook();
+  if (ctx->post_compile_hook != NULL) {
+    ctx->post_compile_hook(ctx->caller_this);
   }
 
   return (NSEEL_CODEHANDLE)handle;

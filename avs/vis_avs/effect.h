@@ -528,7 +528,6 @@ class Configurable_Effect : public Effect {
     };
     std::shared_ptr<Global> global = nullptr;
 
-   protected:
     static Global* get_global_for_instance(AVS_Instance* avs) {
         for (auto& g : Configurable_Effect::globals) {
             if (g.second.expired()) {
@@ -541,10 +540,9 @@ class Configurable_Effect : public Effect {
         }
         return nullptr;
     }
-    // TODO [clean]: Make this private as soon as NSEEL & EELTrans are fixed
-    static std::map<AVS_Instance*, std::weak_ptr<Global>> globals;
 
    private:
+    static std::map<AVS_Instance*, std::weak_ptr<Global>> globals;
     static void prune_empty_globals() {
         for (auto it = Configurable_Effect::globals.begin();
              it != Configurable_Effect::globals.end();) {

@@ -246,8 +246,8 @@ typedef struct _compileContext
 
   void *caller_this;
 
-  char* (*precompile_hook)(NSEEL_VMCTX ctx, char *code);
-  void (*postcompile_hook)(void);
+  const char* (*pre_compile_hook)(NSEEL_VMCTX ctx, char *code, void* caller_this);
+  void (*post_compile_hook)(void* caller_this);
 }
 compileContext;
 

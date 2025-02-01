@@ -19,13 +19,8 @@
 
 constexpr Parameter EelTrans_Info::parameters[];
 
-// TODO [bug][feature]: NSEEL-per-AVS-instance. NSEEL is currently one global instance,
-// and is not separated per AVS instance. Instance-global configuration of EELTrans
-// works, but any interaction with NSEEL currently still only uses preprocessor code
-// from EELTrans effects in the first AVS instance, and conversely applies to all code
-// sections everywhere.
 std::vector<void*> comp_ctxs;
-char* newbuf;
+std::map<AVS_Instance*, std::string> translated_strings;
 
 void E_EelTrans::on_enable(bool enabled) {
     this->global->config.translate_enabled = enabled;
@@ -50,7 +45,8 @@ E_EelTrans::E_EelTrans(AVS_Instance* avs) : Configurable_Effect(avs) {
             fclose(ini);
         }
 
-        NSEEL_set_compile_hooks(this->pre_compile_hook, this->post_compile_hook);
+        this->avs->eel_state.pre_compile_hook = this->pre_compile_hook;
+        this->avs->eel_state.post_compile_hook = this->post_compile_hook;
     } else {
         this->is_first_instance = false;
     }
@@ -67,7 +63,8 @@ E_EelTrans::~E_EelTrans() {
         }
     }
     if (this->global->instances.size() == 1) {
-        NSEEL_unset_compile_hooks();
+        this->avs->eel_state.pre_compile_hook = nullptr;
+        this->avs->eel_state.post_compile_hook = nullptr;
     }
 }
 
@@ -83,17 +80,22 @@ unsigned int compnum(void* ctx) {
     return i;
 }
 
-char* E_EelTrans::pre_compile_hook(void* ctx, char* expression) {
+const char* E_EelTrans::pre_compile_hook(void* ctx,
+                                         char* expression,
+                                         void* avs_instance) {
     static void* lastctx = 0;
     static int num = 0;
+    auto avs = (AVS_Instance*)avs_instance;
     if (expression == NULL) {
         return NULL;
     }
-    // TODO [bug][feature]: NSEEL-per-AVS-instance. See above for details.
-    // This line simply selects the first available global config. Should be fixed to
-    // select one based on the AVS-instance the NSEEL compiler instance is for.
-    auto g = E_EelTrans::globals.begin()->second.lock();
-    if (g->config.log_enabled) {
+    E_EelTrans::Global* global_ptr;
+    if (!(global_ptr = E_EelTrans::get_global_for_instance(avs))) {
+        return expression;
+    }
+    EelTrans_Global_Config g_config = global_ptr->config;
+    auto g_instances = global_ptr->instances;
+    if (g_config.log_enabled) {
         if (ctx == lastctx) {
             num = (num % 4) + 1;
         } else {
@@ -103,7 +105,7 @@ char* E_EelTrans::pre_compile_hook(void* ctx, char* expression) {
         char filename[200];
         sprintf(filename,
                 "%s\\comp%02dpart%d.log",
-                g->config.log_path.c_str(),
+                g_config.log_path.c_str(),
                 compnum(ctx),
                 num);
         FILE* logfile = fopen(filename, "w");
@@ -111,30 +113,30 @@ char* E_EelTrans::pre_compile_hook(void* ctx, char* expression) {
             fprintf(logfile, "%s", expression);
             fclose(logfile);
         } else {
-            if (!create_directory((char*)g->config.log_path.c_str())) {
+            if (!create_directory((char*)g_config.log_path.c_str())) {
                 printf("Could not create log directory, deactivating Code Logger.\n");
-                g->config.log_enabled = 0;
+                g_config.log_enabled = 0;
             }
         }
     }
-    if (g->config.translate_enabled && (strncmp(expression, "//$notrans", 10) != 0)) {
+    if (g_config.translate_enabled && (strncmp(expression, "//$notrans", 10) != 0)) {
         std::string all_code;
-        for (auto it : g->instances) {
+        for (auto it : g_instances) {
             all_code += it->config.code;
             all_code += "\r\n";
         }
-        std::string tmp = translate(all_code,
-                                    expression,
-                                    g->config.translate_firstlevel,
-                                    g->config.avs_base_path);
-        newbuf = new char[tmp.size() + 1];
-        strcpy(newbuf, tmp.c_str());
-        return newbuf;
+        translated_strings[avs] = translate(all_code,
+                                            expression,
+                                            g_config.translate_firstlevel,
+                                            g_config.avs_base_path);
+        return translated_strings[avs].c_str();
     }
     return expression;
 }
 
-void E_EelTrans::post_compile_hook() { delete[] newbuf; }
+void E_EelTrans::post_compile_hook(void* avs_instance) {
+    translated_strings.erase((AVS_Instance*)avs_instance);
+}
 
 int E_EelTrans::render(char[2][2][576], int, int*, int*, int, int) {
     if (this->global->config.need_new_first_instance && !this->is_first_instance) {
