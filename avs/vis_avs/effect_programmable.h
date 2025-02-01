@@ -163,7 +163,7 @@ class Programmable_Effect
           code_point(this->avs, this->vm_context, this->config.point, this->code_lock) {
     }
     ~Programmable_Effect() {
-        AVS_EEL_IF_VM_free(this->vm_context);
+        NSEEL_VM_free(this->vm_context);
         lock_destroy(this->code_lock);
     }
     Programmable_Effect(const Programmable_Effect& other)
@@ -219,7 +219,7 @@ class Programmable_Effect
 
     void reset_code_context() {
         lock_lock(this->code_lock);
-        AVS_EEL_IF_VM_free(this->vm_context);
+        NSEEL_VM_free(this->vm_context);
         this->vm_context = NULL;
         lock_unlock(this->code_lock);
     }

@@ -41,4 +41,3 @@ void AVS_EEL_IF_quit(AVS_Instance* avs);
 NSEEL_CODEHANDLE AVS_EEL_IF_Compile(AVS_Instance* avs, NSEEL_VMCTX context, char* code);
 void AVS_EEL_IF_Execute(AVS_Instance* avs, void* handle, char visdata[2][2][576]);
 void AVS_EEL_IF_resetvars(NSEEL_VMCTX ctx);
-void AVS_EEL_IF_VM_free(NSEEL_VMCTX ctx);

@@ -224,7 +224,5 @@ void AVS_EEL_IF_Execute(AVS_Instance* avs,
 
 void AVS_EEL_IF_resetvars(NSEEL_VMCTX ctx) { NSEEL_VM_remove_all_nonreg_vars(ctx); }
 
-void AVS_EEL_IF_VM_free(NSEEL_VMCTX ctx) { NSEEL_VM_free(ctx); }
-
 void NSEEL_HOSTSTUB_EnterMutex() {}
 void NSEEL_HOSTSTUB_LeaveMutex() {}
