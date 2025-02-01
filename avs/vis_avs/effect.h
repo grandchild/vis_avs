@@ -32,7 +32,7 @@ class Effect {
     std::string comment;
     std::vector<Effect*> children;
     AVS_Component_Handle* child_handles_for_api = nullptr;
-    Effect(AVS_Instance* avs) : handle(h_components.get()), avs(avs), enabled(true) {};
+    Effect(AVS_Instance* avs) : handle(h_components.get()), avs(avs), enabled(true) {}
     virtual ~Effect();
     Effect(const Effect&);
     Effect& operator=(const Effect&);
@@ -105,8 +105,8 @@ class Effect {
         (void)visdata, (void)is_beat, (void)framebuffer, (void)fbout, (void)w, (void)h;
         return 0;  // returns 1 if fbout has dest
     }
-    virtual void render_with_context(RenderContext&) {};
-    virtual void load(json&) {};
+    virtual void render_with_context(RenderContext&) {}
+    virtual void load(json&) {}
     virtual json save() { return nullptr; }
     virtual char* get_desc() = 0;
     virtual int32_t get_legacy_id() { return -1; }
@@ -191,7 +191,7 @@ class Configurable_Effect : public Effect {
     }
     ~Configurable_Effect() { this->remove_from_global_instances(); }
     Configurable_Effect(const Configurable_Effect& other)
-        : Effect(other), config(other.config) {};
+        : Effect(other), config(other.config) {}
     Configurable_Effect& operator=(const Configurable_Effect& other) {
         Effect::operator=(other);
         this->config = other.config;
@@ -213,7 +213,7 @@ class Configurable_Effect : public Effect {
     static void set_desc(char* desc) {
         Configurable_Effect::_set_desc();
         if (desc) {
-            strcpy(desc, Configurable_Effect::desc.c_str());
+            strncpy(desc, Configurable_Effect::desc.c_str(), 1024);
         }
     }
     virtual char* get_desc() {
