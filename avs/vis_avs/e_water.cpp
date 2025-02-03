@@ -32,6 +32,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // alphachannel safe 11/21/99
 #include "e_water.h"
 
+#include "pixel_format.h"
+
+#include <immintrin.h>
+
 #define PUT_INT(y)                   \
     data[pos] = (y) & 255;           \
     data[pos + 1] = (y >> 8) & 255;  \
@@ -78,7 +82,7 @@ int E_Water::smp_begin(int max_threads,
             free(this->lastframe);
         }
         this->lastframe_size = w * h;
-        this->lastframe = (unsigned int*)calloc(w * h, sizeof(int));
+        this->lastframe = (unsigned int*)calloc(w * h, pixel_size(AVS_PIXEL_RGB0_8));
     }
 
     return max_threads;
@@ -98,7 +102,7 @@ void E_Water::smp_render(int this_thread,
                          int h) {
     unsigned int* f = (unsigned int*)framebuffer;
     unsigned int* of = (unsigned int*)fbout;
-    unsigned int* lfo = (unsigned int*)this->lastframe;
+    unsigned int* last = (unsigned int*)this->lastframe;
 
     int start_l = (this_thread * h) / max_threads;
     int end_l;
@@ -118,7 +122,7 @@ void E_Water::smp_render(int this_thread,
 
     f += skip_pix;
     of += skip_pix;
-    lfo += skip_pix;
+    last += skip_pix;
 
     int at_top = 0, at_bottom = 0;
 
@@ -129,6 +133,26 @@ void E_Water::smp_render(int this_thread,
         at_bottom = 1;
     }
 
+    /*
+    Convolution filters (where p is the previous frame's value):
+
+    top-left pixel        top row        top-right pixel
+      -p  1          . . . ½  -p  ½ . . .    1 -p
+       1  0                0   ½  0          0  1
+
+       .                      .                 .
+       .                      .                 .
+     left column         middle block     right column
+       ½  0                0  ½  0           0  ½
+      -p  ½          . . . ½ -p  ½ . . .     ½ -p
+       ½  0                0  ½  0           0  ½
+       .                      .                 .
+       .                      .                 .
+
+    bottom-left pixel     bottom row     bottom-right pixel
+       1  0                0  ½  0           0  1
+      -p  1          . . . ½ -p  ½ . . .     1 -p
+    */
     {
         // top line
         if (at_top) {
@@ -144,10 +168,10 @@ void E_Water::smp_render(int this_thread,
                 b += _B(f[w]);
                 f++;
 
-                r -= _R(lfo[0]);
-                g -= _G(lfo[0]);
-                b -= _B(lfo[0]);
-                lfo++;
+                r -= _R(last[0]);
+                g -= _G(last[0]);
+                b -= _B(last[0]);
+                last++;
 
                 if (r < 0) {
                     r = 0;
@@ -185,10 +209,10 @@ void E_Water::smp_render(int this_thread,
                 g /= 2;
                 b /= 2;
 
-                r -= _R(lfo[0]);
-                g -= _G(lfo[0]);
-                b -= _B(lfo[0]);
-                lfo++;
+                r -= _R(last[0]);
+                g -= _G(last[0]);
+                b -= _B(last[0]);
+                last++;
 
                 if (r < 0) {
                     r = 0;
@@ -218,10 +242,10 @@ void E_Water::smp_render(int this_thread,
                 b += _B(f[w]);
                 f++;
 
-                r -= _R(lfo[0]);
-                g -= _G(lfo[0]);
-                b -= _B(lfo[0]);
-                lfo++;
+                r -= _R(last[0]);
+                g -= _G(last[0]);
+                b -= _B(last[0]);
+                last++;
 
                 if (r < 0) {
                     r = 0;
@@ -265,10 +289,10 @@ void E_Water::smp_render(int this_thread,
                     g /= 2;
                     b /= 2;
 
-                    r -= _R(lfo[0]);
-                    g -= _G(lfo[0]);
-                    b -= _B(lfo[0]);
-                    lfo++;
+                    r -= _R(last[0]);
+                    g -= _G(last[0]);
+                    b -= _B(last[0]);
+                    last++;
 
                     if (r < 0) {
                         r = 0;
@@ -290,7 +314,36 @@ void E_Water::smp_render(int this_thread,
 
                 // middle of line
                 x = (w - 2);
-#ifdef NO_MMX
+#ifdef SIMD_MODE_X86_SSE
+                __m128i zero = _mm_setzero_si128();
+                while (x >= 4) {
+                    __m128i right = _mm_loadu_si128((__m128i*)&f[1]);
+                    __m128i left = _mm_loadu_si128((__m128i*)&f[-1]);
+                    __m128i down = _mm_loadu_si128((__m128i*)&f[w]);
+                    __m128i up = _mm_loadu_si128((__m128i*)&f[-w]);
+                    __m128i prev = _mm_loadu_si128((__m128i*)last);
+                    __m128i f_2px_lo = _mm_adds_epu16(_mm_unpacklo_epi8(right, zero),
+                                                      _mm_unpacklo_epi8(left, zero));
+                    __m128i f_2px_hi = _mm_adds_epu16(_mm_unpackhi_epi8(right, zero),
+                                                      _mm_unpackhi_epi8(left, zero));
+                    f_2px_lo = _mm_adds_epu16(f_2px_lo, _mm_unpacklo_epi8(down, zero));
+                    f_2px_hi = _mm_adds_epu16(f_2px_hi, _mm_unpackhi_epi8(down, zero));
+                    f_2px_lo = _mm_adds_epu16(f_2px_lo, _mm_unpacklo_epi8(up, zero));
+                    f_2px_hi = _mm_adds_epu16(f_2px_hi, _mm_unpackhi_epi8(up, zero));
+                    f_2px_lo = _mm_srli_epi16(f_2px_lo, 1);
+                    f_2px_hi = _mm_srli_epi16(f_2px_hi, 1);
+                    f_2px_lo = _mm_subs_epu16(f_2px_lo, _mm_unpacklo_epi8(prev, zero));
+                    f_2px_hi = _mm_subs_epu16(f_2px_hi, _mm_unpackhi_epi8(prev, zero));
+                    __m128i f_4x = _mm_packus_epi16(f_2px_lo, f_2px_hi);
+                    _mm_storeu_si128((__m128i*)of, f_4x);
+                    f += 4;
+                    last += 4;
+                    of += 4;
+                    x -= 4;
+                }
+#endif
+                // Non-SIMD version, but also fill remaining 2 pixels at the end of each
+                // row in SIMD mode (because 4*n width - 2 border pixels = 2 remaining).
                 while (x--) {
                     int r = _R(f[1]);
                     int g = _G(f[1]);
@@ -310,10 +363,10 @@ void E_Water::smp_render(int this_thread,
                     g /= 2;
                     b /= 2;
 
-                    r -= _R(lfo[0]);
-                    g -= _G(lfo[0]);
-                    b -= _B(lfo[0]);
-                    lfo++;
+                    r -= _R(last[0]);
+                    g -= _G(last[0]);
+                    b -= _B(last[0]);
+                    last++;
 
                     if (r < 0) {
                         r = 0;
@@ -332,146 +385,7 @@ void E_Water::smp_render(int this_thread,
                     }
                     *of++ = _RGB(r, g, b);
                 }
-#else
-#ifdef _MSC_VER  // MSVC asm
-                __asm {
-          mov esi, f
-          mov edi, of
-          mov edx, lfo
-          mov ecx, x
-          mov ebx, w
-          shl ebx, 2
-          shr ecx, 1
-          sub esi, ebx
-          align 16
-mmx_water_loop1:
-          movd mm0, [esi+ebx+4]
 
-          movd mm1, [esi+ebx-4]
-          punpcklbw mm0, [zero]
-
-          movd mm2, [esi+ebx*2]
-          punpcklbw mm1, [zero]
-
-          movd mm3, [esi]
-          punpcklbw mm2, [zero]
-
-          movd mm4, [edx]
-          paddw mm0, mm1
-
-          punpcklbw mm3, [zero]
-          movd mm7, [esi+ebx+8]
-
-          punpcklbw mm4, [zero]
-          paddw mm2, mm3
-
-          movd mm6, [esi+ebx]
-          paddw mm0, mm2
-
-          psrlw mm0, 1
-          punpcklbw mm7, [zero]
-
-          movd mm2, [esi+ebx*2+4]
-          psubw mm0, mm4
-
-          movd mm3, [esi+4]
-          packuswb mm0, mm0
-
-          movd [edi], mm0
-          punpcklbw mm6, [zero]
-
-          movd mm4, [edx+4]
-          punpcklbw mm2, [zero]
-
-          paddw mm7, mm6
-          punpcklbw mm3, [zero]
-
-          punpcklbw mm4, [zero]
-          paddw mm2, mm3
-          
-          paddw mm7, mm2
-          add edx, 8
-
-          psrlw mm7, 1
-          add esi, 8
-
-          psubw mm7, mm4
-
-          packuswb mm7, mm7
-
-          movd [edi+4], mm7
-
-          add edi, 8
-
-          dec ecx
-          jnz mmx_water_loop1
-
-          add esi, ebx
-          mov f, esi
-          mov of, edi
-          mov lfo, edx
-                }
-                ;
-#else            // _MSC_VER, GCC asm
-                __asm__ __volatile__(
-                    "mov       %%esi, %[f]\n\t"
-                    "mov       %%edi, %[of]\n\t"
-                    "mov       %%edx, %[lfo]\n\t"
-                    "mov       %%ecx, %[x]\n\t"
-                    "mov       %%ebx, %[w]\n\t"
-                    "shl       %%ebx, 2\n\t"
-                    "shr       %%ecx, 1\n\t"
-                    "sub       %%esi, %%ebx\n\t"
-                    ".align    16\n\t"
-                    "mmx_water_loop1:\n\t"
-                    "movd      %%mm0, [%%esi + %%ebx + 4]\n\t"
-                    "movd      %%mm1, [%%esi + %%ebx - 4]\n\t"
-                    "punpcklbw %%mm0, [%[zero]]\n\t"
-                    "movd      %%mm2, [%%esi + %%ebx * 2]\n\t"
-                    "punpcklbw %%mm1, [%[zero]]\n\t"
-                    "movd      %%mm3, [%%esi]\n\t"
-                    "punpcklbw %%mm2, [%[zero]]\n\t"
-                    "movd      %%mm4, [%%edx]\n\t"
-                    "paddw     %%mm0, %%mm1\n\t"
-                    "punpcklbw %%mm3, [%[zero]]\n\t"
-                    "movd      %%mm7, [%%esi + %%ebx + 8]\n\t"
-                    "punpcklbw %%mm4, [%[zero]]\n\t"
-                    "paddw     %%mm2, %%mm3\n\t"
-                    "movd      %%mm6, [%%esi + %%ebx] \n\t"
-                    "paddw     %%mm0, %%mm2\n\t"
-                    "psrlw     %%mm0, 1\n\t"
-                    "punpcklbw %%mm7, [%[zero]]\n\t"
-                    "movd      %%mm2, [%%esi + %%ebx * 2 + 4]\n\t"
-                    "psubw     %%mm0, %%mm4\n\t"
-                    "movd      %%mm3, [%%esi + 4]\n\t"
-                    "packuswb  %%mm0, %%mm0\n\t"
-                    "movd      [%%edi], %%mm0\n\t"
-                    "punpcklbw %%mm6, [%[zero]]\n\t"
-                    "movd      %%mm4, [%%edx + 4]\n\t"
-                    "punpcklbw %%mm2, [%[zero]]\n\t"
-                    "paddw     %%mm7, %%mm6\n\t"
-                    "punpcklbw %%mm3, [%[zero]]\n\t"
-                    "punpcklbw %%mm4, [%[zero]]\n\t"
-                    "paddw     %%mm2, %%mm3\n\t"
-                    "paddw     %%mm7, %%mm2\n\t"
-                    "add       %%edx, 8\n\t"
-                    "psrlw     %%mm7, 1\n\t"
-                    "add       %%esi, 8\n\t"
-                    "psubw     %%mm7, %%mm4\n\t"
-                    "packuswb  %%mm7, %%mm7\n\t"
-                    "movd      [%%edi + 4], %%mm7\n\t"
-                    "add       %%edi, 8\n\t"
-                    "dec       %%ecx\n\t"
-                    "jnz       mmx_water_loop1\n\t"
-                    "add       %%esi, %%ebx\n\t"
-                    "mov       %[f], %%esi\n\t"
-                    "mov       %[of], %%edi\n\t"
-                    "mov       %[lfo], %%edx\n\t"
-                    : [f] "+m"(f), [of] "+m"(of), [lfo] "+m"(lfo)
-                    : [x] "m"(x), [w] "m"(w), [zero] "m"(zero)
-                    : "ebx", "ecx", "edx", "edi", "esi");
-#endif           // _MSC_VER
-#endif
                 // right block
                 {
                     int r = _R(f[-1]);
@@ -489,10 +403,10 @@ mmx_water_loop1:
                     g /= 2;
                     b /= 2;
 
-                    r -= _R(lfo[0]);
-                    g -= _G(lfo[0]);
-                    b -= _B(lfo[0]);
-                    lfo++;
+                    r -= _R(last[0]);
+                    g -= _G(last[0]);
+                    b -= _B(last[0]);
+                    last++;
 
                     if (r < 0) {
                         r = 0;
@@ -527,10 +441,10 @@ mmx_water_loop1:
                 b += _B(f[-w]);
                 f++;
 
-                r -= _R(lfo[0]);
-                g -= _G(lfo[0]);
-                b -= _B(lfo[0]);
-                lfo++;
+                r -= _R(last[0]);
+                g -= _G(last[0]);
+                b -= _B(last[0]);
+                last++;
 
                 if (r < 0) {
                     r = 0;
@@ -568,10 +482,10 @@ mmx_water_loop1:
                 g /= 2;
                 b /= 2;
 
-                r -= _R(lfo[0]);
-                g -= _G(lfo[0]);
-                b -= _B(lfo[0]);
-                lfo++;
+                r -= _R(last[0]);
+                g -= _G(last[0]);
+                b -= _B(last[0]);
+                last++;
 
                 if (r < 0) {
                     r = 0;
@@ -601,10 +515,10 @@ mmx_water_loop1:
                 b += _B(f[-w]);
                 f++;
 
-                r -= _R(lfo[0]);
-                g -= _G(lfo[0]);
-                b -= _B(lfo[0]);
-                lfo++;
+                r -= _R(last[0]);
+                g -= _G(last[0]);
+                b -= _B(last[0]);
+                last++;
 
                 if (r < 0) {
                     r = 0;
@@ -627,14 +541,6 @@ mmx_water_loop1:
     }
 
     memcpy(this->lastframe + skip_pix, framebuffer + skip_pix, w * outh * sizeof(int));
-
-#ifndef NO_MMX
-#ifdef _MSC_VER  // MSVC asm
-    __asm emms;
-#else   // _MSC_VER, GCC asm
-    __asm__ __volatile__("emms");
-#endif  // _MSC_VER
-#endif
 }
 
 void E_Water::load_legacy(unsigned char* data, int len) {
