@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct Root_Author_Config : public Effect_Config {
-    std::string role = "author";
+struct Root_Contributor_Config : public Effect_Config {
+    std::string role = "contributor";
     std::string name;
 };
 
@@ -16,7 +16,7 @@ struct Root_BasedOn_Config : public Effect_Config {
     std::string id;
     std::string name;
     std::string date;
-    std::vector<Root_Author_Config> authors;
+    std::vector<Root_Contributor_Config> contributors;
 };
 
 struct Root_Config : public Effect_Config {
@@ -25,7 +25,7 @@ struct Root_Config : public Effect_Config {
     std::string id;
     std::string date_init;
     std::string date_last;
-    std::vector<Root_Author_Config> authors;
+    std::vector<Root_Contributor_Config> contributors;
     std::vector<Root_BasedOn_Config> based_on;
 };
 
@@ -38,12 +38,15 @@ struct Root_Info : public Effect_Info {
     static constexpr int32_t legacy_id = -4;
     static constexpr char const* legacy_ape_id = nullptr;
 
-    static constexpr uint32_t num_author_parameters = 2;
-    static constexpr Parameter author_parameters[num_author_parameters] = {
-        P_STRING(offsetof(Root_Author_Config, name), "Name", "Name of the author"),
-        P_STRING(offsetof(Root_Author_Config, role),
+    static constexpr uint32_t num_contributor_parameters = 2;
+    static constexpr Parameter contributor_parameters[num_contributor_parameters] = {
+        P_STRING(offsetof(Root_Contributor_Config, name),
+                 "Name",
+                 "Name of the person contributing to the preset"),
+        P_STRING(offsetof(Root_Contributor_Config, role),
                  "Role",
-                 "'author', 'remixer', 'editor', 'curator' - or anything else")};
+                 "'contributor', 'curator', 'author', 'remixer', 'editor' - or "
+                 "anything else")};
 
     static constexpr uint32_t num_remix_parameters = 4;
     static constexpr Parameter remix_parameters[num_remix_parameters] = {
@@ -54,13 +57,13 @@ struct Root_Info : public Effect_Info {
         P_STRING(offsetof(Root_BasedOn_Config, date),
                  "Date",
                  "Last-edited date of the predecessor"),
-        P_LIST<Root_Author_Config>(offsetof(Root_BasedOn_Config, authors),
-                                   "Authors",
-                                   author_parameters,
-                                   num_author_parameters,
-                                   0,
-                                   0,
-                                   "Authors of the predecessor"),
+        P_LIST<Root_Contributor_Config>(offsetof(Root_BasedOn_Config, contributors),
+                                        "Contributors",
+                                        contributor_parameters,
+                                        num_contributor_parameters,
+                                        0,
+                                        0,
+                                        "Contributors of the predecessor"),
     };
 
     static constexpr uint32_t num_parameters = 7;
@@ -76,13 +79,13 @@ struct Root_Info : public Effect_Info {
         P_STRING(offsetof(Root_Config, date_last),
                  "Date Last",
                  "Date of preset's latest save"),
-        P_LIST<Root_Author_Config>(offsetof(Root_Config, authors),
-                                   "Authors",
-                                   author_parameters,
-                                   num_author_parameters,
-                                   0,
-                                   0,
-                                   "Authors of the preset"),
+        P_LIST<Root_Contributor_Config>(offsetof(Root_Config, contributors),
+                                        "Contributors",
+                                        contributor_parameters,
+                                        num_contributor_parameters,
+                                        0,
+                                        0,
+                                        "Contributors of the preset"),
         P_LIST<Root_BasedOn_Config>(offsetof(Root_Config, based_on),
                                     "Based On",
                                     remix_parameters,

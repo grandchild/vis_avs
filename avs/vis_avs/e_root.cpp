@@ -18,7 +18,7 @@
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
 
-constexpr Parameter Root_Info::author_parameters[];
+constexpr Parameter Root_Info::contributor_parameters[];
 constexpr Parameter Root_Info::remix_parameters[];
 constexpr Parameter Root_Info::parameters[];
 
@@ -50,7 +50,7 @@ void E_Root::remix() {
     based_on.id = this->config.id;
     based_on.name = this->config.name;
     based_on.date = this->config.date_last;
-    based_on.authors = this->config.authors;
+    based_on.contributors = this->config.contributors;
     this->config.based_on.push_back(based_on);
     this->config.id = uuid4();
     this->config.date_init = current_date_str();
