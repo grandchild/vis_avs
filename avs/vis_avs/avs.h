@@ -275,7 +275,7 @@ bool avs_audio_device_set(AVS_Handle avs, int32_t device);
  * Returns `true` if the key state was successfully set or `false` if `key` is out of
  * range or some other error occurred.
  */
-bool avs_input_key_set(AVS_Handle avs, int key, bool state);
+bool avs_input_key_set(AVS_Handle avs, uint32_t key, bool state);
 
 /**
  * Set the mouse position. The position is given in the range [0, 1] for both x and y.
@@ -295,7 +295,7 @@ bool avs_input_mouse_pos_set(AVS_Handle avs, double x, double y);
  * Returns `true` if the button state was successfully set or `false` if `button` is out
  * of range or some other error occurred.
  */
-bool avs_input_mouse_button_set(AVS_Handle avs, int button, bool state);
+bool avs_input_mouse_button_set(AVS_Handle avs, uint32_t button, bool state);
 
 /**
  * Load a preset file from the given location and return `true` on success. You may call

@@ -326,13 +326,13 @@ void* AVS_Instance::get_buffer(size_t, size_t, int32_t buffer_num, bool) {
 
 int64_t AVS_Instance::get_current_time_in_ms() { return this->current_time_in_ms; }
 
-bool AVS_Instance::get_key_state(int key) {
+bool AVS_Instance::get_key_state(uint32_t key) {
     if (key >= 0 && key < sizeof(this->key_states) / sizeof(this->key_states[0])) {
         return this->key_states[key];
     }
     return false;
 }
-bool AVS_Instance::set_key_state(int key, bool state) {
+bool AVS_Instance::set_key_state(uint32_t key, bool state) {
     if (key >= 0 && key < sizeof(this->key_states) / sizeof(this->key_states[0])) {
         this->key_states[key] = state;
         return true;
@@ -349,7 +349,7 @@ void AVS_Instance::set_mouse_pos(double x, double y) {
     this->mouse_x = x;
     this->mouse_y = y;
 }
-bool AVS_Instance::get_mouse_button_state(int button) {
+bool AVS_Instance::get_mouse_button_state(uint32_t button) {
     if (button >= 0
         && button < sizeof(this->mouse_button_states)
                         / sizeof(this->mouse_button_states[0])) {
@@ -357,7 +357,7 @@ bool AVS_Instance::get_mouse_button_state(int button) {
     }
     return false;
 }
-bool AVS_Instance::set_mouse_button_state(int button, bool state) {
+bool AVS_Instance::set_mouse_button_state(uint32_t button, bool state) {
     if (button >= 0
         && button < sizeof(this->mouse_button_states)
                         / sizeof(this->mouse_button_states[0])) {

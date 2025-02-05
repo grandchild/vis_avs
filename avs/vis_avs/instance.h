@@ -68,12 +68,12 @@ class AVS_Instance {
     void update_time(int64_t time_in_ms);
 
     int64_t get_current_time_in_ms();
-    bool get_key_state(int key);
-    bool set_key_state(int key, bool state);
+    bool get_key_state(uint32_t key);
+    bool set_key_state(uint32_t key, bool state);
     double get_mouse_pos(bool get_y);
     void set_mouse_pos(double x, double y);
-    bool get_mouse_button_state(int button);
-    bool set_mouse_button_state(int button, bool state);
+    bool get_mouse_button_state(uint32_t button);
+    bool set_mouse_button_state(uint32_t button, bool state);
 
     AVS_Handle handle;
 
