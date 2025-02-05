@@ -184,6 +184,31 @@ impl Avs {
         Ok(())
     }
 
+    pub fn input_key_set(&self, key: u32, state: bool) -> Result<(), AvsError> {
+        if !unsafe { avs_input_key_set(self.handle, key, state) } {
+            return Err(self.error("input_key_set"));
+        }
+        Ok(())
+    }
+
+    pub fn input_mouse_pos_set(&self, x: f64, y: f64) -> Result<(), AvsError> {
+        if !unsafe { avs_input_mouse_pos_set(self.handle, x, y) } {
+            return Err(self.error("input_mouse_pos_set"));
+        }
+        Ok(())
+    }
+
+    pub fn input_mouse_button_set(
+        &self,
+        button: u32,
+        state: bool,
+    ) -> Result<(), AvsError> {
+        if !unsafe { avs_input_mouse_button_set(self.handle, button, state) } {
+            return Err(self.error("input_mouse_button_set"));
+        }
+        Ok(())
+    }
+
     pub fn preset_load(&mut self, file_path: &Path) -> Result<(), AvsError> {
         let file_path_cstr = CString::new(
             file_path
