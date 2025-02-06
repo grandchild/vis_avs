@@ -13,7 +13,7 @@ use avs_rs::{AvsComponentPosition, AvsPixelFormat};
 use inotify::{Inotify, WatchMask};
 #[cfg(target_os = "linux")]
 use linuxfb::{/*double::Buffer,*/ Framebuffer};
-use minifb::{Key, KeyRepeat, Window, WindowOptions};
+use minifb::{Key, KeyRepeat, MouseButton, Window, WindowOptions};
 
 use std::rc::Rc;
 use std::{io::ErrorKind, path::Path};
@@ -94,7 +94,7 @@ fn main() -> Result<()> {
         };
         let mut last_time = std::time::Instant::now();
         while window.is_open() && !(window.is_key_down(Key::Escape) || window.is_key_down(Key::Q)) {
-            // let (window_width, window_height) = window.get_size();
+            let (window_width, window_height) = window.get_size();
             // width = window_width & !3usize; // width must be multiple of 4
             // height = window_height & !1usize; // height must be multiple of 2
             if width != last_width || height != last_height {
@@ -104,6 +104,15 @@ fn main() -> Result<()> {
                 println!("resize: {}x{}", width, height);
             }
             is_beat = window.is_key_pressed(Key::Space, KeyRepeat::No);
+            window.get_mouse_pos(minifb::MouseMode::Pass).map(|mouse| {
+                avs.input_mouse_pos_set(
+                    mouse.0 as f64 / (window_width as f64),
+                    mouse.1 as f64 / (window_height as f64),
+                );
+            });
+            avs.input_mouse_button_set(0, window.get_mouse_down(MouseButton::Left));
+            avs.input_mouse_button_set(2, window.get_mouse_down(MouseButton::Middle));
+            avs.input_mouse_button_set(1, window.get_mouse_down(MouseButton::Right));
             avs.render_frame(
                 &mut avs_framebuffer,
                 time_in_ms,
