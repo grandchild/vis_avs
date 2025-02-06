@@ -92,6 +92,7 @@ fn main() -> Result<()> {
             width,
             height,
         };
+        let mut last_time = std::time::Instant::now();
         while window.is_open() && !(window.is_key_down(Key::Escape) || window.is_key_down(Key::Q)) {
             // let (window_width, window_height) = window.get_size();
             // width = window_width & !3usize; // width must be multiple of 4
@@ -114,6 +115,11 @@ fn main() -> Result<()> {
                 AvsBufferData::Vec(ref v) => window.update_with_buffer(*v, width, height).unwrap(),
                 _ => panic!(),
             }
+
+            let now = std::time::Instant::now();
+            let fps = 1_000_000_000 / (now - last_time).as_nanos();
+            print!("\rCurrent FPS: {fps}      ");
+            last_time = now;
 
             match inotify.read_events(&mut inotify_event_buffer) {
                 Ok(events) => {
