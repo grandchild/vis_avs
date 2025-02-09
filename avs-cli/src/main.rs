@@ -20,6 +20,9 @@ use std::{io::ErrorKind, path::Path};
 
 use avs_rs::{Avs, AvsAudioSource, AvsBeatSource, AvsBufferData, AvsError, AvsFramebuffer};
 
+mod keyboardmap;
+use keyboardmap::AvsKeyboardMap;
+
 /// AVS
 #[derive(FromArgs, Debug)]
 struct AvsArgs {
@@ -93,6 +96,7 @@ fn main() -> Result<()> {
             height,
         };
         let mut last_time = std::time::Instant::now();
+        let keyboard_map = AvsKeyboardMap::new();
         while window.is_open() && !(window.is_key_down(Key::Escape) || window.is_key_down(Key::Q)) {
             let (window_width, window_height) = window.get_size();
             // width = window_width & !3usize; // width must be multiple of 4
@@ -113,6 +117,15 @@ fn main() -> Result<()> {
             avs.input_mouse_button_set(0, window.get_mouse_down(MouseButton::Left));
             avs.input_mouse_button_set(2, window.get_mouse_down(MouseButton::Middle));
             avs.input_mouse_button_set(1, window.get_mouse_down(MouseButton::Right));
+            let mut keys: [bool; 256] = [false; 256];
+            for key in window.get_keys() {
+                for k in keyboard_map.from_minifb(key) {
+                    keys[k as usize] = true;
+                }
+            }
+            for i in 0..256 {
+                avs.input_key_set(i as u32, keys[i]);
+            }
             avs.render_frame(
                 &mut avs_framebuffer,
                 time_in_ms,
