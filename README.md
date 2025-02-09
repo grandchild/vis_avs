@@ -23,9 +23,11 @@ integrated as builtin effects instead.
   libavs [header](avs/vis_avs/avs.h) [files](avs/vis_avs/avs_editor.h).
 * 🎉 Builds for Windows both with MSVC & MinGW-w64 GCC into a running `vis_avs.dll`,
   loadable with Winamp, as well as `libavs.dll`.
-* 🐧 Builds for Linux as `libavs.so`, with pipewire audio input. EEL functions don't
-  work yet, but basic EEL code does.  A (very) basic cli frontend and a more interesting
-  WIP Rust frontend are also available, both for rendering only, not editing.
+* 🐧 Builds for Linux as `libavs.so`, with Pipewire audio input. A (very) basic CLI
+  frontend and a more interesting WIP Rust frontend are also available, both for
+  rendering only, not editing.
+* ✨ Switched EEL compiler to EEL2 (similar to [CHAVS](https://github.com/visbot/chavs))
+  coming with various [new features](https://www.reaper.fm/sdk/js/js.php).
 * 💾 New JSON file format, which is more accessible for direct editing and inspection.
   The old binary format is still fully supported.
 * 💃 Runs most presets (unless they use rare APEs).
