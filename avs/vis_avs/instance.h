@@ -133,7 +133,7 @@ class AVS_Instance {
     int last_time_mode = AVS_TIME_MODE_UNKNOWN;
     int64_t time_mode_switch_offset = 0;
 
-    bool key_states[108];
+    bool key_states[256];
     double mouse_x = 0.0;
     double mouse_y = 0.0;
     bool mouse_button_states[8];
