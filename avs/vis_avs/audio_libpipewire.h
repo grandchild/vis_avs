@@ -38,7 +38,7 @@ struct LibPipewire {
     static decltype(&pw_thread_loop_unlock) thread_loop_unlock;
 
     LibPipewire(avs_audio_input_handler callback, void* data)
-        : loaded(load_pipewire_dlib()), user_callback(callback), user_data(data) {};
+        : loaded(load_pipewire_dlib()), user_callback(callback), user_data(data) {}
     static bool load_pipewire_dlib();
     static std::string load_error;
     static dlib_t* libpipewire;

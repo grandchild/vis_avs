@@ -7,7 +7,7 @@
 struct Simple_Color_Config : public Effect_Config {
     uint64_t color = 0x000000;
     Simple_Color_Config() = default;
-    Simple_Color_Config(uint64_t color) : color(color) {};
+    Simple_Color_Config(uint64_t color) : color(color) {}
 };
 
 struct Simple_Config : public Effect_Config {

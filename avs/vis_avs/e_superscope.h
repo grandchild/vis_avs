@@ -11,7 +11,7 @@
 struct SuperScope_Color_Config : public Effect_Config {
     uint64_t color = 0x000000;
     SuperScope_Color_Config() = default;
-    SuperScope_Color_Config(uint64_t color) : color(color) {};
+    SuperScope_Color_Config(uint64_t color) : color(color) {}
 };
 
 struct SuperScope_Config : public Effect_Config {

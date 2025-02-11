@@ -677,22 +677,22 @@ bool CopyRGBSurfaceToYUVSurfaceMMX(LPDDSURFACEDESC pddsd1,
 			ALIGN 8
 			yuvloop:
 
-                /*
-                // prefetch
-                            test     ecx, 0x000001ff
-                            jnz      PROCESS_PIXEL_MMX32           // every 256th pixel
-                do some prefetches
+        /*
+        // prefetch
+                    test     ecx, 0x000001ff
+                    jnz      PROCESS_PIXEL_MMX32           // every 256th pixel
+        do some prefetches
 
-                                                 mov      ebx, 2*256                 //
-                need to prefetch 256*6 bytes ALIGN 8 LOAD_ESI_ARRAY_MMX32: mov      eax,
-                [ebx+esi] mov      eax, [ebx+esi+32] sub      ebx, 64 jnz
-                LOAD_ESI_ARRAY_MMX32
+                                         mov      ebx, 2*256                 //
+        need to prefetch 256*6 bytes ALIGN 8 LOAD_ESI_ARRAY_MMX32: mov      eax,
+        [ebx+esi] mov      eax, [ebx+esi+32] sub      ebx, 64 jnz
+        LOAD_ESI_ARRAY_MMX32
 
-                ALIGN 8
-                                PROCESS_PIXEL_MMX32:
-                */
+        ALIGN 8
+                        PROCESS_PIXEL_MMX32:
+        */
 
-                // read in 2 pixels
+        // read in 2 pixels
 				movq mm0, qword ptr [esi]  // -- b1 g1 r1 -- b2 g2 r2
 				movq mm1, qword ptr [esi]  // -- b1 g1 r1 -- b2 g2 r2
 				movq mm2, qword ptr [esi]  // -- b1 g1 r1 -- b2 g2 r2
@@ -1087,14 +1087,14 @@ void homemadeBlitFrom32bpp(DDSURFACEDESC* out, void* in, int w, int h, int sy, i
         and eax, ebx
         and edx, ebx
 
-                    // 00000000RRRRR000GGGGG000BBBBB000
+                     // 00000000RRRRR000GGGGG000BBBBB000
         shr ah,3  // 00000000RRRRR000000GGGGGBBBBB000
         shr dh,3
 
         shr ax,3  // 00000000RRRRR000000000GGGGGBBBBB
         shr dx,3
 
-                // ----------------HHHHHHHHLLLLLLLL
+                 // ----------------HHHHHHHHLLLLLLLL
         ror eax,10  // GGGGGBBBBB00000000RRRRR000000000
         ror edx,10
 
@@ -1187,7 +1187,7 @@ void homemadeBlitFrom32bpp(DDSURFACEDESC* out, void* in, int w, int h, int sy, i
         and eax, ebx
         and edx, ebx
 
-                    // RRRRR000GGGGGG00BBBBB000
+                     // RRRRR000GGGGGG00BBBBB000
 
         shr ah,2  // RRRRR00000GGGGGGBBBBB000
         shr dh,2

@@ -60,9 +60,9 @@ struct ColorMap_Map_Color : public Effect_Config {
     int64_t color_id = 0;
     static Handles id_factory;
 
-    ColorMap_Map_Color() : color_id(id_factory.get()) {};
+    ColorMap_Map_Color() : color_id(id_factory.get()) {}
     ColorMap_Map_Color(int64_t position, uint64_t color)
-        : position(position), color(color), color_id(id_factory.get()) {};
+        : position(position), color(color), color_id(id_factory.get()) {}
 };
 
 struct ColorMap_Map : public Effect_Config {

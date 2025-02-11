@@ -176,7 +176,7 @@ class AVS {
 
        public:
         Readonly_Array() = delete;  // use `Readonly_Array(data, size)`
-        Readonly_Array(const T* data, size_t size) : _size(size), _data(data) {};
+        Readonly_Array(const T* data, size_t size) : _size(size), _data(data) {}
         size_t size() const { return this->_size; }
         const T* data() const { return this->_data; }
         const T& operator[](size_t index) const { return this->_data[index]; }
@@ -270,7 +270,7 @@ class AVS {
        protected:
         AVS* avs;
         Has_AVS_Ref() = delete;
-        explicit Has_AVS_Ref(AVS* avs) : avs(avs) {};
+        explicit Has_AVS_Ref(AVS* avs) : avs(avs) {}
         AVS_Handle avs_handle() { return this->avs != NULL ? this->avs->handle : 0; }
         void clear_error() {
             if (this->avs != NULL) {

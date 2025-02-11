@@ -77,7 +77,7 @@ class E_Interferences
     : public Configurable_Effect<Interferences_Info, Interferences_Config> {
    public:
     E_Interferences(AVS_Instance* avs);
-    virtual ~E_Interferences() {};
+    virtual ~E_Interferences() {}
     virtual int render(char visdata[2][2][576],
                        int is_beat,
                        int* framebuffer,
