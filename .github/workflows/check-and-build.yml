@@ -96,3 +96,41 @@ jobs:
         with:
           name: vis_avs_msvc
           path: vis_avs_281d_msvc_debug.dll
+
+  build-linux-native:
+    name: Build on Ubuntu with GCC for Linux
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Install dependencies
+        run: |-
+          deps=(
+            gcc-multilib
+            g++-multilib
+            libavformat-dev
+            libavcodec-dev
+            libswscale-dev
+            libpipewire-0.3-dev
+            autoconf gettext flex bison libtool autopoint  # for util-linux/libuuid
+          )
+          sudo apt update && sudo apt install --yes "${deps[@]}"
+          .ci/tasks.sh build-libuuid-32bit install
+
+      - name: Install Rust toolchain if rustup available
+        run: |-
+          if command -v rustup; then
+            rustup target add i686-unknown-linux-gnu
+          fi
+
+      - name: Build
+        run: |-
+          .ci/tasks.sh build-linux32 verbose
+
+      - uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08  # v4.6.0
+        with:
+          name: libavs_linux
+          path: |
+            build_linux32/libavs.so
+            build_linux32/avs
+            build_linux32/avs-cli
