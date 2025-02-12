@@ -8,9 +8,9 @@ shopt -s globstar # Enable ** globbing
 GIT_BISECT_CANNOT_CHECK=125
 
 function clean() {
-    rm -r build_win32
-    rm -r build_linux32
-    rm -r target
+    rm -rf build_win32
+    rm -rf build_linux32
+    rm -rf target
 }
 
 function check_clang_format() {
