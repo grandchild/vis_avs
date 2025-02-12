@@ -5,6 +5,8 @@ project(vis_avs VERSION 2.82)
 include(CheckIncludeFiles)
 include(CheckLinkerFlag)
 include(ExternalProject)
+include(FindPkgConfig)
+include(utils.cmake)
 
 # Sometimes LINUX is set, but unfortunately on some systems' cmake it's not.
 # Make sure the simple system vars are always set.
@@ -154,13 +156,11 @@ add_library(libavs SHARED
     $<TARGET_OBJECTS:avs_common>
 )
 
-check_include_files(
-    "libavcodec/avcodec.h;libavformat/avformat.h;libswscale/swscale.h"
-    HAVE_FFMPEG
-)
-if(NOT HAVE_FFMPEG OR NO_FFMPEG)
+pkg_search_include_dirs_with_64bit_fallback(FFMPEG "libavcodec;libavformat;libswscale" "video")
+if(NOT FFMPEG_INCLUDE_DIRS OR NO_FFMPEG)
     add_compile_definitions(NO_FFMPEG)
-    message(WARNING "FFmpeg headers not found. Building without video support!")
+else()
+    include_directories(${FFMPEG_INCLUDE_DIRS})
 endif()
 
 if(WIN32)
@@ -231,11 +231,16 @@ if(WIN32)
     endif()
     set(AVS_DYLIB_EXTENSION "dll")
 elseif(LINUX)
-    include(FindPkgConfig)
-    pkg_search_module(PIPEWIRE REQUIRED libpipewire-0.3)
-    target_include_directories(avs_common PUBLIC ${PIPEWIRE_INCLUDE_DIRS})
-    target_link_libraries(libavs uuid)
-    target_link_options(libavs PUBLIC -Wl,-m elf_i386)
+    pkg_search_include_dirs_with_64bit_fallback(PIPEWIRE "libpipewire-0.3" "internal audio")
+    if(NOT PIPEWIRE_INCLUDE_DIRS OR NO_PIPEWIRE)
+        add_compile_definitions(NO_PIPEWIRE)
+    else()
+        include_directories(${PIPEWIRE_INCLUDE_DIRS})
+    endif()
+    pkg_search_module(UUID REQUIRED uuid)
+    target_link_libraries(libavs ${UUID_LIBRARIES})
+    include_directories(avs_common PRIVATE ${UUID_INCLUDE_DIRS})
+    target_link_options(avs_common PUBLIC -Wl,-m elf_i386)
     set(AVS_DYLIB_EXTENSION "so")
     add_executable(avs-cli avs/avs-cli.c)
     target_link_libraries(avs-cli libavs)
