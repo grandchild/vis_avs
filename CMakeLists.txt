@@ -134,7 +134,10 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")  # Remove "lib" prefix from output to get or
 
 add_library(avs_eel OBJECT ${SRC_FILES_EEL2})
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(avs_eel PRIVATE -masm=att)
+    target_compile_options(avs_eel PRIVATE
+        -masm=att           # EEL2 uses AT&T syntax for inline assembly.
+        -w                  # No warnings for code we don't control.
+    )
 endif()
 add_library(avs_common OBJECT ${SRC_FILES_AVS_COMMON})
 
