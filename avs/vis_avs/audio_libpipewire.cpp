@@ -1,3 +1,5 @@
+#ifndef NO_PIPEWIRE
+
 #include "audio_libpipewire.h"
 
 #include "../optional_lib_helper.h"
@@ -42,3 +44,5 @@ DEFINE_FUNC(LibPipewire, pw, thread_loop_new);
 DEFINE_FUNC(LibPipewire, pw, thread_loop_start);
 DEFINE_FUNC(LibPipewire, pw, thread_loop_stop);
 DEFINE_FUNC(LibPipewire, pw, thread_loop_unlock);
+
+#endif
