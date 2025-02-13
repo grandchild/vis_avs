@@ -90,8 +90,7 @@ function run_rust_cli() {
 task=$1
 shift
 
-parallel=${JOBS:-$(($(nproc) - 1))}
-parallel=$((parallel > 0 ? parallel : 1))
+parallel=${JOBS:-$(nproc --ignore=1)}
 case $task in
     "build-win32")
         (build_win32)
