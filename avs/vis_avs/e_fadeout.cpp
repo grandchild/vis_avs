@@ -141,7 +141,7 @@ int E_Fadeout::render(char[2][2][576],
         uint32_t fadelen_noalpha = this->config.fadelen | (this->config.fadelen << 8)
                                    | (this->config.fadelen << 16);
         __m128i adj = _mm_set1_epi32(fadelen_noalpha);
-        for (size_t i; i < w * h; i += 4) {
+        for (size_t i = 0; i < w * h; i += 4) {
             __m128i fb_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
             _mm_storeu_si128((__m128i*)&framebuffer[i], _mm_subs_epu8(fb_4px, adj));
         }
