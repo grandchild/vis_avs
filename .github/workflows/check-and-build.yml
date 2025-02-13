@@ -105,7 +105,7 @@ jobs:
 
       - name: Install dependencies
         run: |-
-          sudo apt update && sudo apt install --yes gcc-multilib g++-multilib libavformat-dev libavcodec-dev libswscale-dev libpipewire-0.3-dev
+          sudo apt update && sudo apt install --yes gcc-multilib g++-multilib libavformat-dev libavcodec-dev libswscale-dev libpipewire-0.3-dev uuid-dev
 
       - name: Build
         run: |-
