@@ -123,9 +123,10 @@ jobs:
 
       - name: Copy
         run: |-
-          find build
-          mv build/libavs.so build/libavs_281d_gcc_debug.so
+          find build_linux32
+          mv build_linux32/libavs.so build_linux32/libavs_281d_gcc_debug.so
 
       - uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08  # v4.6.0
         with:
           name: libavs_linux
+          path: build_linux32/*.so
