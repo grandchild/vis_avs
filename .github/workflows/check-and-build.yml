@@ -105,11 +105,21 @@ jobs:
 
       - name: Install dependencies
         run: |-
-          sudo apt update && sudo apt install --yes gcc-multilib g++-multilib libavformat-dev libavcodec-dev libswscale-dev libpipewire-0.3-dev
+          deps=(
+            gcc-multilib
+            g++-multilib
+            libavformat-dev
+            libavcodec-dev
+            libswscale-dev
+            libpipewire-0.3-dev
+            autoconf gettext flex bison libtool autopoint  # for util-linux/libuuid
+          )
+          sudo apt update && sudo apt install --yes "${deps[@]}"
+          .ci/tasks.sh build-libuuid-32bit install
 
       - name: Build
         run: |-
-          .ci/tasks.sh build-linux32
+          .ci/tasks.sh build-linux32 verbose
 
       - name: Copy
         run: |-
