@@ -33,6 +33,10 @@ function check_clang_format() {
 }
 
 function build_win32() {
+    verbose=${1:-}
+    if [ "$verbose" == "verbose" ]; then
+        _verbose="VERBOSE=1"
+    fi
     build_dir=build_win32
     mkdir -p "$build_dir"
     pushd "$build_dir" || return 1
@@ -42,7 +46,8 @@ function build_win32() {
         cmake -DCMAKE_TOOLCHAIN_FILE=CMake-MingWcross-toolchain.txt .. \
             || return $GIT_BISECT_CANNOT_CHECK
     fi
-    make -k -j "$parallel" all
+    # shellcheck disable=SC2086  # $_verbose should be omitted if empty
+    make -k -j "$parallel" $_verbose all
     popd || return 1
 }
 
@@ -57,9 +62,14 @@ function run_winamp() {
 }
 
 function build_linux32() {
+    verbose=${1:-}
+    if [ "$verbose" == "verbose" ]; then
+        _verbose="--verbose"
+    fi
     build_dir=build_linux32
     cmake -B "$build_dir" --toolchain CMake-Linux32cross-toolchain.txt || return 1
-    cmake --build "$build_dir" --parallel "$parallel"
+    # shellcheck disable=SC2086  # $_verbose should be omitted if empty
+    cmake --build "$build_dir" --parallel "$parallel" $_verbose
 }
 
 function run_c_cli() {
@@ -93,13 +103,13 @@ shift
 parallel=${JOBS:-$(nproc --ignore=1)}
 case $task in
     "build-win32")
-        (build_win32)
+        (build_win32 "$1")
         ;;
     "run-winamp")
         (run_winamp "$1")
         ;;
     "build-linux32")
-        (build_linux32)
+        (build_linux32 "$1")
         ;;
     "run-c-cli")
         (run_c_cli "$1")
@@ -112,8 +122,8 @@ case $task in
         ;;
     "all-checks")
         (echo -n "clang-format " ; check_clang_format &> /dev/null && echo ✓ || echo ✗) \
-            && (echo -n "build_win32 " ; build_win32 &> /dev/null && echo ✓ || echo ✗) \
-            && (echo -n "build_linux32 " ; build_linux32 &> /dev/null && echo ✓ || echo ✗)
+            && (echo -n "build_win32 " ; build_win32 "$1" &> /dev/null && echo ✓ || echo ✗) \
+            && (echo -n "build_linux32 " ; build_linux32 "$1" &> /dev/null && echo ✓ || echo ✗)
         ;;
     "clean")
         (clean)
@@ -122,12 +132,12 @@ case $task in
         echo "Usage: $0 TASK"
         echo
         echo "Tasks:"
-        echo "    build-win32"
+        echo "    build-win32 [verbose]"
         echo "    run-winamp <winamp-dir>"
-        echo "    build-linux32"
+        echo "    build-linux32 [verbose]"
         echo "    run-rust-cli <preset>"
         echo "    check-clang-format [dump]"
-        echo "    all-checks"
+        echo "    all-checks [verbose]"
         echo "    clean"
         echo
         echo "Env vars:"
