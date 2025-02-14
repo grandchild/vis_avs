@@ -6,6 +6,14 @@ include(CheckIncludeFiles)
 include(CheckLinkerFlag)
 include(ExternalProject)
 
+# Sometimes LINUX is set, but unfortunately on some systems' cmake it's not.
+# Make sure the simple system vars are always set.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(LINUX ON)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(WIN32 ON)
+endif()
+
 file(GLOB SRC_FILES_EEL2
     avs/3rdparty/WDL-EEL2/eel2/nseel-*.c
 )
