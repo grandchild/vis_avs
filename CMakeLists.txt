@@ -8,6 +8,8 @@ include(ExternalProject)
 include(FindPkgConfig)
 include(utils.cmake)
 
+ensure_platform_vars()
+
 file(GLOB SRC_FILES_EEL2
     avs/3rdparty/WDL-EEL2/eel2/nseel-*.c
 )

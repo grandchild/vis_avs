@@ -46,3 +46,13 @@ macro(pkg_search_include_dirs_with_64bit_fallback LIBRARY LIB_NAMES SUPPORT)
         set(${LIBRARY}_INCLUDE_DIRS ${_INCLUDE_DIRS})
     endif()
 endmacro()
+
+macro(ensure_platform_vars)
+    # Sometimes LINUX is set, but unfortunately on some systems' cmake it's not.
+    # Make sure the simple system vars are always set.
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        set(LINUX ON)
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        set(WIN32 ON)
+    endif()
+endmacro()
