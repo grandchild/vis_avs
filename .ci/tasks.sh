@@ -97,6 +97,28 @@ function run_rust_cli() {
         "$1"
 }
 
+function build_libuuid_32bit() {
+    install=${1:-}
+    tmpclone=$(mktemp -d)
+    git clone \
+        https://git.kernel.org/pub/scm/utils/util-linux/util-linux.git \
+        "$tmpclone" \
+        --depth=1
+    pushd "$tmpclone" || return 1
+    # requires: autoconf gettext flex bison libtool autopoint
+    ./autogen.sh
+    ./configure \
+        --host=i686-linux-gnu \
+        "CFLAGS=-m32" "CXXFLAGS=-m32" "LDFLAGS=-m32" \
+        --libdir=/usr/lib32/ \
+        --disable-all-programs \
+        --enable-libuuid
+    make -j "$parallel"
+    if [[ "$install" == "install" ]]; then
+        sudo make install
+    fi
+}
+
 task=$1
 shift
 
@@ -128,6 +150,9 @@ case $task in
     "clean")
         (clean)
         ;;
+    "build-libuuid-32bit")
+        (build_libuuid_32bit "$1")
+        ;;
     *)
         echo "Usage: $0 TASK"
         echo
@@ -139,6 +164,10 @@ case $task in
         echo "    check-clang-format [dump]"
         echo "    all-checks [verbose]"
         echo "    clean"
+        echo "    build-libuuid-32bit [install]"
+        echo "        install"
+        echo "            autoconf autopoint gettext flex bison libtool"
+        echo "        before running this task"
         echo
         echo "Env vars:"
         echo "    JOBS - Number of parallel jobs to run."
