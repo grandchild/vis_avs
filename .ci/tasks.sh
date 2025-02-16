@@ -97,6 +97,35 @@ function run_rust_cli() {
         "$1"
 }
 
+function install_deps() {
+    distro=${1:-}
+    if [[ $distro == "arch" || $distro == "archlinux" ]]; then
+        if ! command -v yay &> /dev/null; then
+            echo "Error: 'yay' is used for Arch Linux dependency installation."
+            echo "Edit the script to use another AUR helper if desired."
+            exit 1
+        fi
+        yay -Sy --noconfirm --needed \
+            base-devel mingw-w64-cmake mingw-w64-gcc \
+            mingw-w64-ffmpeg \
+            lib32-util-linux \
+            lib32-libpipewire lib32-ffmpeg \
+            #
+    elif [[ $distro == "ubuntu" || $distro == "debian" ]]; then
+        SUDO=sudo
+        if ! command $SUDO -v &> /dev/null; then
+            SUDO=""
+        fi
+        $SUDO apt-get update
+        $SUDO apt-get install -y --no-install-recommends \
+            cmake pkg-config mingw-w64 gcc-multilib g++-multilib \
+            autoconf gettext flex bison libtool autopoint \
+            libavformat-dev libavcodec-dev libswscale-dev \
+            libpipewire-0.3-dev \
+            #
+    fi
+}
+
 function build_libuuid_32bit() {
     install=${1:-}
     tmpclone=$(mktemp -d)
@@ -150,6 +179,9 @@ case $task in
     "clean")
         (clean)
         ;;
+    "install-deps")
+        (install_deps "$1")
+        ;;
     "build-libuuid-32bit")
         (build_libuuid_32bit "$1")
         ;;
@@ -164,8 +196,9 @@ case $task in
         echo "    check-clang-format [dump]"
         echo "    all-checks [verbose]"
         echo "    clean"
-        echo "    build-libuuid-32bit [install]"
-        echo "        install"
+        echo "    install-deps [arch|ubuntu|debian]"
+        echo "    build-libuuid-32bit [install] (only needed on debian/ubuntu)"
+        echo "        run 'install-deps' or install"
         echo "            autoconf autopoint gettext flex bison libtool"
         echo "        before running this task"
         echo
