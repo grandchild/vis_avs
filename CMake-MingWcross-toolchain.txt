@@ -20,6 +20,7 @@
 # exists.
 SET(CROSS_CC_NAME i686-w64-mingw32)
 SET(CROSS_CC_PREFIX /usr/${CROSS_CC_NAME})
+SET(ENV{PKG_CONFIG_LIBDIR} ${CROSS_CC_PREFIX}/lib/pkgconfig)
 
 # Only edit below here if your setup is a bit out of the ordinary, e.g. not a distro-
 # packaged toolchain.
