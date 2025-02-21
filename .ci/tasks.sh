@@ -207,5 +207,6 @@ case $task in
         echo "           Defaults to nproc - 1"
         echo "    WINEPREFIX - Wine prefix to use for Winamp."
         echo "                 Defaults to ~/.wine and will fail if that's 64bit!"
+        exit 1
         ;;
 esac || exit
