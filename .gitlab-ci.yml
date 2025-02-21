@@ -3,11 +3,7 @@ image: gcc:9
 build:
   stage: build
   before_script:
-    - >
-      apt update &&
-      apt -y install
-      gcc-mingw-w64 g++-mingw-w64 cmake make
-      libavformat-dev libavcodec-dev libswscale-dev
+    - .ci/tasks.sh install-deps ubuntu
   script:
     - .ci/tasks.sh build-win32
     - .ci/tasks.sh build-linux32
