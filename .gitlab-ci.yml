@@ -9,13 +9,14 @@ build:
       gcc-mingw-w64 g++-mingw-w64 cmake make
       libavformat-dev libavcodec-dev libswscale-dev
   script:
-    - mkdir -p build
-    - cd build
-    - cmake -D CMAKE_TOOLCHAIN_FILE=../CMake-MingWcross-toolchain.txt ..
-    - make
+    - .ci/tasks.sh build-win32
+    - .ci/tasks.sh build-linux32
   artifacts:
     paths:
-      - build/vis_avs.dll
+      - build_win32/vis_avs.dll
+      - build_win32/libavs.dll
+      - build_linux32/libavs.so
   cache:
     paths:
-      - "build/"
+      - "build_win32/"
+      - "build_linux32/"
