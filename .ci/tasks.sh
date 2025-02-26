@@ -104,16 +104,19 @@ function run_rust_cli() {
 function install_deps() {
     distro=${1:-}
     if [[ $distro == "arch" || $distro == "archlinux" ]]; then
-        if ! command -v yay &> /dev/null; then
-            echo "Error: 'yay' is used for Arch Linux dependency installation."
+        if ! command -v paru &> /dev/null; then
+            echo "Error: 'paru' is used for Arch Linux dependency installation."
             echo "Edit the script to use another AUR helper if desired."
             exit 1
         fi
-        yay -Sy --noconfirm --needed \
-            base-devel mingw-w64-cmake mingw-w64-gcc \
-            mingw-w64-ffmpeg \
+        $SUDO paru -Sy --noconfirm --needed \
+            base-devel \
+            mingw-w64-cmake \
+            mingw-w64-gcc \
+            mingw-w64-ffmpeg-minimal \
             lib32-util-linux \
-            lib32-libpipewire lib32-ffmpeg \
+            lib32-libpipewire \
+            lib32-ffmpeg-minimal-dev \
             #
     elif [[ $distro == "ubuntu" || $distro == "debian" ]]; then
         SUDO=sudo
