@@ -110,10 +110,13 @@ function install_deps() {
             exit 1
         fi
         yay -Sy --noconfirm --needed \
-            base-devel mingw-w64-cmake mingw-w64-gcc \
-            mingw-w64-ffmpeg \
+            base-devel \
+            mingw-w64-cmake \
+            mingw-w64-gcc \
+            mingw-w64-ffmpeg-minimal \
             lib32-util-linux \
-            lib32-libpipewire lib32-ffmpeg \
+            lib32-libpipewire \
+            lib32-ffmpeg-minimal-dev \
             #
     elif [[ $distro == "ubuntu" || $distro == "debian" ]]; then
         SUDO=sudo
