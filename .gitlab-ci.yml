@@ -6,6 +6,9 @@ stages:
 build-ci-image:
   image: docker
   stage: prepare
+  services:
+    - name: docker:dind
+      alias: docker
   script:
     - cd .ci
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
