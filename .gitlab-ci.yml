@@ -2,6 +2,7 @@ stages:
   - prepare
   - build
 
+
 build-ci-image:
   image: docker
   stage: prepare
@@ -10,11 +11,12 @@ build-ci-image:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $CI_REGISTRY_IMAGE/ci-build:$CI_COMMIT_TIMESTAMP-$CI_COMMIT_SHORT_SHA .
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - # if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
         paths:
           - .ci/Dockerfile
-        compare_to: main
+        compare_to: $CI_DEFAULT_BRANCH
+
 
 .build: &build_base
   image: $CI_REGISTRY_IMAGE/ci-build
