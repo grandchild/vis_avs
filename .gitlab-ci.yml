@@ -29,20 +29,26 @@ build-ci-image:
   timeout: 3 hours  # Should take less than 1.5 hours
 
 
-build:
+.build: &build_base
   image: $CI_REGISTRY_IMAGE/ci-build
   stage: build
-  # before_script:
-  #   - .ci/tasks.sh install-deps archlinux
+  cache:
+    paths:
+      - build_*
+
+Windows32:
+  <<: *build_base
   script:
     - .ci/tasks.sh build-win32
+  artifacts:
+    paths:
+      - build_win32/*.dll
+
+Linux32:
+  <<: *build_base
+  script:
     - .ci/tasks.sh build-linux32
   artifacts:
     paths:
-      - build_win32/vis_avs.dll
-      - build_win32/libavs.dll
-      - build_linux32/libavs.so
-  cache:
-    paths:
-      - build_win32/
-      - build_linux32/
+      - build_linux32/*.so
+      - build_linux32/avs
