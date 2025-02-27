@@ -24,6 +24,6 @@ RUN sudo pacman -Syu --needed --noconfirm \
     \
     && git clone --branch=ci-updates https://github.com/grandchild/vis_avs.git \
     && vis_avs/.ci/tasks.sh install-deps archlinux \
-    && sudo pacman -Scc \
+    && sudo pacman -Scc --noconfirm \
     && rustup toolchain uninstall stable-x86_64-unknown-linux-gnu \
     && rm -rf paru .cache .cargo .wine
