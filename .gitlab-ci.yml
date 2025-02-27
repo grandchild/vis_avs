@@ -1,9 +1,39 @@
-image: gcc:9
+stages:
+  - prepare
+  - build
+
+
+build-ci-image:
+  image: docker
+  stage: prepare
+  services:
+    - name: docker:dind
+  script:
+    - cd .ci
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - IMAGE_TIMESTAMP=$(date "+%Y%m%d_%H%M%S" --utc)
+    - >
+      docker build
+      -t $CI_REGISTRY_IMAGE/ci-build:$IMAGE_TIMESTAMP-$CI_COMMIT_SHORT_SHA
+      -t $CI_REGISTRY_IMAGE/ci-build:latest
+      .
+    - docker push --all-tags $CI_REGISTRY_IMAGE/ci-build
+  rules:
+    - changes:
+        paths:
+          - .ci/Dockerfile
+        compare_to: $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - .ci/Dockerfile
+  timeout: 3 hours  # Should take less than 1.5 hours
+
 
 build:
+  image: $CI_REGISTRY_IMAGE/ci-build
   stage: build
-  before_script:
-    - .ci/tasks.sh install-deps ubuntu
+  # before_script:
+  #   - .ci/tasks.sh install-deps archlinux
   script:
     - .ci/tasks.sh build-win32
     - .ci/tasks.sh build-linux32
@@ -14,5 +44,5 @@ build:
       - build_linux32/libavs.so
   cache:
     paths:
-      - "build_win32/"
-      - "build_linux32/"
+      - build_win32/
+      - build_linux32/
