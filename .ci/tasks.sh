@@ -120,6 +120,8 @@ function install_deps() {
         fi
         yay -Sy --noconfirm --needed \
             base-devel \
+            cmake \
+            clang \
             mingw-w64-cmake \
             mingw-w64-gcc \
             mingw-w64-ffmpeg-minimal \
