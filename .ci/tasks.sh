@@ -157,15 +157,21 @@ function build_libuuid_32bit() {
     pushd "$tmpclone" || return 1
     # requires: autoconf gettext flex bison libtool autopoint
     ./autogen.sh
-    ./configure \
-        --host=i686-linux-gnu \
-        "CFLAGS=-m32" "CXXFLAGS=-m32" "LDFLAGS=-m32" \
-        --libdir=/usr/lib32/ \
-        --disable-all-programs \
+    configure_flags=(
+        --host=i686-linux-gnu
+        "CFLAGS=-m32"
+        "CXXFLAGS=-m32"
+        "LDFLAGS=-m32"
+        # Some older platforms may complain about missing "wide time_t" support on 32bit
+        --disable-year2038
+        --libdir=/usr/lib32/
+        --disable-all-programs
         --enable-libuuid
+    )
+    ./configure "${configure_flags[@]}"
     make -j "$parallel"
     if [[ "$install" == "install" ]]; then
-        sudo make install
+        $SUDO make install
     fi
 }
 
