@@ -7,6 +7,13 @@ shopt -s globstar # Enable ** globbing
 # mean the build failed.
 GIT_BISECT_CANNOT_CHECK=125
 
+# If sudo is not installed, this usually means we're running in a container or CI
+# environment and are root already.
+SUDO=sudo
+if ! command $SUDO -V &> /dev/null; then
+    SUDO=""
+fi
+
 function clean() {
     rm -rf build_win32
     rm -rf build_linux32
@@ -130,10 +137,6 @@ function install_deps() {
             lib32-ffmpeg-minimal-dev \
             #
     elif [[ $distro == "ubuntu" || $distro == "debian" ]]; then
-        SUDO=sudo
-        if ! command $SUDO -v &> /dev/null; then
-            SUDO=""
-        fi
         $SUDO apt-get update
         $SUDO apt-get install -y --no-install-recommends \
             cmake pkg-config mingw-w64 gcc-multilib g++-multilib \
