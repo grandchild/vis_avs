@@ -89,16 +89,25 @@ function run_rust_cli() {
     if [ ! -e build_linux32/libavs.so ]; then
         build_linux32 || return
     fi
+    if [ "$1" == "nobuild" ]; then
+        shift
+        no_build=1
+    fi
     build_dir=build_linux32
     export RUST_BACKTRACE=${RUST_BACKTRACE:-1}
     export RUSTFLAGS="-L $build_dir -l avs"
     export LD_LIBRARY_PATH=$build_dir
     export PKG_CONFIG_SYSROOT_DIR=/usr/lib32/
-    cargo run \
-        --bin avs-cli \
-        --target i686-unknown-linux-gnu \
-        -- \
-        "$1"
+    if [ "$no_build" -eq 1 ] \
+            && [ -e target/i686-unknown-linux-gnu/debug/avs-cli ]; then
+        target/i686-unknown-linux-gnu/debug/avs-cli "$@"
+    else
+        cargo run \
+            --bin avs-cli \
+            --target i686-unknown-linux-gnu \
+            -- \
+            "$@"
+    fi
 }
 
 function install_deps() {
@@ -173,7 +182,7 @@ case $task in
         (run_c_cli "$1")
         ;;
     "run-rust-cli")
-        (run_rust_cli "$1")
+        (run_rust_cli "$@")
         ;;
     "check-clang-format")
         (check_clang_format "$1")
