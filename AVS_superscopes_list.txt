@@ -1,0 +1,218 @@
+# Built-in Superscope Examples
+
+## Spiral
+Init: n=800
+Frame: t=t-0.05
+Beat:
+Point: d=i+v*0.2; r=t+i*$PI*4; x=cos(r)*d; y=sin(r)*d
+
+## 3D Scope Dish
+Init: n=200
+Frame:
+Beat:
+Point: iz=1.3+sin(r+i*$PI*2)*(v+0.5)*0.88; ix=cos(r+i*$PI*2)*(v+0.5)*.88; iy=-0.3+abs(cos(v*$PI)); x=ix/iz;y=iy/iz;
+
+## Rotating Bow Thing
+Init: n=80;t=0.0;
+Frame: t=t+0.01
+Beat:
+Point: r=i*$PI*2; d=sin(r*3)+v*0.5; x=cos(t+r)*d; y=sin(t-r)*d
+
+## Vertical Bouncing Scope
+Init: n=100; t=0; tv=0.1;dt=1;
+Frame: t=t*0.9+tv*0.1
+Beat: tv=((rand(50.0)/50.0))*dt; dt=-dt;
+Point: x=t+v*pow(sin(i*$PI),2); y=i*2-1.0;
+
+## Spiral Graph Fun
+Init: n=100;t=0;
+Frame: t=t+0.01;
+Beat: n=80+rand(120.0)
+Point: r=i*$PI*128+t; x=cos(r/64)*0.7+sin(r)*0.3; y=sin(r/64)*0.7+cos(r)*0.3
+
+## Alternating Diagonal Scope
+Init: n=64; t=1;
+Frame:
+Beat: t=-t;
+Point: sc=0.4*sin(i*$PI); x=2*(i-0.5-v*sc)*t; y=2*(i-0.5+v*sc);
+
+## Vibrating Worm
+Init: n=w; dt=0.01; t=0; sc=1;
+Frame: t=t+dt;dt=0.9*dt+0.001; t=if(above(t,$PI*2),t-$PI*2,t);
+Beat: dt=sc;sc=-sc;
+Point: x=cos(2*i+t)*0.9*(v*0.5+0.5); y=sin(i*2+t)*0.9*(v*0.5+0.5);
+
+## Wandering Simple
+Init: n=800;xa=-0.5;ya=0.0;xb=-0.0;yb=0.75;c=200;f=0;\r\n nxa=(rand(100)-50)*.02;nya=(rand(100)-50)*.02;\r\n nxb=(rand(100)-50)*.02;nyb=(rand(100)-50)*.02;
+Frame: f=f+1;\r\n t=1-((cos((f*3.1415)/c)+1)*.5);\r\n xa=((nxa-lxa)*t)+lxa;\r\n ya=((nya-lya)*t)+lya;\r\n xb=((nxb-lxb)*t)+lxb;\r\n yb=((nyb-lyb)*t)+lyb;\r\n ex=(xb-xa);\r\n ey=(yb-ya);\r\n d=sqrt(sqr(ex)+sqr(ey));\r\n r=atan(ey/ex)+(3.1415/2);\r\n dv=d*2
+Beat: c=f;\r\n f=0;\r\n lxa=nxa;\r\n lya=nya;\r\n lxb=nxb;\r\n lyb=nyb;\r\n nxa=(rand(100)-50)*.02;\r\n nya=(rand(100)-50)*.02;\r\n nxb=(rand(100)-50)*.02;\r\n nyb=(rand(100)-50)*.02
+Point: //primary render\r\n x=(ex*i)+xa;\r\n y=(ey*i)+ya;\r\n \r\n //volume offset\r\n x=x+ ( cos(r) * v * dv);\r\n y=y+ ( sin(r) * v * dv);\r\n \r\n //color values\r\n red=i;\r\n green=(1-i);\r\n blue=abs(v*6);
+
+## Flitterbug
+Init: n=180;t=0.0;lx=0;ly=0;vx=rand(200)-100;vy=rand(200)-100;cf=.97;c=200;f=0
+Frame: x=nx;y=ny;\r\n r=i*3.14159*2; f=f+1;t=(f*2*3.1415)/c;\r\n vx=(vx-(lx*.1))*cf;\r\n vy=(vy-(ly*.1))*cf;\r\n lx=lx+vx;ly=ly+vy;\r\n nx=lx*.001;ny=ly*.001;\r\n s=abs(nx*ny)
+Beat: c=f;f=0;\r\n vx=vx+rand(600)-300;vy=vy+rand(600)-300
+Point: d=(sin(r*5*(1-s))+i*0.5)*(.3-s);\r\n tx=(t*(1-(s*(i-.5))));\r\n x=x+cos(tx+r)*d; y=y+sin(t-y)*d;\r\n red=abs(x-nx)*5;\r\n green=abs(y-ny)*5;\r\n blue=1-s-red-green;
+
+## Spirostar
+Init: n=20;t=0;f=0;c=200;mn=10;dv=2;dn=0
+Frame: f=f+1;t=(f*3.1415*2)/c;\r\n sz=abs(sin(t-3.1415));\r\n dv=if(below(n,12),(n/2)-1,\r\n     if(equal(12,n),3,\r\n     if(equal(14,n),6,\r\n     if(below(n,20),2,4))))
+Beat: bb = bb + 1;\r\n beatdiv = 8;\r\n c=if(equal(bb%beatdiv,0),f,c);\r\n f=if(equal(bb%beatdiv,0),0,f);\r\n g=if(equal(bb%beatdiv,0),g+1,g);\r\n n=if(equal(bb%beatdiv,0),(abs((g%17)-8) *2)+4,n);
+Point: r=if(b,0,((i*dv)*3.14159*128)+(t/2));\r\n x=cos(r)*sz;\r\n y=sin(r)*sz;
+
+## Exploding Daisy
+Init: n = 380 + rand(200) ; k = 0.0; l = 0.0; m = ( rand( 10 ) + 2 ) * .5; c = 0; f = 0
+Frame: a = a + 0.002 ; k = k + 0.04 ; l = l + 0.03
+Beat: bb = bb + 1;\r\n beatdiv = 16;\r\n n=if(equal(bb%beatdiv,0),380 + rand(200),n);\r\n t=if(equal(bb%beatdiv,0),0.0,t);\r\n a=if(equal(bb%beatdiv,0),0.0,a);\r\n k=if(equal(bb%beatdiv,0),0.0,k);\r\n l=if(equal(bb%beatdiv,0),0.0,l);\r\n m=if(equal(bb%beatdiv,0),(( rand( 100  ) + 2 ) * .1) + 2,m);
+Point: r=(i*3.14159*2)+(a * 3.1415);\r\n d=sin(r*m)*.3;\r\n x=cos(k+r)*d*2;y=(  (sin(k-r)*d) + ( sin(l*(i-.5) ) ) ) * .7;\r\n red=abs(x);\r\n green=abs(y);\r\n blue=d
+
+## Swirlie Dots
+Init: n=45;t=rand(100);u=rand(100)
+Frame: t = t + .15; u = u + .05
+Beat: bb = bb + 1;\r\n beatdiv = 16;\r\n n = if(equal(bb%beatdiv,0),30 + rand( 30 ),n);
+Point: di = ( i - .5) * 2;\r\n x = di;sin(u*di) * .4;\r\n y = cos(u*di) * .6;\r\n x = x + ( cos(t) * .05 );\r\n y = y + ( sin(t) * .05 );
+
+## Sweep
+Init: n=180;lsv=100;sv=200;ssv=200;c=200;f=0
+Frame: f=f+1;t=(f*2*3.1415)/c;\r\n lsv=slsv;sv=ssv;fv=0
+Beat: bb = bb + 1;\r\n beatdiv = 8;\r\n c=if(equal(bb%beatdiv,0),f,c);\r\n f=if(equal(bb%beatdiv,0),0,f);\r\n dv=if(equal(bb%beatdiv,0),((rand(100)*.01) * .1) + .02,dv);\r\n n=if(equal(bb%beatdiv,0),80+rand(100),n);\r\n ssv=if(equal(bb%beatdiv,0),rand(200)+100,ssv);\r\n slsv=if(equal(bb%beatdiv,0),rand(200)+100,slsv);
+Point: sv=(sv*abs(cos(lsv)))+(lsv*abs(cos(sv)));\r\n fv=fv+(sin(sv)*dv);\r\n d=i; r=t+(fv * sin(t) * .3)*3.14159*4;\r\n x=cos(r)*d;\r\n y=sin(r)*d;\r\n red=i;\r\n green=abs(sin(r))-(red*.15);\r\n blue=fv
+
+## Whiplash Spiral
+Init: n=80;c=200;f=0
+Frame: t=t-0.05;f=f+1;dt=(f*2*3.1415)/c
+Beat: bb = bb + 1;\r\n beatdiv = 8;\r\n c=if(equal(bb%beatdiv,0),f,c);\r\n f=if(equal(bb%beatdiv,0),0,f);
+Point: d=i;\r\n r=t+i*3.14159*4;\r\n sdt=sin(dt+(i*3.1415*2));\r\n cdt=cos(dt+(i*3.1415*2));\r\n x=(cos(r)*d) + (sdt * .6 * sin(t) );\r\n y=(sin(r)*d) + ( cdt *.6 * sin(t) );\r\n blue=abs(x);\r\n green=abs(y);\r\n red=cos(dt*4)
+
+# Custom Superscope: Rainbow Merkaba
+## Init
+n=720; rot=0;
+## Frame
+rot=rot+0.02;
+## Beat
+rot=rot+0.2;
+## Point
+edge=floor(i*12); t=frac(i*12);
+edge==0?(x1=1;y1=1;z1=1;x2=-1;y2=-1;z2=1):
+edge==1?(x1=1;y1=1;z1=1;x2=-1;y2=1;z2=-1):
+edge==2?(x1=1;y1=1;z1=1;x2=1;y2=-1;z2=-1):
+edge==3?(x1=-1;y1=-1;z1=1;x2=-1;y2=1;z2=-1):
+edge==4?(x1=-1;y1=-1;z1=1;x2=1;y2=-1;z2=-1):
+edge==5?(x1=-1;y1=1;z1=-1;x2=1;y2=-1;z2=-1):
+edge==6?(x1=1;y1=1;z1=-1;x2=-1;y2=-1;z2=-1):
+edge==7?(x1=1;y1=1;z1=-1;x2=-1;y2=1;z2=1):
+edge==8?(x1=1;y1=1;z1=-1;x2=1;y2=-1;z2=1):
+edge==9?(x1=-1;y1=-1;z1=-1;x2=-1;y2=1;z2=1):
+edge==10?(x1=-1;y1=-1;z1=-1;x2=1;y2=-1;z2=1):
+(x1=-1;y1=1;z1=1;x2=1;y2=-1;z2=1);
+x=(x2-x1)*t+x1; y=(y2-y1)*t+y1; z=(z2-z1)*t+z1;
+cz=cos(rot*0.6); sz=sin(rot*0.6);
+cy=cos(rot*0.3); sy=sin(rot*0.3);
+cx=cos(rot); sx=sin(rot);
+# rotate around Z
+x1=x*cz - y*sz; y1=x*sz + y*cz; z1=z;
+# rotate around Y
+x2=x1*cy + z1*sy; z2=-x1*sy + z1*cy; y2=y1;
+# rotate around X
+y3=y2*cx - z2*sx; z3=y2*sx + z2*cx; x3=x2;
+# perspective
+pers=2/(2+z3);
+x=x3*pers; y=y3*pers;
+phi=i*6.283*2;
+red=0.5+0.5*sin(phi);
+green=0.5+0.5*sin(phi+2.094);
+blue=0.5+0.5*sin(phi+4.188);
+linesize=1;
+
+# Cat-Themed Superscopes
+
+## Cat Face Outline
+Init: n=320; t=0;
+Frame: t=t+0.02;
+Beat:
+Point: r=i*$PI*2; d=0.45; x=cos(r)*d; y=sin(r)*d; y=y+(i>0.75?0.2*sin(t*4):0);
+
+## Cat Paw Print
+Init: n=200; t=0;
+Frame: t=t+0.03;
+Beat:
+Point: g=floor(i*5); p=i*5-g; x=(g-2)*0.2+0.05*cos(p*6.283); y=0.2*(g==2?0:-1)+0.05*sin(p*6.283);
+
+## Cat Tail Wave
+Init: n=100; t=0;
+Frame: t=t+0.04;
+Beat:
+Point: x=i*0.8-0.4; y=0.3*sin(i*6+t);
+
+## Cat Eye Blink
+Init: n=120; t=0;
+Frame: t=t+0.05;
+Beat:
+Point: r=i*$PI*2; x=cos(r)*0.25; y=sin(r)*0.1*(1+0.5*sin(t*3));
+
+## Cat Whiskers
+Init: n=160; t=0;
+Frame: t=t+0.02;
+Beat:
+Point: x=(i-0.5)*1.2; y=0.05*sin(i*20+t);
+
+## Sleeping Cat
+Init: n=140; t=0;
+Frame: t=t+0.01;
+Beat:
+Point: r=i*$PI*2; x=cos(r)*0.3; y=sin(r)*0.12*cos(t);
+
+## Kitty Spiral
+Init: n=150; t=0;
+Frame: t=t+0.03;
+Beat:
+Point: d=i*0.35; x=cos(i*10+t)*d; y=sin(i*10+t)*d;
+
+## Kitten Bounce
+Init: n=80; t=0;
+Frame: t=t+0.06;
+Beat:
+Point: x=i-0.5; y=abs(sin(t+i*2))-0.5;
+
+## Feline Swish
+Init: n=140; t=0;
+Frame: t=t+0.05;
+Beat:
+Point: r=i*$PI*4; x=cos(r)*0.5; y=sin(r)*0.5*sin(t);
+
+## Rainbow Sphere Grid
+Init: n=700; t=0; phase=0;
+Frame: t=t+0.04; phase=phase+0.02;
+Beat:
+Point: theta=acos(1-2*i); phi=i*$PI*6; xs=sin(theta)*cos(phi+t); ys=sin(theta)*sin(phi+t); zs=cos(theta); g=0.1*(sin(phi*6+phase)+sin(theta*6+phase)); xs=xs+g*xs; ys=ys+g*ys; pers=1/(1+zs); x=xs*pers; y=ys*pers; red=0.5+0.5*sin(phi*3+phase); green=0.5+0.5*sin(phi*3+phase+2.094); blue=0.5+0.5*sin(phi*3+phase+4.188); linesize=1;
+
+## Superscope Cow
+Init: n=260; t=0;
+Frame: t=t+0.03;
+Beat:
+Point: s=floor(i*8); p=frac(i*8); s==0?(x=-0.3+0.6*p; y=0.15*sin(p*$PI)-0.1):s==1?(x=0.3-0.6*p; y=-0.15*sin(p*$PI)-0.3):s==2?(x=-0.1+0.2*p; y=0.15*cos(p*$PI)+0.15):s==3?(x=-0.2; y=-0.3*p-0.3):s==4?(x=0.2; y=-0.3*p-0.3):s==5?(x=0.3+0.1*sin(p*$PI*2); y=-0.1*p):s==6?(x=-0.05-0.05*p; y=0.3+0.05*sin(p*$PI*2)):(x=0.05+0.05*p; y=0.3+0.05*sin(p*$PI*2));
+
+## Cardboard Box
+Init: n=480; rot=0;
+Frame: rot=rot+0.01;
+Beat:
+Point: edge=floor(i*12); t=frac(i*12); edge==0?(x1=1;y1=1;z1=1;x2=-1;y2=1;z2=1):edge==1?(x1=-1;y1=1;z1=1;x2=-1;y2=-1;z2=1):edge==2?(x1=-1;y1=-1;z1=1;x2=1;y2=-1;z2=1):edge==3?(x1=1;y1=-1;z1=1;x2=1;y2=1;z2=1):edge==4?(x1=1;y1=1;z1=-1;x2=-1;y2=1;z2=-1):edge==5?(x1=-1;y1=1;z1=-1;x2=-1;y2=-1;z2=-1):edge==6?(x1=-1;y1=-1;z1=-1;x2=1;y2=-1;z2=-1):edge==7?(x1=1;y1=-1;z1=-1;x2=1;y2=1;z2=-1):edge==8?(x1=1;y1=1;z1=1;x2=1;y2=1;z2=-1):edge==9?(x1=-1;y1=1;z1=1;x2=-1;y2=1;z2=-1):edge==10?(x1=-1;y1=-1;z1=1;x2=-1;y2=-1;z2=-1):(x1=1;y1=-1;z1=1;x2=1;y2=-1;z2=-1); x=(x2-x1)*t+x1; y=(y2-y1)*t+y1; z=(z2-z1)*t+z1; cz=cos(rot*0.3); sz=sin(rot*0.3); cy=cos(rot*0.2); sy=sin(rot*0.2); cx=cos(rot*0.4); sx=sin(rot*0.4); x1=x*cz - y*sz; y1=x*sz + y*cz; z1=z; x2=x1*cy + z1*sy; z2=-x1*sy + z1*cy; y2=y1; y3=y2*cx - z2*sx; z3=y2*sx + z2*cx; x3=x2; pers=2/(2+z3); x=x3*pers; y=y3*pers; red=0.7; green=0.5; blue=0.3; linesize=1;
+
+## Dragonfly
+Init: n=360; t=0;
+Frame: t=t+0.02;
+Beat:
+Point: s=floor(i*6); p=frac(i*6); s==0?(x=0; y=0.2-0.4*p):s==1?(x=-0.3*sin(p*$PI); y=0.1+0.2*cos(p*$PI)):s==2?(x=0.3*sin(p*$PI); y=0.1+0.2*cos(p*$PI)):s==3?(x=-0.3*sin(p*$PI); y=-0.1-0.2*cos(p*$PI)):s==4?(x=0.3*sin(p*$PI); y=-0.1-0.2*cos(p*$PI)):(x=0; y=-0.2-0.4*p); red=0.5+0.5*sin(t*3); green=0.5+0.5*sin(t*3+2.094); blue=0.5+0.5*sin(t*3+4.188); linesize=1;
+
+## Butterfly
+Init: n=300; t=0;
+Frame: t=t+0.02;
+Beat:
+Point: s=floor(i*5); p=frac(i*5); s==0?(x=-0.35*cos(p*$PI); y=0.2*sin(p*$PI)):s==1?(x=-0.2*cos(p*$PI); y=0.4*sin(p*$PI)):s==2?(x=0.2*cos(p*$PI); y=0.4*sin(p*$PI)):s==3?(x=0.35*cos(p*$PI); y=0.2*sin(p*$PI)):(x=0; y=0.25-0.5*p); red=0.5+0.5*sin(t*2); green=0.5+0.5*sin(t*2+2.094); blue=0.5+0.5*sin(t*2+4.188); linesize=1;
+
+## Bee
+Init: n=360; t=0;
+Frame: t=t+0.02;
+Beat:
+Point: s=floor(i*6); p=frac(i*6); s==0?(x=0.2*cos(p*$PI); y=0.15*sin(p*$PI)):s==1?(x=-0.2*sin(p*$PI); y=0.25*cos(p*$PI)+0.1):s==2?(x=0.2*sin(p*$PI); y=0.25*cos(p*$PI)+0.1):s==3?(x=-0.13; y=0.3*p-0.15):s==4?(x=0; y=0.3*p-0.15):(x=0.13; y=0.3*p-0.15); red=1; green=0.8; blue=0.2; linesize=1;
+

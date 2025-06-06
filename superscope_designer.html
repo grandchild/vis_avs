@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Superscope Designer</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 20px; }
+label { display: inline-block; width: 60px; }
+textarea { width: 100%; height: 60px; }
+select, button { margin: 5px 0; }
+#shape-form { margin-top: 20px; }
+</style>
+</head>
+<body>
+<h1>Superscope Designer</h1>
+<p>Select a preset shape or create your own to generate Superscope code snippets for Winamp AVS.</p>
+<select id="shape-select"></select>
+<button onclick="loadShape()">Load Shape</button>
+<form id="shape-form">
+  <div><label>Init</label><textarea id="init"></textarea></div>
+  <div><label>Frame</label><textarea id="frame"></textarea></div>
+  <div><label>Beat</label><textarea id="beat"></textarea></div>
+  <div><label>Point</label><textarea id="point"></textarea></div>
+</form>
+<h2>Add Custom Shape</h2>
+<input id="new-name" placeholder="Name" />
+<button onclick="addShape()">Add</button>
+<p id="status"></p>
+<h2>Conversion Explanation</h2>
+<p>Superscopes plot points over time. To convert a 2D or 3D model into a Superscope:</p>
+<ol>
+<li>Sample the model's outline or surface as a set of points.</li>
+<li>Normalize coordinates to the -1..1 range.</li>
+<li>Use trigonometric functions for curves and rotations.</li>
+<li>Write expressions for <strong>Init</strong> to set point count and variables.</li>
+<li>Use <strong>Frame</strong> to animate values each frame.</li>
+<li><strong>Beat</strong> reacts to music beats for extra motion.</li>
+<li>The <strong>Point</strong> expression outputs <code>x</code>, <code>y</code>, and optional color values per point.</li>
+</ol>
+<script>
+const shapes = {
+  "Rainbow Sphere Grid": {
+    init: "n=700; t=0; phase=0;",
+    frame: "t=t+0.04; phase=phase+0.02;",
+    beat: "",
+    point: "theta=acos(1-2*i); phi=i*$PI*6; xs=sin(theta)*cos(phi+t); ys=sin(theta)*sin(phi+t); zs=cos(theta); g=0.1*(sin(phi*6+phase)+sin(theta*6+phase)); xs=xs+g*xs; ys=ys+g*ys; pers=1/(1+zs); x=xs*pers; y=ys*pers; red=0.5+0.5*sin(phi*3+phase); green=0.5+0.5*sin(phi*3+phase+2.094); blue=0.5+0.5*sin(phi*3+phase+4.188); linesize=1;"
+  },
+  "Superscope Cow": {
+    init: "n=260; t=0;",
+    frame: "t=t+0.03;",
+    beat: "",
+    point: "s=floor(i*8); p=frac(i*8); s==0?(x=-0.3+0.6*p; y=0.15*sin(p*$PI)-0.1):s==1?(x=0.3-0.6*p; y=-0.15*sin(p*$PI)-0.3):s==2?(x=-0.1+0.2*p; y=0.15*cos(p*$PI)+0.15):s==3?(x=-0.2; y=-0.3*p-0.3):s==4?(x=0.2; y=-0.3*p-0.3):s==5?(x=0.3+0.1*sin(p*$PI*2); y=-0.1*p):s==6?(x=-0.05-0.05*p; y=0.3+0.05*sin(p*$PI*2)):(x=0.05+0.05*p; y=0.3+0.05*sin(p*$PI*2));"
+  },
+  "Cardboard Box": {
+    init: "n=480; rot=0;",
+    frame: "rot=rot+0.01;",
+    beat: "",
+    point: "edge=floor(i*12); t=frac(i*12); edge==0?(x1=1;y1=1;z1=1;x2=-1;y2=1;z2=1):edge==1?(x1=-1;y1=1;z1=1;x2=-1;y2=-1;z2=1):edge==2?(x1=-1;y1=-1;z1=1;x2=1;y2=-1;z2=1):edge==3?(x1=1;y1=-1;z1=1;x2=1;y2=1;z2=1):edge==4?(x1=1;y1=1;z1=-1;x2=-1;y2=1;z2=-1):edge==5?(x1=-1;y1=1;z1=-1;x2=-1;y2=-1;z2=-1):edge==6?(x1=-1;y1=-1;z1=-1;x2=1;y2=-1;z2=-1):edge==7?(x1=1;y1=-1;z1=-1;x2=1;y2=1;z2=-1):edge==8?(x1=1;y1=1;z1=1;x2=1;y2=1;z2=-1):edge==9?(x1=-1;y1=1;z1=1;x2=-1;y2=1;z2=-1):edge==10?(x1=-1;y1=-1;z1=1;x2=-1;y2=-1;z2=-1):(x1=1;y1=-1;z1=1;x2=1;y2=-1;z2=-1); x=(x2-x1)*t+x1; y=(y2-y1)*t+y1; z=(z2-z1)*t+z1; cz=cos(rot*0.3); sz=sin(rot*0.3); cy=cos(rot*0.2); sy=sin(rot*0.2); cx=cos(rot*0.4); sx=sin(rot*0.4); x1=x*cz - y*sz; y1=x*sz + y*cz; z1=z; x2=x1*cy + z1*sy; z2=-x1*sy + z1*cy; y2=y1; y3=y2*cx - z2*sx; z3=y2*sx + z2*cx; x3=x2; pers=2/(2+z3); x=x3*pers; y=y3*pers; red=0.7; green=0.5; blue=0.3; linesize=1;"
+  },
+  "Dragonfly": {
+    init: "n=360; t=0;",
+    frame: "t=t+0.02;",
+    beat: "",
+    point: "s=floor(i*6); p=frac(i*6); s==0?(x=0; y=0.2-0.4*p):s==1?(x=-0.3*sin(p*$PI); y=0.1+0.2*cos(p*$PI)):s==2?(x=0.3*sin(p*$PI); y=0.1+0.2*cos(p*$PI)):s==3?(x=-0.3*sin(p*$PI); y=-0.1-0.2*cos(p*$PI)):s==4?(x=0.3*sin(p*$PI); y=-0.1-0.2*cos(p*$PI)):(x=0; y=-0.2-0.4*p); red=0.5+0.5*sin(t*3); green=0.5+0.5*sin(t*3+2.094); blue=0.5+0.5*sin(t*3+4.188); linesize=1;"
+  },
+  "Butterfly": {
+    init: "n=300; t=0;",
+    frame: "t=t+0.02;",
+    beat: "",
+    point: "s=floor(i*5); p=frac(i*5); s==0?(x=-0.35*cos(p*$PI); y=0.2*sin(p*$PI)):s==1?(x=-0.2*cos(p*$PI); y=0.4*sin(p*$PI)):s==2?(x=0.2*cos(p*$PI); y=0.4*sin(p*$PI)):s==3?(x=0.35*cos(p*$PI); y=0.2*sin(p*$PI)):(x=0; y=0.25-0.5*p); red=0.5+0.5*sin(t*2); green=0.5+0.5*sin(t*2+2.094); blue=0.5+0.5*sin(t*2+4.188); linesize=1;"
+  },
+  "Bee": {
+    init: "n=360; t=0;",
+    frame: "t=t+0.02;",
+    beat: "",
+    point: "s=floor(i*6); p=frac(i*6); s==0?(x=0.2*cos(p*$PI); y=0.15*sin(p*$PI)):s==1?(x=-0.2*sin(p*$PI); y=0.25*cos(p*$PI)+0.1):s==2?(x=0.2*sin(p*$PI); y=0.25*cos(p*$PI)+0.1):s==3?(x=-0.13; y=0.3*p-0.15):s==4?(x=0; y=0.3*p-0.15):(x=0.13; y=0.3*p-0.15); red=1; green=0.8; blue=0.2; linesize=1;"
+  }
+};
+function populate() {
+  const sel = document.getElementById('shape-select');
+  Object.keys(shapes).forEach(k => { const o = document.createElement('option'); o.value = k; o.textContent = k; sel.appendChild(o); });
+}
+function loadShape() {
+  const name = document.getElementById('shape-select').value;
+  const s = shapes[name];
+  if (!s) return;
+  document.getElementById('init').value = s.init;
+  document.getElementById('frame').value = s.frame;
+  document.getElementById('beat').value = s.beat;
+  document.getElementById('point').value = s.point;
+}
+function addShape() {
+  const name = document.getElementById('new-name').value.trim();
+  const init = document.getElementById('init').value;
+  const frame = document.getElementById('frame').value;
+  const beat = document.getElementById('beat').value;
+  const point = document.getElementById('point').value;
+  if (!name) return;
+  shapes[name] = {init, frame, beat, point};
+  const opt = document.createElement('option');
+  opt.value = name; opt.textContent = name;
+  document.getElementById('shape-select').appendChild(opt);
+  document.getElementById('status').textContent = 'Added ' + name;
+  document.getElementById('new-name').value = '';
+}
+window.onload = populate;
+</script>
+</body>
+</html>
