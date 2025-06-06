@@ -22,6 +22,7 @@ select, button { margin: 5px 0; }
   <div><label>Beat</label><textarea id="beat"></textarea></div>
   <div><label>Point</label><textarea id="point"></textarea></div>
 </form>
+<button onclick="openPreview()">Open Preview</button>
 <h2>Add Custom Shape</h2>
 <input id="new-name" placeholder="Name" />
 <button onclick="addShape()">Add</button>
@@ -102,6 +103,59 @@ function addShape() {
   document.getElementById('shape-select').appendChild(opt);
   document.getElementById('status').textContent = 'Added ' + name;
   document.getElementById('new-name').value = '';
+}
+
+function getCurrentShape() {
+  return {
+    init: document.getElementById('init').value,
+    frame: document.getElementById('frame').value,
+    beat: document.getElementById('beat').value,
+    point: document.getElementById('point').value
+  };
+}
+
+function openPreview() {
+  window.currentShapeProvider = getCurrentShape;
+  const w = window.open('', 'preview', 'width=600,height=600,resizable=yes');
+  w.document.write(`<!DOCTYPE html>
+  <html><head><title>Preview</title>
+  <style>body{margin:0;overflow:hidden}</style>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"><\/script>
+  </head><body></body>
+  <script>
+  const frac = x => x-Math.floor(x);
+  let scene,camera,renderer,pts,geom,mesh;
+  function computePoints(shape){
+    const vars={};
+    const run=c=>{with(Math){with(vars){eval(c);}}};
+    run(shape.init||'');
+    const n=vars.n||300; const arr=[];
+    for(let j=0;j<n;j++){vars.i=j/n; run(shape.point||''); arr.push(new THREE.Vector3(vars.x||0,vars.y||0,vars.z||0));}
+    return arr;
+  }
+  function setup(){
+    scene=new THREE.Scene();
+    camera=new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    renderer=new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+    geom=new THREE.BufferGeometry();
+    mesh=new THREE.Points(geom, new THREE.PointsMaterial({size:0.03,color:0xffffff}));
+    scene.add(mesh);
+    camera.position.z=2;
+  }
+  function update(){
+    const shape=window.opener.currentShapeProvider();
+    pts=computePoints(shape);
+    geom.setFromPoints(pts);
+  }
+  function animate(){
+    requestAnimationFrame(animate);
+    mesh.rotation.x+=0.01; mesh.rotation.y+=0.01;
+    renderer.render(scene,camera);
+  }
+  setup(); update(); setInterval(update,500); animate();
+  <\/script></html>`);
 }
 window.onload = populate;
 </script>
