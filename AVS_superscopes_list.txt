@@ -216,3 +216,9 @@ Frame: t=t+0.02;
 Beat:
 Point: s=floor(i*6); p=frac(i*6); s==0?(x=0.2*cos(p*$PI); y=0.15*sin(p*$PI)):s==1?(x=-0.2*sin(p*$PI); y=0.25*cos(p*$PI)+0.1):s==2?(x=0.2*sin(p*$PI); y=0.25*cos(p*$PI)+0.1):s==3?(x=-0.13; y=0.3*p-0.15):s==4?(x=0; y=0.3*p-0.15):(x=0.13; y=0.3*p-0.15); red=1; green=0.8; blue=0.2; linesize=1;
 
+
+## Pong Simulation
+Init: n=120; px=0; py=0; vx=0.02; vy=0.015; t=0; pyL=0; pyR=0;
+Frame: t=t+0.02; px=px+vx; py=py+vy; vx=px>0.9?-abs(vx):px<-0.9?abs(vx):vx; vy=py>0.8?-abs(vy):py<-0.8?abs(vy):vy; pyL=pyL*0.8+py*0.2; pyR=pyR*0.8+py*0.2;
+Beat: vx=vx*1.05; vy=vy*1.05;
+Point: seg=floor(i*3); p=frac(i*3); seg==0?(x=-0.9; y=pyL+0.6*(p-0.5)) : seg==1?(x=0.9; y=pyR+0.6*(p-0.5)) : (ang=p*6.283; x=px+0.05*cos(ang); y=py+0.05*sin(ang)); red=0.5+0.5*sin(t*4+seg*1.7); green=0.5+0.5*sin(t*4+seg*1.7+2.094); blue=0.5+0.5*sin(t*4+seg*1.7+4.188); linesize=1;
