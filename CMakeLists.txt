@@ -29,9 +29,8 @@ file(GLOB SRC_FILES_AVS_COMMON
     avs/vis_avs/matrix.cpp
     avs/vis_avs/preset_json_schema.cpp
     avs/vis_avs/render_context.cpp
-    # avs/vis_avs/r_text.cpp
+    avs/vis_avs/r_text.cpp
     avs/vis_avs/r_transition.cpp
-    avs/vis_avs/text_win32.cpp
     avs/vis_avs/video.cpp
     avs/vis_avs/video_libav.cpp
     avs/platform.c
@@ -55,6 +54,7 @@ if(WIN32)
     list(APPEND SRC_FILES_AVS_COMMON
         avs/platform_win32.c
         avs/vis_avs/audio_in_windows_wasapi.cpp
+        avs/vis_avs/text_win32.cpp
     )
 elseif(LINUX)
     list(APPEND SRC_FILES_AVS_COMMON

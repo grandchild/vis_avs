@@ -29,7 +29,7 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include "c_text.h"
+#include "e_text.h"
 
 #include "r_defs.h"
 
@@ -42,16 +42,38 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <stdlib.h>
 
+#define GET_INT() \
+    (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
+
+#define PUT_INT(y)                   \
+    data[pos] = (y) & 255;           \
+    data[pos + 1] = (y >> 8) & 255;  \
+    data[pos + 2] = (y >> 16) & 255; \
+    data[pos + 3] = (y >> 24) & 255
+
+constexpr Parameter Text_Info::parameters[];
+
+/*
+void Text_Info::callback(Effect* component,
+                         const Parameter*,
+                         const std::vector<int64_t>&) {
+    auto text = (E_Text*)component;
+    text->callback();
+}
+*/
+
 // Reinit bitmap buffer since size changed
-void C_THISCLASS::reinit(int w, int h) {
+void E_Text::reinit(int w, int h) {
     // Free anything if needed
     if (lw || lh) {
+#ifdef _WIN32
         SelectObject(hBitmapDC, hOldBitmap);
         if (hOldFont) {
             SelectObject(hBitmapDC, hOldFont);
         }
         DeleteDC(hBitmapDC);
         ReleaseDC(NULL, hDesktopDC);
+#endif  // _WIN32
         if (myBuffer) {
             free(myBuffer);
         }
@@ -59,12 +81,14 @@ void C_THISCLASS::reinit(int w, int h) {
 
     // Alloc buffers, select objects, init structures
     myBuffer = (int*)malloc(w * h * 4);
+#ifdef _WIN32
     hDesktopDC = GetDC(NULL);
     hRetBitmap = CreateCompatibleBitmap(hDesktopDC, w, h);
     hBitmapDC = CreateCompatibleDC(hDesktopDC);
     hOldBitmap = (HBITMAP)SelectObject(hBitmapDC, hRetBitmap);
     SetTextColor(hBitmapDC,
-                 ((color & 0xFF0000) >> 16) | (color & 0xFF00) | (color & 0xFF) << 16);
+                 ((this->config.color & 0xFF0000) >> 16) | (this->config.color & 0xFF00)
+                     | (this->config.color & 0xFF) << 16);
     SetBkMode(hBitmapDC, TRANSPARENT);
     SetBkColor(hBitmapDC, 0);
     if (myFont) {
@@ -83,42 +107,15 @@ void C_THISCLASS::reinit(int w, int h) {
     bi.bmiHeader.biYPelsPerMeter = 0;
     bi.bmiHeader.biClrUsed = 0;
     bi.bmiHeader.biClrImportant = 0;
+#endif  // _WIN32
 }
 
-C_THISCLASS::~C_THISCLASS() {
-    // Free up everything
-    if (lw || lh) {
-        SelectObject(hBitmapDC, hOldBitmap);
-        if (hOldFont) {
-            SelectObject(hBitmapDC, hOldFont);
-        }
-        DeleteDC(hBitmapDC);
-        ReleaseDC(NULL, hDesktopDC);
-        if (myBuffer) {
-            free(myBuffer);
-        }
-    }
-    if (text) {
-        free(text);
-    }
-    if (myFont) {
-        DeleteObject(myFont);
-    }
-}
-
-// configuration read/write
-
-C_THISCLASS::C_THISCLASS()  // set up default configuration
-{
-    // Init all
-    randomword = 0;
-    shadow = 0;
+E_Text::E_Text(AVS_Instance* avs) : Configurable_Effect(avs) {
     old_valign = 0;
     old_halign = 0;
-    old_outline = -1;
+    old_border_mode = -1;
     old_curword = -1;
     old_clipcolor = -1;
-    oldshadow = -1;
     *oldtxt = 0;
     old_blend1 = 0;
     old_blend2 = 0;
@@ -131,225 +128,53 @@ C_THISCLASS::C_THISCLASS()  // set up default configuration
     forceshift = 0;
     forceBeat = 0;
     forcealign = 1;
-    xshift = 0;
-    yshift = 0;
-    outlinecolor = 0;
-    outline = 0;
-    outline = 0;
-    color = 0xFFFFFF;
-    enabled = 1;
-    blend = 0;
-    blendavg = 0;
-    onbeat = 0;
-    insertBlank = 0;
-    randomPos = 0;
-    halign = DT_CENTER;
-    valign = DT_VCENTER;
-    onbeatSpeed = 15;
-    normSpeed = 15;
+
+#ifdef _WIN32
     myFont = NULL;
     memset(&cf, 0, sizeof(CHOOSEFONT));
     cf.lStructSize = sizeof(CHOOSEFONT);
     cf.lpLogFont = &lf;
     cf.Flags = CF_EFFECTS | CF_SCREENFONTS | CF_FORCEFONTEXIST | CF_INITTOLOGFONTSTRUCT;
-    cf.rgbColors = color;
+    cf.rgbColors = this->config.color;
     memset(&lf, 0, sizeof(LOGFONT));
-    text = NULL;
+#endif  // _WIN32
     lw = lh = 0;
     updating = false;
     nb = 0;
-    outlinesize = 1;
     oddeven = 0;
     nf = 0;
     shiftinit = 1;
 }
 
-#define GET_INT() \
-    (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
-
-void C_THISCLASS::load_config(unsigned char* data, int len)  // read configuration of
-                                                             // max length "len" from
-                                                             // data.
-{
-    int pos = 0;
-    int size = 0;
-    updating = true;
-    forceredraw = 1;
-    if (len - pos >= 4) {
-        enabled = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        color = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        blend = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        blendavg = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        onbeat = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        insertBlank = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        randomPos = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        valign = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        halign = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        onbeatSpeed = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        normSpeed = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= ssizeof32(cf)) {
-        memcpy(&cf, data + pos, sizeof(cf));
-        pos += sizeof(cf);
-    }
-    cf.lpLogFont = &lf;
-    if (len - pos >= ssizeof32(lf)) {
-        memcpy(&lf, data + pos, sizeof(lf));
-        pos += sizeof(lf);
-    }
-    if (len - pos >= 4) {
-        size = GET_INT();
-        pos += 4;
-    }
-    if (size > 0 && len - pos >= size) {
-        if (text) {
-            free(text);
+E_Text::~E_Text() {
+    if (lw || lh) {
+#ifdef _WIN32
+        SelectObject(hBitmapDC, hOldBitmap);
+        if (hOldFont) {
+            SelectObject(hBitmapDC, hOldFont);
         }
-        text = (char*)malloc(size + 1);
-        memcpy(text, data + pos, size);
-        pos += size;
-    } else {
-        if (text) {
-            free(text);
+        DeleteDC(hBitmapDC);
+        ReleaseDC(NULL, hDesktopDC);
+#endif  // _WIN32
+        if (myBuffer) {
+            free(myBuffer);
         }
-        text = NULL;
     }
-    myFont = CreateFontIndirect(&lf);
-    if (len - pos >= 4) {
-        outline = GET_INT();
-        pos += 4;
+#ifdef _WIN32
+    if (myFont) {
+        DeleteObject(myFont);
     }
-    if (len - pos >= 4) {
-        outlinecolor = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        xshift = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        yshift = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        outlinesize = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        randomword = GET_INT();
-        pos += 4;
-    }
-    if (len - pos >= 4) {
-        shadow = GET_INT();
-        pos += 4;
-    }
-    forcealign = 1;
-    forceredraw = 1;
-    forceshift = 1;
-    shiftinit = 1;
-    updating = false;
+#endif  // _WIN32
 }
 
-#define PUT_INT(y)                   \
-    data[pos] = (y) & 255;           \
-    data[pos + 1] = (y >> 8) & 255;  \
-    data[pos + 2] = (y >> 16) & 255; \
-    data[pos + 3] = (y >> 24) & 255
+#ifdef CAN_TALK_TO_WINAMP
 extern HWND hwnd_WinampParent;
+#endif
 
-int C_THISCLASS::save_config(unsigned char* data)  // write configuration to data,
-                                                   // return length. config data should
-                                                   // not exceed 64k.
-{
-    int pos = 0;
-    PUT_INT(enabled);
-    pos += 4;
-    PUT_INT(color);
-    pos += 4;
-    PUT_INT(blend);
-    pos += 4;
-    PUT_INT(blendavg);
-    pos += 4;
-    PUT_INT(onbeat);
-    pos += 4;
-    PUT_INT(insertBlank);
-    pos += 4;
-    PUT_INT(randomPos);
-    pos += 4;
-    PUT_INT(valign);
-    pos += 4;
-    PUT_INT(halign);
-    pos += 4;
-    PUT_INT(onbeatSpeed);
-    pos += 4;
-    PUT_INT(normSpeed);
-    pos += 4;
-    memcpy(data + pos, &cf, sizeof(cf));
-    pos += sizeof(cf);
-    memcpy(data + pos, &lf, sizeof(lf));
-    pos += sizeof(lf);
-    if (text) {
-        int l = strlen(text) + 1;
-        PUT_INT(l);
-        pos += 4;
-        memcpy(data + pos, text, strlen(text) + 1);
-        pos += strlen(text) + 1;
-    } else {
-        PUT_INT(0);
-        pos += 4;
-    }
-    PUT_INT(outline);
-    pos += 4;
-    PUT_INT(outlinecolor);
-    pos += 4;
-    PUT_INT(xshift);
-    pos += 4;
-    PUT_INT(yshift);
-    pos += 4;
-    PUT_INT(outlinesize);
-    pos += 4;
-    PUT_INT(randomword);
-    pos += 4;
-    PUT_INT(shadow);
-    pos += 4;
-
-    return pos;
-}
 // Parse text buffer for a specified word
-void C_THISCLASS::getWord(int n, char* buf, int maxlen) {
+void E_Text::getWord(int n, char* buf, int maxlen) {
     int w = 0;
-    char* p = text;
+    const char* p = this->config.text.c_str();
     char* d = buf;
     *d = 0;
     if (!p) {
@@ -364,7 +189,8 @@ void C_THISCLASS::getWord(int n, char* buf, int maxlen) {
 
     maxlen--;  // null terminator
     while (*p && *p != ';' && maxlen > 0) {
-        char* endp;
+        const char* endp;
+#ifdef CAN_TALK_TO_WINAMP
         if ((!strnicmp(p, "$(playpos", 9) || !strnicmp(p, "$(playlen", 9))
             && (endp = strstr(p + 9, ")"))) {
             char buf[128];
@@ -380,7 +206,6 @@ void C_THISCLASS::getWord(int n, char* buf, int maxlen) {
 
             int pos = 0;
 
-            extern HWND hwnd_WinampParent;
             if (IsWindow(hwnd_WinampParent)) {
                 if (!SendMessageTimeout(hwnd_WinampParent,
                                         WM_USER,
@@ -462,7 +287,7 @@ void C_THISCLASS::getWord(int n, char* buf, int maxlen) {
             char* titleptr = this_title;
 
             if (p[7] == ':') {
-                char* ptr = p + 8;
+                const char* ptr = p + 8;
                 if (*ptr == 'n') {
                     ptr++;
                     skipnum = 0;
@@ -500,48 +325,51 @@ void C_THISCLASS::getWord(int n, char* buf, int maxlen) {
             maxlen -= n;
             d += n;
             p = endp + 1;
-        } else if (!strnicmp(p, "$(reg", 5) && p[5] >= '0' && p[5] <= '9' && p[6] >= '0'
-                   && p[6] <= '9' && (endp = strstr(p + 7, ")"))) {
-            char buf[128];
-            char fmt[32];
-            int wr = atoi(p + 5);
-            if (wr < 0) {
-                wr = 0;
-            }
-            if (wr > 99) {
-                wr = 99;
-            }
-            p += 7;
-            char* fmtptr = fmt;
-            *fmtptr++ = '%';
-            if (*p == ':') {
-                p++;
-                while (fmtptr - fmt < 16 && ((*p >= '0' && *p <= '9') || *p == '.')) {
-                    *fmtptr++ = *p++;
+        } else
+#endif  // CAN_TALK_TO_WINAMP
+            if (!strnicmp(p, "$(reg", 5) && p[5] >= '0' && p[5] <= '9' && p[6] >= '0'
+                && p[6] <= '9' && (endp = strstr(p + 7, ")"))) {
+                char buf[128];
+                char fmt[32];
+                int wr = atoi(p + 5);
+                if (wr < 0) {
+                    wr = 0;
                 }
-            }
-            *fmtptr++ = 'f';
-            *fmtptr++ = 0;
+                if (wr > 99) {
+                    wr = 99;
+                }
+                p += 7;
+                char* fmtptr = fmt;
+                *fmtptr++ = '%';
+                if (*p == ':') {
+                    p++;
+                    while (fmtptr - fmt < 16
+                           && ((*p >= '0' && *p <= '9') || *p == '.')) {
+                        *fmtptr++ = *p++;
+                    }
+                }
+                *fmtptr++ = 'f';
+                *fmtptr++ = 0;
 
-            int l = sprintf(buf, fmt, NSEEL_getglobalregs()[wr]);
-            if (l > maxlen) {
-                l = maxlen;
+                int l = sprintf(buf, fmt, NSEEL_getglobalregs()[wr]);
+                if (l > maxlen) {
+                    l = maxlen;
+                }
+                memcpy(d, buf, l);
+                maxlen -= l;
+                d += l;
+                p = endp + 1;
+            } else {
+                *d++ = *p++;
+                maxlen--;
             }
-            memcpy(d, buf, l);
-            maxlen -= l;
-            d += l;
-            p = endp + 1;
-        } else {
-            *d++ = *p++;
-            maxlen--;
-        }
     }
     *d = 0;
 }
 
 // Returns number of words in buffer
-static int getNWords(char* buf) {
-    char* p = buf;
+static int getNWords(std::string buf) {
+    const char* p = buf.c_str();
     int n = 0;
     while (p && *p) {
         if (*p == ';') {
@@ -552,19 +380,123 @@ static int getNWords(char* buf) {
     return n;
 }
 
-// render function
-// render should return 0 if it only used framebuffer, or 1 if the new output data is in
-// fbout. this is used when you want to do something that you'd otherwise need to make a
-// copy of the framebuffer. w and h are the width and height of the screen, in pixels.
-// is_beat is 1 if a beat has been detected.
-// visdata is in the format of [spectrum:0,wave:1][channel][band].
+// TODO [clean]: Move to utils together with the ones from Texer2
+struct RectI {
+    int left;
+    int top;
+    int right;
+    int bottom;
+};
 
-int C_THISCLASS::render(char[2][2][576],
-                        int is_beat,
-                        int* framebuffer,
-                        int*,
-                        int w,
-                        int h) {
+struct TextRenderInfo {
+#ifdef _WIN32
+    HDC context;
+    HBITMAP bitmap;
+    BITMAPINFO info;
+    unsigned int valign;
+    unsigned int halign;
+    RECT r;
+    unsigned int lines;
+#endif
+};
+
+/* Win32 winuser.h constants used for legacy-preset position values:
+DT_TOP     0  -> VPOS_TOP
+DT_LEFT    0  -> HPOS_LEFT
+DT_CENTER  1  -> HPOS_CENTER
+DT_RIGHT   2  -> HPOS_RIGHT
+DT_VCENTER 4  -> VPOS_CENTER
+DT_BOTTOM  8  -> VPOS_BOTTOM
+*/
+
+int valign_to_dt(int valign) {
+    switch (valign) {
+        case VPOS_TOP: return 0;
+        default:
+        case VPOS_CENTER: return 4;
+        case VPOS_BOTTOM: return 8;
+    }
+}
+int halign_to_dt(int halign) {
+    switch (halign) {
+        case HPOS_LEFT: return 0;
+        default:
+        case HPOS_CENTER: return 1;
+        case HPOS_RIGHT: return 2;
+    }
+}
+
+void draw_text_buffer(const char* text,
+                      uint64_t color,
+                      uint64_t border,
+                      uint64_t border_color,
+                      size_t border_size,
+                      void* buffer,
+                      TextRenderInfo* render_info) {
+#ifdef _WIN32
+#define RGB_TO_BGR(color) \
+    (((color) & 0xff0000) >> 16 | ((color) & 0xff00) | ((color) & 0xff) << 16)
+#define BGR_TO_RGB(color) RGB_TO_BGR(color)  // is its own inverse
+
+    HDC context = render_info->context;
+    HBITMAP bitmap = render_info->bitmap;
+    BITMAPINFO info = render_info->info;
+    RECT r = render_info->r;
+    int h = render_info->lines;
+
+    int alignment =
+        render_info->valign | render_info->halign | DT_NOCLIP | DT_SINGLELINE;
+    size_t text_len = strlen(text);
+    SetDIBits(context, bitmap, 0, h, (void*)buffer, &info, DIB_RGB_COLORS);
+    if (border == TEXT_BORDER_OUTLINE) {
+        SetTextColor(context, RGB_TO_BGR(border_color));
+        r.left -= border_size;
+        r.right -= border_size;
+        r.top -= border_size;
+        r.bottom -= border_size;
+        DrawText(context, text, text_len, &r, alignment);
+        r.left += border_size;
+        r.right += border_size;
+        DrawText(context, text, text_len, &r, alignment);
+        r.left += border_size;
+        r.right += border_size;
+        DrawText(context, text, text_len, &r, alignment);
+        r.top += border_size;
+        r.bottom += border_size;
+        DrawText(context, text, text_len, &r, alignment);
+        r.top += border_size;
+        r.bottom += border_size;
+        DrawText(context, text, text_len, &r, alignment);
+        r.left -= border_size;
+        r.right -= border_size;
+        DrawText(context, text, text_len, &r, alignment);
+        r.left -= border_size;
+        r.right -= border_size;
+        DrawText(context, text, text_len, &r, alignment);
+        r.top -= border_size;
+        r.bottom -= border_size;
+        DrawText(context, text, text_len, &r, alignment);
+        r.left += border_size;
+        r.right += border_size;
+    } else if (border == TEXT_BORDER_SHADOW) {
+        SetTextColor(context, RGB_TO_BGR(border_color));
+        r.left += border_size;
+        r.right += border_size;
+        r.top += border_size;
+        r.bottom += border_size;
+        DrawText(context, text, text_len, &r, alignment);
+        r.left -= border_size;
+        r.right -= border_size;
+        r.top -= border_size;
+        r.bottom -= border_size;
+    }
+    SetTextColor(context, RGB_TO_BGR(color));
+    DrawText(context, text, text_len, &r, alignment);
+    GetDIBits(context, bitmap, 0, h, (void*)buffer, &info, DIB_RGB_COLORS);
+#endif
+}
+
+int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, int h) {
     int i, j;
     int *p, *d;
     int clipcolor;
@@ -582,25 +514,26 @@ int C_THISCLASS::render(char[2][2][576],
 
     if (forcealign) {
         forcealign = false;
-        _halign = halign;
-        _valign = valign;
+        _halign = this->config.horizontal_align;
+        _valign = this->config.vertical_align;
     }
     if (shiftinit) {
         shiftinit = 0;
-        _xshift = xshift;
-        _yshift = yshift;
+        _xshift = this->config.shift_x;
+        _yshift = this->config.shift_y;
     }
 
     // If not beat sensitive and time is up for this word
     // OR if beat sensitive and this frame is a beat and time is up for last beat
-    if ((!onbeat && nf >= normSpeed) || (onbeat && is_beat && !nb)) {
+    if ((!this->config.on_beat && nf >= this->config.speed)
+        || (this->config.on_beat && is_beat && !nb)) {
         // Then choose which word to show
-        if (!(insertBlank && !(oddeven % 2))) {
-            if (randomword) {
-                curword = rand() % (getNWords(text) + 1);
+        if (!(this->config.insert_blanks && !(oddeven % 2))) {
+            if (this->config.random_word) {
+                curword = rand() % (getNWords(this->config.text) + 1);
             } else {
                 curword++;
-                curword %= (getNWords(text) + 1);
+                curword %= (getNWords(this->config.text) + 1);
             }
         }
         oddeven++;
@@ -614,55 +547,60 @@ int C_THISCLASS::render(char[2][2][576],
 
     // If beat sensitive and frame is a beat and last beat expired, start frame timer
     // for this beat
-    if (onbeat && is_beat && !nb) {
-        nb = onbeatSpeed;
+    if (this->config.on_beat && is_beat && !nb) {
+        nb = this->config.on_beat_speed;
     }
 
     // Get the word(s) to show
     getWord(curword, thisText, 256);
-    if (insertBlank && !oddeven) {
+    if (this->config.insert_blanks && !oddeven) {
         *thisText = 0;
     }
 
     // Same test as above but takes care of nb init
-    if ((!onbeat && nf >= normSpeed) || (onbeat && is_beat && nb == onbeatSpeed)) {
+    if ((!this->config.on_beat && nf >= this->config.speed)
+        || (this->config.on_beat && is_beat && nb == this->config.on_beat_speed)) {
         nf = 0;
-        if (randomPos && w && h)  // Handle random position
+        if (this->config.random_position && w && h)  // Handle random position
         {
+            // Don't write outside the screen
+#ifdef _WIN32
             SIZE size = {0, 0};
-            GetTextExtentPoint32(
-                hBitmapDC, thisText, strlen(thisText), &size);  // Don't write outside
-                                                                // the screen
-            _halign = DT_LEFT;
+            GetTextExtentPoint32(hBitmapDC, thisText, strlen(thisText), &size);
+            _halign = HPOS_LEFT;
             if (size.cx < w) {
                 _xshift = rand() % (int)(((float)(w - size.cx) / (float)w) * 100.0F);
             }
-            _valign = DT_TOP;
+            _valign = VPOS_TOP;
             if (size.cy < h) {
                 _yshift = rand() % (int)(((float)(h - size.cy) / (float)h) * 100.0F);
             }
             forceshift = 1;
+#endif            // _WIN32
         } else {  // Reset position to what is specified
-            _halign = halign;
-            _valign = valign;
-            _xshift = xshift;
-            _yshift = yshift;
+            _halign = this->config.horizontal_align;
+            _valign = this->config.vertical_align;
+            _xshift = this->config.shift_x;
+            _yshift = this->config.shift_y;
         }
     }
 
     // Choose cliping color
-    if (color != 0 && outlinecolor != 0) {
+    if (this->config.color != 0 && this->config.border_color != 0) {
         clipcolor = 0;
-    } else if (color != 0x000008 && outlinecolor != 0x000008) {
+    } else if (this->config.color != 0x000008
+               && this->config.border_color != 0x000008) {
         clipcolor = 8;
-    } else if (color != 0x0000010 && outlinecolor != 0x0000010) {
+    } else if (this->config.color != 0x0000010
+               && this->config.border_color != 0x0000010) {
         clipcolor = 10;
     }
 
+    RectI r;
     // If size changed or if we're forced to shift the buffer
     if ((lw != w || lh != h) || forceshift) {
-        if (lw != w || lh != h) {  // only if size changed then reinit buffer, not if
-                                   // its only a forcedshifting
+        if (lw != w || lh != h) {
+            // only if size changed reinit buffer, not if its only a forced shifting
             reinit(w, h);
         }
         forceshift = 0;
@@ -685,21 +623,31 @@ int C_THISCLASS::render(char[2][2][576],
     // Check if we need to redraw the buffer
     if (forceredraw || old_halign != _halign || old_valign != _valign
         || curword != old_curword || (*thisText && strcmp(thisText, oldtxt))
-        || old_clipcolor != clipcolor || (old_blend1 != (blend && !(onbeat && !nb)))
-        || (old_blend2 != (blendavg && !(onbeat && !nb)))
-        || (old_blend3 != (!(onbeat && !nb))) || old_outline != outline
-        || oldshadow != shadow || _xshift != oldxshift || _yshift != oldyshift) {
+        || old_clipcolor != clipcolor
+        || (old_blend1
+            != ((this->config.blend_mode == BLEND_SIMPLE_ADDITIVE)
+                && !(this->config.on_beat && !nb)))
+        || (old_blend2
+            != ((this->config.blend_mode == BLEND_SIMPLE_5050)
+                && !(this->config.on_beat && !nb)))
+        || (old_blend3
+            != ((this->config.blend_mode == BLEND_SIMPLE_REPLACE)
+                && !(this->config.on_beat && !nb)))
+        || old_border_mode != this->config.border || _xshift != oldxshift
+        || _yshift != oldyshift) {
         forceredraw = 0;
         old_halign = _halign;
         old_valign = _valign;
         old_curword = curword;
         strcpy(oldtxt, thisText);
         old_clipcolor = clipcolor;
-        old_blend1 = (blend && !(onbeat && !nb));
-        old_blend2 = (blendavg && !(onbeat && !nb));
-        old_blend3 = !(onbeat && !nb);
-        old_outline = outline;
-        oldshadow = shadow;
+        old_blend1 = ((this->config.blend_mode == BLEND_SIMPLE_ADDITIVE)
+                      && !(this->config.on_beat && !nb));
+        old_blend2 = ((this->config.blend_mode == BLEND_SIMPLE_5050)
+                      && !(this->config.on_beat && !nb));
+        old_blend3 = ((this->config.blend_mode == BLEND_SIMPLE_REPLACE)
+                      && !(this->config.on_beat && !nb));
+        old_border_mode = this->config.border;
         oldxshift = _xshift;
         oldyshift = _yshift;
 
@@ -709,103 +657,26 @@ int C_THISCLASS::render(char[2][2][576],
             *p = clipcolor;
             p++;
         }
-        SetDIBits(hBitmapDC, hRetBitmap, 0, h, (void*)myBuffer, &bi, DIB_RGB_COLORS);
         if (*thisText) {
-            if (outline) {
-                SetTextColor(hBitmapDC,
-                             ((outlinecolor & 0xFF0000) >> 16) | (outlinecolor & 0xFF00)
-                                 | (outlinecolor & 0xFF) << 16);
-                r.left -= outlinesize;
-                r.right -= outlinesize;
-                r.top -= outlinesize;
-                r.bottom -= outlinesize;
-                DrawText(hBitmapDC,
-                         thisText,
-                         strlen(thisText),
-                         &r,
-                         _valign | _halign | DT_NOCLIP | DT_SINGLELINE);
-                r.left += outlinesize;
-                r.right += outlinesize;
-                DrawText(hBitmapDC,
-                         thisText,
-                         strlen(thisText),
-                         &r,
-                         _valign | _halign | DT_NOCLIP | DT_SINGLELINE);
-                r.left += outlinesize;
-                r.right += outlinesize;
-                DrawText(hBitmapDC,
-                         thisText,
-                         strlen(thisText),
-                         &r,
-                         _valign | _halign | DT_NOCLIP | DT_SINGLELINE);
-                r.top += outlinesize;
-                r.bottom += outlinesize;
-                DrawText(hBitmapDC,
-                         thisText,
-                         strlen(thisText),
-                         &r,
-                         _valign | _halign | DT_NOCLIP | DT_SINGLELINE);
-                r.top += outlinesize;
-                r.bottom += outlinesize;
-                DrawText(hBitmapDC,
-                         thisText,
-                         strlen(thisText),
-                         &r,
-                         _valign | _halign | DT_NOCLIP | DT_SINGLELINE);
-                r.left -= outlinesize;
-                r.right -= outlinesize;
-                DrawText(hBitmapDC,
-                         thisText,
-                         strlen(thisText),
-                         &r,
-                         _valign | _halign | DT_NOCLIP | DT_SINGLELINE);
-                r.left -= outlinesize;
-                r.right -= outlinesize;
-                DrawText(hBitmapDC,
-                         thisText,
-                         strlen(thisText),
-                         &r,
-                         _valign | _halign | DT_NOCLIP | DT_SINGLELINE);
-                r.top -= outlinesize;
-                r.bottom -= outlinesize;
-                DrawText(hBitmapDC,
-                         thisText,
-                         strlen(thisText),
-                         &r,
-                         _valign | _halign | DT_NOCLIP | DT_SINGLELINE);
-                r.left += outlinesize;
-                r.right += outlinesize;
-                SetTextColor(hBitmapDC,
-                             ((color & 0xFF0000) >> 16) | (color & 0xFF00)
-                                 | (color & 0xFF) << 16);
-            } else if (shadow) {
-                SetTextColor(hBitmapDC,
-                             ((outlinecolor & 0xFF0000) >> 16) | (outlinecolor & 0xFF00)
-                                 | (outlinecolor & 0xFF) << 16);
-                r.left += outlinesize;
-                r.right += outlinesize;
-                r.top += outlinesize;
-                r.bottom += outlinesize;
-                DrawText(hBitmapDC,
-                         thisText,
-                         strlen(thisText),
-                         &r,
-                         _valign | _halign | DT_NOCLIP | DT_SINGLELINE);
-                r.left -= outlinesize;
-                r.right -= outlinesize;
-                r.top -= outlinesize;
-                r.bottom -= outlinesize;
-                SetTextColor(hBitmapDC,
-                             ((color & 0xFF0000) >> 16) | (color & 0xFF00)
-                                 | (color & 0xFF) << 16);
-            }
-            DrawText(hBitmapDC,
-                     thisText,
-                     strlen(thisText),
-                     &r,
-                     _valign | _halign | DT_NOCLIP | DT_SINGLELINE);
+            TextRenderInfo render_info = {
+#ifdef _WIN32
+                hBitmapDC,
+                hRetBitmap,
+                bi,
+                valign_to_dt(_valign),
+                halign_to_dt(_halign),
+                RECT{r.left, r.top, r.right, r.bottom},
+                h,
+#endif  // _WIN32
+            };
+            draw_text_buffer(thisText,
+                             this->config.color,
+                             this->config.border,
+                             this->config.border_color,
+                             this->config.border_size,
+                             myBuffer,
+                             &render_info);
         }
-        GetDIBits(hBitmapDC, hRetBitmap, 0, h, (void*)myBuffer, &bi, DIB_RGB_COLORS);
     }
 
     // Now render the bitmap text buffer over framebuffer, handle blending options.
@@ -813,7 +684,8 @@ int C_THISCLASS::render(char[2][2][576],
     p = myBuffer;
     d = framebuffer + w * (h - 1);
 
-    if (blend && !(onbeat && !nb)) {
+    if (this->config.blend_mode == BLEND_SIMPLE_ADDITIVE
+        && !(this->config.on_beat && !nb)) {
         for (i = 0; i < h; i++) {
             for (j = 0; j < w; j++) {
                 if (*p != clipcolor) {
@@ -824,7 +696,8 @@ int C_THISCLASS::render(char[2][2][576],
             }
             d -= w * 2;
         }
-    } else if (blendavg && !(onbeat && !nb)) {
+    } else if (this->config.blend_mode == BLEND_SIMPLE_5050
+               && !(this->config.on_beat && !nb)) {
         for (i = 0; i < h; i++) {
             for (j = 0; j < w; j++) {
                 if (*p != clipcolor) {
@@ -835,7 +708,7 @@ int C_THISCLASS::render(char[2][2][576],
             }
             d -= w * 2;
         }
-    } else if (!(onbeat && !nb)) {
+    } else if (!(this->config.on_beat && !nb)) {
         for (i = 0; i < h; i++) {
             for (j = 0; j < w; j++) {
                 if (*p != clipcolor) {
@@ -849,13 +722,196 @@ int C_THISCLASS::render(char[2][2][576],
     }
 
     // Advance frame counter
-    if (!onbeat) {
+    if (!this->config.on_beat) {
         nf++;
     }
     // Decrease frametimer
-    if (onbeat && nb) {
+    if (this->config.on_beat && nb) {
         nb--;
     }
-
     return 0;
 }
+
+void E_Text::load_legacy(unsigned char* data, int len) {
+    int pos = 0;
+    int size = 0;
+    updating = true;
+    forceredraw = 1;
+    if (len - pos >= 4) {
+        this->enabled = GET_INT();
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        this->config.color = GET_INT();
+        pos += 4;
+    }
+    this->config.blend_mode = BLEND_SIMPLE_REPLACE;
+    if (len - pos >= 4) {
+        if (GET_INT()) {
+            this->config.blend_mode = BLEND_SIMPLE_ADDITIVE;
+        }
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        if (GET_INT()) {
+            this->config.blend_mode = BLEND_SIMPLE_5050;
+        }
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        this->config.on_beat = GET_INT();
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        this->config.insert_blanks = GET_INT();
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        this->config.random_position = GET_INT();
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        int dt_valign = GET_INT();
+        switch (dt_valign) {
+            case 0: this->config.vertical_align = VPOS_TOP; break;
+            default:
+            case 4: this->config.vertical_align = VPOS_CENTER; break;
+            case 8: this->config.vertical_align = VPOS_BOTTOM; break;
+        }
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        int dt_halign = GET_INT();
+        switch (dt_halign) {
+            case 0: this->config.horizontal_align = HPOS_LEFT; break;
+            default:
+            case 1: this->config.horizontal_align = HPOS_CENTER; break;
+            case 2: this->config.horizontal_align = HPOS_RIGHT; break;
+        }
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        this->config.on_beat_speed = GET_INT();
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        this->config.speed = GET_INT();
+        pos += 4;
+    }
+#ifdef _WIN32
+    if (len - pos >= ssizeof32(cf)) {
+        memcpy(&cf, data + pos, sizeof(cf));
+        pos += sizeof(cf);
+    }
+    cf.lpLogFont = &lf;
+    if (len - pos >= ssizeof32(lf)) {
+        memcpy(&lf, data + pos, sizeof(lf));
+        pos += sizeof(lf);
+    }
+    myFont = CreateFontIndirect(&lf);
+#else
+    pos += 60;  // sizeof(CHOOSEFONT);
+    pos += 60;  // sizeof(LOGFONT);
+#endif  // _WIN32
+    if (len - pos >= 4) {
+        char* str_data = (char*)data;
+        pos += this->string_load_legacy(&str_data[pos], this->config.text, len - pos);
+    }
+    if (len - pos >= 4) {
+        this->config.border = GET_INT() ? TEXT_BORDER_OUTLINE : TEXT_BORDER_NONE;
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        this->config.border_color = GET_INT();
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        this->config.shift_x = GET_INT();
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        this->config.shift_y = GET_INT();
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        this->config.border_size = GET_INT();
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        this->config.random_word = GET_INT();
+        pos += 4;
+    }
+    if (len - pos >= 4) {
+        if (GET_INT() && !(this->config.border == TEXT_BORDER_OUTLINE)) {
+            this->config.border = TEXT_BORDER_SHADOW;
+        }
+        pos += 4;
+    }
+    forcealign = 1;
+    forceredraw = 1;
+    forceshift = 1;
+    shiftinit = 1;
+    updating = false;
+}
+
+int E_Text::save_legacy(unsigned char* data) {
+    int pos = 0;
+    PUT_INT(this->enabled);
+    pos += 4;
+    PUT_INT(this->config.color);
+    pos += 4;
+    bool blend_additive = this->config.blend_mode == BLEND_SIMPLE_ADDITIVE;
+    PUT_INT(blend_additive);
+    pos += 4;
+    bool blend_5050 = this->config.blend_mode == BLEND_SIMPLE_5050;
+    PUT_INT(blend_5050);
+    pos += 4;
+    PUT_INT(this->config.on_beat);
+    pos += 4;
+    PUT_INT(this->config.insert_blanks);
+    pos += 4;
+    PUT_INT(this->config.random_position);
+    pos += 4;
+    PUT_INT(valign_to_dt(this->config.vertical_align));
+    pos += 4;
+    PUT_INT(halign_to_dt(this->config.horizontal_align));
+    pos += 4;
+    PUT_INT(this->config.on_beat_speed);
+    pos += 4;
+    PUT_INT(this->config.speed);
+    pos += 4;
+#ifdef _WIN32
+    memcpy(data + pos, &cf, sizeof(cf));
+    pos += sizeof(cf);
+    memcpy(data + pos, &lf, sizeof(lf));
+    pos += sizeof(lf);
+#else
+    memset(data + pos, 0, 60);  // sizeof(CHOOSEFONT);
+    pos += 60;
+    memset(data + pos, 0, 60);  // sizeof(LOGFONT);
+    pos += 60;
+#endif  // _WIN32
+    char* str_data = (char*)data;
+    pos += this->string_save_legacy(
+        this->config.text, &str_data[pos], MAX_CODE_LEN - 1 - pos, /*with_nt*/ true);
+    PUT_INT(this->config.border == TEXT_BORDER_OUTLINE);
+    pos += 4;
+    PUT_INT(this->config.border_color);
+    pos += 4;
+    PUT_INT(this->config.shift_x);
+    pos += 4;
+    PUT_INT(this->config.shift_y);
+    pos += 4;
+    PUT_INT(this->config.border_size);
+    pos += 4;
+    PUT_INT(this->config.random_word);
+    pos += 4;
+    PUT_INT(this->config.border == TEXT_BORDER_SHADOW);
+    pos += 4;
+
+    return pos;
+}
+
+Effect_Info* create_Text_Info() { return new Text_Info(); }
+Effect* create_Text(AVS_Instance* avs) { return new E_Text(avs); }
+void set_Text_desc(char* desc) { E_Text::set_desc(desc); }

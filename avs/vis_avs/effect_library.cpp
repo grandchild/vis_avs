@@ -85,7 +85,7 @@ bool make_effect_lib() {
     MAKE_EFFECT_LIB_ENTRY(ClearScreen);
     MAKE_EFFECT_LIB_ENTRY(Mirror);
     MAKE_EFFECT_LIB_ENTRY(Starfield);
-    // MAKE_EFFECT_LIB_ENTRY(Text);
+    MAKE_EFFECT_LIB_ENTRY(Text);
     MAKE_EFFECT_LIB_ENTRY(Bump);
     MAKE_EFFECT_LIB_ENTRY(Mosaic);
     MAKE_EFFECT_LIB_ENTRY(WaterBump);
