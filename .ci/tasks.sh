@@ -54,7 +54,7 @@ function build_win32() {
             || return $GIT_BISECT_CANNOT_CHECK
     fi
     # shellcheck disable=SC2086  # $_verbose should be omitted if empty
-    make -k -j "$parallel" $_verbose all
+    make -k -j "$parallel" $_verbose all || return 1
     popd || return 1
 }
 
@@ -65,7 +65,7 @@ function run_winamp() {
     winamp_dir=$1
     cp build_win32/vis_avs.dll "$winamp_dir/Plugins/"
     export WINEARCH=win32
-    wine "$winamp_dir/winamp.exe"
+    wine "$winamp_dir/winamp.exe" || return 1
 }
 
 function build_linux32() {
@@ -79,7 +79,7 @@ function build_linux32() {
     cmake -DCMAKE_TOOLCHAIN_FILE=CMake-Linux32cross-toolchain.txt .. \
         || return $GIT_BISECT_CANNOT_CHECK
     # shellcheck disable=SC2086  # $_verbose should be omitted if empty
-    make -k -j "$parallel" $_verbose
+    make -k -j "$parallel" $_verbose || return 1
     popd || return 1
 }
 
@@ -89,7 +89,7 @@ function run_c_cli() {
     fi
     build_dir=build_linux32
     export LD_LIBRARY_PATH=$build_dir
-    "$build_dir/avs-cli" "$1"
+    "$build_dir/avs-cli" "$1" || return 1
 }
 
 function run_rust_cli() {
