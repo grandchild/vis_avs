@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+argh = { version = "0", default-features = false, features = ["help"] }
 avs-rs = { path = "../avs-rs" }
 anyhow = "1"
-inotify = "0"
+inotify = { version = "0", default-features = false, features = [] }
 minifb = "0"
-argh = "0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 linuxfb = "0"
