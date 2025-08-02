@@ -86,9 +86,10 @@ void E_Text::reinit(int w, int h) {
     hRetBitmap = CreateCompatibleBitmap(hDesktopDC, w, h);
     hBitmapDC = CreateCompatibleDC(hDesktopDC);
     hOldBitmap = (HBITMAP)SelectObject(hBitmapDC, hRetBitmap);
-    SetTextColor(hBitmapDC,
-                 ((this->config.color & 0xFF0000) >> 16) | (this->config.color & 0xFF00)
-                     | (this->config.color & 0xFF) << 16);
+    // SetTextColor(hBitmapDC,
+    //              ((this->config.color & 0xFF0000) >> 16) | (this->config.color &
+    //              0xFF00)
+    //                  | (this->config.color & 0xFF) << 16);
     SetBkMode(hBitmapDC, TRANSPARENT);
     SetBkColor(hBitmapDC, 0);
     if (myFont) {
@@ -409,7 +410,7 @@ DT_VCENTER 4  -> VPOS_CENTER
 DT_BOTTOM  8  -> VPOS_BOTTOM
 */
 
-int valign_to_dt(int valign) {
+uint32_t valign_to_dt(int valign) {
     switch (valign) {
         case VPOS_TOP: return 0;
         default:
@@ -417,12 +418,66 @@ int valign_to_dt(int valign) {
         case VPOS_BOTTOM: return 8;
     }
 }
-int halign_to_dt(int halign) {
+uint32_t halign_to_dt(int halign) {
     switch (halign) {
         case HPOS_LEFT: return 0;
         default:
         case HPOS_CENTER: return 1;
         case HPOS_RIGHT: return 2;
+    }
+}
+
+int config_weight_to_font_weight(TEXT_FONT_WEIGHT weight) {
+    switch (weight) {
+        default:
+        case TEXT_FW_DONTCARE: return 0;
+        case TEXT_FW_THIN: return 100;
+        case TEXT_FW_EXTRALIGHT: return 200;
+        case TEXT_FW_LIGHT: return 300;
+        case TEXT_FW_REGULAR: return 400;
+        case TEXT_FW_MEDIUM: return 500;
+        case TEXT_FW_SEMIBOLD: return 600;
+        case TEXT_FW_BOLD: return 700;
+        case TEXT_FW_EXTRABOLD: return 800;
+        case TEXT_FW_BLACK: return 900;
+    }
+}
+TEXT_FONT_WEIGHT font_weight_to_config_weight(int weight) {
+    switch (weight) {
+        default:
+        case 0: return TEXT_FW_DONTCARE;
+        case 100: return TEXT_FW_THIN;
+        case 200: return TEXT_FW_EXTRALIGHT;
+        case 300: return TEXT_FW_LIGHT;
+        case 400: return TEXT_FW_REGULAR;
+        case 500: return TEXT_FW_MEDIUM;
+        case 600: return TEXT_FW_SEMIBOLD;
+        case 700: return TEXT_FW_BOLD;
+        case 800: return TEXT_FW_EXTRABOLD;
+        case 900: return TEXT_FW_BLACK;
+    }
+}
+
+int config_family_to_font_family(TEXT_FONT_FAMILY family) {
+    switch (family) {
+        default:
+        case TEXT_FAMILY_DONTCARE: return 0;
+        case TEXT_FAMILY_ROMAN: return 1;
+        case TEXT_FAMILY_SWISS: return 2;
+        case TEXT_FAMILY_MODERN: return 3;
+        case TEXT_FAMILY_SCRIPT: return 4;
+        case TEXT_FAMILY_DECORATIVE: return 5;
+    }
+}
+TEXT_FONT_FAMILY font_pitchfamily_to_config_family(int pitch_and_family) {
+    switch (pitch_and_family >> 4) {
+        default:
+        case 0: return TEXT_FAMILY_DONTCARE;
+        case 1: return TEXT_FAMILY_ROMAN;
+        case 2: return TEXT_FAMILY_SWISS;
+        case 3: return TEXT_FAMILY_MODERN;
+        case 4: return TEXT_FAMILY_SCRIPT;
+        case 5: return TEXT_FAMILY_DECORATIVE;
     }
 }
 
@@ -733,6 +788,7 @@ int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, 
 }
 
 void E_Text::load_legacy(unsigned char* data, int len) {
+    char* str_data = (char*)data;
     int pos = 0;
     int size = 0;
     updating = true;
@@ -805,16 +861,31 @@ void E_Text::load_legacy(unsigned char* data, int len) {
     }
     cf.lpLogFont = &lf;
     if (len - pos >= ssizeof32(lf)) {
+        this->config.weight = font_weight_to_config_weight(*(int32_t*)&data[pos + 16]);
+        this->config.height = abs(*(int32_t*)&data[pos]);
+        this->config.width = *(int32_t*)&data[pos + 4];
+        this->config.italic = data[pos + 20];
+        this->config.underline = data[pos + 21];
+        this->config.strike_out = data[pos + 22];
+        this->config.family = font_pitchfamily_to_config_family(data[pos + 27]);
+        this->config.font_name = &str_data[pos + 28];
         memcpy(&lf, data + pos, sizeof(lf));
         pos += sizeof(lf);
     }
     myFont = CreateFontIndirect(&lf);
 #else
     pos += 60;  // sizeof(CHOOSEFONT);
+    this->config.weight = font_weight_to_config_weight(*(int32_t*)&data[pos + 16]);
+    this->config.height = abs(*(int32_t*)&data[pos]);
+    this->config.width = *(int32_t*)&data[pos + 4];
+    this->config.italic = data[pos + 20];
+    this->config.underline = data[pos + 21];
+    this->config.strike_out = data[pos + 22];
+    this->config.family = font_pitchfamily_to_config_family(data[pos + 27]);
+    this->config.font_name = &str_data[pos + 28];
     pos += 60;  // sizeof(LOGFONT);
 #endif  // _WIN32
     if (len - pos >= 4) {
-        char* str_data = (char*)data;
         pos += this->string_load_legacy(&str_data[pos], this->config.text, len - pos);
     }
     if (len - pos >= 4) {

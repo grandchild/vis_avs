@@ -22,18 +22,21 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     const Parameter& p_on_beat_speed = Text_Info::parameters[7];
     const Parameter& p_speed = Text_Info::parameters[8];
     const Parameter& p_weight = Text_Info::parameters[9];
-    AVS_Parameter_Handle p_italic = Text_Info::parameters[10].handle;
-    AVS_Parameter_Handle p_underline = Text_Info::parameters[11].handle;
-    AVS_Parameter_Handle p_strike_out = Text_Info::parameters[12].handle;
-    const Parameter& p_char_set = Text_Info::parameters[13];
-    AVS_Parameter_Handle p_font_name = Text_Info::parameters[14].handle;
-    AVS_Parameter_Handle p_text = Text_Info::parameters[15].handle;
-    const Parameter& p_border = Text_Info::parameters[16];
-    AVS_Parameter_Handle p_border_color = Text_Info::parameters[17].handle;
-    const Parameter& p_border_size = Text_Info::parameters[18];
-    const Parameter& p_shift_x = Text_Info::parameters[19];
-    const Parameter& p_shift_y = Text_Info::parameters[20];
-    AVS_Parameter_Handle p_random_word = Text_Info::parameters[21].handle;
+    const Parameter& p_height = Text_Info::parameters[10];
+    const Parameter& p_width = Text_Info::parameters[11];
+    AVS_Parameter_Handle p_italic = Text_Info::parameters[12].handle;
+    AVS_Parameter_Handle p_underline = Text_Info::parameters[13].handle;
+    AVS_Parameter_Handle p_strike_out = Text_Info::parameters[14].handle;
+    const Parameter& p_char_set = Text_Info::parameters[15];
+    const Parameter& p_family = Text_Info::parameters[16];
+    AVS_Parameter_Handle p_font_name = Text_Info::parameters[17].handle;
+    AVS_Parameter_Handle p_text = Text_Info::parameters[18].handle;
+    const Parameter& p_border = Text_Info::parameters[19];
+    AVS_Parameter_Handle p_border_color = Text_Info::parameters[20].handle;
+    const Parameter& p_border_size = Text_Info::parameters[21];
+    const Parameter& p_shift_x = Text_Info::parameters[22];
+    const Parameter& p_shift_y = Text_Info::parameters[23];
+    AVS_Parameter_Handle p_random_word = Text_Info::parameters[24].handle;
 
     switch (uMsg) {
         case WM_INITDIALOG: {

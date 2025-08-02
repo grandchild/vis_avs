@@ -14,6 +14,28 @@ enum TEXT_BORDER_MODE {
     TEXT_BORDER_SHADOW = 2,
 };
 
+enum TEXT_FONT_WEIGHT {
+    TEXT_FW_DONTCARE = 0,
+    TEXT_FW_THIN = 100,
+    TEXT_FW_EXTRALIGHT,
+    TEXT_FW_LIGHT,
+    TEXT_FW_REGULAR,
+    TEXT_FW_MEDIUM,
+    TEXT_FW_SEMIBOLD,
+    TEXT_FW_BOLD,
+    TEXT_FW_EXTRABOLD,
+    TEXT_FW_BLACK,
+};
+
+enum TEXT_FONT_FAMILY {
+    TEXT_FAMILY_DONTCARE = 0,
+    TEXT_FAMILY_ROMAN = 1,
+    TEXT_FAMILY_SWISS = 2,
+    TEXT_FAMILY_MODERN = 3,
+    TEXT_FAMILY_SCRIPT = 4,
+    TEXT_FAMILY_DECORATIVE = 5,
+};
+
 struct Text_Config : public Effect_Config {
     uint64_t color = 0xffffff;
     int64_t blend_mode = BLEND_SIMPLE_REPLACE;
@@ -25,10 +47,13 @@ struct Text_Config : public Effect_Config {
     int64_t on_beat_speed = 15;
     int64_t speed = 15;
     int64_t weight = 0;
+    int64_t height = 0;
+    int64_t width = 0;
     bool italic = false;
     bool underline = false;
     bool strike_out = false;
     int64_t char_set = 0;
+    int64_t family = TEXT_FAMILY_DONTCARE;
     std::string font_name;
     std::string text;
     int64_t border = TEXT_BORDER_NONE;
@@ -63,6 +88,19 @@ struct Text_Info : public Effect_Info {
         return options;
     }
 
+    static const char* const* families(int64_t* length_out) {
+        *length_out = 6;
+        static const char* const options[6] = {
+            "Dont Care",
+            "Roman",
+            "Swiss",
+            "Modern",
+            "Script",
+            "Decorative",
+        };
+        return options;
+    }
+
     static const char* const* border_modes(int64_t* length_out) {
         *length_out = 3;
         static const char* const options[3] = {
@@ -75,7 +113,7 @@ struct Text_Info : public Effect_Info {
 
     static void callback(Effect*, const Parameter*, const std::vector<int64_t>&);
 
-    static constexpr uint32_t num_parameters = 23;
+    static constexpr uint32_t num_parameters = 25;
     static constexpr Parameter parameters[num_parameters] = {
         P_COLOR(offsetof(Text_Config, color), "Color"),
         P_SELECT(offsetof(Text_Config, blend_mode), "Blend Mode", blend_modes_simple),
@@ -89,10 +127,13 @@ struct Text_Info : public Effect_Info {
         P_IRANGE(offsetof(Text_Config, on_beat_speed), "On Beat Speed", 1, 400),
         P_IRANGE(offsetof(Text_Config, speed), "Speed", 1, 400),
         P_SELECT(offsetof(Text_Config, weight), "Weight", weights),
+        P_IRANGE(offsetof(Text_Config, height), "Height"),
+        P_IRANGE(offsetof(Text_Config, width), "Width"),
         P_BOOL(offsetof(Text_Config, italic), "Italic"),
         P_BOOL(offsetof(Text_Config, underline), "Underline"),
         P_BOOL(offsetof(Text_Config, strike_out), "Strike Out"),
         P_IRANGE(offsetof(Text_Config, char_set), "Character Set", 0, INT64_MAX),
+        P_SELECT(offsetof(Text_Config, family), "Font Family", families),
         P_STRING(offsetof(Text_Config, font_name), "Font Name"),
         P_STRING(offsetof(Text_Config, text), "Text"),
         P_SELECT(offsetof(Text_Config, border), "Border", border_modes),
