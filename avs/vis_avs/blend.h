@@ -18,8 +18,8 @@ void blend_replace_fill(uint32_t src, uint32_t* dest, uint32_t w);
 void blend_every_other_pixel(ARGS_1SRC_DEST_WH);
 void blend_every_other_line(ARGS_1SRC_DEST_WH);
 
-#define ARGS_2SRC_DEST_WH  ARGS_2SRC_DEST, uint32_t w, uint32_t h
 #define ARGS_2SRC_DEST     const uint32_t *src1, const uint32_t *src2, uint32_t *dest
+#define ARGS_2SRC_DEST_WH  ARGS_2SRC_DEST, uint32_t w, uint32_t h
 #define ARGS_SRCVAL_DEST_W uint32_t src, uint32_t *dest, uint32_t w
 void blend_add(ARGS_2SRC_DEST_WH);
 void blend_add_1px(ARGS_2SRC_DEST);
