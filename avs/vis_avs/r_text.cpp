@@ -160,6 +160,7 @@ E_Text::E_Text(AVS_Instance* avs) : Configurable_Effect(avs) {
     memset(&lf, 0, sizeof(LOGFONT));
 #endif  // _WIN32
     lw = lh = 0;
+    r = {0, 0, 0, 0};
     updating = false;
     nb = 0;
     oddeven = 0;
@@ -514,14 +515,6 @@ void E_Text::on_font() {
 #endif  // _WIN32
 }
 
-// TODO [clean]: Move to utils together with the ones from Texer2
-struct RectI {
-    int left;
-    int top;
-    int right;
-    int bottom;
-};
-
 struct TextRenderInfo {
 #ifdef _WIN32
     HDC context;
@@ -651,6 +644,7 @@ int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, 
         }
         oddeven++;
         oddeven %= 2;
+        // forceshift = 1;
     }
 
     if (forceBeat) {
@@ -709,7 +703,6 @@ int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, 
         clipcolor = 10;
     }
 
-    RectI r;
     // If size changed or if we're forced to shift the buffer
     if ((lw != w || lh != h) || forceshift) {
         if (lw != w || lh != h) {
@@ -732,6 +725,7 @@ int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, 
         r.bottom += (int)((float)_yshift * (float)h / 100.0F);
         forceredraw = 1;
     }
+    // log_info("r: %d %d %d %d", r.left, r.top, r.right, r.bottom);
 
     // Check if we need to redraw the buffer
     if (forceredraw || old_halign != _halign || old_valign != _valign

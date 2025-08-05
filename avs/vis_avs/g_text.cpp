@@ -217,7 +217,6 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                     }
                     break;
                 case IDC_CHOOSEFONT: {
-                    HFONT font;
                     LOGFONT lf;
                     memset(&lf, 0, sizeof(LOGFONT));
                     lf.lfHeight = -g_this->get_int(p_height.handle);
@@ -234,6 +233,7 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                         << 4;
                     strncpy(lf.lfFaceName, g_this->get_string(p_font_name), 31);
                     lf.lfFaceName[31] = '\0';
+
                     CHOOSEFONT cf;
                     memset(&cf, 0, sizeof(CHOOSEFONT));
                     cf.lStructSize = sizeof(CHOOSEFONT);
@@ -244,17 +244,12 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                     auto a = g_this->get_color(p_color);
                     cf.rgbColors =
                         ((a >> 16) & 0xff) | (a & 0xff00) | ((a << 16) & 0xff0000);
-                    ChooseFont(&cf);
-                    // g_ConfigThis->updating = true;
-                    font = CreateFontIndirect(&lf);
-                    // g_ConfigThis->forceredraw = 1;
-                    // if (g_ConfigThis->hOldFont) {
-                    //     SelectObject(g_ConfigThis->hBitmapDC,
-                    //     g_ConfigThis->hOldFont);
-                    // }
-                    if (font) {
-                        // g_ConfigThis->hOldFont = (HFONT)
-                        SelectObject(g_ConfigThis->hBitmapDC, font);
+                    if (!ChooseFont(&cf)) {
+                        break;
+                    }
+                    if (!CreateFontIndirect(&lf)) {
+                        // g_ConfigThis->updating = true;
+                        break;
                         g_this->set_string(p_font_name, lf.lfFaceName);
                         g_this->set_int(p_weight.handle,
                                         font_weight_to_config_weight(lf.lfWeight));
@@ -267,10 +262,8 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                         g_this->set_int(
                             p_family.handle,
                             font_pitchfamily_to_config_family(lf.lfPitchAndFamily));
-                    } else {
-                        // g_ConfigThis->hOldFont = NULL;
+                        // g_ConfigThis->updating = false;
                     }
-                    // g_ConfigThis->updating = false;
                     break;
                 }
                 case IDC_CHECK1:
@@ -286,9 +279,6 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                         TRUE,
                         g_this->get_int(is_on_beat ? p_on_beat_duration.handle
                                                    : p_duration.handle));
-                    // if (is_on_beat) {
-                    //     g_ConfigThis->nb = g_ConfigThis->config.on_beat_duration;
-                    // }
                     break;
                 }
                 case IDC_ADDITIVE:
@@ -376,7 +366,6 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                                         ? BLEND_SIMPLE_5050
                                         : BLEND_SIMPLE_REPLACE);
                     break;
-                    // g_ConfigThis->forceredraw = 1;
             }
             if (LOWORD(wParam) == IDC_DEFCOL || LOWORD(wParam) == IDC_DEFOUTCOL) {
                 int a = g_this->get_color(
@@ -397,13 +386,6 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                         LOWORD(wParam) == IDC_DEFCOL ? p_color : p_border_color, a);
                 }
                 InvalidateRect(GetDlgItem(hwndDlg, LOWORD(wParam)), NULL, TRUE);
-                // g_ConfigThis->updating = true;
-                // SetTextColor(g_ConfigThis->hBitmapDC,
-                //              ((g_ConfigThis->config.color & 0xFF0000) >> 16)
-                //                  | (g_ConfigThis->config.color & 0xFF00)
-                //                  | (g_ConfigThis->config.color & 0xFF) << 16);
-                // g_ConfigThis->forceredraw = 1;
-                // g_ConfigThis->updating = false;
             }
     }
     return 0;

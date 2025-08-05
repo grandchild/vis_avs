@@ -120,36 +120,23 @@ struct Text_Info : public Effect_Info {
 
     static constexpr uint32_t num_parameters = 25;
     static constexpr Parameter parameters[num_parameters] = {
-        P_STRING(offsetof(Text_Config, text), "Text", nullptr, redraw),
-        P_COLOR(offsetof(Text_Config, color), "Color", nullptr, redraw),
-        P_SELECT(offsetof(Text_Config, blend_mode),
-                 "Blend Mode",
-                 blend_modes_simple,
-                 nullptr,
-                 redraw),
+        P_STRING(offsetof(Text_Config, text), "Text"),
+        P_COLOR(offsetof(Text_Config, color), "Color"),
+        P_SELECT(offsetof(Text_Config, blend_mode), "Blend Mode", blend_modes_simple),
         P_IRANGE(offsetof(Text_Config, duration), "Duration", 1, 400),
-        P_BOOL(offsetof(Text_Config, on_beat), "On Beat", nullptr, redraw),
+        P_BOOL(offsetof(Text_Config, on_beat), "On Beat"),
         P_IRANGE(offsetof(Text_Config, on_beat_duration),
                  "On Beat Duration",
                  1,
                  400,
                  nullptr,
                  on_onbeatduration),
-        P_BOOL(offsetof(Text_Config, insert_blanks), "Insert Blanks", nullptr, redraw),
-        P_BOOL(offsetof(Text_Config, random_position),
-               "Random Position",
-               nullptr,
-               redraw),
-        P_SELECT(offsetof(Text_Config, vertical_align),
-                 "Vertical Align",
-                 v_positions,
-                 nullptr,
-                 redraw),
+        P_BOOL(offsetof(Text_Config, insert_blanks), "Insert Blanks"),
+        P_BOOL(offsetof(Text_Config, random_position), "Random Position"),
+        P_SELECT(offsetof(Text_Config, vertical_align), "Vertical Align", v_positions),
         P_SELECT(offsetof(Text_Config, horizontal_align),
                  "Horizontal Align",
-                 h_positions,
-                 nullptr,
-                 redraw),
+                 h_positions),
         P_SELECT(offsetof(Text_Config, weight), "Weight", weights),
         P_IRANGE(offsetof(Text_Config, height), "Height"),
         P_IRANGE(offsetof(Text_Config, width), "Width"),
@@ -163,18 +150,9 @@ struct Text_Info : public Effect_Info {
                  nullptr,
                  on_font),
         P_STRING(offsetof(Text_Config, font_name), "Font Name"),
-        P_SELECT(offsetof(Text_Config, border),
-                 "Border",
-                 border_modes,
-                 nullptr,
-                 redraw),
-        P_COLOR(offsetof(Text_Config, border_color), "Border Color", nullptr, redraw),
-        P_IRANGE(offsetof(Text_Config, border_size),
-                 "Border Size",
-                 1,
-                 16,
-                 nullptr,
-                 redraw),
+        P_SELECT(offsetof(Text_Config, border), "Border", border_modes),
+        P_COLOR(offsetof(Text_Config, border_color), "Border Color"),
+        P_IRANGE(offsetof(Text_Config, border_size), "Border Size", 1, 16),
         P_IRANGE(offsetof(Text_Config, shift_x),
                  "Shift X",
                  -100,
@@ -214,6 +192,14 @@ class E_Text : public Configurable_Effect<Text_Info, Text_Config> {
     void on_onbeatduration();
     void on_font();
 
+   private:
+    // TODO [clean]: Move to utils together with the ones from Texer2
+    struct RectI {
+        int left;
+        int top;
+        int right;
+        int bottom;
+    };
 #ifdef _WIN32
     CHOOSEFONT cf;
     LOGFONT lf;
@@ -227,6 +213,7 @@ class E_Text : public Configurable_Effect<Text_Info, Text_Config> {
 #endif
 
     int lw, lh;
+    RectI r;
     bool updating;
     int shadow;
     int outlinecolor;
