@@ -31,9 +31,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "e_text.h"
 
-#include "r_defs.h"
-
 #include "avs_eelif.h"
+#include "blend.h"
+#include "constants.h"  // MAX_CODE_LEN
 
 #include "../util.h"
 
@@ -51,16 +51,36 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     data[pos + 2] = (y >> 16) & 255; \
     data[pos + 3] = (y >> 24) & 255
 
+#define SIZEOF_CHOOSEFONT 60
+#define SIZEOF_LOGFONT    60
+#define FONT_NAME_MAX_LEN 32
+
 constexpr Parameter Text_Info::parameters[];
 
-/*
-void Text_Info::callback(Effect* component,
+void Text_Info::redraw(Effect* component,
+                       const Parameter*,
+                       const std::vector<int64_t>&) {
+    auto text = (E_Text*)component;
+    text->redraw();
+}
+void Text_Info::on_shift(Effect* component,
                          const Parameter*,
                          const std::vector<int64_t>&) {
     auto text = (E_Text*)component;
-    text->callback();
+    text->on_shift();
 }
-*/
+void Text_Info::on_onbeatduration(Effect* component,
+                                  const Parameter*,
+                                  const std::vector<int64_t>&) {
+    auto text = (E_Text*)component;
+    text->on_onbeatduration();
+}
+void Text_Info::on_font(Effect* component,
+                        const Parameter*,
+                        const std::vector<int64_t>&) {
+    auto text = (E_Text*)component;
+    text->on_font();
+}
 
 // Reinit bitmap buffer since size changed
 void E_Text::reinit(int w, int h) {
@@ -381,35 +401,6 @@ static int getNWords(std::string buf) {
     return n;
 }
 
-// TODO [clean]: Move to utils together with the ones from Texer2
-struct RectI {
-    int left;
-    int top;
-    int right;
-    int bottom;
-};
-
-struct TextRenderInfo {
-#ifdef _WIN32
-    HDC context;
-    HBITMAP bitmap;
-    BITMAPINFO info;
-    unsigned int valign;
-    unsigned int halign;
-    RECT r;
-    unsigned int lines;
-#endif
-};
-
-/* Win32 winuser.h constants used for legacy-preset position values:
-DT_TOP     0  -> VPOS_TOP
-DT_LEFT    0  -> HPOS_LEFT
-DT_CENTER  1  -> HPOS_CENTER
-DT_RIGHT   2  -> HPOS_RIGHT
-DT_VCENTER 4  -> VPOS_CENTER
-DT_BOTTOM  8  -> VPOS_BOTTOM
-*/
-
 uint32_t valign_to_dt(int valign) {
     switch (valign) {
         case VPOS_TOP: return 0;
@@ -480,6 +471,77 @@ TEXT_FONT_FAMILY font_pitchfamily_to_config_family(int pitch_and_family) {
         case 5: return TEXT_FAMILY_DECORATIVE;
     }
 }
+
+void E_Text::redraw() {
+    this->forceredraw = 1;
+    this->forceshift = 1;
+}
+void E_Text::on_shift() {
+    this->forceredraw = 1;
+    this->forceshift = 1;
+    this->shiftinit = 1;
+}
+void E_Text::on_onbeatduration() {
+    if (this->nb > this->config.on_beat_duration) {
+        this->nb = this->config.on_beat_duration;
+    }
+}
+void E_Text::on_font() {
+#ifdef _WIN32
+    if (this->myFont) {
+        DeleteObject(this->myFont);
+    }
+    this->myFont = CreateFont(
+        -this->config.height,
+        0,
+        0,
+        0,
+        config_weight_to_font_weight((TEXT_FONT_WEIGHT)this->config.weight),
+        this->config.italic,
+        this->config.underline,
+        this->config.strike_out,
+        this->config.char_set,
+        OUT_DEFAULT_PRECIS,
+        CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY,
+        DEFAULT_PITCH
+            | config_family_to_font_family((TEXT_FONT_FAMILY)this->config.family),
+        this->config.font_name.c_str());
+    SetTextColor(hBitmapDC,
+                 ((this->config.color & 0xFF0000) >> 16) | (this->config.color & 0xFF00)
+                     | ((this->config.color & 0xFF) << 16));
+    SelectObject(this->hBitmapDC, this->myFont);
+#endif  // _WIN32
+}
+
+// TODO [clean]: Move to utils together with the ones from Texer2
+struct RectI {
+    int left;
+    int top;
+    int right;
+    int bottom;
+};
+
+struct TextRenderInfo {
+#ifdef _WIN32
+    HDC context;
+    HBITMAP bitmap;
+    BITMAPINFO info;
+    unsigned int valign;
+    unsigned int halign;
+    RECT r;
+    unsigned int lines;
+#endif
+};
+
+/* Win32 winuser.h constants used for legacy-preset position values:
+DT_TOP     0  -> VPOS_TOP
+DT_LEFT    0  -> HPOS_LEFT
+DT_CENTER  1  -> HPOS_CENTER
+DT_RIGHT   2  -> HPOS_RIGHT
+DT_VCENTER 4  -> VPOS_CENTER
+DT_BOTTOM  8  -> VPOS_BOTTOM
+*/
 
 void draw_text_buffer(const char* text,
                       uint64_t color,
@@ -553,14 +615,10 @@ void draw_text_buffer(const char* text,
 
 int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, int h) {
     int i, j;
-    int *p, *d;
     int clipcolor;
     char thisText[256];
 
     if (updating) {
-        return 0;
-    }
-    if (!enabled) {
         return 0;
     }
     if (is_beat & 0x80000000) {
@@ -580,7 +638,7 @@ int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, 
 
     // If not beat sensitive and time is up for this word
     // OR if beat sensitive and this frame is a beat and time is up for last beat
-    if ((!this->config.on_beat && nf >= this->config.speed)
+    if ((!this->config.on_beat && nf >= this->config.duration)
         || (this->config.on_beat && is_beat && !nb)) {
         // Then choose which word to show
         if (!(this->config.insert_blanks && !(oddeven % 2))) {
@@ -603,7 +661,7 @@ int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, 
     // If beat sensitive and frame is a beat and last beat expired, start frame timer
     // for this beat
     if (this->config.on_beat && is_beat && !nb) {
-        nb = this->config.on_beat_speed;
+        nb = this->config.on_beat_duration;
     }
 
     // Get the word(s) to show
@@ -613,8 +671,8 @@ int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, 
     }
 
     // Same test as above but takes care of nb init
-    if ((!this->config.on_beat && nf >= this->config.speed)
-        || (this->config.on_beat && is_beat && nb == this->config.on_beat_speed)) {
+    if ((!this->config.on_beat && nf >= this->config.duration)
+        || (this->config.on_beat && is_beat && nb == this->config.on_beat_duration)) {
         nf = 0;
         if (this->config.random_position && w && h)  // Handle random position
         {
@@ -707,7 +765,7 @@ int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, 
         oldyshift = _yshift;
 
         // Draw everything
-        p = myBuffer;
+        int* p = myBuffer;
         while (p < myBuffer + h * w) {
             *p = clipcolor;
             p++;
@@ -736,15 +794,15 @@ int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, 
 
     // Now render the bitmap text buffer over framebuffer, handle blending options.
     // Separate blocks here so we don4t have to make w*h tests
-    p = myBuffer;
-    d = framebuffer + w * (h - 1);
+    uint32_t* p = (uint32_t*)myBuffer;
+    uint32_t* d = (uint32_t*)framebuffer + w * (h - 1);
 
     if (this->config.blend_mode == BLEND_SIMPLE_ADDITIVE
         && !(this->config.on_beat && !nb)) {
         for (i = 0; i < h; i++) {
             for (j = 0; j < w; j++) {
                 if (*p != clipcolor) {
-                    *d = BLEND(*p, *d);
+                    blend_add_1px(p, d, d);
                 }
                 d++;
                 p++;
@@ -756,7 +814,7 @@ int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, 
         for (i = 0; i < h; i++) {
             for (j = 0; j < w; j++) {
                 if (*p != clipcolor) {
-                    *d = BLEND_AVG(*p, *d);
+                    blend_5050_1px(p, d, d);
                 }
                 d++;
                 p++;
@@ -767,7 +825,7 @@ int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, 
         for (i = 0; i < h; i++) {
             for (j = 0; j < w; j++) {
                 if (*p != clipcolor) {
-                    *d = *p;
+                    blend_replace_1px(p, d);
                 }
                 d++;
                 p++;
@@ -847,20 +905,20 @@ void E_Text::load_legacy(unsigned char* data, int len) {
         pos += 4;
     }
     if (len - pos >= 4) {
-        this->config.on_beat_speed = GET_INT();
+        this->config.on_beat_duration = GET_INT();
         pos += 4;
     }
     if (len - pos >= 4) {
-        this->config.speed = GET_INT();
+        this->config.duration = GET_INT();
         pos += 4;
     }
+    if (len - pos >= SIZEOF_CHOOSEFONT) {
 #ifdef _WIN32
-    if (len - pos >= ssizeof32(cf)) {
-        memcpy(&cf, data + pos, sizeof(cf));
-        pos += sizeof(cf);
+        memcpy(&this->cf, data + pos, SIZEOF_CHOOSEFONT);
+#endif  // _WIN32
+        pos += SIZEOF_CHOOSEFONT;
     }
-    cf.lpLogFont = &lf;
-    if (len - pos >= ssizeof32(lf)) {
+    if (len - pos >= SIZEOF_LOGFONT) {
         this->config.weight = font_weight_to_config_weight(*(int32_t*)&data[pos + 16]);
         this->config.height = abs(*(int32_t*)&data[pos]);
         this->config.width = *(int32_t*)&data[pos + 4];
@@ -869,22 +927,9 @@ void E_Text::load_legacy(unsigned char* data, int len) {
         this->config.strike_out = data[pos + 22];
         this->config.family = font_pitchfamily_to_config_family(data[pos + 27]);
         this->config.font_name = &str_data[pos + 28];
-        memcpy(&lf, data + pos, sizeof(lf));
-        pos += sizeof(lf);
+        pos += SIZEOF_LOGFONT;
+        this->on_font();
     }
-    myFont = CreateFontIndirect(&lf);
-#else
-    pos += 60;  // sizeof(CHOOSEFONT);
-    this->config.weight = font_weight_to_config_weight(*(int32_t*)&data[pos + 16]);
-    this->config.height = abs(*(int32_t*)&data[pos]);
-    this->config.width = *(int32_t*)&data[pos + 4];
-    this->config.italic = data[pos + 20];
-    this->config.underline = data[pos + 21];
-    this->config.strike_out = data[pos + 22];
-    this->config.family = font_pitchfamily_to_config_family(data[pos + 27]);
-    this->config.font_name = &str_data[pos + 28];
-    pos += 60;  // sizeof(LOGFONT);
-#endif  // _WIN32
     if (len - pos >= 4) {
         pos += this->string_load_legacy(&str_data[pos], this->config.text, len - pos);
     }
@@ -947,21 +992,33 @@ int E_Text::save_legacy(unsigned char* data) {
     pos += 4;
     PUT_INT(halign_to_dt(this->config.horizontal_align));
     pos += 4;
-    PUT_INT(this->config.on_beat_speed);
+    PUT_INT(this->config.on_beat_duration);
     pos += 4;
-    PUT_INT(this->config.speed);
+    PUT_INT(this->config.duration);
     pos += 4;
-#ifdef _WIN32
-    memcpy(data + pos, &cf, sizeof(cf));
-    pos += sizeof(cf);
-    memcpy(data + pos, &lf, sizeof(lf));
-    pos += sizeof(lf);
-#else
-    memset(data + pos, 0, 60);  // sizeof(CHOOSEFONT);
-    pos += 60;
-    memset(data + pos, 0, 60);  // sizeof(LOGFONT);
-    pos += 60;
-#endif  // _WIN32
+    memset(data + pos, 0, SIZEOF_CHOOSEFONT);
+    pos += SIZEOF_CHOOSEFONT;
+
+    // memcpy(data + pos, &this->lf, SIZEOF_LOGFONT);
+    *(int32_t*)&data[pos] = -this->config.height;  // height is negative
+    pos += 4;
+    *(int32_t*)&data[pos] = this->config.width;
+    pos += 4;
+    pos += 4 + 4;  // lfEscapement + lfOrientation
+    *(int32_t*)&data[pos] =
+        config_weight_to_font_weight((TEXT_FONT_WEIGHT)this->config.weight);
+    pos += 4;
+    data[pos++] = this->config.italic;
+    data[pos++] = this->config.underline;
+    data[pos++] = this->config.strike_out;
+    data[pos++] = this->config.char_set;
+    pos += 1 + 1 + 1;  // lfOutPrecision + lfClipPrecision + lfQuality
+    data[pos++] = config_family_to_font_family((TEXT_FONT_FAMILY)this->config.family)
+                  << 4;
+    strncpy((char*)&data[pos], this->config.font_name.c_str(), FONT_NAME_MAX_LEN);
+    data[pos + FONT_NAME_MAX_LEN - 1] = '\0';
+    pos += FONT_NAME_MAX_LEN;
+
     char* str_data = (char*)data;
     pos += this->string_save_legacy(
         this->config.text, &str_data[pos], MAX_CODE_LEN - 1 - pos, /*with_nt*/ true);
