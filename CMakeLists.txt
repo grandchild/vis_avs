@@ -29,13 +29,15 @@ file(GLOB SRC_FILES_AVS_COMMON
     avs/vis_avs/matrix.cpp
     avs/vis_avs/preset_json_schema.cpp
     avs/vis_avs/render_context.cpp
-    avs/vis_avs/r_text.cpp
     avs/vis_avs/r_transition.cpp
     avs/vis_avs/video.cpp
     avs/vis_avs/video_libav.cpp
     avs/platform.c
     avs/uuid.cpp
     avs/3rdparty/md_fft.cpp
+)
+file(GLOB SRC_FILES_LIBAVS
+    avs/vis_avs/r_text.cpp
 )
 
 file(GLOB SRC_FILES_VIS_AVS
@@ -46,6 +48,7 @@ file(GLOB SRC_FILES_VIS_AVS
     avs/vis_avs/main.cpp
     avs/vis_avs/render.cpp
     avs/vis_avs/undo.cpp
+    avs/vis_avs/r_text.cpp
     avs/vis_avs/util.cpp
     avs/vis_avs/wnd.cpp
     avs/vis_avs/*.rc
@@ -149,6 +152,7 @@ add_library(avs_common OBJECT ${SRC_FILES_AVS_COMMON})
 add_library(libavs SHARED
     $<TARGET_OBJECTS:avs_eel>
     $<TARGET_OBJECTS:avs_common>
+    ${SRC_FILES_LIBAVS}
 )
 
 pkg_search_include_dirs_with_64bit_fallback(FFMPEG "libavcodec;libavformat;libswscale" "video")
