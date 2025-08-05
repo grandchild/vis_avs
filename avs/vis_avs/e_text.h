@@ -3,38 +3,11 @@
 #include "effect.h"
 #include "effect_common.h"
 #include "effect_info.h"
+#include "text.h"
 
 #ifdef _WIN32
 #include "windows.h"
 #endif
-
-enum TEXT_BORDER_MODE {
-    TEXT_BORDER_NONE = 0,
-    TEXT_BORDER_OUTLINE = 1,
-    TEXT_BORDER_SHADOW = 2,
-};
-
-enum TEXT_FONT_WEIGHT {
-    TEXT_FW_DONTCARE = 0,
-    TEXT_FW_THIN = 100,
-    TEXT_FW_EXTRALIGHT,
-    TEXT_FW_LIGHT,
-    TEXT_FW_REGULAR,
-    TEXT_FW_MEDIUM,
-    TEXT_FW_SEMIBOLD,
-    TEXT_FW_BOLD,
-    TEXT_FW_EXTRABOLD,
-    TEXT_FW_BLACK,
-};
-
-enum TEXT_FONT_FAMILY {
-    TEXT_FAMILY_DONTCARE = 0,
-    TEXT_FAMILY_ROMAN = 1,
-    TEXT_FAMILY_SWISS = 2,
-    TEXT_FAMILY_MODERN = 3,
-    TEXT_FAMILY_SCRIPT = 4,
-    TEXT_FAMILY_DECORATIVE = 5,
-};
 
 struct Text_Config : public Effect_Config {
     std::string text;
@@ -54,7 +27,7 @@ struct Text_Config : public Effect_Config {
     bool underline = false;
     bool strike_out = false;
     int64_t char_set = 0;
-    int64_t family = TEXT_FAMILY_DONTCARE;
+    int64_t family = FONT_FAMILY_DONTCARE;
     std::string font_name;
     int64_t border = TEXT_BORDER_NONE;
     uint64_t border_color = 0xffffff;

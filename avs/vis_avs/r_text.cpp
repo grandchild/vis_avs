@@ -419,57 +419,57 @@ uint32_t halign_to_dt(int halign) {
     }
 }
 
-int config_weight_to_font_weight(TEXT_FONT_WEIGHT weight) {
+int config_weight_to_font_weight(FontWeight weight) {
     switch (weight) {
         default:
-        case TEXT_FW_DONTCARE: return 0;
-        case TEXT_FW_THIN: return 100;
-        case TEXT_FW_EXTRALIGHT: return 200;
-        case TEXT_FW_LIGHT: return 300;
-        case TEXT_FW_REGULAR: return 400;
-        case TEXT_FW_MEDIUM: return 500;
-        case TEXT_FW_SEMIBOLD: return 600;
-        case TEXT_FW_BOLD: return 700;
-        case TEXT_FW_EXTRABOLD: return 800;
-        case TEXT_FW_BLACK: return 900;
+        case FONT_WEIGHT_DONTCARE: return 0;
+        case FONT_WEIGHT_THIN: return 100;
+        case FONT_WEIGHT_EXTRALIGHT: return 200;
+        case FONT_WEIGHT_LIGHT: return 300;
+        case FONT_WEIGHT_REGULAR: return 400;
+        case FONT_WEIGHT_MEDIUM: return 500;
+        case FONT_WEIGHT_SEMIBOLD: return 600;
+        case FONT_WEIGHT_BOLD: return 700;
+        case FONT_WEIGHT_EXTRABOLD: return 800;
+        case FONT_WEIGHT_BLACK: return 900;
     }
 }
-TEXT_FONT_WEIGHT font_weight_to_config_weight(int weight) {
+FontWeight font_weight_to_config_weight(int weight) {
     switch (weight) {
         default:
-        case 0: return TEXT_FW_DONTCARE;
-        case 100: return TEXT_FW_THIN;
-        case 200: return TEXT_FW_EXTRALIGHT;
-        case 300: return TEXT_FW_LIGHT;
-        case 400: return TEXT_FW_REGULAR;
-        case 500: return TEXT_FW_MEDIUM;
-        case 600: return TEXT_FW_SEMIBOLD;
-        case 700: return TEXT_FW_BOLD;
-        case 800: return TEXT_FW_EXTRABOLD;
-        case 900: return TEXT_FW_BLACK;
+        case 0: return FONT_WEIGHT_DONTCARE;
+        case 100: return FONT_WEIGHT_THIN;
+        case 200: return FONT_WEIGHT_EXTRALIGHT;
+        case 300: return FONT_WEIGHT_LIGHT;
+        case 400: return FONT_WEIGHT_REGULAR;
+        case 500: return FONT_WEIGHT_MEDIUM;
+        case 600: return FONT_WEIGHT_SEMIBOLD;
+        case 700: return FONT_WEIGHT_BOLD;
+        case 800: return FONT_WEIGHT_EXTRABOLD;
+        case 900: return FONT_WEIGHT_BLACK;
     }
 }
 
-int config_family_to_font_family(TEXT_FONT_FAMILY family) {
+int config_family_to_font_family(FontFamily family) {
     switch (family) {
         default:
-        case TEXT_FAMILY_DONTCARE: return 0;
-        case TEXT_FAMILY_ROMAN: return 1;
-        case TEXT_FAMILY_SWISS: return 2;
-        case TEXT_FAMILY_MODERN: return 3;
-        case TEXT_FAMILY_SCRIPT: return 4;
-        case TEXT_FAMILY_DECORATIVE: return 5;
+        case FONT_FAMILY_DONTCARE: return 0;
+        case FONT_FAMILY_ROMAN: return 1;
+        case FONT_FAMILY_SWISS: return 2;
+        case FONT_FAMILY_MODERN: return 3;
+        case FONT_FAMILY_SCRIPT: return 4;
+        case FONT_FAMILY_DECORATIVE: return 5;
     }
 }
-TEXT_FONT_FAMILY font_pitchfamily_to_config_family(int pitch_and_family) {
+FontFamily font_pitchfamily_to_config_family(int pitch_and_family) {
     switch (pitch_and_family >> 4) {
         default:
-        case 0: return TEXT_FAMILY_DONTCARE;
-        case 1: return TEXT_FAMILY_ROMAN;
-        case 2: return TEXT_FAMILY_SWISS;
-        case 3: return TEXT_FAMILY_MODERN;
-        case 4: return TEXT_FAMILY_SCRIPT;
-        case 5: return TEXT_FAMILY_DECORATIVE;
+        case 0: return FONT_FAMILY_DONTCARE;
+        case 1: return FONT_FAMILY_ROMAN;
+        case 2: return FONT_FAMILY_SWISS;
+        case 3: return FONT_FAMILY_MODERN;
+        case 4: return FONT_FAMILY_SCRIPT;
+        case 5: return FONT_FAMILY_DECORATIVE;
     }
 }
 
@@ -497,7 +497,7 @@ void E_Text::on_font() {
         0,
         0,
         0,
-        config_weight_to_font_weight((TEXT_FONT_WEIGHT)this->config.weight),
+        config_weight_to_font_weight((FontWeight)this->config.weight),
         this->config.italic,
         this->config.underline,
         this->config.strike_out,
@@ -505,8 +505,7 @@ void E_Text::on_font() {
         OUT_DEFAULT_PRECIS,
         CLIP_DEFAULT_PRECIS,
         DEFAULT_QUALITY,
-        DEFAULT_PITCH
-            | config_family_to_font_family((TEXT_FONT_FAMILY)this->config.family),
+        DEFAULT_PITCH | config_family_to_font_family((FontFamily)this->config.family),
         this->config.font_name.c_str());
     SetTextColor(hBitmapDC,
                  ((this->config.color & 0xFF0000) >> 16) | (this->config.color & 0xFF00)
@@ -1000,15 +999,14 @@ int E_Text::save_legacy(unsigned char* data) {
     pos += 4;
     pos += 4 + 4;  // lfEscapement + lfOrientation
     *(int32_t*)&data[pos] =
-        config_weight_to_font_weight((TEXT_FONT_WEIGHT)this->config.weight);
+        config_weight_to_font_weight((FontWeight)this->config.weight);
     pos += 4;
     data[pos++] = this->config.italic;
     data[pos++] = this->config.underline;
     data[pos++] = this->config.strike_out;
     data[pos++] = this->config.char_set;
     pos += 1 + 1 + 1;  // lfOutPrecision + lfClipPrecision + lfQuality
-    data[pos++] = config_family_to_font_family((TEXT_FONT_FAMILY)this->config.family)
-                  << 4;
+    data[pos++] = config_family_to_font_family((FontFamily)this->config.family) << 4;
     strncpy((char*)&data[pos], this->config.font_name.c_str(), FONT_NAME_MAX_LEN);
     data[pos + FONT_NAME_MAX_LEN - 1] = '\0';
     pos += FONT_NAME_MAX_LEN;

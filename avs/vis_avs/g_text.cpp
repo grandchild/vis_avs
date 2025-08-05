@@ -8,57 +8,57 @@
 #include <windows.h>
 #include <commctrl.h>
 
-static int config_weight_to_font_weight(TEXT_FONT_WEIGHT weight) {
+static int config_weight_to_font_weight(FontWeight weight) {
     switch (weight) {
         default:
-        case TEXT_FW_DONTCARE: return 0;
-        case TEXT_FW_THIN: return 100;
-        case TEXT_FW_EXTRALIGHT: return 200;
-        case TEXT_FW_LIGHT: return 300;
-        case TEXT_FW_REGULAR: return 400;
-        case TEXT_FW_MEDIUM: return 500;
-        case TEXT_FW_SEMIBOLD: return 600;
-        case TEXT_FW_BOLD: return 700;
-        case TEXT_FW_EXTRABOLD: return 800;
-        case TEXT_FW_BLACK: return 900;
+        case FONT_WEIGHT_DONTCARE: return 0;
+        case FONT_WEIGHT_THIN: return 100;
+        case FONT_WEIGHT_EXTRALIGHT: return 200;
+        case FONT_WEIGHT_LIGHT: return 300;
+        case FONT_WEIGHT_REGULAR: return 400;
+        case FONT_WEIGHT_MEDIUM: return 500;
+        case FONT_WEIGHT_SEMIBOLD: return 600;
+        case FONT_WEIGHT_BOLD: return 700;
+        case FONT_WEIGHT_EXTRABOLD: return 800;
+        case FONT_WEIGHT_BLACK: return 900;
     }
 }
-static TEXT_FONT_WEIGHT font_weight_to_config_weight(int weight) {
+static FontWeight font_weight_to_config_weight(int weight) {
     switch (weight) {
         default:
-        case 0: return TEXT_FW_DONTCARE;
-        case 100: return TEXT_FW_THIN;
-        case 200: return TEXT_FW_EXTRALIGHT;
-        case 300: return TEXT_FW_LIGHT;
-        case 400: return TEXT_FW_REGULAR;
-        case 500: return TEXT_FW_MEDIUM;
-        case 600: return TEXT_FW_SEMIBOLD;
-        case 700: return TEXT_FW_BOLD;
-        case 800: return TEXT_FW_EXTRABOLD;
-        case 900: return TEXT_FW_BLACK;
+        case 0: return FONT_WEIGHT_DONTCARE;
+        case 100: return FONT_WEIGHT_THIN;
+        case 200: return FONT_WEIGHT_EXTRALIGHT;
+        case 300: return FONT_WEIGHT_LIGHT;
+        case 400: return FONT_WEIGHT_REGULAR;
+        case 500: return FONT_WEIGHT_MEDIUM;
+        case 600: return FONT_WEIGHT_SEMIBOLD;
+        case 700: return FONT_WEIGHT_BOLD;
+        case 800: return FONT_WEIGHT_EXTRABOLD;
+        case 900: return FONT_WEIGHT_BLACK;
     }
 }
 
-static int config_family_to_font_family(TEXT_FONT_FAMILY family) {
+static int config_family_to_font_family(FontFamily family) {
     switch (family) {
         default:
-        case TEXT_FAMILY_DONTCARE: return 0;
-        case TEXT_FAMILY_ROMAN: return 1;
-        case TEXT_FAMILY_SWISS: return 2;
-        case TEXT_FAMILY_MODERN: return 3;
-        case TEXT_FAMILY_SCRIPT: return 4;
-        case TEXT_FAMILY_DECORATIVE: return 5;
+        case FONT_FAMILY_DONTCARE: return 0;
+        case FONT_FAMILY_ROMAN: return 1;
+        case FONT_FAMILY_SWISS: return 2;
+        case FONT_FAMILY_MODERN: return 3;
+        case FONT_FAMILY_SCRIPT: return 4;
+        case FONT_FAMILY_DECORATIVE: return 5;
     }
 }
-static TEXT_FONT_FAMILY font_pitchfamily_to_config_family(int pitch_and_family) {
+static FontFamily font_pitchfamily_to_config_family(int pitch_and_family) {
     switch (pitch_and_family >> 4) {
         default:
-        case 0: return TEXT_FAMILY_DONTCARE;
-        case 1: return TEXT_FAMILY_ROMAN;
-        case 2: return TEXT_FAMILY_SWISS;
-        case 3: return TEXT_FAMILY_MODERN;
-        case 4: return TEXT_FAMILY_SCRIPT;
-        case 5: return TEXT_FAMILY_DECORATIVE;
+        case 0: return FONT_FAMILY_DONTCARE;
+        case 1: return FONT_FAMILY_ROMAN;
+        case 2: return FONT_FAMILY_SWISS;
+        case 3: return FONT_FAMILY_MODERN;
+        case 4: return FONT_FAMILY_SCRIPT;
+        case 5: return FONT_FAMILY_DECORATIVE;
     }
 }
 
@@ -221,7 +221,7 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                     memset(&lf, 0, sizeof(LOGFONT));
                     lf.lfHeight = -g_this->get_int(p_height.handle);
                     lf.lfWeight = config_weight_to_font_weight(
-                        (TEXT_FONT_WEIGHT)g_this->get_int(p_weight.handle));
+                        (FontWeight)g_this->get_int(p_weight.handle));
                     lf.lfWidth = g_this->get_int(p_width.handle);
                     lf.lfItalic = g_this->get_bool(p_italic);
                     lf.lfUnderline = g_this->get_bool(p_underline);
@@ -229,7 +229,7 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                     lf.lfCharSet = g_this->get_int(p_char_set.handle);
                     lf.lfPitchAndFamily =
                         config_family_to_font_family(
-                            (TEXT_FONT_FAMILY)g_this->get_int(p_family.handle))
+                            (FontFamily)g_this->get_int(p_family.handle))
                         << 4;
                     strncpy(lf.lfFaceName, g_this->get_string(p_font_name), 31);
                     lf.lfFaceName[31] = '\0';
