@@ -1,6 +1,10 @@
 #include "text.h"
 
+#include "../platform.h"
+
 #include <windows.h>
+
+#define FONT_NAME_MAX_LEN 32
 
 int family_to_win32_family(FontFamily family) {
     switch (family) {
@@ -86,6 +90,39 @@ std::vector<AVS_Font> AVS_Font::get_fonts() {
     return font_list;
 }
 
+void AVS_Font::load() {
+    log_info("loading font");
+    DeleteObject(this->platform_font);
+    this->platform_font = nullptr;
+    auto lf = new LOGFONT();
+    *lf = {
+        /*lfHeight*/ (LONG)this->height,
+        /*lfWidth*/ 0,
+        /*lfEscapement*/ 0,
+        /*lfOrientation*/ 0,
+        /*lfWeight*/ (LONG)this->weight,
+        /*lfItalic*/ (BYTE)this->italic,
+        /*lfUnderline*/ (BYTE)this->underline,
+        /*lfStrikeOut*/ (BYTE)this->strike_out,
+        /*lfCharSet*/ (BYTE)this->char_set,
+        /*lfOutPrecision*/ OUT_DEFAULT_PRECIS,
+        /*lfClipPrecision*/ CLIP_DEFAULT_PRECIS,
+        /*lfQuality*/ DEFAULT_QUALITY,
+        /*lfPitchAndFamily*/
+        (BYTE)(family_to_win32_family(this->family) | DEFAULT_PITCH),
+        /*lfFaceName*/ {0},
+    };
+    strncpy(lf->lfFaceName, this->name.c_str(), FONT_NAME_MAX_LEN - 1);
+    this->platform_font = CreateFontIndirect(lf);
+}
+
+AVS_Font::~AVS_Font() {
+    if (this->platform_font) {
+        DeleteObject((HFONT)this->platform_font);
+        this->platform_font = nullptr;
+    }
+}
+
 struct TextPlatformContext {
     HDC device = nullptr;
     HBITMAP bitmap = nullptr;
@@ -94,23 +131,21 @@ struct TextPlatformContext {
     HBITMAP previous_bitmap = nullptr;
     HFONT previous_font = nullptr;
 
-    TextPlatformContext(size_t w, size_t h, HFONT font);
+    TextPlatformContext(size_t w, size_t h);
     ~TextPlatformContext();
 };
 
-TextPlatformContext::TextPlatformContext(size_t w, size_t h, HFONT font)
+TextPlatformContext::TextPlatformContext(size_t w, size_t h)
     : device(CreateCompatibleDC(nullptr)),
-      bitmap(CreateCompatibleBitmap(this->device, w, h)) {
+      bitmap(CreateCompatibleBitmap(GetDC(nullptr), w, h)),
+      bm_info() {
+    log_info("device: 0x%p, bitmap: 0x%p", this->device, this->bitmap);
     this->previous_bitmap = (HBITMAP)SelectObject(this->device, this->bitmap);
-    this->previous_font = (HFONT)SelectObject(this->device, font);
-    this->bm_info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    this->bm_info.bmiHeader.biWidth = 1;
-    this->bm_info.bmiHeader.biHeight = 1;
     this->bm_info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     this->bm_info.bmiHeader.biWidth = w;
     this->bm_info.bmiHeader.biHeight = h;
     this->bm_info.bmiHeader.biPlanes = 1;
-    this->bm_info.bmiHeader.biBitCount = 32;  // ARGB
+    this->bm_info.bmiHeader.biBitCount = 32;
     this->bm_info.bmiHeader.biCompression = BI_RGB;
     this->rect.left = 0;
     this->rect.top = 0;
@@ -153,11 +188,14 @@ void AVS_Text::get_text_render_size(std::string string,
     (((color) & 0xff0000) >> 16 | ((color) & 0xff00) | ((color) & 0xff) << 16)
 
 void AVS_Text::render(std::string string,
+                      AVS_Font* font,
                       pixel_rgb0_8* buffer,
                       size_t w,
                       size_t h,
                       Horizontal_Positions h_align,
                       Vertical_Positions v_align,
+                      int32_t shift_x,
+                      int32_t shift_y,
                       pixel_rgb0_8 color,
                       TextBorderMode border,
                       pixel_rgb0_8 border_color,
@@ -166,16 +204,26 @@ void AVS_Text::render(std::string string,
     if (string.empty() || buffer == nullptr) {
         return;
     }
-    if (this->last_h != h || this->last_w != w) {
+    if (!this->context || this->last_h != h || this->last_w != w) {
         this->reset(w, h);
         this->last_w = w;
         this->last_h = h;
+    }
+    if (this->last_font != font) {
+        font->load();
+        this->context->previous_font =
+            (HFONT)SelectObject(this->context->device, (HFONT)font->platform_font);
+        this->last_font = font;
     }
 
     auto device = this->context->device;
     auto bitmap = this->context->bitmap;
     auto bm_info = this->context->bm_info;
     auto rect = this->context->rect;
+    rect.left += shift_x;
+    rect.right += shift_x;
+    rect.top += shift_y;
+    rect.bottom += shift_y;
 
     int alignment =
         valign_to_dt(v_align) | halign_to_dt(h_align) | DT_NOCLIP | DT_SINGLELINE;
@@ -233,8 +281,6 @@ void AVS_Text::render(std::string string,
 
 void AVS_Text::reset(size_t w, size_t h) {
     auto old_context = this->context;
-    this->context = new TextPlatformContext(w, h, (HFONT)this->font.platform_font);
-    if (old_context != nullptr) {
-        delete old_context;
-    }
+    this->context = new TextPlatformContext(w, h);
+    delete old_context;
 }

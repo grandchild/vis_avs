@@ -20,7 +20,7 @@ struct Text_Config : public Effect_Config {
     bool random_position = false;
     int64_t vertical_align = VPOS_CENTER;
     int64_t horizontal_align = HPOS_CENTER;
-    int64_t weight = 0;
+    int64_t weight = FONT_WEIGHT_DONTCARE;
     int64_t height = 0;
     int64_t width = 0;
     bool italic = false;
@@ -154,6 +154,7 @@ class E_Text : public Configurable_Effect<Text_Info, Text_Config> {
                        int* fbout,
                        int w,
                        int h);
+    virtual void on_load();
     virtual void load_legacy(unsigned char* data, int len);
     virtual int save_legacy(unsigned char* data);
     virtual E_Text* clone() { return new E_Text(*this); }
@@ -185,6 +186,8 @@ class E_Text : public Configurable_Effect<Text_Info, Text_Config> {
     BITMAPINFO bi;
 #endif
 
+    AVS_Font* font;
+    AVS_Text* text;
     int lw, lh;
     RectI r;
     bool updating;

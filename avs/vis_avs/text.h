@@ -37,8 +37,12 @@ struct AVS_Font {
     bool strike_out = false;
     uint32_t char_set = 0;
     FontFamily family = FONT_FAMILY_DONTCARE;
+
     static std::vector<AVS_Font> get_fonts();
-    void* platform_font;
+    void load();
+    ~AVS_Font();
+
+    void* platform_font = nullptr;
 };
 
 enum TextBorderMode {
@@ -51,24 +55,28 @@ struct TextPlatformContext;  // defined in the platform-specific implementation
 
 class AVS_Text {
    public:
-    explicit AVS_Text(const AVS_Font& font) : font(font) {}
+    AVS_Text() {}
     ~AVS_Text();
     void get_text_render_size(std::string string, size_t* out_w, size_t* out_h);
     void render(std::string string,
+                AVS_Font* font,
                 pixel_rgb0_8* buffer,
                 size_t w,
                 size_t h,
                 Horizontal_Positions h_align,
                 Vertical_Positions v_align,
+                int32_t shift_x,
+                int32_t shift_y,
                 pixel_rgb0_8 color,
                 TextBorderMode border,
                 pixel_rgb0_8 border_color,
                 uint32_t border_size);
+    void unregister_font() { this->last_font = nullptr; }
 
    private:
     void reset(size_t w, size_t h);
 
-    const AVS_Font& font;
+    AVS_Font* last_font = nullptr;
     TextPlatformContext* context = nullptr;
     uint32_t last_w = 0;
     uint32_t last_h = 0;

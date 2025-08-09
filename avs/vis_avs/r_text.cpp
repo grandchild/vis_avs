@@ -131,7 +131,7 @@ void E_Text::reinit(int w, int h) {
 #endif  // _WIN32
 }
 
-E_Text::E_Text(AVS_Instance* avs) : Configurable_Effect(avs) {
+E_Text::E_Text(AVS_Instance* avs) : Configurable_Effect(avs), text(new AVS_Text()) {
     old_valign = 0;
     old_halign = 0;
     old_border_mode = -1;
@@ -152,11 +152,11 @@ E_Text::E_Text(AVS_Instance* avs) : Configurable_Effect(avs) {
 
 #ifdef _WIN32
     myFont = NULL;
-    memset(&cf, 0, sizeof(CHOOSEFONT));
-    cf.lStructSize = sizeof(CHOOSEFONT);
-    cf.lpLogFont = &lf;
-    cf.Flags = CF_EFFECTS | CF_SCREENFONTS | CF_FORCEFONTEXIST | CF_INITTOLOGFONTSTRUCT;
-    cf.rgbColors = this->config.color;
+    // memset(&cf, 0, sizeof(CHOOSEFONT));
+    // cf.lStructSize = sizeof(CHOOSEFONT);
+    // cf.lpLogFont = &lf;
+    // cf.Flags = CF_EFFECTS | CF_SCREENFONTS | CF_FORCEFONTEXIST |
+    // CF_INITTOLOGFONTSTRUCT; cf.rgbColors = this->config.color;
     memset(&lf, 0, sizeof(LOGFONT));
 #endif  // _WIN32
     lw = lh = 0;
@@ -419,34 +419,34 @@ uint32_t halign_to_dt(int halign) {
     }
 }
 
-int config_weight_to_font_weight(FontWeight weight) {
-    switch (weight) {
-        default:
-        case FONT_WEIGHT_DONTCARE: return 0;
-        case FONT_WEIGHT_THIN: return 100;
-        case FONT_WEIGHT_EXTRALIGHT: return 200;
-        case FONT_WEIGHT_LIGHT: return 300;
-        case FONT_WEIGHT_REGULAR: return 400;
-        case FONT_WEIGHT_MEDIUM: return 500;
-        case FONT_WEIGHT_SEMIBOLD: return 600;
-        case FONT_WEIGHT_BOLD: return 700;
-        case FONT_WEIGHT_EXTRABOLD: return 800;
-        case FONT_WEIGHT_BLACK: return 900;
-    }
-}
-FontWeight font_weight_to_config_weight(int weight) {
+FontWeight config_weight_to_font_weight(int weight) {
     switch (weight) {
         default:
         case 0: return FONT_WEIGHT_DONTCARE;
-        case 100: return FONT_WEIGHT_THIN;
-        case 200: return FONT_WEIGHT_EXTRALIGHT;
-        case 300: return FONT_WEIGHT_LIGHT;
-        case 400: return FONT_WEIGHT_REGULAR;
-        case 500: return FONT_WEIGHT_MEDIUM;
-        case 600: return FONT_WEIGHT_SEMIBOLD;
-        case 700: return FONT_WEIGHT_BOLD;
-        case 800: return FONT_WEIGHT_EXTRABOLD;
-        case 900: return FONT_WEIGHT_BLACK;
+        case 1: return FONT_WEIGHT_THIN;
+        case 2: return FONT_WEIGHT_EXTRALIGHT;
+        case 3: return FONT_WEIGHT_LIGHT;
+        case 4: return FONT_WEIGHT_REGULAR;
+        case 5: return FONT_WEIGHT_MEDIUM;
+        case 6: return FONT_WEIGHT_SEMIBOLD;
+        case 7: return FONT_WEIGHT_BOLD;
+        case 8: return FONT_WEIGHT_EXTRABOLD;
+        case 9: return FONT_WEIGHT_BLACK;
+    }
+}
+int font_weight_to_config_weight(FontWeight weight) {
+    switch (weight) {
+        default:
+        case FONT_WEIGHT_DONTCARE: return 0;
+        case FONT_WEIGHT_THIN: return 1;
+        case FONT_WEIGHT_EXTRALIGHT: return 2;
+        case FONT_WEIGHT_LIGHT: return 3;
+        case FONT_WEIGHT_REGULAR: return 4;
+        case FONT_WEIGHT_MEDIUM: return 5;
+        case FONT_WEIGHT_SEMIBOLD: return 6;
+        case FONT_WEIGHT_BOLD: return 7;
+        case FONT_WEIGHT_EXTRABOLD: return 8;
+        case FONT_WEIGHT_BLACK: return 9;
     }
 }
 
@@ -477,17 +477,35 @@ void E_Text::redraw() {
     this->forceredraw = 1;
     this->forceshift = 1;
 }
+
 void E_Text::on_shift() {
     this->forceredraw = 1;
     this->forceshift = 1;
     this->shiftinit = 1;
 }
+
 void E_Text::on_onbeatduration() {
     if (this->nb > this->config.on_beat_duration) {
         this->nb = this->config.on_beat_duration;
     }
 }
+
 void E_Text::on_font() {
+    if (this->font) {
+        delete this->font;
+        this->text->unregister_font();
+    }
+    this->font = new AVS_Font{
+        this->config.font_name,
+        (uint32_t)this->config.weight * 100,
+        (uint32_t)this->config.height,
+        this->config.italic,
+        this->config.underline,
+        this->config.strike_out,
+        (uint32_t)this->config.char_set,
+        font_pitchfamily_to_config_family(this->config.family),
+    };
+
 #ifdef _WIN32
     if (this->myFont) {
         DeleteObject(this->myFont);
@@ -497,7 +515,7 @@ void E_Text::on_font() {
         0,
         0,
         0,
-        config_weight_to_font_weight((FontWeight)this->config.weight),
+        this->config.weight * 100,
         this->config.italic,
         this->config.underline,
         this->config.strike_out,
@@ -507,9 +525,6 @@ void E_Text::on_font() {
         DEFAULT_QUALITY,
         DEFAULT_PITCH | config_family_to_font_family((FontFamily)this->config.family),
         this->config.font_name.c_str());
-    SetTextColor(hBitmapDC,
-                 ((this->config.color & 0xFF0000) >> 16) | (this->config.color & 0xFF00)
-                     | ((this->config.color & 0xFF) << 16));
     SelectObject(this->hBitmapDC, this->myFont);
 #endif  // _WIN32
 }
@@ -545,7 +560,6 @@ void draw_text_buffer(const char* text,
 #ifdef _WIN32
 #define RGB_TO_BGR(color) \
     (((color) & 0xff0000) >> 16 | ((color) & 0xff00) | ((color) & 0xff) << 16)
-#define BGR_TO_RGB(color) RGB_TO_BGR(color)  // is its own inverse
 
     HDC context = render_info->context;
     HBITMAP bitmap = render_info->bitmap;
@@ -555,6 +569,9 @@ void draw_text_buffer(const char* text,
 
     int alignment =
         render_info->valign | render_info->halign | DT_NOCLIP | DT_SINGLELINE;
+    log_info("alignment: %08x", alignment);
+    log_info(
+        "bm info: %dx%d, %d lines", info.bmiHeader.biWidth, info.bmiHeader.biHeight, h);
     size_t text_len = strlen(text);
     SetDIBits(context, bitmap, 0, h, (void*)buffer, &info, DIB_RGB_COLORS);
     if (border == TEXT_BORDER_OUTLINE) {
@@ -724,7 +741,6 @@ int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, 
         r.bottom += (int)((float)_yshift * (float)h / 100.0F);
         forceredraw = 1;
     }
-    // log_info("r: %d %d %d %d", r.left, r.top, r.right, r.bottom);
 
     // Check if we need to redraw the buffer
     if (forceredraw || old_halign != _halign || old_valign != _valign
@@ -775,13 +791,26 @@ int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, 
                 h,
 #endif  // _WIN32
             };
-            draw_text_buffer(thisText,
-                             this->config.color,
-                             this->config.border,
-                             this->config.border_color,
-                             this->config.border_size,
-                             myBuffer,
-                             &render_info);
+            // draw_text_buffer(thisText,
+            //                  this->config.color,
+            //                  this->config.border,
+            //                  this->config.border_color,
+            //                  this->config.border_size,
+            //                  myBuffer,
+            //                  &render_info);
+            this->text->render(thisText,
+                               this->font,
+                               (pixel_rgb0_8*)myBuffer,
+                               w,
+                               h,
+                               (Horizontal_Positions)_halign,
+                               (Vertical_Positions)_valign,
+                               _xshift,
+                               _yshift,
+                               this->config.color,
+                               (TextBorderMode)this->config.border,
+                               this->config.border_color,
+                               this->config.border_size);
         }
     }
 
@@ -837,6 +866,8 @@ int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, 
     }
     return 0;
 }
+
+void E_Text::on_load() { this->on_font(); }
 
 void E_Text::load_legacy(unsigned char* data, int len) {
     char* str_data = (char*)data;
@@ -906,13 +937,10 @@ void E_Text::load_legacy(unsigned char* data, int len) {
         pos += 4;
     }
     if (len - pos >= SIZEOF_CHOOSEFONT) {
-#ifdef _WIN32
-        memcpy(&this->cf, data + pos, SIZEOF_CHOOSEFONT);
-#endif  // _WIN32
         pos += SIZEOF_CHOOSEFONT;
     }
     if (len - pos >= SIZEOF_LOGFONT) {
-        this->config.weight = font_weight_to_config_weight(*(int32_t*)&data[pos + 16]);
+        this->config.weight = *(int32_t*)&data[pos + 16] / 100;
         this->config.height = abs(*(int32_t*)&data[pos]);
         this->config.width = *(int32_t*)&data[pos + 4];
         this->config.italic = data[pos + 20];
@@ -998,8 +1026,7 @@ int E_Text::save_legacy(unsigned char* data) {
     *(int32_t*)&data[pos] = this->config.width;
     pos += 4;
     pos += 4 + 4;  // lfEscapement + lfOrientation
-    *(int32_t*)&data[pos] =
-        config_weight_to_font_weight((FontWeight)this->config.weight);
+    *(int32_t*)&data[pos] = this->config.weight * 100;
     pos += 4;
     data[pos++] = this->config.italic;
     data[pos++] = this->config.underline;
