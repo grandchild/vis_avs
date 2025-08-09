@@ -8,37 +8,6 @@
 #include <windows.h>
 #include <commctrl.h>
 
-static int config_weight_to_font_weight(FontWeight weight) {
-    switch (weight) {
-        default:
-        case FONT_WEIGHT_DONTCARE: return 0;
-        case FONT_WEIGHT_THIN: return 100;
-        case FONT_WEIGHT_EXTRALIGHT: return 200;
-        case FONT_WEIGHT_LIGHT: return 300;
-        case FONT_WEIGHT_REGULAR: return 400;
-        case FONT_WEIGHT_MEDIUM: return 500;
-        case FONT_WEIGHT_SEMIBOLD: return 600;
-        case FONT_WEIGHT_BOLD: return 700;
-        case FONT_WEIGHT_EXTRABOLD: return 800;
-        case FONT_WEIGHT_BLACK: return 900;
-    }
-}
-static FontWeight font_weight_to_config_weight(int weight) {
-    switch (weight) {
-        default:
-        case 0: return FONT_WEIGHT_DONTCARE;
-        case 100: return FONT_WEIGHT_THIN;
-        case 200: return FONT_WEIGHT_EXTRALIGHT;
-        case 300: return FONT_WEIGHT_LIGHT;
-        case 400: return FONT_WEIGHT_REGULAR;
-        case 500: return FONT_WEIGHT_MEDIUM;
-        case 600: return FONT_WEIGHT_SEMIBOLD;
-        case 700: return FONT_WEIGHT_BOLD;
-        case 800: return FONT_WEIGHT_EXTRABOLD;
-        case 900: return FONT_WEIGHT_BLACK;
-    }
-}
-
 static int config_family_to_font_family(FontFamily family) {
     switch (family) {
         default:
@@ -220,8 +189,7 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                     LOGFONT lf;
                     memset(&lf, 0, sizeof(LOGFONT));
                     lf.lfHeight = -g_this->get_int(p_height.handle);
-                    lf.lfWeight = config_weight_to_font_weight(
-                        (FontWeight)g_this->get_int(p_weight.handle));
+                    lf.lfWeight = g_this->get_int(p_weight.handle) * 100;
                     lf.lfWidth = g_this->get_int(p_width.handle);
                     lf.lfItalic = g_this->get_bool(p_italic);
                     lf.lfUnderline = g_this->get_bool(p_underline);
@@ -251,8 +219,7 @@ int win32_dlgproc_text(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                         // g_ConfigThis->updating = true;
                         break;
                         g_this->set_string(p_font_name, lf.lfFaceName);
-                        g_this->set_int(p_weight.handle,
-                                        font_weight_to_config_weight(lf.lfWeight));
+                        g_this->set_int(p_weight.handle, lf.lfWeight / 100);
                         g_this->set_int(p_height.handle, abs(lf.lfHeight));
                         g_this->set_int(p_width.handle, lf.lfWidth);
                         g_this->set_bool(p_italic, lf.lfItalic);

@@ -57,7 +57,12 @@ class AVS_Text {
    public:
     AVS_Text() {}
     ~AVS_Text();
-    void get_text_render_size(std::string string, size_t* out_w, size_t* out_h);
+    void get_text_render_size(std::string string,
+                              AVS_Font* font,
+                              size_t w,
+                              size_t h,
+                              size_t* out_w,
+                              size_t* out_h);
     void render(std::string string,
                 AVS_Font* font,
                 pixel_rgb0_8* buffer,

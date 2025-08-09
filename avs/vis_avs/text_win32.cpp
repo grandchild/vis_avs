@@ -173,8 +173,22 @@ TextPlatformContext::~TextPlatformContext() {
 AVS_Text::~AVS_Text() { delete this->context; }
 
 void AVS_Text::get_text_render_size(std::string string,
+                                    AVS_Font* font,
+                                    size_t w,
+                                    size_t h,
                                     uint32_t* out_w,
                                     uint32_t* out_h) {
+    if (!this->context || this->last_h != h || this->last_w != w) {
+        this->reset(w, h);
+        this->last_w = w;
+        this->last_h = h;
+    }
+    if (this->last_font != font) {
+        font->load();
+        this->context->previous_font =
+            (HFONT)SelectObject(this->context->device, (HFONT)font->platform_font);
+        this->last_font = font;
+    }
     if (out_w == nullptr || out_h == nullptr) {
         return;
     }

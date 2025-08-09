@@ -82,53 +82,9 @@ void Text_Info::on_font(Effect* component,
     text->on_font();
 }
 
-// Reinit bitmap buffer since size changed
 void E_Text::reinit(int w, int h) {
-    // Free anything if needed
-    if (lw || lh) {
-#ifdef _WIN32
-        SelectObject(hBitmapDC, hOldBitmap);
-        if (hOldFont) {
-            SelectObject(hBitmapDC, hOldFont);
-        }
-        DeleteDC(hBitmapDC);
-        ReleaseDC(NULL, hDesktopDC);
-#endif  // _WIN32
-        if (myBuffer) {
-            free(myBuffer);
-        }
-    }
-
-    // Alloc buffers, select objects, init structures
+    free(myBuffer);
     myBuffer = (int*)malloc(w * h * 4);
-#ifdef _WIN32
-    hDesktopDC = GetDC(NULL);
-    hRetBitmap = CreateCompatibleBitmap(hDesktopDC, w, h);
-    hBitmapDC = CreateCompatibleDC(hDesktopDC);
-    hOldBitmap = (HBITMAP)SelectObject(hBitmapDC, hRetBitmap);
-    // SetTextColor(hBitmapDC,
-    //              ((this->config.color & 0xFF0000) >> 16) | (this->config.color &
-    //              0xFF00)
-    //                  | (this->config.color & 0xFF) << 16);
-    SetBkMode(hBitmapDC, TRANSPARENT);
-    SetBkColor(hBitmapDC, 0);
-    if (myFont) {
-        hOldFont = (HFONT)SelectObject(hBitmapDC, myFont);
-    } else {
-        hOldFont = NULL;
-    }
-    bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bi.bmiHeader.biWidth = w;
-    bi.bmiHeader.biHeight = h;
-    bi.bmiHeader.biPlanes = 1;
-    bi.bmiHeader.biBitCount = 32;
-    bi.bmiHeader.biCompression = BI_RGB;
-    bi.bmiHeader.biSizeImage = 0;
-    bi.bmiHeader.biXPelsPerMeter = 0;
-    bi.bmiHeader.biYPelsPerMeter = 0;
-    bi.bmiHeader.biClrUsed = 0;
-    bi.bmiHeader.biClrImportant = 0;
-#endif  // _WIN32
 }
 
 E_Text::E_Text(AVS_Instance* avs) : Configurable_Effect(avs), text(new AVS_Text()) {
@@ -150,15 +106,6 @@ E_Text::E_Text(AVS_Instance* avs) : Configurable_Effect(avs), text(new AVS_Text(
     forceBeat = 0;
     forcealign = 1;
 
-#ifdef _WIN32
-    myFont = NULL;
-    // memset(&cf, 0, sizeof(CHOOSEFONT));
-    // cf.lStructSize = sizeof(CHOOSEFONT);
-    // cf.lpLogFont = &lf;
-    // cf.Flags = CF_EFFECTS | CF_SCREENFONTS | CF_FORCEFONTEXIST |
-    // CF_INITTOLOGFONTSTRUCT; cf.rgbColors = this->config.color;
-    memset(&lf, 0, sizeof(LOGFONT));
-#endif  // _WIN32
     lw = lh = 0;
     r = {0, 0, 0, 0};
     updating = false;
@@ -168,26 +115,7 @@ E_Text::E_Text(AVS_Instance* avs) : Configurable_Effect(avs), text(new AVS_Text(
     shiftinit = 1;
 }
 
-E_Text::~E_Text() {
-    if (lw || lh) {
-#ifdef _WIN32
-        SelectObject(hBitmapDC, hOldBitmap);
-        if (hOldFont) {
-            SelectObject(hBitmapDC, hOldFont);
-        }
-        DeleteDC(hBitmapDC);
-        ReleaseDC(NULL, hDesktopDC);
-#endif  // _WIN32
-        if (myBuffer) {
-            free(myBuffer);
-        }
-    }
-#ifdef _WIN32
-    if (myFont) {
-        DeleteObject(myFont);
-    }
-#endif  // _WIN32
-}
+E_Text::~E_Text() { free(myBuffer); }
 
 #ifdef CAN_TALK_TO_WINAMP
 extern HWND hwnd_WinampParent;
@@ -419,37 +347,6 @@ uint32_t halign_to_dt(int halign) {
     }
 }
 
-FontWeight config_weight_to_font_weight(int weight) {
-    switch (weight) {
-        default:
-        case 0: return FONT_WEIGHT_DONTCARE;
-        case 1: return FONT_WEIGHT_THIN;
-        case 2: return FONT_WEIGHT_EXTRALIGHT;
-        case 3: return FONT_WEIGHT_LIGHT;
-        case 4: return FONT_WEIGHT_REGULAR;
-        case 5: return FONT_WEIGHT_MEDIUM;
-        case 6: return FONT_WEIGHT_SEMIBOLD;
-        case 7: return FONT_WEIGHT_BOLD;
-        case 8: return FONT_WEIGHT_EXTRABOLD;
-        case 9: return FONT_WEIGHT_BLACK;
-    }
-}
-int font_weight_to_config_weight(FontWeight weight) {
-    switch (weight) {
-        default:
-        case FONT_WEIGHT_DONTCARE: return 0;
-        case FONT_WEIGHT_THIN: return 1;
-        case FONT_WEIGHT_EXTRALIGHT: return 2;
-        case FONT_WEIGHT_LIGHT: return 3;
-        case FONT_WEIGHT_REGULAR: return 4;
-        case FONT_WEIGHT_MEDIUM: return 5;
-        case FONT_WEIGHT_SEMIBOLD: return 6;
-        case FONT_WEIGHT_BOLD: return 7;
-        case FONT_WEIGHT_EXTRABOLD: return 8;
-        case FONT_WEIGHT_BLACK: return 9;
-    }
-}
-
 int config_family_to_font_family(FontFamily family) {
     switch (family) {
         default:
@@ -505,121 +402,6 @@ void E_Text::on_font() {
         (uint32_t)this->config.char_set,
         font_pitchfamily_to_config_family(this->config.family),
     };
-
-#ifdef _WIN32
-    if (this->myFont) {
-        DeleteObject(this->myFont);
-    }
-    this->myFont = CreateFont(
-        -this->config.height,
-        0,
-        0,
-        0,
-        this->config.weight * 100,
-        this->config.italic,
-        this->config.underline,
-        this->config.strike_out,
-        this->config.char_set,
-        OUT_DEFAULT_PRECIS,
-        CLIP_DEFAULT_PRECIS,
-        DEFAULT_QUALITY,
-        DEFAULT_PITCH | config_family_to_font_family((FontFamily)this->config.family),
-        this->config.font_name.c_str());
-    SelectObject(this->hBitmapDC, this->myFont);
-#endif  // _WIN32
-}
-
-struct TextRenderInfo {
-#ifdef _WIN32
-    HDC context;
-    HBITMAP bitmap;
-    BITMAPINFO info;
-    unsigned int valign;
-    unsigned int halign;
-    RECT r;
-    unsigned int lines;
-#endif
-};
-
-/* Win32 winuser.h constants used for legacy-preset position values:
-DT_TOP     0  -> VPOS_TOP
-DT_LEFT    0  -> HPOS_LEFT
-DT_CENTER  1  -> HPOS_CENTER
-DT_RIGHT   2  -> HPOS_RIGHT
-DT_VCENTER 4  -> VPOS_CENTER
-DT_BOTTOM  8  -> VPOS_BOTTOM
-*/
-
-void draw_text_buffer(const char* text,
-                      uint64_t color,
-                      uint64_t border,
-                      uint64_t border_color,
-                      size_t border_size,
-                      void* buffer,
-                      TextRenderInfo* render_info) {
-#ifdef _WIN32
-#define RGB_TO_BGR(color) \
-    (((color) & 0xff0000) >> 16 | ((color) & 0xff00) | ((color) & 0xff) << 16)
-
-    HDC context = render_info->context;
-    HBITMAP bitmap = render_info->bitmap;
-    BITMAPINFO info = render_info->info;
-    RECT r = render_info->r;
-    int h = render_info->lines;
-
-    int alignment =
-        render_info->valign | render_info->halign | DT_NOCLIP | DT_SINGLELINE;
-    log_info("alignment: %08x", alignment);
-    log_info(
-        "bm info: %dx%d, %d lines", info.bmiHeader.biWidth, info.bmiHeader.biHeight, h);
-    size_t text_len = strlen(text);
-    SetDIBits(context, bitmap, 0, h, (void*)buffer, &info, DIB_RGB_COLORS);
-    if (border == TEXT_BORDER_OUTLINE) {
-        SetTextColor(context, RGB_TO_BGR(border_color));
-        r.left -= border_size;
-        r.right -= border_size;
-        r.top -= border_size;
-        r.bottom -= border_size;
-        DrawText(context, text, text_len, &r, alignment);
-        r.left += border_size;
-        r.right += border_size;
-        DrawText(context, text, text_len, &r, alignment);
-        r.left += border_size;
-        r.right += border_size;
-        DrawText(context, text, text_len, &r, alignment);
-        r.top += border_size;
-        r.bottom += border_size;
-        DrawText(context, text, text_len, &r, alignment);
-        r.top += border_size;
-        r.bottom += border_size;
-        DrawText(context, text, text_len, &r, alignment);
-        r.left -= border_size;
-        r.right -= border_size;
-        DrawText(context, text, text_len, &r, alignment);
-        r.left -= border_size;
-        r.right -= border_size;
-        DrawText(context, text, text_len, &r, alignment);
-        r.top -= border_size;
-        r.bottom -= border_size;
-        DrawText(context, text, text_len, &r, alignment);
-        r.left += border_size;
-        r.right += border_size;
-    } else if (border == TEXT_BORDER_SHADOW) {
-        SetTextColor(context, RGB_TO_BGR(border_color));
-        r.left += border_size;
-        r.right += border_size;
-        r.top += border_size;
-        r.bottom += border_size;
-        DrawText(context, text, text_len, &r, alignment);
-        r.left -= border_size;
-        r.right -= border_size;
-        r.top -= border_size;
-        r.bottom -= border_size;
-    }
-    SetTextColor(context, RGB_TO_BGR(color));
-    DrawText(context, text, text_len, &r, alignment);
-    GetDIBits(context, bitmap, 0, h, (void*)buffer, &info, DIB_RGB_COLORS);
-#endif
 }
 
 int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, int h) {
@@ -687,19 +469,19 @@ int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, 
         if (this->config.random_position && w && h)  // Handle random position
         {
             // Don't write outside the screen
-#ifdef _WIN32
-            SIZE size = {0, 0};
-            GetTextExtentPoint32(hBitmapDC, thisText, strlen(thisText), &size);
+            size_t text_w = 0;
+            size_t text_h = 0;
+            this->text->get_text_render_size(
+                thisText, this->font, w, h, &text_w, &text_h);
             _halign = HPOS_LEFT;
-            if (size.cx < w) {
-                _xshift = rand() % (int)(((float)(w - size.cx) / (float)w) * 100.0F);
+            if (text_w < w) {
+                _xshift = rand() % (int)(((float)(w - text_w) / (float)w) * 100.0F);
             }
             _valign = VPOS_TOP;
-            if (size.cy < h) {
-                _yshift = rand() % (int)(((float)(h - size.cy) / (float)h) * 100.0F);
+            if (text_h < h) {
+                _yshift = rand() % (int)(((float)(h - text_h) / (float)h) * 100.0F);
             }
             forceshift = 1;
-#endif            // _WIN32
         } else {  // Reset position to what is specified
             _halign = this->config.horizontal_align;
             _valign = this->config.vertical_align;
@@ -780,24 +562,6 @@ int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, 
             p++;
         }
         if (*thisText) {
-            TextRenderInfo render_info = {
-#ifdef _WIN32
-                hBitmapDC,
-                hRetBitmap,
-                bi,
-                valign_to_dt(_valign),
-                halign_to_dt(_halign),
-                RECT{r.left, r.top, r.right, r.bottom},
-                h,
-#endif  // _WIN32
-            };
-            // draw_text_buffer(thisText,
-            //                  this->config.color,
-            //                  this->config.border,
-            //                  this->config.border_color,
-            //                  this->config.border_size,
-            //                  myBuffer,
-            //                  &render_info);
             this->text->render(thisText,
                                this->font,
                                (pixel_rgb0_8*)myBuffer,
