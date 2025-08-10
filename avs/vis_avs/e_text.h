@@ -65,11 +65,11 @@ struct Text_Info : public Effect_Info {
         *length_out = 6;
         static const char* const options[6] = {
             "Dont Care",
-            "Roman",
-            "Swiss",
-            "Modern",
-            "Script",
-            "Decorative",
+            "Serif",
+            "Sans-Serif",
+            "Monospace",
+            "Cursive",
+            "Fantasy",
         };
         return options;
     }

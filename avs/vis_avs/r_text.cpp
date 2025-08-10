@@ -351,22 +351,22 @@ int config_family_to_font_family(FontFamily family) {
     switch (family) {
         default:
         case FONT_FAMILY_DONTCARE: return 0;
-        case FONT_FAMILY_ROMAN: return 1;
-        case FONT_FAMILY_SWISS: return 2;
-        case FONT_FAMILY_MODERN: return 3;
-        case FONT_FAMILY_SCRIPT: return 4;
-        case FONT_FAMILY_DECORATIVE: return 5;
+        case FONT_FAMILY_SERIF: return 1;
+        case FONT_FAMILY_SANSSERIF: return 2;
+        case FONT_FAMILY_MONOSPACE: return 3;
+        case FONT_FAMILY_CURSIVE: return 4;
+        case FONT_FAMILY_FANTASY: return 5;
     }
 }
 FontFamily font_pitchfamily_to_config_family(int pitch_and_family) {
     switch (pitch_and_family >> 4) {
         default:
         case 0: return FONT_FAMILY_DONTCARE;
-        case 1: return FONT_FAMILY_ROMAN;
-        case 2: return FONT_FAMILY_SWISS;
-        case 3: return FONT_FAMILY_MODERN;
-        case 4: return FONT_FAMILY_SCRIPT;
-        case 5: return FONT_FAMILY_DECORATIVE;
+        case 1: return FONT_FAMILY_SERIF;
+        case 2: return FONT_FAMILY_SANSSERIF;
+        case 3: return FONT_FAMILY_MONOSPACE;
+        case 4: return FONT_FAMILY_CURSIVE;
+        case 5: return FONT_FAMILY_FANTASY;
     }
 }
 
