@@ -91,7 +91,6 @@ std::vector<AVS_Font> AVS_Font::get_fonts() {
 }
 
 void AVS_Font::load() {
-    log_info("loading font");
     DeleteObject(this->platform_font);
     this->platform_font = nullptr;
     auto lf = new LOGFONT();
@@ -139,7 +138,6 @@ TextPlatformContext::TextPlatformContext(size_t w, size_t h)
     : device(CreateCompatibleDC(nullptr)),
       bitmap(CreateCompatibleBitmap(GetDC(nullptr), w, h)),
       bm_info() {
-    log_info("device: 0x%p, bitmap: 0x%p", this->device, this->bitmap);
     this->previous_bitmap = (HBITMAP)SelectObject(this->device, this->bitmap);
     this->bm_info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     this->bm_info.bmiHeader.biWidth = w;
