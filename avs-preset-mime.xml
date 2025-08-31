@@ -1,0 +1,9 @@
+<!-- Install with "[sudo] xdg-mime install avs-preset-mime.xml" -->
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+    <mime-type type="application/x-avs-preset">
+        <comment>AVS Preset File</comment>
+        <icon name="application-x-avs"/>
+        <glob pattern="*.avs-preset"/>
+    </mime-type>
+</mime-info>

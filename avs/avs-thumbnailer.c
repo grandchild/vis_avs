@@ -1,0 +1,98 @@
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "3rdparty/stb_image_write.h"
+#include "vis_avs/avs.h"
+
+#include <stdlib.h>  // random(), malloc(), free()
+
+#define AUDIO_SRATE 44100
+#define FRAMERATE   30
+
+int main(int argc, char const* argv[]) {
+    if (argc < 4) {
+        printf("Usage: %s <input.avs-preset> <size> <output.png> [<warmup>]\n",
+               argv[0]);
+        return 1;
+    }
+    const char* preset = argv[1];
+    int size = atoi(argv[2]);
+    if (size <= 0) {
+        printf("Invalid size: %d\n", size);
+        return 2;
+    }
+    const char* output_png = argv[3];
+    int warmup = 0;
+    if (argc >= 5) {
+        warmup = atoi(argv[4]);
+        if (warmup < 0) {
+            warmup = 0;
+        }
+    }
+    AVS_Handle avs = avs_init(nullptr, AVS_AUDIO_EXTERNAL, AVS_BEAT_EXTERNAL);
+    if (!avs) {
+        printf("Error initializing AVS: %s\n", avs_error_str(avs));
+        return 3;
+    }
+    if (!avs_preset_load(avs, preset)) {
+        printf("Error loading preset: %s\n", avs_error_str(avs));
+        avs_free(avs);
+        return 4;
+    }
+    size_t width = size;
+    size_t height = size;
+    uint32_t* framebuffer = (uint32_t*)malloc(width * height * sizeof(uint32_t));
+    if (!framebuffer) {
+        printf("Error allocating framebuffer\n");
+        avs_free(avs);
+        return 5;
+    }
+    int64_t time_in_ms = 0;
+    // TODO [bug]: Reenable audio code after fixing AVS audio setter
+    // float audio[2][AUDIO_SRATE];
+    // srandom(0x12345678);
+    for (int i = 0; i < warmup; i++) {
+        // if (i % FRAMERATE == 0) {
+        //     for (size_t s = 0; s < AUDIO_SRATE; s++) {
+        //         audio[0][s] = ((float)(random() % 2000) / 1000.0f) - 1.0f;
+        //         audio[1][s] = ((float)(random() % 2000) / 1000.0f) - 1.0f;
+        //     }
+        //     avs_audio_set(avs, audio[0], audio[1], AUDIO_SRATE, AUDIO_SRATE, (i + 1)
+        //     * AUDIO_SRATE);
+        // }
+        if (!avs_render_frame(
+                avs, framebuffer, width, height, time_in_ms, false, AVS_PIXEL_RGB0_8)) {
+            printf("Error during warmup: %s\n", avs_error_str(avs));
+            free(framebuffer);
+            avs_free(avs);
+            return 6;
+        }
+        time_in_ms += 1000 / FRAMERATE;
+    }
+
+    if (avs_render_frame(
+            avs, framebuffer, width, height, time_in_ms, false, AVS_PIXEL_RGB0_8)) {
+        unsigned char* img_data = (unsigned char*)malloc(width * height * 4);
+        if (!img_data) {
+            printf("Error allocating output image data\n");
+            free(framebuffer);
+            avs_free(avs);
+            return 7;
+        }
+        for (size_t i = 0; i < width * height; i++) {
+            img_data[i * 4 + 0] = (framebuffer[i] >> 16) & 0xFF;
+            img_data[i * 4 + 1] = (framebuffer[i] >> 8) & 0xFF;
+            img_data[i * 4 + 2] = (framebuffer[i] >> 0) & 0xFF;
+            img_data[i * 4 + 3] = 255;
+        }
+        stbi_write_png(output_png, width, height, 4, img_data, width * 4);
+        free(img_data);
+    } else {
+        printf("Error rendering: %s\n", avs_error_str(avs));
+        free(framebuffer);
+        avs_free(avs);
+        return 8;
+    }
+    printf("Successfully thumbnailed %s to %s\n", preset, output_png);
+    free(framebuffer);
+    avs_free(avs);
+    return 0;
+}

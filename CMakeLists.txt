@@ -241,6 +241,8 @@ elseif(LINUX)
     target_link_options(avs_common PUBLIC -Wl,-m elf_i386)
     add_executable(avs-cli avs/avs-cli.c)
     target_link_libraries(avs-cli libavs)
+    add_executable(avs-thumbnailer avs/avs-thumbnailer.c)
+    target_link_libraries(avs-thumbnailer libavs)
 endif()
 
 

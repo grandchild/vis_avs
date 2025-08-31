@@ -1,0 +1,4 @@
+[Thumbnailer Entry]
+TryExec=avs-thumbnailer
+Exec=avs-thumbnailer %i %s %o 100
+MimeType=application/x-avs-preset;
