@@ -27,6 +27,7 @@ struct Root_Config : public Effect_Config {
     std::string date_last;
     std::vector<Root_Contributor_Config> contributors;
     std::vector<Root_BasedOn_Config> based_on;
+    int64_t warmup_frames = 10;
 };
 
 struct Root_Info : public Effect_Info {
@@ -66,7 +67,7 @@ struct Root_Info : public Effect_Info {
                                         "Contributors of the predecessor"),
     };
 
-    static constexpr uint32_t num_parameters = 7;
+    static constexpr uint32_t num_parameters = 8;
     static constexpr Parameter parameters[num_parameters] = {
         P_BOOL(offsetof(Root_Config, clear),
                "Clear",
@@ -93,6 +94,10 @@ struct Root_Info : public Effect_Info {
                                     0,
                                     0,
                                     "Previous presets used to create this one"),
+        P_INT(offsetof(Root_Config, warmup_frames),
+              "Warmup Frames",
+              "Render at least this many frames before a screenshot/thumbnail"
+              " - if it's negative use a cautious default, e.g. 100"),
     };
 
     virtual bool can_have_child_components() const { return true; }

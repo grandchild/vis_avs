@@ -140,6 +140,7 @@ void E_Root::load_legacy(unsigned char* data, int len) {
         pos += l_len;
         this->insert(new_effect, this, INSERT_CHILD);
     }
+    this->config.warmup_frames = -1;
 }
 
 int E_Root::save_legacy(unsigned char* data) {
