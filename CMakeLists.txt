@@ -65,6 +65,7 @@ elseif(LINUX)
         avs/vis_avs/audio_in_linux_pipewire.cpp
         avs/vis_avs/audio_libpipewire.cpp
         avs/3rdparty/pevents.cpp
+        avs/vis_avs/text_linux.cpp
     )
 endif()
 
@@ -235,6 +236,10 @@ elseif(LINUX)
     else()
         include_directories(${PIPEWIRE_INCLUDE_DIRS})
     endif()
+    pkg_search_module(FREETYPE REQUIRED freetype2)
+    pkg_search_module(FONTCONFIG REQUIRED fontconfig)
+    include_directories(${FREETYPE_INCLUDE_DIRS} ${FONTCONFIG_INCLUDE_DIRS})
+    target_link_libraries(libavs ${FREETYPE_LIBRARIES} ${FONTCONFIG_LIBRARIES})
     pkg_search_module(UUID REQUIRED uuid)
     target_link_libraries(libavs ${UUID_LIBRARIES})
     include_directories(avs_common PRIVATE ${UUID_INCLUDE_DIRS})
