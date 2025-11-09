@@ -14,14 +14,14 @@ struct Root_Contributor_Config : public Effect_Config {
 
 struct Root_BasedOn_Config : public Effect_Config {
     std::string id;
-    std::string name;
+    std::string title;
     std::string date;
     std::vector<Root_Contributor_Config> contributors;
 };
 
 struct Root_Config : public Effect_Config {
     bool clear = false;
-    std::string name;
+    std::string title;
     std::string id;
     std::string date_init;
     std::string date_last;
@@ -52,9 +52,9 @@ struct Root_Info : public Effect_Info {
     static constexpr uint32_t num_remix_parameters = 4;
     static constexpr Parameter remix_parameters[num_remix_parameters] = {
         P_STRING(offsetof(Root_BasedOn_Config, id), "ID", "UUID of the predecessor"),
-        P_STRING(offsetof(Root_BasedOn_Config, name),
-                 "Name",
-                 "Name of the predecessor"),
+        P_STRING(offsetof(Root_BasedOn_Config, title),
+                 "Title Before",
+                 "Title of the predecessor"),
         P_STRING(offsetof(Root_BasedOn_Config, date),
                  "Date",
                  "Last-edited date of the predecessor"),
@@ -72,7 +72,7 @@ struct Root_Info : public Effect_Info {
         P_BOOL(offsetof(Root_Config, clear),
                "Clear",
                "Clear the screen for every new frame"),
-        P_STRING(offsetof(Root_Config, name), "Name", "Name of the preset"),
+        P_STRING(offsetof(Root_Config, title), "Title", "Title of the preset"),
         P_STRING(offsetof(Root_Config, id), "ID", "UUID of the preset"),
         P_STRING(offsetof(Root_Config, date_init),
                  "Date Initial",

@@ -22,7 +22,7 @@ constexpr Parameter Root_Info::contributor_parameters[];
 constexpr Parameter Root_Info::remix_parameters[];
 constexpr Parameter Root_Info::parameters[];
 
-std::string random_preset_name_slug() {
+std::string random_preset_title_slug() {
     static const char charset[] = "0123456789abcdefghijklmnopqrstuvwxyz";
     std::string slug;
     for (int i = 0; i < 10; i++) {
@@ -33,7 +33,7 @@ std::string random_preset_name_slug() {
 
 E_Root::E_Root(AVS_Instance* avs) : Configurable_Effect(avs), buffers_saved(false) {
     this->config.date_init = current_date_str();
-    this->config.name = "Untitled Preset " + random_preset_name_slug();
+    this->config.title = "Untitled Preset " + random_preset_title_slug();
     this->config.id = uuid4();
 }
 E_Root::~E_Root() {
@@ -48,7 +48,7 @@ E_Root::~E_Root() {
 void E_Root::remix() {
     Root_BasedOn_Config based_on;
     based_on.id = this->config.id;
-    based_on.name = this->config.name;
+    based_on.title = this->config.title;
     based_on.date = this->config.date_last;
     based_on.contributors = this->config.contributors;
     this->config.based_on.push_back(based_on);
