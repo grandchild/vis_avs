@@ -394,7 +394,7 @@ bool avs_parameter_get_bool(AVS_Handle avs,
                             AVS_Component_Handle component,
                             AVS_Parameter_Handle parameter,
                             uint32_t list_depth,
-                            int64_t* list_indices) {
+                            const int64_t* list_indices) {
     Effect* _component;
     if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
         return false;
@@ -407,7 +407,7 @@ int64_t avs_parameter_get_int(AVS_Handle avs,
                               AVS_Component_Handle component,
                               AVS_Parameter_Handle parameter,
                               uint32_t list_depth,
-                              int64_t* list_indices) {
+                              const int64_t* list_indices) {
     Effect* _component;
     if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
         return 0;
@@ -420,7 +420,7 @@ double avs_parameter_get_float(AVS_Handle avs,
                                AVS_Component_Handle component,
                                AVS_Parameter_Handle parameter,
                                uint32_t list_depth,
-                               int64_t* list_indices) {
+                               const int64_t* list_indices) {
     Effect* _component;
     if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
         return 0.0;
@@ -433,7 +433,7 @@ uint64_t avs_parameter_get_color(AVS_Handle avs,
                                  AVS_Component_Handle component,
                                  AVS_Parameter_Handle parameter,
                                  uint32_t list_depth,
-                                 int64_t* list_indices) {
+                                 const int64_t* list_indices) {
     Effect* _component;
     if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
         return 0;
@@ -446,7 +446,7 @@ const char* avs_parameter_get_string(AVS_Handle avs,
                                      AVS_Component_Handle component,
                                      AVS_Parameter_Handle parameter,
                                      uint32_t list_depth,
-                                     int64_t* list_indices) {
+                                     const int64_t* list_indices) {
     Effect* _component;
     if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
         return "";
@@ -461,7 +461,7 @@ bool avs_parameter_set_bool(AVS_Handle avs,
                             AVS_Parameter_Handle parameter,
                             bool value,
                             uint32_t list_depth,
-                            int64_t* list_indices) {
+                            const int64_t* list_indices) {
     AVS_Instance* instance;
     Effect* _component;
     if (!resolve_handles(avs, 0, component, 0, &instance, NULL, &_component)) {
@@ -476,7 +476,7 @@ bool avs_parameter_set_int(AVS_Handle avs,
                            AVS_Parameter_Handle parameter,
                            int64_t value,
                            uint32_t list_depth,
-                           int64_t* list_indices) {
+                           const int64_t* list_indices) {
     AVS_Instance* instance;
     Effect* _component;
     if (!resolve_handles(avs, 0, component, 0, &instance, NULL, &_component)) {
@@ -491,7 +491,7 @@ bool avs_parameter_set_float(AVS_Handle avs,
                              AVS_Parameter_Handle parameter,
                              double value,
                              uint32_t list_depth,
-                             int64_t* list_indices) {
+                             const int64_t* list_indices) {
     AVS_Instance* instance;
     Effect* _component;
     if (!resolve_handles(avs, 0, component, 0, &instance, NULL, &_component)) {
@@ -506,7 +506,7 @@ bool avs_parameter_set_color(AVS_Handle avs,
                              AVS_Parameter_Handle parameter,
                              uint64_t value,
                              uint32_t list_depth,
-                             int64_t* list_indices) {
+                             const int64_t* list_indices) {
     AVS_Instance* instance;
     Effect* _component;
     if (!resolve_handles(avs, 0, component, 0, &instance, NULL, &_component)) {
@@ -521,7 +521,7 @@ bool avs_parameter_set_string(AVS_Handle avs,
                               AVS_Parameter_Handle parameter,
                               const char* value,
                               uint32_t list_depth,
-                              int64_t* list_indices) {
+                              const int64_t* list_indices) {
     AVS_Instance* instance;
     Effect* _component;
     if (!resolve_handles(avs, 0, component, 0, &instance, NULL, &_component)) {
@@ -537,7 +537,7 @@ const int64_t* avs_parameter_get_int_array(AVS_Handle avs,
                                            AVS_Parameter_Handle parameter,
                                            uint64_t* length_out,
                                            uint32_t list_depth,
-                                           int64_t* list_indices) {
+                                           const int64_t* list_indices) {
     Effect* _component;
     if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
         *length_out = 0;
@@ -554,7 +554,7 @@ const double* avs_parameter_get_float_array(AVS_Handle avs,
                                             AVS_Parameter_Handle parameter,
                                             uint64_t* length_out,
                                             uint32_t list_depth,
-                                            int64_t* list_indices) {
+                                            const int64_t* list_indices) {
     Effect* _component;
     if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
         *length_out = 0;
@@ -571,7 +571,7 @@ const uint64_t* avs_parameter_get_color_array(AVS_Handle avs,
                                               AVS_Parameter_Handle parameter,
                                               uint64_t* length_out,
                                               uint32_t list_depth,
-                                              int64_t* list_indices) {
+                                              const int64_t* list_indices) {
     Effect* _component;
     if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
         *length_out = 0;
@@ -588,7 +588,7 @@ bool avs_parameter_run_action(AVS_Handle avs,
                               AVS_Component_Handle component,
                               AVS_Parameter_Handle parameter,
                               uint32_t list_depth,
-                              int64_t* list_indices) {
+                              const int64_t* list_indices) {
     AVS_Instance* instance;
     Effect* _component;
     if (!resolve_handles(avs, 0, component, 0, &instance, NULL, &_component)) {
@@ -603,7 +603,7 @@ int64_t avs_parameter_list_length(AVS_Handle avs,
                                   AVS_Component_Handle component,
                                   AVS_Parameter_Handle parameter,
                                   uint32_t list_depth,
-                                  int64_t* list_indices) {
+                                  const int64_t* list_indices) {
     AVS_Instance* instance;
     Effect* _component;
     const Parameter* _parameter;
@@ -634,7 +634,7 @@ bool avs_parameter_list_element_add(AVS_Handle avs,
                                     uint32_t values_length,
                                     const AVS_Parameter_Value* values,
                                     uint32_t list_depth,
-                                    int64_t* list_indices) {
+                                    const int64_t* list_indices) {
     AVS_Instance* instance;
     Effect* _component;
     const Parameter* _parameter;
@@ -659,7 +659,7 @@ bool avs_parameter_list_element_move(AVS_Handle avs,
                                      int64_t from_index,
                                      int64_t to_index,
                                      uint32_t list_depth,
-                                     int64_t* list_indices) {
+                                     const int64_t* list_indices) {
     AVS_Instance* instance;
     Effect* _component;
     const Parameter* _parameter;
@@ -683,7 +683,7 @@ bool avs_parameter_list_element_remove(AVS_Handle avs,
                                        AVS_Parameter_Handle parameter,
                                        int64_t remove_index,
                                        uint32_t list_depth,
-                                       int64_t* list_indices) {
+                                       const int64_t* list_indices) {
     AVS_Instance* instance;
     Effect* _component;
     const Parameter* _parameter;
