@@ -125,6 +125,8 @@ class E_Root : public Configurable_Effect<Root_Info, Root_Config> {
     void end_buffer_context();
 
    private:
+    bool is_first_render;
+
     // these are our framebuffers (formerly nb_save)
     int buffers_w[NUM_GLOBAL_BUFFERS] = {};
     int buffers_h[NUM_GLOBAL_BUFFERS] = {};

@@ -31,7 +31,8 @@ std::string random_preset_title_slug() {
     return slug;
 }
 
-E_Root::E_Root(AVS_Instance* avs) : Configurable_Effect(avs), buffers_saved(false) {
+E_Root::E_Root(AVS_Instance* avs)
+    : Configurable_Effect(avs), is_first_render(true), buffers_saved(false) {
     this->config.date_init = current_date_str();
     this->config.title = "Untitled Preset " + random_preset_title_slug();
     this->config.id = uuid4();
@@ -62,8 +63,9 @@ int E_Root::render(char visdata[2][2][576],
                    int* fbout,
                    int w,
                    int h) {
-    if (this->config.clear) {
+    if (this->config.clear || this->is_first_render) {
         memset(framebuffer, 0, w * h * sizeof(pixel_rgb0_8));
+        this->is_first_render = false;
     }
     bool swap_parity = false;
     for (auto& effect : this->children) {
@@ -85,8 +87,9 @@ int E_Root::render(char visdata[2][2][576],
 }
 
 void E_Root::render_with_context(RenderContext& ctx) {
-    if (this->config.clear) {
+    if (this->config.clear || this->is_first_render) {
         memset(ctx.framebuffers[0].data, 0, ctx.w * ctx.h * sizeof(pixel_rgb0_8));
+        this->is_first_render = false;
     }
     char visdata[2][2][576];
     ctx.audio.to_legacy_visdata(visdata);
