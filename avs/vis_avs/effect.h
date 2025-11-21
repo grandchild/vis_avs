@@ -1,3 +1,31 @@
+/**
+ * Effect (abstract)
+ * │ - API handle
+ * │ - implements tree behavior
+ * │ - render methods
+ * │ - save/load methods for preset files
+ * │
+ * └── template Configurable_Effect
+ *     │ - info, config & global config
+ *     │ - parameter get/set methods
+ *     │
+ *     ├── Configurable_Effect<Foo_Info, Foo_Config [, Foo_Global_Config]>
+ *     │   │ - template instantiation for Foo effect
+ *     │   │ - specifies info & config types
+ *     │   │
+ *     │   └── E_Foo
+ *     │         - effect class
+ *     │
+ *     ├── Configurable_Effect<Bar_Info, Bar_Config [, Bar_Global_Config]>
+ *     │   └── E_Bar
+ *     ├── ...
+ *     │
+ *     └── template Programmable_Effect
+ *         ├── Programmable_Effect<Baz_Info, Baz_Config, Baz_Vars [, Baz_Global_Config]>
+ *         │   └── E_Baz
+ *         └── Programmable_Effect<Qux_Info, Qux_Config, Qux_Vars [, Qux_Global_Config]>
+ *             └── E_Qux
+ */
 #pragma once
 
 #include "avs_editor.h"
