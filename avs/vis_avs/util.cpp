@@ -412,27 +412,33 @@ void compilerfunctionlist(HWND hwndDlg, const char* title, const char* text) {
                    (LONG)info.c_str());
 }
 
-void init_ranged_slider(const Parameter& param,
+void init_ranged_slider(const Parameter* param,
                         int64_t value,
                         HWND hwndDlg,
                         uint32_t control_handle,
                         uint32_t tick_freq /*default: 0*/) {
-    SendDlgItemMessage(hwndDlg, control_handle, TBM_SETRANGEMIN, 0, param.int_min);
-    SendDlgItemMessage(hwndDlg, control_handle, TBM_SETRANGEMAX, 0, param.int_max);
+    if (!param) {
+        return;
+    }
+    SendDlgItemMessage(hwndDlg, control_handle, TBM_SETRANGEMIN, 0, param->int_min);
+    SendDlgItemMessage(hwndDlg, control_handle, TBM_SETRANGEMAX, 0, param->int_max);
     SendDlgItemMessage(hwndDlg, control_handle, TBM_SETPOS, 1, value);
     if (tick_freq) {
         SendDlgItemMessage(hwndDlg, control_handle, TBM_SETTICFREQ, tick_freq, 0);
     }
 }
 
-void init_ranged_slider_float(const Parameter& param,
+void init_ranged_slider_float(const Parameter* param,
                               double value,
                               double factor,
                               HWND hwndDlg,
                               uint32_t control_handle,
                               double tick_freq /*default: 0*/) {
-    int64_t min_val = (int64_t)(param.float_min * factor);
-    int64_t max_val = (int64_t)(param.float_max * factor);
+    if (!param) {
+        return;
+    }
+    int64_t min_val = (int64_t)(param->float_min * factor);
+    int64_t max_val = (int64_t)(param->float_max * factor);
     int64_t value_i = (int64_t)(value * factor);
     SendDlgItemMessage(hwndDlg, control_handle, TBM_SETRANGEMIN, 0, min_val);
     SendDlgItemMessage(hwndDlg, control_handle, TBM_SETRANGEMAX, 0, max_val);
@@ -443,12 +449,15 @@ void init_ranged_slider_float(const Parameter& param,
     }
 }
 
-void init_select(const Parameter& param,
+void init_select(const Parameter* param,
                  int64_t value,
                  HWND hwndDlg,
                  uint32_t control_handle) {
+    if (!param) {
+        return;
+    }
     int64_t options_length;
-    const char* const* options = param.get_options(&options_length);
+    const char* const* options = param->get_options(&options_length);
     for (int64_t i = 0; i < options_length; ++i) {
         SendDlgItemMessage(
             hwndDlg, control_handle, CB_ADDSTRING, 0, (LPARAM)options[i]);
@@ -458,26 +467,29 @@ void init_select(const Parameter& param,
     }
 }
 
-void init_select_radio(const Parameter& param,
+void init_select_radio(const Parameter* param,
                        int64_t value,
                        HWND hwndDlg,
                        uint32_t* control_handles,
                        size_t num_controls) {
+    if (!param) {
+        return;
+    }
     int64_t options_length;
-    param.get_options(&options_length);
+    param->get_options(&options_length);
     if (num_controls < options_length) {
         printf(
             "Warning: %lld less control(s) than options in '%s',"
             " some options unreachable.\n",
             options_length - num_controls,
-            param.name);
+            param->name);
     }
     if (num_controls > options_length) {
         printf(
             "Warning: %lld more control(s) than options in '%s',"
             " some options invalid.\n",
             options_length - num_controls,
-            param.name);
+            param->name);
     }
     bool found = false;
     for (int64_t i = 0; i < options_length; ++i) {
@@ -487,17 +499,21 @@ void init_select_radio(const Parameter& param,
         }
     }
     if (!found) {
-        printf("Radio option %lld for parameter '%s' not found.?\n", value, param.name);
+        printf(
+            "Radio option %lld for parameter '%s' not found.?\n", value, param->name);
     }
 }
 
-void init_resource(const Parameter& param,
+void init_resource(const Parameter* param,
                    const char* value,
                    HWND hwndDlg,
                    int32_t control_handle,
                    size_t max_str_len) {
+    if (!param) {
+        return;
+    }
     int64_t options_length;
-    const char* const* options = param.get_options(&options_length);
+    const char* const* options = param->get_options(&options_length);
     bool resource_available = false;
     for (int64_t i = 0; i < options_length; ++i) {
         SendDlgItemMessage(

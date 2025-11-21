@@ -2,8 +2,11 @@
 
 #include "avs_editor.h"  // AVS_Parameter_Handle
 
-#include <map>
+#include <unordered_map>
 #include <vector>
+
+class Effect_Info;  // effect_info.h
+class Parameter;    // effect_info.h
 
 class Handles {
    private:
@@ -51,5 +54,8 @@ class Handles {
 
 extern Handles h_instances;
 extern Handles h_components;
-extern std::map<AVS_Parameter_Handle, std::vector<AVS_Parameter_Handle>>
-    h_parameter_children;
+extern std::unordered_map<AVS_Parameter_Handle, const Parameter*> g_param_map;
+extern std::unordered_map<const Effect_Info*, std::vector<AVS_Parameter_Handle>>
+    g_effect_parameters_for_api;
+extern std::unordered_map<const Parameter*, std::vector<AVS_Parameter_Handle>>
+    g_child_parameters_for_api;

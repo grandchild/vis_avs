@@ -68,7 +68,7 @@ void E_AddBorders::load_legacy(unsigned char* data, int len) {
     }
     pos += 4;
     if (len - pos >= 4) {
-        this->set_int(this->info.parameters[1].handle, GET_INT());
+        this->config.size = GET_INT();
     } else {
         this->config.size = this->info.parameters[1].int_min;
     }

@@ -13,17 +13,17 @@ int win32_dlgproc_blitterfeedback(HWND hwndDlg,
                                   WPARAM wParam,
                                   LPARAM lParam) {
     auto g_this = (E_BlitterFeedback*)g_current_render;
-    const Parameter& p_zoom = BlitterFeedback_Info::parameters[0];
-    AVS_Parameter_Handle p_on_beat = BlitterFeedback_Info::parameters[1].handle;
-    const Parameter& p_on_beat_zoom = BlitterFeedback_Info::parameters[2];
-    AVS_Parameter_Handle p_blend_mode = BlitterFeedback_Info::parameters[3].handle;
-    AVS_Parameter_Handle p_bilinear = BlitterFeedback_Info::parameters[4].handle;
+    const Parameter* p_zoom = &BlitterFeedback_Info::parameters[0];
+    const Parameter* p_on_beat = &BlitterFeedback_Info::parameters[1];
+    const Parameter* p_on_beat_zoom = &BlitterFeedback_Info::parameters[2];
+    const Parameter* p_blend_mode = &BlitterFeedback_Info::parameters[3];
+    const Parameter* p_bilinear = &BlitterFeedback_Info::parameters[4];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
-            auto zoom = g_this->get_int(p_zoom.handle);
+            auto zoom = g_this->get_int(p_zoom);
             init_ranged_slider(p_zoom, zoom, hwndDlg, IDC_SLIDER1);
-            auto on_beat_zoom = g_this->get_int(p_on_beat_zoom.handle);
+            auto on_beat_zoom = g_this->get_int(p_on_beat_zoom);
             init_ranged_slider(p_on_beat_zoom, on_beat_zoom, hwndDlg, IDC_SLIDER2);
 
             CheckDlgButton(hwndDlg,
@@ -55,10 +55,10 @@ int win32_dlgproc_blitterfeedback(HWND hwndDlg,
             HWND swnd = (HWND)lParam;
             auto t = (int)SendMessage(swnd, TBM_GETPOS, 0, 0);
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER1)) {
-                g_this->set_int(p_zoom.handle, t);
+                g_this->set_int(p_zoom, t);
             }
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER2)) {
-                g_this->set_int(p_on_beat_zoom.handle, t);
+                g_this->set_int(p_on_beat_zoom, t);
             }
         }
     }

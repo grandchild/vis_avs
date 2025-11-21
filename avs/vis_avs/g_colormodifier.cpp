@@ -9,13 +9,13 @@
 
 int win32_dlgproc_colormodifier(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     E_ColorModifier* g_this = (E_ColorModifier*)g_current_render;
-    const AVS_Parameter_Handle p_init = g_this->info.parameters[0].handle;
-    const AVS_Parameter_Handle p_frame = g_this->info.parameters[1].handle;
-    const AVS_Parameter_Handle p_beat = g_this->info.parameters[2].handle;
-    const AVS_Parameter_Handle p_point = g_this->info.parameters[3].handle;
-    const AVS_Parameter_Handle p_recompute = g_this->info.parameters[4].handle;
-    const Parameter& p_example = g_this->info.parameters[5];
-    AVS_Parameter_Handle p_load_example = g_this->info.parameters[6].handle;
+    const Parameter* p_init = &g_this->info.parameters[0];
+    const Parameter* p_frame = &g_this->info.parameters[1];
+    const Parameter* p_beat = &g_this->info.parameters[2];
+    const Parameter* p_point = &g_this->info.parameters[3];
+    const Parameter* p_recompute = &g_this->info.parameters[4];
+    const Parameter* p_example = &g_this->info.parameters[5];
+    const Parameter* p_load_example = &g_this->info.parameters[6];
 
     static int isstart;
     switch (uMsg) {
@@ -47,7 +47,8 @@ int win32_dlgproc_colormodifier(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
                 hMenu = CreatePopupMenu();
                 unsigned int x;
                 int64_t num_examples;
-                const char* const* example_names = p_example.get_options(&num_examples);
+                const char* const* example_names =
+                    p_example->get_options(&num_examples);
                 const int index_offset = 16;
                 for (x = 0; x < num_examples; x++) {
                     i.fMask = MIIM_TYPE | MIIM_DATA | MIIM_ID;
@@ -68,7 +69,7 @@ int win32_dlgproc_colormodifier(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
                                    hwndDlg,
                                    NULL);
                 if (x >= index_offset && x < index_offset + num_examples) {
-                    g_this->set_int(p_example.handle, x - index_offset);
+                    g_this->set_int(p_example, x - index_offset);
                     g_this->run_action(p_load_example);
                     SetDlgItemText(
                         hwndDlg, IDC_EDIT1, (char*)g_this->get_string(p_point));

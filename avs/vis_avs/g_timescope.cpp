@@ -10,10 +10,10 @@
 
 int win32_dlgproc_timescope(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto g_this = (E_Timescope*)g_current_render;
-    AVS_Parameter_Handle p_color = Timescope_Info::parameters[0].handle;
-    AVS_Parameter_Handle p_blend_mode = Timescope_Info::parameters[1].handle;
-    AVS_Parameter_Handle p_audio_channel = Timescope_Info::parameters[2].handle;
-    const Parameter& p_bands = Timescope_Info::parameters[3];
+    const Parameter* p_color = &Timescope_Info::parameters[0];
+    const Parameter* p_blend_mode = &Timescope_Info::parameters[1];
+    const Parameter* p_audio_channel = &Timescope_Info::parameters[2];
+    const Parameter* p_bands = &Timescope_Info::parameters[3];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
@@ -27,7 +27,7 @@ int win32_dlgproc_timescope(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
                 hwndDlg, IDC_DEFAULTBLEND, blend_mode == TIMESCOPE_BLEND_DEFAULT);
             CheckDlgButton(hwndDlg, IDC_REPLACE, blend_mode == TIMESCOPE_BLEND_REPLACE);
 
-            auto bands = g_this->get_int(p_bands.handle);
+            auto bands = g_this->get_int(p_bands);
             init_ranged_slider(p_bands, bands, hwndDlg, IDC_BANDS, 32);
             char txt[64];
             wsprintf(txt, "Draw %d bands", bands);
@@ -84,7 +84,7 @@ int win32_dlgproc_timescope(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
         case WM_NOTIFY:
             if (LOWORD(wParam) == IDC_BANDS) {
                 auto bands = SendDlgItemMessage(hwndDlg, IDC_BANDS, TBM_GETPOS, 0, 0);
-                g_this->set_int(p_bands.handle, bands);
+                g_this->set_int(p_bands, bands);
                 char txt[64];
                 wsprintf(txt, "Draw %d bands", bands);
                 SetDlgItemText(hwndDlg, IDC_BANDTXT, txt);

@@ -16,8 +16,8 @@ static COLORREF g_cust_colors[16];
 
 int win32_dlgproc_addborders(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     E_AddBorders* g_this = (E_AddBorders*)g_current_render;
-    const AVS_Parameter_Handle p_color = g_this->info.parameters[0].handle;
-    const Parameter& p_size = g_this->info.parameters[1];
+    const Parameter* p_color = &g_this->info.parameters[0];
+    const Parameter* p_size = &g_this->info.parameters[1];
 
     DRAWITEMSTRUCT* drawitem;
 
@@ -41,7 +41,7 @@ int win32_dlgproc_addborders(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             }
             break;
         case WM_INITDIALOG: {  // 0x110
-            auto size = g_this->get_int(p_size.handle);
+            auto size = g_this->get_int(p_size);
             init_ranged_slider(p_size, size, hwndDlg, IDC_ADDBORDERS_SIZE);
             if (g_this->enabled) {
                 CheckDlgButton(hwndDlg, IDC_ADDBORDERS_ENABLE, 1);
@@ -50,8 +50,7 @@ int win32_dlgproc_addborders(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
         }
         case WM_HSCROLL:  // 0x114
             if ((HWND)lParam == GetDlgItem(hwndDlg, IDC_ADDBORDERS_SIZE)) {
-                g_this->set_int(p_size.handle,
-                                SendMessage((HWND)lParam, TBM_GETPOS, 0, 0));
+                g_this->set_int(p_size, SendMessage((HWND)lParam, TBM_GETPOS, 0, 0));
             }
             break;
         case WM_COMMAND:  // 0x111

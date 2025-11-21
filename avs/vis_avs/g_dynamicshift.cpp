@@ -9,11 +9,11 @@
 
 int win32_dlgproc_dynamicshift(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     E_DynamicShift* g_this = (E_DynamicShift*)g_current_render;
-    const AVS_Parameter_Handle p_init = g_this->info.parameters[0].handle;
-    const AVS_Parameter_Handle p_frame = g_this->info.parameters[1].handle;
-    const AVS_Parameter_Handle p_beat = g_this->info.parameters[2].handle;
-    const AVS_Parameter_Handle p_blend_mode = g_this->info.parameters[3].handle;
-    const AVS_Parameter_Handle p_bilinear = g_this->info.parameters[4].handle;
+    const Parameter* p_init = &g_this->info.parameters[0];
+    const Parameter* p_frame = &g_this->info.parameters[1];
+    const Parameter* p_beat = &g_this->info.parameters[2];
+    const Parameter* p_blend_mode = &g_this->info.parameters[3];
+    const Parameter* p_bilinear = &g_this->info.parameters[4];
 
     static int isstart;
     switch (uMsg) {

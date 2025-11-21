@@ -9,7 +9,7 @@
 
 int win32_dlgproc_comment(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     E_Comment* g_this = (E_Comment*)g_current_render;
-    AVS_Parameter_Handle h_comment = g_this->info.parameters[0].handle;
+    const Parameter* h_comment = &g_this->info.parameters[0];
 
     switch (uMsg) {
         case WM_INITDIALOG:

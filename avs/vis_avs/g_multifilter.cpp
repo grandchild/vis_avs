@@ -11,13 +11,13 @@
 
 int win32_dlgproc_multifilter(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto g_this = (E_MultiFilter*)g_current_render;
-    const Parameter& p_effect = MultiFilter_Info::parameters[0];
-    AVS_Parameter_Handle p_toggle_on_beat = MultiFilter_Info::parameters[1].handle;
+    const Parameter* p_effect = &MultiFilter_Info::parameters[0];
+    const Parameter* p_toggle_on_beat = &MultiFilter_Info::parameters[1];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
             CheckDlgButton(hwndDlg, IDC_MULTIFILTER_ENABLED, g_this->enabled);
-            auto effect = g_this->get_int(p_effect.handle);
+            auto effect = g_this->get_int(p_effect);
             init_select(p_effect, effect, hwndDlg, IDC_MULTIFILTER_EFFECT);
             CheckDlgButton(hwndDlg,
                            IDC_MULTIFILTER_TOGGLEONBEAT,
@@ -27,7 +27,7 @@ int win32_dlgproc_multifilter(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
         case WM_COMMAND: {
             int command = HIWORD(wParam);
             if (command == CBN_SELCHANGE && LOWORD(wParam) == IDC_MULTIFILTER_EFFECT) {
-                g_this->set_int(p_effect.handle,
+                g_this->set_int(p_effect,
                                 SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0));
             } else if (command == BN_CLICKED) {
                 switch (LOWORD(wParam)) {

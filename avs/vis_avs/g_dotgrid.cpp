@@ -10,20 +10,20 @@
 
 int win32_dlgproc_dotgrid(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto g_this = (E_DotGrid*)g_current_render;
-    AVS_Parameter_Handle p_color = DotGrid_Info::color_params[0].handle;
-    AVS_Parameter_Handle p_colors = DotGrid_Info::parameters[0].handle;
-    AVS_Parameter_Handle p_spacing = DotGrid_Info::parameters[1].handle;
-    const Parameter& p_speed_x = DotGrid_Info::parameters[2];
-    const Parameter& p_speed_y = DotGrid_Info::parameters[3];
-    AVS_Parameter_Handle p_blend_mode = DotGrid_Info::parameters[4].handle;
-    AVS_Parameter_Handle p_zero_speed_x = DotGrid_Info::parameters[5].handle;
-    AVS_Parameter_Handle p_zero_speed_y = DotGrid_Info::parameters[6].handle;
+    const Parameter* p_color = &DotGrid_Info::color_params[0];
+    const Parameter* p_colors = &DotGrid_Info::parameters[0];
+    const Parameter* p_spacing = &DotGrid_Info::parameters[1];
+    const Parameter* p_speed_x = &DotGrid_Info::parameters[2];
+    const Parameter* p_speed_y = &DotGrid_Info::parameters[3];
+    const Parameter* p_blend_mode = &DotGrid_Info::parameters[4];
+    const Parameter* p_zero_speed_x = &DotGrid_Info::parameters[5];
+    const Parameter* p_zero_speed_y = &DotGrid_Info::parameters[6];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
-            auto speed_x = g_this->get_int(p_speed_x.handle);
+            auto speed_x = g_this->get_int(p_speed_x);
             init_ranged_slider(p_speed_x, speed_x, hwndDlg, IDC_SLIDER1, 32);
-            auto speed_y = g_this->get_int(p_speed_y.handle);
+            auto speed_y = g_this->get_int(p_speed_y);
             init_ranged_slider(p_speed_y, speed_y, hwndDlg, IDC_SLIDER2, 32);
             SetDlgItemInt(
                 hwndDlg, IDC_NUMCOL, g_this->parameter_list_length(p_colors), false);
@@ -73,10 +73,10 @@ int win32_dlgproc_dotgrid(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             HWND swnd = (HWND)lParam;
             auto t = (int)SendMessage(swnd, TBM_GETPOS, 0, 0);
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER1)) {
-                g_this->set_int(p_speed_x.handle, t);
+                g_this->set_int(p_speed_x, t);
             }
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER2)) {
-                g_this->set_int(p_speed_y.handle, t);
+                g_this->set_int(p_speed_y, t);
             }
             return 0;
         }
@@ -88,7 +88,7 @@ int win32_dlgproc_dotgrid(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                                        IDC_SLIDER1,
                                        TBM_SETPOS,
                                        1,
-                                       g_this->get_int(p_speed_x.handle));
+                                       g_this->get_int(p_speed_x));
                     return 0;
                 case IDC_BUTTON3:
                     g_this->run_action(p_zero_speed_y);
@@ -96,7 +96,7 @@ int win32_dlgproc_dotgrid(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                                        IDC_SLIDER2,
                                        TBM_SETPOS,
                                        1,
-                                       g_this->get_int(p_speed_y.handle));
+                                       g_this->get_int(p_speed_y));
                     return 0;
                 case IDC_RADIO1:
                 case IDC_RADIO2:

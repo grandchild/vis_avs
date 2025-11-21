@@ -9,9 +9,9 @@
 
 int win32_dlgproc_clearscreen(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto g_this = (E_ClearScreen*)g_current_render;
-    AVS_Parameter_Handle p_color = ClearScreen_Info::parameters[0].handle;
-    AVS_Parameter_Handle p_blend_mode = ClearScreen_Info::parameters[1].handle;
-    AVS_Parameter_Handle p_only_first = ClearScreen_Info::parameters[2].handle;
+    const Parameter* p_color = &ClearScreen_Info::parameters[0];
+    const Parameter* p_blend_mode = &ClearScreen_Info::parameters[1];
+    const Parameter* p_only_first = &ClearScreen_Info::parameters[2];
 
     switch (uMsg) {
         case WM_INITDIALOG: {

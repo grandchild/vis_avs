@@ -52,7 +52,7 @@ void MovingParticle_Info::on_size_change(Effect* component,
                                          const Parameter* parameter,
                                          const std::vector<int64_t>&) {
     auto particle = (E_MovingParticle*)component;
-    particle->set_current_size(particle->get_int(parameter->handle));
+    particle->set_current_size(particle->get_int(parameter));
 }
 
 E_MovingParticle::E_MovingParticle(AVS_Instance* avs)

@@ -9,16 +9,16 @@
 
 int win32_dlgproc_movement(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     E_Movement* g_this = (E_Movement*)g_current_render;
-    AVS_Parameter_Handle p_source_map = g_this->info.parameters[0].handle;
-    AVS_Parameter_Handle p_on_beat_source_map = g_this->info.parameters[1].handle;
-    AVS_Parameter_Handle p_wrap = g_this->info.parameters[2].handle;
-    AVS_Parameter_Handle p_blend_mode = g_this->info.parameters[3].handle;
-    AVS_Parameter_Handle p_bilinear = g_this->info.parameters[4].handle;
-    AVS_Parameter_Handle p_coordinates = g_this->info.parameters[5].handle;
-    AVS_Parameter_Handle p_code = g_this->info.parameters[6].handle;
-    const Parameter& p_effect = g_this->info.parameters[7];
-    AVS_Parameter_Handle p_use_custom_code = g_this->info.parameters[8].handle;
-    AVS_Parameter_Handle p_load_effect = g_this->info.parameters[9].handle;
+    const Parameter* p_source_map = &g_this->info.parameters[0];
+    const Parameter* p_on_beat_source_map = &g_this->info.parameters[1];
+    const Parameter* p_wrap = &g_this->info.parameters[2];
+    const Parameter* p_blend_mode = &g_this->info.parameters[3];
+    const Parameter* p_bilinear = &g_this->info.parameters[4];
+    const Parameter* p_coordinates = &g_this->info.parameters[5];
+    const Parameter* p_code = &g_this->info.parameters[6];
+    const Parameter* p_effect = &g_this->info.parameters[7];
+    const Parameter* p_use_custom_code = &g_this->info.parameters[8];
+    const Parameter* p_load_effect = &g_this->info.parameters[9];
 
     // Note that, specifically in Movement, `options_length`, while it is the length of
     // builtin effects, is less than the list of options in the UI, which additionally
@@ -48,12 +48,12 @@ int win32_dlgproc_movement(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
             CheckDlgButton(hwndDlg, IDC_CHECK2, source_map_state);
 
             SendDlgItemMessage(hwndDlg, IDC_LIST1, LB_ADDSTRING, 0, (LPARAM) "None");
-            options = p_effect.get_options(&options_length);
+            options = p_effect->get_options(&options_length);
             for (uint32_t x = 0; x < options_length; x++) {
                 SendDlgItemMessage(
                     hwndDlg, IDC_LIST1, LB_ADDSTRING, 0, (LPARAM)options[x]);
             }
-            auto effect = g_this->get_int(p_effect.handle);
+            auto effect = g_this->get_int(p_effect);
             auto use_custom_code = g_this->get_bool(p_use_custom_code);
             SendDlgItemMessage(
                 hwndDlg, IDC_LIST1, LB_ADDSTRING, 0, (LPARAM) "(user defined)");
@@ -75,7 +75,7 @@ int win32_dlgproc_movement(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                 GetDlgItemText(hwndDlg, IDC_EDIT1, buf, length);
                 g_this->set_string(p_code, buf);
                 delete[] buf;
-                p_effect.get_options(&options_length);
+                p_effect->get_options(&options_length);
                 if (SendDlgItemMessage(hwndDlg, IDC_LIST1, LB_GETCURSEL, 0, 0)
                     <= options_length) {
                     g_this->set_int(p_coordinates,
@@ -89,12 +89,12 @@ int win32_dlgproc_movement(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
             if (LOWORD(wParam) == IDC_LIST1 && HIWORD(wParam) == LBN_SELCHANGE) {
                 int selection =
                     SendDlgItemMessage(hwndDlg, IDC_LIST1, LB_GETCURSEL, 0, 0);
-                p_effect.get_options(&options_length);
+                p_effect->get_options(&options_length);
                 if (selection == 0) {
                     g_this->set_enabled(false);
                 } else if (selection <= options_length) {
                     g_this->set_enabled(true);
-                    g_this->set_int(p_effect.handle, selection - 1);
+                    g_this->set_int(p_effect, selection - 1);
                     g_this->set_bool(p_use_custom_code, false);
                     g_this->run_action(p_load_effect);
                     SetDlgItemText(
@@ -105,7 +105,7 @@ int win32_dlgproc_movement(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                     CheckDlgButton(hwndDlg, IDC_WRAP, g_this->get_bool(p_wrap));
                 } else {
                     g_this->set_enabled(true);
-                    g_this->set_int(p_effect.handle, -1);
+                    g_this->set_int(p_effect, -1);
                     g_this->set_bool(p_use_custom_code, true);
                     EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT1), true);
                     EnableWindow(GetDlgItem(hwndDlg, IDC_CHECK3), true);
@@ -157,10 +157,10 @@ int win32_dlgproc_movement(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                                 IsDlgButtonChecked(hwndDlg, IDC_CHECK3)
                                     ? COORDS_CARTESIAN
                                     : COORDS_POLAR);
-                p_effect.get_options(&options_length);
+                p_effect->get_options(&options_length);
                 if (SendDlgItemMessage(hwndDlg, IDC_LIST1, LB_GETCURSEL, 0, 0)
                     <= options_length) {
-                    g_this->set_int(p_effect.handle, -1);
+                    g_this->set_int(p_effect, -1);
                     g_this->set_bool(p_use_custom_code, true);
                     SendDlgItemMessage(
                         hwndDlg, IDC_LIST1, LB_SETCURSEL, options_length + 1, 0);

@@ -13,20 +13,20 @@ int win32_dlgproc_dynamicmovement(HWND hwndDlg,
                                   WPARAM wParam,
                                   LPARAM lParam) {
     E_DynamicMovement* g_this = (E_DynamicMovement*)g_current_render;
-    AVS_Parameter_Handle p_init = g_this->info.parameters[0].handle;
-    AVS_Parameter_Handle p_frame = g_this->info.parameters[1].handle;
-    AVS_Parameter_Handle p_beat = g_this->info.parameters[2].handle;
-    AVS_Parameter_Handle p_point = g_this->info.parameters[3].handle;
-    AVS_Parameter_Handle p_bilinear = g_this->info.parameters[4].handle;
-    AVS_Parameter_Handle p_coordinates = g_this->info.parameters[5].handle;
-    AVS_Parameter_Handle p_grid_w = g_this->info.parameters[6].handle;
-    AVS_Parameter_Handle p_grid_h = g_this->info.parameters[7].handle;
-    AVS_Parameter_Handle p_blend = g_this->info.parameters[8].handle;
-    AVS_Parameter_Handle p_wrap = g_this->info.parameters[9].handle;
-    const Parameter& p_buffer = g_this->info.parameters[10];
-    AVS_Parameter_Handle p_alpha_only = g_this->info.parameters[11].handle;
-    const Parameter& p_example = g_this->info.parameters[12];
-    AVS_Parameter_Handle p_load_example = g_this->info.parameters[13].handle;
+    const Parameter* p_init = &g_this->info.parameters[0];
+    const Parameter* p_frame = &g_this->info.parameters[1];
+    const Parameter* p_beat = &g_this->info.parameters[2];
+    const Parameter* p_point = &g_this->info.parameters[3];
+    const Parameter* p_bilinear = &g_this->info.parameters[4];
+    const Parameter* p_coordinates = &g_this->info.parameters[5];
+    const Parameter* p_grid_w = &g_this->info.parameters[6];
+    const Parameter* p_grid_h = &g_this->info.parameters[7];
+    const Parameter* p_blend = &g_this->info.parameters[8];
+    const Parameter* p_wrap = &g_this->info.parameters[9];
+    const Parameter* p_buffer = &g_this->info.parameters[10];
+    const Parameter* p_alpha_only = &g_this->info.parameters[11];
+    const Parameter* p_example = &g_this->info.parameters[12];
+    const Parameter* p_load_example = &g_this->info.parameters[13];
 
     static int isstart;
     switch (uMsg) {
@@ -46,11 +46,11 @@ int win32_dlgproc_dynamicmovement(HWND hwndDlg,
 
             SendDlgItemMessage(hwndDlg, IDC_COMBO1, CB_ADDSTRING, 0, (int)"Current");
             char txt[16];
-            for (int i = 0; i < p_buffer.int_max; i++) {
+            for (int i = 0; i < p_buffer->int_max; i++) {
                 wsprintf(txt, "Buffer %d", i + 1);
                 SendDlgItemMessage(hwndDlg, IDC_COMBO1, CB_ADDSTRING, 0, (int)txt);
             }
-            auto buffer = g_this->get_int(p_buffer.handle);
+            auto buffer = g_this->get_int(p_buffer);
             SendDlgItemMessage(hwndDlg, IDC_COMBO1, CB_SETCURSEL, (WPARAM)buffer, 0);
 
             SetDlgItemInt(hwndDlg, IDC_EDIT5, g_this->get_int(p_grid_w), false);
@@ -91,7 +91,7 @@ int win32_dlgproc_dynamicmovement(HWND hwndDlg,
                 int x;
 
                 int64_t options_length;
-                const char* const* options = p_example.get_options(&options_length);
+                const char* const* options = p_example->get_options(&options_length);
                 const int index_offset = 16;
                 for (x = 0; x < options_length; x++) {
                     i.fMask = MIIM_TYPE | MIIM_DATA | MIIM_ID;
@@ -112,7 +112,7 @@ int win32_dlgproc_dynamicmovement(HWND hwndDlg,
                                    hwndDlg,
                                    NULL);
                 if (x >= index_offset && x < index_offset + options_length) {
-                    g_this->set_int(p_example.handle, x - index_offset);
+                    g_this->set_int(p_example, x - index_offset);
                     g_this->run_action(p_load_example);
                     SetDlgItemText(hwndDlg, IDC_EDIT1, g_this->get_string(p_point));
                     SetDlgItemText(hwndDlg, IDC_EDIT2, g_this->get_string(p_frame));
@@ -131,7 +131,7 @@ int win32_dlgproc_dynamicmovement(HWND hwndDlg,
             if (!isstart && HIWORD(wParam) == CBN_SELCHANGE
                 && LOWORD(wParam) == IDC_COMBO1) {  // handle clicks to combo box
                 g_this->set_int(
-                    p_buffer.handle,
+                    p_buffer,
                     SendDlgItemMessage(hwndDlg, IDC_COMBO1, CB_GETCURSEL, 0, 0));
             }
 

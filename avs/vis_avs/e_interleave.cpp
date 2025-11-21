@@ -48,14 +48,14 @@ void Interleave_Info::on_x_change(Effect* component,
                                   const Parameter* parameter,
                                   const std::vector<int64_t>&) {
     auto* interleave = (E_Interleave*)component;
-    interleave->cur_x = (double)interleave->get_int(parameter->handle);
+    interleave->cur_x = (double)interleave->get_int(parameter);
 }
 
 void Interleave_Info::on_y_change(Effect* component,
                                   const Parameter* parameter,
                                   const std::vector<int64_t>&) {
     auto* interleave = (E_Interleave*)component;
-    interleave->cur_y = (double)interleave->get_int(parameter->handle);
+    interleave->cur_y = (double)interleave->get_int(parameter);
 }
 
 void Interleave_Info::on_duration_change(Effect* component,

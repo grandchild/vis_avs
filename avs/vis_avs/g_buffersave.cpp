@@ -11,16 +11,16 @@
 
 int win32_dlgproc_buffersave(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     auto g_this = (E_BufferSave*)g_current_render;
-    AVS_Parameter_Handle p_action = BufferSave_Info::parameters[0].handle;
-    const Parameter& p_buffer = BufferSave_Info::parameters[1];
-    AVS_Parameter_Handle p_blend_mode = BufferSave_Info::parameters[2].handle;
-    const Parameter& p_adjustable_blend = BufferSave_Info::parameters[3];
-    AVS_Parameter_Handle p_clear_buffer = BufferSave_Info::parameters[4].handle;
-    AVS_Parameter_Handle p_nudge_parity = BufferSave_Info::parameters[5].handle;
+    const Parameter* p_action = &BufferSave_Info::parameters[0];
+    const Parameter* p_buffer = &BufferSave_Info::parameters[1];
+    const Parameter* p_blend_mode = &BufferSave_Info::parameters[2];
+    const Parameter* p_adjustable_blend = &BufferSave_Info::parameters[3];
+    const Parameter* p_clear_buffer = &BufferSave_Info::parameters[4];
+    const Parameter* p_nudge_parity = &BufferSave_Info::parameters[5];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
-            for (int x = p_buffer.int_min; x <= p_buffer.int_max; x++) {
+            for (int x = p_buffer->int_min; x <= p_buffer->int_max; x++) {
                 char s[32];
                 wsprintf(s, "Buffer %d", x);
                 SendDlgItemMessage(hwndDlg, IDC_COMBO1, CB_ADDSTRING, 0, (LPARAM)s);
@@ -28,14 +28,14 @@ int win32_dlgproc_buffersave(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
             SendDlgItemMessage(hwndDlg,
                                IDC_COMBO1,
                                CB_SETCURSEL,
-                               g_this->get_int(p_buffer.handle) - p_buffer.int_min,
+                               g_this->get_int(p_buffer) - p_buffer->int_min,
                                0);
             auto action = g_this->get_int(p_action);
             CheckDlgButton(hwndDlg, IDC_SAVEFB, action == BUFFER_ACTION_SAVE);
             CheckDlgButton(hwndDlg, IDC_RESTFB, action == BUFFER_ACTION_RESTORE);
             CheckDlgButton(hwndDlg, IDC_RADIO1, action == BUFFER_ACTION_SAVE_RESTORE);
             CheckDlgButton(hwndDlg, IDC_RADIO2, action == BUFFER_ACTION_RESTORE_SAVE);
-            auto adjust_blend = g_this->get_int(p_adjustable_blend.handle);
+            auto adjust_blend = g_this->get_int(p_adjustable_blend);
             init_ranged_slider(
                 p_adjustable_blend, adjust_blend, hwndDlg, IDC_BLENDSLIDE);
             auto blend = g_this->get_int(p_blend_mode);
@@ -116,14 +116,14 @@ int win32_dlgproc_buffersave(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
             if (LOWORD(wParam) == IDC_COMBO1 && HIWORD(wParam) == CBN_SELCHANGE) {
                 int i = SendDlgItemMessage(hwndDlg, IDC_COMBO1, CB_GETCURSEL, 0, 0);
                 if (i != CB_ERR) {
-                    g_this->set_int(p_buffer.handle, i + p_buffer.int_min);
+                    g_this->set_int(p_buffer, i + p_buffer->int_min);
                 }
             }
             return 0;
         case WM_NOTIFY:
             if (LOWORD(wParam) == IDC_BLENDSLIDE) {
                 g_this->set_int(
-                    p_adjustable_blend.handle,
+                    p_adjustable_blend,
                     SendDlgItemMessage(hwndDlg, IDC_BLENDSLIDE, TBM_GETPOS, 0, 0));
             }
             return 0;

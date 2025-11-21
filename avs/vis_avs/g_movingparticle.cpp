@@ -13,22 +13,21 @@ int win32_dlgproc_movingparticle(HWND hwndDlg,
                                  WPARAM wParam,
                                  LPARAM lParam) {
     auto g_this = (E_MovingParticle*)g_current_render;
-    AVS_Parameter_Handle p_color = MovingParticle_Info::parameters[0].handle;
-    const Parameter& p_distance = MovingParticle_Info::parameters[1];
-    const Parameter& p_size = MovingParticle_Info::parameters[2];
-    AVS_Parameter_Handle p_on_beat_size_change =
-        MovingParticle_Info::parameters[3].handle;
-    const Parameter& p_on_beat_size = MovingParticle_Info::parameters[4];
-    AVS_Parameter_Handle p_blend_mode = MovingParticle_Info::parameters[5].handle;
+    const Parameter* p_color = &MovingParticle_Info::parameters[0];
+    const Parameter* p_distance = &MovingParticle_Info::parameters[1];
+    const Parameter* p_size = &MovingParticle_Info::parameters[2];
+    const Parameter* p_on_beat_size_change = &MovingParticle_Info::parameters[3];
+    const Parameter* p_on_beat_size = &MovingParticle_Info::parameters[4];
+    const Parameter* p_blend_mode = &MovingParticle_Info::parameters[5];
 
     int32_t color;
     switch (uMsg) {
         case WM_INITDIALOG: {
-            auto distance = g_this->get_int(p_distance.handle);
+            auto distance = g_this->get_int(p_distance);
             init_ranged_slider(p_distance, distance, hwndDlg, IDC_SLIDER1);
-            auto particle_size = g_this->get_int(p_size.handle);
+            auto particle_size = g_this->get_int(p_size);
             init_ranged_slider(p_size, particle_size, hwndDlg, IDC_SLIDER3);
-            auto on_beat_particle_size = g_this->get_int(p_on_beat_size.handle);
+            auto on_beat_particle_size = g_this->get_int(p_on_beat_size);
             init_ranged_slider(
                 p_on_beat_size, on_beat_particle_size, hwndDlg, IDC_SLIDER4);
 
@@ -91,13 +90,13 @@ int win32_dlgproc_movingparticle(HWND hwndDlg,
             HWND swnd = (HWND)lParam;
             int t = (int)SendMessage(swnd, TBM_GETPOS, 0, 0);
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER1)) {
-                g_this->set_int(p_distance.handle, t);
+                g_this->set_int(p_distance, t);
             }
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER3)) {
-                g_this->set_int(p_size.handle, t);
+                g_this->set_int(p_size, t);
             }
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER4)) {
-                g_this->set_int(p_on_beat_size.handle, t);
+                g_this->set_int(p_on_beat_size, t);
             }
             return 0;
         }

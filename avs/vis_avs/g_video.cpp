@@ -16,36 +16,27 @@ static void EnableWindows(HWND hwndDlg, E_Video* g_this) {
 
 int win32_dlgproc_video(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     E_Video* g_this = (E_Video*)g_current_render;
-    const Parameter& p_filename = g_this->info.parameters[0];
-    const Parameter& p_blend_mode = g_this->info.parameters[1];
-    const Parameter& p_on_beat_persist = g_this->info.parameters[2];
-    const Parameter& p_playback_speed = g_this->info.parameters[3];
-    const Parameter& p_resampling = g_this->info.parameters[4];
+    const Parameter* p_filename = &g_this->info.parameters[0];
+    const Parameter* p_blend_mode = &g_this->info.parameters[1];
+    const Parameter* p_on_beat_persist = &g_this->info.parameters[2];
+    const Parameter* p_playback_speed = &g_this->info.parameters[3];
+    const Parameter* p_resampling = &g_this->info.parameters[4];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
-            auto persist_range =
-                MAKELONG(p_on_beat_persist.int_min, p_on_beat_persist.int_max);
-            SendDlgItemMessage(hwndDlg, IDC_PERSIST, TBM_SETRANGE, TRUE, persist_range);
-            SendDlgItemMessage(hwndDlg,
-                               IDC_PERSIST,
-                               TBM_SETPOS,
-                               TRUE,
-                               g_this->get_int(p_on_beat_persist.handle));
-            auto speed_range =
-                MAKELONG(p_playback_speed.int_min, p_playback_speed.int_max);
-            SendDlgItemMessage(hwndDlg, IDC_SPEED, TBM_SETTICFREQ, 50, 0);
-            SendDlgItemMessage(hwndDlg, IDC_SPEED, TBM_SETRANGE, TRUE, speed_range);
-            SendDlgItemMessage(hwndDlg,
-                               IDC_SPEED,
-                               TBM_SETPOS,
-                               TRUE,
-                               g_this->get_int(p_playback_speed.handle));
+            init_ranged_slider(p_on_beat_persist,
+                               g_this->get_int(p_on_beat_persist),
+                               hwndDlg,
+                               IDC_PERSIST);
+            init_ranged_slider(p_playback_speed,
+                               g_this->get_int(p_playback_speed),
+                               hwndDlg,
+                               IDC_SPEED);
             if (g_this->enabled) {
                 CheckDlgButton(hwndDlg, IDC_CHECK1, BST_CHECKED);
             }
 
-            auto blend_mode = g_this->get_int(p_blend_mode.handle);
+            auto blend_mode = g_this->get_int(p_blend_mode);
             static constexpr size_t num_controls = 4;
             uint32_t controls[num_controls] = {
                 IDC_REPLACE, IDC_ADDITIVE, IDC_5050, IDC_ADAPT};
@@ -53,9 +44,9 @@ int win32_dlgproc_video(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                 p_blend_mode, blend_mode, hwndDlg, controls, num_controls);
             EnableWindows(hwndDlg, g_this);
 
-            auto filename = g_this->get_string(p_filename.handle);
+            auto filename = g_this->get_string(p_filename);
             init_resource(p_filename, filename, hwndDlg, OBJ_COMBO, MAX_PATH);
-            auto resampling = g_this->get_int(p_resampling.handle);
+            auto resampling = g_this->get_int(p_resampling);
             init_select(p_resampling, resampling, hwndDlg, IDC_VIDEO_RESAMPLE);
 
             return 1;
@@ -100,13 +91,11 @@ int win32_dlgproc_video(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                         char* buf = (char*)calloc(filename_length, sizeof(char));
                         SendDlgItemMessage(
                             hwndDlg, widget, CB_GETLBTEXT, sel, (LPARAM)buf);
-                        g_this->set_string(p_filename.handle, buf);
+                        g_this->set_string(p_filename, buf);
                         free(buf);
                         break;
                     }
-                    case IDC_VIDEO_RESAMPLE:
-                        g_this->set_int(p_resampling.handle, sel);
-                        break;
+                    case IDC_VIDEO_RESAMPLE: g_this->set_int(p_resampling, sel); break;
                 }
             }
             return 0;

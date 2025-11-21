@@ -16,15 +16,15 @@ int win32_dlgproc_globalvariables(HWND hwndDlg,
                                   WPARAM wParam,
                                   LPARAM lParam) {
     auto g_this = (E_GlobalVariables*)g_current_render;
-    AVS_Parameter_Handle p_load = GlobalVariables_Info::parameters[0].handle;
-    AVS_Parameter_Handle p_init = GlobalVariables_Info::parameters[1].handle;
-    AVS_Parameter_Handle p_frame = GlobalVariables_Info::parameters[2].handle;
-    AVS_Parameter_Handle p_beat = GlobalVariables_Info::parameters[3].handle;
-    AVS_Parameter_Handle p_file = GlobalVariables_Info::parameters[4].handle;
-    AVS_Parameter_Handle p_save_reg_ranges = GlobalVariables_Info::parameters[5].handle;
-    AVS_Parameter_Handle p_save_buf_ranges = GlobalVariables_Info::parameters[6].handle;
-    AVS_Parameter_Handle p_error = GlobalVariables_Info::parameters[7].handle;
-    AVS_Parameter_Handle p_save = GlobalVariables_Info::parameters[8].handle;
+    const Parameter* p_load = &GlobalVariables_Info::parameters[0];
+    const Parameter* p_init = &GlobalVariables_Info::parameters[1];
+    const Parameter* p_frame = &GlobalVariables_Info::parameters[2];
+    const Parameter* p_beat = &GlobalVariables_Info::parameters[3];
+    const Parameter* p_file = &GlobalVariables_Info::parameters[4];
+    const Parameter* p_save_reg_ranges = &GlobalVariables_Info::parameters[5];
+    const Parameter* p_save_buf_ranges = &GlobalVariables_Info::parameters[6];
+    const Parameter* p_error = &GlobalVariables_Info::parameters[7];
+    const Parameter* p_save = &GlobalVariables_Info::parameters[8];
 
     switch (uMsg) {
         case WM_INITDIALOG: {

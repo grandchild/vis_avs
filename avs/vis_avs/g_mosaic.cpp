@@ -10,19 +10,19 @@
 
 int win32_dlgproc_mosaic(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     auto g_this = (E_Mosaic*)g_current_render;
-    const Parameter& p_size = Mosaic_Info::parameters[0];
-    const Parameter& p_on_beat_size = Mosaic_Info::parameters[1];
-    AVS_Parameter_Handle p_on_beat_size_change = Mosaic_Info::parameters[2].handle;
-    const Parameter& p_on_beat_duration = Mosaic_Info::parameters[3];
-    AVS_Parameter_Handle p_blend_mode = Mosaic_Info::parameters[4].handle;
+    const Parameter* p_size = &Mosaic_Info::parameters[0];
+    const Parameter* p_on_beat_size = &Mosaic_Info::parameters[1];
+    const Parameter* p_on_beat_size_change = &Mosaic_Info::parameters[2];
+    const Parameter* p_on_beat_duration = &Mosaic_Info::parameters[3];
+    const Parameter* p_blend_mode = &Mosaic_Info::parameters[4];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
-            auto size = g_this->get_int(p_size.handle);
+            auto size = g_this->get_int(p_size);
             init_ranged_slider(p_size, size, hwndDlg, IDC_QUALITY, 10);
-            auto on_beat_size = g_this->get_int(p_on_beat_size.handle);
+            auto on_beat_size = g_this->get_int(p_on_beat_size);
             init_ranged_slider(p_on_beat_size, on_beat_size, hwndDlg, IDC_QUALITY2, 10);
-            auto on_beat_duration = g_this->get_int(p_on_beat_duration.handle);
+            auto on_beat_duration = g_this->get_int(p_on_beat_duration);
             init_ranged_slider(
                 p_on_beat_duration, on_beat_duration, hwndDlg, IDC_BEATDUR, 10);
 
@@ -38,17 +38,16 @@ int win32_dlgproc_mosaic(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
         case WM_NOTIFY: {
             if (LOWORD(wParam) == IDC_QUALITY) {
                 g_this->set_int(
-                    p_size.handle,
-                    SendDlgItemMessage(hwndDlg, IDC_QUALITY, TBM_GETPOS, 0, 0));
+                    p_size, SendDlgItemMessage(hwndDlg, IDC_QUALITY, TBM_GETPOS, 0, 0));
             }
             if (LOWORD(wParam) == IDC_QUALITY2) {
                 g_this->set_int(
-                    p_on_beat_size.handle,
+                    p_on_beat_size,
                     SendDlgItemMessage(hwndDlg, IDC_QUALITY2, TBM_GETPOS, 0, 0));
             }
             if (LOWORD(wParam) == IDC_BEATDUR) {
                 g_this->set_int(
-                    p_on_beat_duration.handle,
+                    p_on_beat_duration,
                     SendDlgItemMessage(hwndDlg, IDC_BEATDUR, TBM_GETPOS, 0, 0));
             }
             return 0;

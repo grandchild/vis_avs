@@ -9,11 +9,10 @@
 
 int win32_dlgproc_multidelay(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     E_MultiDelay* g_this = (E_MultiDelay*)g_current_render;
-    const AVS_Parameter_Handle p_mode = g_this->info.parameters[0].handle;
-    const AVS_Parameter_Handle p_active_buffer = g_this->info.parameters[1].handle;
-
-    const AVS_Parameter_Handle p_use_beats = g_this->info.buffer_parameters[0].handle;
-    const AVS_Parameter_Handle p_delay = g_this->info.buffer_parameters[1].handle;
+    const Parameter* p_mode = &g_this->info.parameters[0];
+    const Parameter* p_active_buffer = &g_this->info.parameters[1];
+    const Parameter* p_use_beats = &g_this->info.buffer_parameters[0];
+    const Parameter* p_delay = &g_this->info.buffer_parameters[1];
 
     static bool init = false;
     switch (uMsg) {

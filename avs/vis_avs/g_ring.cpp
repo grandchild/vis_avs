@@ -10,12 +10,12 @@
 
 int win32_dlgproc_ring(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto g_this = (E_Ring*)g_current_render;
-    AVS_Parameter_Handle p_position = Ring_Info::parameters[0].handle;
-    const Parameter& p_size = Ring_Info::parameters[1];
-    AVS_Parameter_Handle p_audio_source = Ring_Info::parameters[2].handle;
-    AVS_Parameter_Handle p_audio_channel = Ring_Info::parameters[3].handle;
-    AVS_Parameter_Handle p_colors = Ring_Info::parameters[4].handle;
-    AVS_Parameter_Handle p_color = Ring_Info::color_params[0].handle;
+    const Parameter* p_position = &Ring_Info::parameters[0];
+    const Parameter* p_size = &Ring_Info::parameters[1];
+    const Parameter* p_audio_source = &Ring_Info::parameters[2];
+    const Parameter* p_audio_channel = &Ring_Info::parameters[3];
+    const Parameter* p_colors = &Ring_Info::parameters[4];
+    const Parameter* p_color = &Ring_Info::color_params[0];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
@@ -32,7 +32,7 @@ int win32_dlgproc_ring(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             CheckDlgButton(hwndDlg, IDC_OSC, audio_source == AUDIO_WAVEFORM);
             SetDlgItemInt(
                 hwndDlg, IDC_NUMCOL, g_this->parameter_list_length(p_colors), false);
-            auto size = g_this->get_int(p_size.handle);
+            auto size = g_this->get_int(p_size);
             init_ranged_slider(p_size, size, hwndDlg, IDC_SLIDER1);
             return 1;
         }
@@ -128,7 +128,7 @@ int win32_dlgproc_ring(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             HWND swnd = (HWND)lParam;
             auto t = (int)SendMessage(swnd, TBM_GETPOS, 0, 0);
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER1)) {
-                g_this->set_int(p_size.handle, t);
+                g_this->set_int(p_size, t);
             }
             return 0;
         }

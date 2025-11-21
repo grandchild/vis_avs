@@ -17,18 +17,18 @@
 
 int win32_dlgproc_starfield(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto g_this = (E_Starfield*)g_current_render;
-    AVS_Parameter_Handle p_color = Starfield_Info::parameters[0].handle;
-    const Parameter& p_blend_mode = Starfield_Info::parameters[1];
-    const Parameter& p_speed = Starfield_Info::parameters[2];
-    const Parameter& p_stars = Starfield_Info::parameters[3];
-    const AVS_Parameter_Handle p_on_beat = Starfield_Info::parameters[4].handle;
-    const Parameter& p_on_beat_speed = Starfield_Info::parameters[5];
-    const Parameter& p_on_beat_duration = Starfield_Info::parameters[6];
+    const Parameter* p_color = &Starfield_Info::parameters[0];
+    const Parameter* p_blend_mode = &Starfield_Info::parameters[1];
+    const Parameter* p_speed = &Starfield_Info::parameters[2];
+    const Parameter* p_stars = &Starfield_Info::parameters[3];
+    const Parameter* p_on_beat = &Starfield_Info::parameters[4];
+    const Parameter* p_on_beat_speed = &Starfield_Info::parameters[5];
+    const Parameter* p_on_beat_duration = &Starfield_Info::parameters[6];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
             CheckDlgButton(hwndDlg, IDC_CHECK1, g_this->enabled);
-            auto blend_mode = g_this->get_int(p_blend_mode.handle);
+            auto blend_mode = g_this->get_int(p_blend_mode);
             static constexpr size_t num_blend_modes = 3;
             uint32_t controls_blend_mode[num_blend_modes] = {
                 IDC_REPLACE, IDC_5050, IDC_ADDITIVE};
@@ -37,19 +37,19 @@ int win32_dlgproc_starfield(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
                               hwndDlg,
                               controls_blend_mode,
                               num_blend_modes);
-            auto speed = g_this->get_float(p_speed.handle);
+            auto speed = g_this->get_float(p_speed);
             init_ranged_slider_float(p_speed, speed, SPEED_FACTOR, hwndDlg, IDC_SPEED);
-            auto stars = g_this->get_int(p_stars.handle);
+            auto stars = g_this->get_int(p_stars);
             init_ranged_slider(p_stars, stars, hwndDlg, IDC_NUMSTARS);
             CheckDlgButton(hwndDlg, IDC_ONBEAT2, g_this->get_bool(p_on_beat));
-            auto on_beat_speed = g_this->get_float(p_on_beat_speed.handle);
+            auto on_beat_speed = g_this->get_float(p_on_beat_speed);
             init_ranged_slider_float(p_on_beat_speed,
                                      on_beat_speed,
                                      ON_BEAT_SPEED_FACTOR,
                                      hwndDlg,
                                      IDC_SPDCHG);
 
-            auto on_beat_duration = g_this->get_int(p_on_beat_duration.handle);
+            auto on_beat_duration = g_this->get_int(p_on_beat_duration);
             init_ranged_slider(
                 p_on_beat_duration, on_beat_duration, hwndDlg, IDC_SPDDUR);
 
@@ -89,7 +89,7 @@ int win32_dlgproc_starfield(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
                 case IDC_ADDITIVE:
                 case IDC_5050:
                     g_this->set_int(
-                        p_blend_mode.handle,
+                        p_blend_mode,
                         IsDlgButtonChecked(hwndDlg, IDC_ADDITIVE)
                             ? 2
                             : (IsDlgButtonChecked(hwndDlg, IDC_5050) ? 1 : 0));
@@ -117,13 +117,13 @@ int win32_dlgproc_starfield(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
             HWND control = (HWND)lParam;
             int value = (int)SendMessage(control, TBM_GETPOS, 0, 0);
             if (control == GetDlgItem(hwndDlg, IDC_NUMSTARS)) {
-                g_this->set_int(p_stars.handle, value);
+                g_this->set_int(p_stars, value);
             } else if (control == GetDlgItem(hwndDlg, IDC_SPDDUR)) {
-                g_this->set_int(p_on_beat_duration.handle, value);
+                g_this->set_int(p_on_beat_duration, value);
             } else if (control == GetDlgItem(hwndDlg, IDC_SPEED)) {
-                g_this->set_float(p_speed.handle, (double)value / SPEED_FACTOR);
+                g_this->set_float(p_speed, (double)value / SPEED_FACTOR);
             } else if (control == GetDlgItem(hwndDlg, IDC_SPDCHG)) {
-                g_this->set_float(p_on_beat_speed.handle,
+                g_this->set_float(p_on_beat_speed,
                                   (double)value / ON_BEAT_SPEED_FACTOR);
             }
             return 0;

@@ -11,25 +11,23 @@
 
 int win32_dlgproc_transition(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     auto g_this = &g_single_instance->transition;
-    const Parameter& p_effect = Transition_Info::parameters[0];
-    const Parameter& p_time_ms = Transition_Info::parameters[1];
-    AVS_Parameter_Handle p_on_load = Transition_Info::parameters[2].handle;
-    AVS_Parameter_Handle p_on_next_prev = Transition_Info::parameters[3].handle;
-    AVS_Parameter_Handle p_on_random = Transition_Info::parameters[4].handle;
-    AVS_Parameter_Handle p_keep_rendering_old_preset =
-        Transition_Info::parameters[5].handle;
-    AVS_Parameter_Handle p_preinit_on_load = Transition_Info::parameters[6].handle;
-    AVS_Parameter_Handle p_preinit_on_next_prev = Transition_Info::parameters[7].handle;
-    AVS_Parameter_Handle p_preinit_on_random = Transition_Info::parameters[8].handle;
-    AVS_Parameter_Handle p_preinit_low_priority = Transition_Info::parameters[9].handle;
-    AVS_Parameter_Handle p_preinit_only_in_fullscreen =
-        Transition_Info::parameters[10].handle;
+    const Parameter* p_effect = &Transition_Info::parameters[0];
+    const Parameter* p_time_ms = &Transition_Info::parameters[1];
+    const Parameter* p_on_load = &Transition_Info::parameters[2];
+    const Parameter* p_on_next_prev = &Transition_Info::parameters[3];
+    const Parameter* p_on_random = &Transition_Info::parameters[4];
+    const Parameter* p_keep_rendering_old_preset = &Transition_Info::parameters[5];
+    const Parameter* p_preinit_on_load = &Transition_Info::parameters[6];
+    const Parameter* p_preinit_on_next_prev = &Transition_Info::parameters[7];
+    const Parameter* p_preinit_on_random = &Transition_Info::parameters[8];
+    const Parameter* p_preinit_low_priority = &Transition_Info::parameters[9];
+    const Parameter* p_preinit_only_in_fullscreen = &Transition_Info::parameters[10];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
-            auto effect = g_this->get_int(p_effect.handle);
+            auto effect = g_this->get_int(p_effect);
             init_select(p_effect, effect, hwndDlg, IDC_TRANSITION);
-            auto time_ms = g_this->get_int(p_time_ms.handle);
+            auto time_ms = g_this->get_int(p_time_ms);
             init_ranged_slider(p_time_ms, time_ms, hwndDlg, IDC_SPEED);
             CheckDlgButton(
                 hwndDlg, IDC_CHECK9, g_this->get_bool(p_keep_rendering_old_preset));
@@ -53,7 +51,7 @@ int win32_dlgproc_transition(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                     int r =
                         SendDlgItemMessage(hwndDlg, IDC_TRANSITION, CB_GETCURSEL, 0, 0);
                     if (r != CB_ERR) {
-                        g_this->set_int(p_effect.handle, r);
+                        g_this->set_int(p_effect, r);
                     }
                 }
             } else if (control == IDC_CHECK9 || control == IDC_CHECK2
@@ -83,7 +81,7 @@ int win32_dlgproc_transition(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
         case WM_NOTIFY:
             if (LOWORD(wParam) == IDC_SPEED) {
                 g_this->set_int(
-                    p_time_ms.handle,
+                    p_time_ms,
                     SendDlgItemMessage(hwndDlg, IDC_SPEED, TBM_GETPOS, 0, 0));
             }
             break;

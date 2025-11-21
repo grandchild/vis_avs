@@ -9,8 +9,8 @@
 
 int win32_dlgproc_unknown(HWND hwndDlg, UINT uMsg, WPARAM, LPARAM) {
     auto g_this = (E_Unknown*)g_current_render;
-    AVS_Parameter_Handle p_id = Unknown_Info::parameters[0].handle;
-    AVS_Parameter_Handle p_config = Unknown_Info::parameters[1].handle;
+    const Parameter* p_id = &Unknown_Info::parameters[0];
+    const Parameter* p_config = &Unknown_Info::parameters[1];
 
     switch (uMsg) {
         case WM_INITDIALOG: {

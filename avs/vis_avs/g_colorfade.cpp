@@ -10,29 +10,29 @@
 
 int win32_dlgproc_colorfade(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto g_this = (E_Colorfade*)g_current_render;
-    const Parameter& p_fader_max = Colorfade_Info::parameters[1];
-    const Parameter& p_fader_2nd = Colorfade_Info::parameters[2];
-    const Parameter& p_fader_3rd_gray = Colorfade_Info::parameters[3];
-    AVS_Parameter_Handle p_on_beat = Colorfade_Info::parameters[4].handle;
-    AVS_Parameter_Handle p_on_beat_random = Colorfade_Info::parameters[5].handle;
-    const Parameter& p_on_beat_max = Colorfade_Info::parameters[6];
-    const Parameter& p_on_beat_2nd = Colorfade_Info::parameters[7];
-    const Parameter& p_on_beat_3rd_gray = Colorfade_Info::parameters[8];
+    const Parameter* p_fader_max = &Colorfade_Info::parameters[1];
+    const Parameter* p_fader_2nd = &Colorfade_Info::parameters[2];
+    const Parameter* p_fader_3rd_gray = &Colorfade_Info::parameters[3];
+    const Parameter* p_on_beat = &Colorfade_Info::parameters[4];
+    const Parameter* p_on_beat_random = &Colorfade_Info::parameters[5];
+    const Parameter* p_on_beat_max = &Colorfade_Info::parameters[6];
+    const Parameter* p_on_beat_2nd = &Colorfade_Info::parameters[7];
+    const Parameter* p_on_beat_3rd_gray = &Colorfade_Info::parameters[8];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
-            auto fader_2nd = g_this->get_int(p_fader_2nd.handle);
+            auto fader_2nd = g_this->get_int(p_fader_2nd);
             init_ranged_slider(p_fader_2nd, fader_2nd, hwndDlg, IDC_SLIDER1);
-            auto fader_max = g_this->get_int(p_fader_max.handle);
+            auto fader_max = g_this->get_int(p_fader_max);
             init_ranged_slider(p_fader_max, fader_max, hwndDlg, IDC_SLIDER2);
-            auto fader_3rd_gray = g_this->get_int(p_fader_3rd_gray.handle);
+            auto fader_3rd_gray = g_this->get_int(p_fader_3rd_gray);
             init_ranged_slider(p_fader_3rd_gray, fader_3rd_gray, hwndDlg, IDC_SLIDER3);
 
-            auto on_beat_2nd = g_this->get_int(p_on_beat_2nd.handle);
+            auto on_beat_2nd = g_this->get_int(p_on_beat_2nd);
             init_ranged_slider(p_on_beat_2nd, on_beat_2nd, hwndDlg, IDC_SLIDER4);
-            auto on_beat_max = g_this->get_int(p_on_beat_max.handle);
+            auto on_beat_max = g_this->get_int(p_on_beat_max);
             init_ranged_slider(p_on_beat_max, on_beat_max, hwndDlg, IDC_SLIDER5);
-            auto on_beat_3rd_gray = g_this->get_int(p_on_beat_3rd_gray.handle);
+            auto on_beat_3rd_gray = g_this->get_int(p_on_beat_3rd_gray);
             init_ranged_slider(
                 p_on_beat_3rd_gray, on_beat_3rd_gray, hwndDlg, IDC_SLIDER6);
 
@@ -62,22 +62,22 @@ int win32_dlgproc_colorfade(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
             HWND swnd = (HWND)lParam;
             int t = (int)SendMessage(swnd, TBM_GETPOS, 0, 0);
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER1)) {
-                g_this->set_int(p_fader_2nd.handle, t);
+                g_this->set_int(p_fader_2nd, t);
             }
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER2)) {
-                g_this->set_int(p_fader_max.handle, t);
+                g_this->set_int(p_fader_max, t);
             }
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER3)) {
-                g_this->set_int(p_fader_3rd_gray.handle, t);
+                g_this->set_int(p_fader_3rd_gray, t);
             }
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER4)) {
-                g_this->set_int(p_on_beat_2nd.handle, t);
+                g_this->set_int(p_on_beat_2nd, t);
             }
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER5)) {
-                g_this->set_int(p_on_beat_max.handle, t);
+                g_this->set_int(p_on_beat_max, t);
             }
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER6)) {
-                g_this->set_int(p_on_beat_3rd_gray.handle, t);
+                g_this->set_int(p_on_beat_3rd_gray, t);
             }
             return 0;
         }

@@ -9,46 +9,46 @@
 
 int win32_dlgproc_interleave(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto* g_this = (E_Interleave*)g_current_render;
-    const Parameter& p_x = Interleave_Info::parameters[0];
-    const Parameter& p_y = Interleave_Info::parameters[1];
-    AVS_Parameter_Handle p_color = Interleave_Info::parameters[2].handle;
-    AVS_Parameter_Handle p_on_beat = Interleave_Info::parameters[3].handle;
-    const Parameter& p_on_beat_x = Interleave_Info::parameters[4];
-    const Parameter& p_on_beat_y = Interleave_Info::parameters[5];
-    const Parameter& p_on_beat_duration = Interleave_Info::parameters[6];
-    AVS_Parameter_Handle p_blend_mode = Interleave_Info::parameters[7].handle;
+    const Parameter* p_x = &Interleave_Info::parameters[0];
+    const Parameter* p_y = &Interleave_Info::parameters[1];
+    const Parameter* p_color = &Interleave_Info::parameters[2];
+    const Parameter* p_on_beat = &Interleave_Info::parameters[3];
+    const Parameter* p_on_beat_x = &Interleave_Info::parameters[4];
+    const Parameter* p_on_beat_y = &Interleave_Info::parameters[5];
+    const Parameter* p_on_beat_duration = &Interleave_Info::parameters[6];
+    const Parameter* p_blend_mode = &Interleave_Info::parameters[7];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
-            auto x_range = MAKELONG(p_x.int_min, p_x.int_max);
+            auto x_range = MAKELONG(p_x->int_min, p_x->int_max);
             SendDlgItemMessage(hwndDlg, IDC_X, TBM_SETRANGE, TRUE, x_range);
-            auto x = g_this->get_int(p_x.handle);
+            auto x = g_this->get_int(p_x);
             SendDlgItemMessage(hwndDlg, IDC_X, TBM_SETPOS, TRUE, (int32_t)x);
             SendDlgItemMessage(hwndDlg, IDC_X, TBM_SETTICFREQ, 1, 0);
 
-            auto y_range = MAKELONG(p_y.int_min, p_y.int_max);
+            auto y_range = MAKELONG(p_y->int_min, p_y->int_max);
             SendDlgItemMessage(hwndDlg, IDC_Y, TBM_SETRANGE, TRUE, y_range);
-            auto y = g_this->get_int(p_y.handle);
+            auto y = g_this->get_int(p_y);
             SendDlgItemMessage(hwndDlg, IDC_Y, TBM_SETPOS, TRUE, (int32_t)y);
             SendDlgItemMessage(hwndDlg, IDC_Y, TBM_SETTICFREQ, 1, 0);
 
-            auto on_beat_x_range = MAKELONG(p_on_beat_x.int_min, p_on_beat_x.int_max);
+            auto on_beat_x_range = MAKELONG(p_on_beat_x->int_min, p_on_beat_x->int_max);
             SendDlgItemMessage(hwndDlg, IDC_X2, TBM_SETRANGE, TRUE, on_beat_x_range);
-            auto on_beat_x = g_this->get_int(p_on_beat_x.handle);
+            auto on_beat_x = g_this->get_int(p_on_beat_x);
             SendDlgItemMessage(hwndDlg, IDC_X2, TBM_SETPOS, TRUE, (int32_t)on_beat_x);
             SendDlgItemMessage(hwndDlg, IDC_X2, TBM_SETTICFREQ, 1, 0);
 
-            auto on_beat_y_range = MAKELONG(p_on_beat_y.int_min, p_on_beat_y.int_max);
+            auto on_beat_y_range = MAKELONG(p_on_beat_y->int_min, p_on_beat_y->int_max);
             SendDlgItemMessage(hwndDlg, IDC_Y2, TBM_SETRANGE, TRUE, on_beat_y_range);
-            auto on_beat_y = g_this->get_int(p_on_beat_y.handle);
+            auto on_beat_y = g_this->get_int(p_on_beat_y);
             SendDlgItemMessage(hwndDlg, IDC_Y2, TBM_SETPOS, TRUE, (int32_t)on_beat_y);
             SendDlgItemMessage(hwndDlg, IDC_Y2, TBM_SETTICFREQ, 1, 0);
 
             auto on_beat_duration_range =
-                MAKELONG(p_on_beat_duration.int_min, p_on_beat_duration.int_max);
+                MAKELONG(p_on_beat_duration->int_min, p_on_beat_duration->int_max);
             SendDlgItemMessage(
                 hwndDlg, IDC_X3, TBM_SETRANGE, TRUE, on_beat_duration_range);
-            auto on_beat_duration = g_this->get_int(p_on_beat_duration.handle);
+            auto on_beat_duration = g_this->get_int(p_on_beat_duration);
             SendDlgItemMessage(
                 hwndDlg, IDC_X3, TBM_SETPOS, TRUE, (int32_t)on_beat_duration);
             SendDlgItemMessage(hwndDlg, IDC_X3, TBM_SETTICFREQ, 1, 0);
@@ -73,15 +73,15 @@ int win32_dlgproc_interleave(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             if (LOWORD(wParam) == TB_THUMBTRACK) {
                 int64_t slider_value = HIWORD(wParam);
                 if ((HWND)lParam == GetDlgItem(hwndDlg, IDC_X)) {
-                    g_this->set_int(p_x.handle, slider_value);
+                    g_this->set_int(p_x, slider_value);
                 } else if ((HWND)lParam == GetDlgItem(hwndDlg, IDC_Y)) {
-                    g_this->set_int(p_y.handle, slider_value);
+                    g_this->set_int(p_y, slider_value);
                 } else if ((HWND)lParam == GetDlgItem(hwndDlg, IDC_X2)) {
-                    g_this->set_int(p_on_beat_x.handle, slider_value);
+                    g_this->set_int(p_on_beat_x, slider_value);
                 } else if ((HWND)lParam == GetDlgItem(hwndDlg, IDC_Y2)) {
-                    g_this->set_int(p_on_beat_y.handle, slider_value);
+                    g_this->set_int(p_on_beat_y, slider_value);
                 } else if ((HWND)lParam == GetDlgItem(hwndDlg, IDC_X3)) {
-                    g_this->set_int(p_on_beat_duration.handle, slider_value);
+                    g_this->set_int(p_on_beat_duration, slider_value);
                 }
             }
             return 0;

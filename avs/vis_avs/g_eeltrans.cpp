@@ -15,12 +15,11 @@
 
 int win32_dlgproc_eeltrans(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     E_EelTrans* g_this = (E_EelTrans*)g_current_render;
-    const AVS_Parameter_Handle p_log_enabled = g_this->info.parameters[0].handle;
-    const AVS_Parameter_Handle p_log_path = g_this->info.parameters[1].handle;
-    const AVS_Parameter_Handle p_translate_firstlevel =
-        g_this->info.parameters[2].handle;
-    const AVS_Parameter_Handle p_read_comment_codes = g_this->info.parameters[3].handle;
-    const AVS_Parameter_Handle p_code = g_this->info.parameters[4].handle;
+    const Parameter* p_log_enabled = &g_this->info.parameters[0];
+    const Parameter* p_log_path = &g_this->info.parameters[1];
+    const Parameter* p_translate_firstlevel = &g_this->info.parameters[2];
+    const Parameter* p_read_comment_codes = &g_this->info.parameters[3];
+    const Parameter* p_code = &g_this->info.parameters[4];
 
     switch (uMsg) {
         case WM_INITDIALOG:

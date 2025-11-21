@@ -14,16 +14,16 @@ void load_examples(E_Texer2* texer2, HWND dialog, HWND button);
 
 int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     E_Texer2* g_this = (E_Texer2*)g_current_render;
-    const Parameter& p_image = g_this->info.parameters[1];
-    const AVS_Parameter_Handle p_resize = g_this->info.parameters[2].handle;
-    const AVS_Parameter_Handle p_wrap = g_this->info.parameters[3].handle;
-    const AVS_Parameter_Handle p_colorize = g_this->info.parameters[4].handle;
-    const AVS_Parameter_Handle p_init = g_this->info.parameters[5].handle;
-    const AVS_Parameter_Handle p_frame = g_this->info.parameters[6].handle;
-    const AVS_Parameter_Handle p_beat = g_this->info.parameters[7].handle;
-    const AVS_Parameter_Handle p_point = g_this->info.parameters[8].handle;
-    const Parameter& p_example = g_this->info.parameters[9];
-    const AVS_Parameter_Handle p_load_example = g_this->info.parameters[10].handle;
+    const Parameter* p_image = &g_this->info.parameters[1];
+    const Parameter* p_resize = &g_this->info.parameters[2];
+    const Parameter* p_wrap = &g_this->info.parameters[3];
+    const Parameter* p_colorize = &g_this->info.parameters[4];
+    const Parameter* p_init = &g_this->info.parameters[5];
+    const Parameter* p_frame = &g_this->info.parameters[6];
+    const Parameter* p_beat = &g_this->info.parameters[7];
+    const Parameter* p_point = &g_this->info.parameters[8];
+    const Parameter* p_example = &g_this->info.parameters[9];
+    const Parameter* p_load_example = &g_this->info.parameters[10];
 
     switch (uMsg) {
         case WM_COMMAND: {
@@ -48,7 +48,7 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                            CB_GETLBTEXT,
                                            sel,
                                            (LPARAM)buf);
-                        g_this->set_string(p_image.handle, buf);
+                        g_this->set_string(p_image, buf);
                         free(buf);
                         break;
                 }
@@ -71,7 +71,8 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         return 1;
                     }
                     int64_t options_length;
-                    const char* const* options = p_example.get_options(&options_length);
+                    const char* const* options =
+                        p_example->get_options(&options_length);
                     for (int i = 0; i < options_length; i++) {
                         AppendMenu(
                             m, MF_STRING, TEXERII_EXAMPLES_FIRST_ID + i, options[i]);
@@ -82,7 +83,7 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         || ret >= (TEXERII_EXAMPLES_FIRST_ID + options_length)) {
                         return 1;
                     }
-                    g_this->set_int(p_example.handle, ret - TEXERII_EXAMPLES_FIRST_ID);
+                    g_this->set_int(p_example, ret - TEXERII_EXAMPLES_FIRST_ID);
                     g_this->run_action(p_load_example);
                     SetDlgItemText(
                         hwndDlg, IDC_TEXERII_INIT, g_this->get_string(p_init));
@@ -99,7 +100,7 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         hwndDlg, IDC_TEXERII_MASK, g_this->get_bool(p_colorize));
 
                     // select the default texture image
-                    g_this->set_string(p_image.handle, TEXER_II_DEFAULT_IMAGE_STRING);
+                    g_this->set_string(p_image, TEXER_II_DEFAULT_IMAGE_STRING);
                     SendDlgItemMessage(
                         hwndDlg, IDC_TEXERII_TEXTURE, CB_SETCURSEL, 0, 0);
                     DestroyMenu(m);
@@ -123,7 +124,7 @@ int win32_dlgproc_texer2(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         }
 
         case WM_INITDIALOG: {
-            auto image = g_this->get_string(p_image.handle);
+            auto image = g_this->get_string(p_image);
             init_resource(p_image, image, hwndDlg, IDC_TEXERII_TEXTURE, MAX_PATH);
             SetDlgItemText(hwndDlg, IDC_TEXERII_INIT, g_this->get_string(p_init));
             SetDlgItemText(hwndDlg, IDC_TEXERII_FRAME, g_this->get_string(p_frame));

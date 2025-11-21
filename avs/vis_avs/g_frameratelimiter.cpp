@@ -14,12 +14,12 @@ int win32_dlgproc_frameratelimiter(HWND hwndDlg,
                                    WPARAM wParam,
                                    LPARAM lParam) {
     E_FramerateLimiter* g_this = (E_FramerateLimiter*)g_current_render;
-    const Parameter& p_limit = g_this->info.parameters[0];
+    const Parameter* p_limit = &g_this->info.parameters[0];
 
     char fps_slider_label[32];
     switch (uMsg) {
         case WM_INITDIALOG: {
-            auto limit = g_this->get_int(p_limit.handle);
+            auto limit = g_this->get_int(p_limit);
             init_ranged_slider(p_limit, limit, hwndDlg, IDC_FPSLIMITER_FPS_SLIDER);
             CheckDlgButton(hwndDlg, IDC_FPSLIMITER_ENABLED, g_this->enabled);
             wsprintf(fps_slider_label, "%d FPS max.", limit);
@@ -34,9 +34,8 @@ int win32_dlgproc_frameratelimiter(HWND hwndDlg,
         }
         case WM_HSCROLL: {
             if ((HWND)lParam == GetDlgItem(hwndDlg, IDC_FPSLIMITER_FPS_SLIDER)) {
-                g_this->set_int(p_limit.handle,
-                                SendMessage((HWND)lParam, TBM_GETPOS, 0, 0));
-                auto limit = g_this->get_int(p_limit.handle);
+                g_this->set_int(p_limit, SendMessage((HWND)lParam, TBM_GETPOS, 0, 0));
+                auto limit = g_this->get_int(p_limit);
                 wsprintf(fps_slider_label, "%d FPS max.", limit);
                 SetDlgItemText(hwndDlg, IDC_FPSLIMITER_FPS_LABEL, fps_slider_label);
                 return 1;

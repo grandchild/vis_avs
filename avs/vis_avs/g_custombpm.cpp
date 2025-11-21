@@ -11,21 +11,21 @@
 
 int win32_dlgproc_custombpm(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     auto g_this = (E_CustomBPM*)g_current_render;
-    AVS_Parameter_Handle p_mode = CustomBPM_Info::parameters[0].handle;
-    const Parameter& p_fixed_bpm = CustomBPM_Info::parameters[1];
-    const Parameter& p_skip = CustomBPM_Info::parameters[2];
-    const Parameter& p_skip_first_beats = CustomBPM_Info::parameters[3];
-    AVS_Parameter_Handle p_beat_count_in = CustomBPM_Info::parameters[4].handle;
-    AVS_Parameter_Handle p_beat_count_out = CustomBPM_Info::parameters[5].handle;
+    const Parameter* p_mode = &CustomBPM_Info::parameters[0];
+    const Parameter* p_fixed_bpm = &CustomBPM_Info::parameters[1];
+    const Parameter* p_skip = &CustomBPM_Info::parameters[2];
+    const Parameter* p_skip_first_beats = &CustomBPM_Info::parameters[3];
+    const Parameter* p_beat_count_in = &CustomBPM_Info::parameters[4];
+    const Parameter* p_beat_count_out = &CustomBPM_Info::parameters[5];
 
     char txt[40];
     switch (uMsg) {
         case WM_INITDIALOG: {
-            auto fixed_bpm = g_this->get_int(p_fixed_bpm.handle);
+            auto fixed_bpm = g_this->get_int(p_fixed_bpm);
             init_ranged_slider(p_fixed_bpm, fixed_bpm, hwndDlg, IDC_ARBVAL);
-            auto skip = g_this->get_int(p_skip.handle);
+            auto skip = g_this->get_int(p_skip);
             init_ranged_slider(p_skip, skip, hwndDlg, IDC_SKIPVAL);
-            auto skip_first_beats = g_this->get_int(p_skip_first_beats.handle);
+            auto skip_first_beats = g_this->get_int(p_skip_first_beats);
             init_ranged_slider(
                 p_skip_first_beats, skip_first_beats, hwndDlg, IDC_SKIPFIRST);
 
@@ -60,25 +60,24 @@ int win32_dlgproc_custombpm(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
         case WM_NOTIFY: {
             if (LOWORD(wParam) == IDC_ARBVAL) {
                 g_this->set_int(
-                    p_fixed_bpm.handle,
+                    p_fixed_bpm,
                     SendDlgItemMessage(hwndDlg, IDC_ARBVAL, TBM_GETPOS, 0, 0));
-                auto fixed_bpm = g_this->get_int(p_fixed_bpm.handle);
+                auto fixed_bpm = g_this->get_int(p_fixed_bpm);
                 wsprintf(txt, "%d bpm", (int32_t)fixed_bpm);
                 SetDlgItemText(hwndDlg, IDC_ARBTXT, txt);
             }
             if (LOWORD(wParam) == IDC_SKIPVAL) {
                 g_this->set_int(
-                    p_skip.handle,
-                    SendDlgItemMessage(hwndDlg, IDC_SKIPVAL, TBM_GETPOS, 0, 0));
-                auto skip = g_this->get_int(p_skip.handle);
+                    p_skip, SendDlgItemMessage(hwndDlg, IDC_SKIPVAL, TBM_GETPOS, 0, 0));
+                auto skip = g_this->get_int(p_skip);
                 wsprintf(txt, "%d beat%s", (int32_t)skip, (skip != 1) ? "s" : "");
                 SetDlgItemText(hwndDlg, IDC_SKIPTXT, txt);
             }
             if (LOWORD(wParam) == IDC_SKIPFIRST) {
                 g_this->set_int(
-                    p_skip_first_beats.handle,
+                    p_skip_first_beats,
                     SendDlgItemMessage(hwndDlg, IDC_SKIPFIRST, TBM_GETPOS, 0, 0));
-                auto skip_first_beats = g_this->get_int(p_skip_first_beats.handle);
+                auto skip_first_beats = g_this->get_int(p_skip_first_beats);
                 wsprintf(txt,
                          "%d beat%s",
                          (int32_t)skip_first_beats,

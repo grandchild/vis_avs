@@ -56,29 +56,29 @@ class Effect {
     virtual bool can_have_child_components() = 0;
     virtual Effect_Info* get_info() const = 0;
     virtual size_t parameter_list_length(
-        AVS_Parameter_Handle parameter,
+        const Parameter* parameter,
         const std::vector<int64_t>& parameter_path) = 0;
     virtual bool parameter_list_entry_add(
-        AVS_Parameter_Handle parameter,
+        const Parameter* parameter,
         int64_t before,
         std::vector<AVS_Parameter_Value>,
         const std::vector<int64_t>& parameter_path) = 0;
     virtual bool parameter_list_entry_move(
-        AVS_Parameter_Handle parameter,
+        const Parameter* parameter,
         int64_t from,
         int64_t to,
         const std::vector<int64_t>& parameter_path) = 0;
     virtual bool parameter_list_entry_remove(
-        AVS_Parameter_Handle parameter,
+        const Parameter* parameter,
         int64_t to_remove,
         const std::vector<int64_t>& parameter_path) = 0;
-    virtual bool run_action(AVS_Parameter_Handle parameter,
+    virtual bool run_action(const Parameter* parameter,
                             const std::vector<int64_t>& parameter_path = {}) = 0;
 
 #define GET_SET_PARAMETER_ABSTRACT(AVS_TYPE, TYPE)                                    \
-    virtual TYPE get_##AVS_TYPE(AVS_Parameter_Handle parameter,                       \
+    virtual TYPE get_##AVS_TYPE(const Parameter* parameter,                           \
                                 const std::vector<int64_t>& parameter_path = {}) = 0; \
-    virtual bool set_##AVS_TYPE(AVS_Parameter_Handle parameter,                       \
+    virtual bool set_##AVS_TYPE(const Parameter* parameter,                           \
                                 TYPE value,                                           \
                                 const std::vector<int64_t>& parameter_path = {}) = 0
     GET_SET_PARAMETER_ABSTRACT(bool, bool);
@@ -89,7 +89,7 @@ class Effect {
 
 #define GET_ARRAY_PARAMETER_ABSTRACT(AVS_TYPE, TYPE)  \
     virtual std::vector<TYPE> get_##AVS_TYPE##_array( \
-        AVS_Parameter_Handle parameter,               \
+        const Parameter* parameter,                   \
         const std::vector<int64_t>& parameter_path = {}) = 0
     GET_ARRAY_PARAMETER_ABSTRACT(int, int64_t);
     GET_ARRAY_PARAMETER_ABSTRACT(float, double);
@@ -222,90 +222,71 @@ class Configurable_Effect : public Effect {
     }
 
     template <typename T>
-    T get(AVS_Parameter_Handle parameter,
-          const std::vector<int64_t>& parameter_path = {}) {
-        if (parameter == 0) {
+    T get(const Parameter* parameter, const std::vector<int64_t>& parameter_path = {}) {
+        if (parameter == nullptr) {
             return parameter_dispatch<T>::zero();
         }
-        auto param = this->info.get_parameter_from_handle(parameter);
-        if (param == NULL) {
-            return parameter_dispatch<T>::zero();
-        }
-        auto addr = this->get_config_address(param, parameter_path);
+        auto addr = this->get_config_address(parameter, parameter_path);
         return parameter_dispatch<T>::get(addr);
     }
 
     template <typename T>
-    bool set(AVS_Parameter_Handle parameter,
+    bool set(const Parameter* parameter,
              T value,
              const std::vector<int64_t>& parameter_path = {}) {
-        if (parameter == 0) {
+        if (parameter == nullptr) {
             return false;
         }
-        auto param = this->info.get_parameter_from_handle(parameter);
-        if (param == NULL) {
-            return false;
-        }
-        auto addr = this->get_config_address(param, parameter_path);
-        parameter_dispatch<T>::set(param, addr, value);
-        if (param->on_value_change != NULL) {
-            param->on_value_change(this, param, parameter_path);
+        auto addr = this->get_config_address(parameter, parameter_path);
+        parameter_dispatch<T>::set(parameter, addr, value);
+        if (parameter->on_value_change != NULL) {
+            parameter->on_value_change(this, parameter, parameter_path);
         }
         if (this->trace_parameter_changes) {
-            auto prefix = trace_prefix(this->info.name, param->name, parameter_path);
+            auto prefix =
+                trace_prefix(this->info.name, parameter->name, parameter_path);
             log_info("%s %s",
                      prefix.c_str(),
-                     parameter_dispatch<T>::trace(param, value, addr).c_str());
+                     parameter_dispatch<T>::trace(parameter, value, addr).c_str());
         }
         return true;
     }
 
     template <typename T>
-    std::vector<T>& get_array(AVS_Parameter_Handle parameter,
+    std::vector<T>& get_array(const Parameter* parameter,
                               const std::vector<int64_t>& parameter_path = {}) {
         static std::vector<T> empty;
-        if (parameter == 0) {
+        if (parameter == nullptr) {
             return empty;
         }
-        auto param = this->info.get_parameter_from_handle(parameter);
-        if (param == NULL) {
-            return empty;
-        }
-        auto addr = this->get_config_address(param, parameter_path);
+        auto addr = this->get_config_address(parameter, parameter_path);
         return parameter_dispatch<T>::get_array(addr);
     }
 
-    size_t parameter_list_length(AVS_Parameter_Handle parameter,
+    size_t parameter_list_length(const Parameter* parameter,
                                  const std::vector<int64_t>& parameter_path = {}) {
-        if (parameter == 0) {
+        if (parameter == nullptr) {
             return 0;
         }
-        auto param = this->info.get_parameter_from_handle(parameter);
-        if (param == NULL) {
-            return 0;
-        }
-        auto addr = this->get_config_address(param, parameter_path);
-        return param->list_length(addr);
+        auto addr = this->get_config_address(parameter, parameter_path);
+        return parameter->list_length(addr);
     }
     bool parameter_list_entry_add(
-        AVS_Parameter_Handle parameter,
+        const Parameter* parameter,
         int64_t before,
         std::vector<AVS_Parameter_Value> parameter_values = {},
         const std::vector<int64_t>& parameter_path = {}) {
-        if (parameter == 0) {
+        if (parameter == nullptr) {
             return false;
         }
-        auto param = this->info.get_parameter_from_handle(parameter);
-        if (param == NULL) {
-            return false;
-        }
-        auto addr = this->get_config_address(param, parameter_path);
-        bool success = param->list_add(addr, param->num_child_parameters_max, &before);
+        auto addr = this->get_config_address(parameter, parameter_path);
+        bool success =
+            parameter->list_add(addr, parameter->num_child_parameters_max, &before);
         if (success) {
             std::vector<int64_t> new_parameter_path = parameter_path;
             new_parameter_path.push_back(before);
             for (auto const& pv : parameter_values) {
-                auto pv_param = this->info.get_parameter_from_handle(pv.parameter);
+                auto pv_param = g_param_map[pv.parameter];
                 auto pv_addr = this->get_config_address(pv_param, new_parameter_path);
                 if (pv_param == NULL) {
                     continue;
@@ -339,76 +320,65 @@ class Configurable_Effect : public Effect {
                     default: break;
                 }
             }
-            if (param->on_list_add != NULL) {
-                param->on_list_add(this, param, parameter_path, before, 0);
+            if (parameter->on_list_add != NULL) {
+                parameter->on_list_add(this, parameter, parameter_path, before, 0);
             }
             if (this->trace_parameter_changes) {
                 auto prefix =
-                    trace_prefix(this->info.name, param->name, parameter_path);
+                    trace_prefix(this->info.name, parameter->name, parameter_path);
                 log_info("%s added new entry #%lld\n", prefix.c_str(), before);
             }
         }
         return success;
     }
-    bool parameter_list_entry_move(AVS_Parameter_Handle parameter,
+    bool parameter_list_entry_move(const Parameter* parameter,
                                    int64_t from,
                                    int64_t to,
                                    const std::vector<int64_t>& parameter_path = {}) {
-        if (parameter == 0) {
+        if (parameter == nullptr) {
             return false;
         }
-        auto param = this->info.get_parameter_from_handle(parameter);
-        if (param == NULL) {
-            return false;
-        }
-        auto addr = this->get_config_address(param, parameter_path);
-        bool success = param->list_move(addr, &from, &to);
-        if (success && param->on_list_move != NULL) {
-            param->on_list_move(this, param, parameter_path, from, to);
+        auto addr = this->get_config_address(parameter, parameter_path);
+        bool success = parameter->list_move(addr, &from, &to);
+        if (success && parameter->on_list_move != NULL) {
+            parameter->on_list_move(this, parameter, parameter_path, from, to);
             if (this->trace_parameter_changes) {
                 auto prefix =
-                    trace_prefix(this->info.name, param->name, parameter_path);
+                    trace_prefix(this->info.name, parameter->name, parameter_path);
                 log_info("%s moved entry #%lld to #%lld\n", prefix.c_str(), from, to);
             }
         }
         return success;
     }
-    bool parameter_list_entry_remove(AVS_Parameter_Handle parameter,
+    bool parameter_list_entry_remove(const Parameter* parameter,
                                      int64_t to_remove,
                                      const std::vector<int64_t>& parameter_path = {}) {
-        if (parameter == 0) {
+        if (parameter == nullptr) {
             return false;
         }
-        auto param = this->info.get_parameter_from_handle(parameter);
-        if (param == NULL) {
-            return false;
-        }
-        auto addr = this->get_config_address(param, parameter_path);
-        bool success =
-            param->list_remove(addr, param->num_child_parameters_min, &to_remove);
-        if (success && param->on_list_remove != NULL) {
-            param->on_list_remove(this, param, parameter_path, to_remove, 0);
+        auto addr = this->get_config_address(parameter, parameter_path);
+        bool success = parameter->list_remove(
+            addr, parameter->num_child_parameters_min, &to_remove);
+        if (success && parameter->on_list_remove != NULL) {
+            parameter->on_list_remove(this, parameter, parameter_path, to_remove, 0);
             if (this->trace_parameter_changes) {
                 auto prefix =
-                    trace_prefix(this->info.name, param->name, parameter_path);
+                    trace_prefix(this->info.name, parameter->name, parameter_path);
                 log_info("%s removed entry #%lld\n", prefix.c_str(), to_remove);
             }
         }
         return success;
     }
 
-    bool run_action(AVS_Parameter_Handle parameter,
+    bool run_action(const Parameter* parameter,
                     const std::vector<int64_t>& parameter_path = {}) {
-        if (parameter == 0) {
+        if (parameter == nullptr || parameter->on_value_change == NULL) {
             return false;
         }
-        auto param = this->info.get_parameter_from_handle(parameter);
-        if (param == NULL || param->on_value_change == NULL) {
-            return false;
-        }
-        param->on_value_change(this, param, parameter_path);
+        parameter->on_value_change(this, parameter, parameter_path);
         if (this->trace_parameter_changes) {
-            auto prefix = trace_prefix(this->info.name, param->name, parameter_path);
+            auto prefix =
+                trace_prefix(this->info.name, parameter->name, parameter_path);
             log_info("%s triggered", prefix.c_str());
         }
         return true;
@@ -435,11 +405,11 @@ class Configurable_Effect : public Effect {
     static size_t instance_count() { return Configurable_Effect::globals.size(); }
 
 #define GET_SET_PARAMETER(AVS_TYPE, TYPE)                                          \
-    virtual TYPE get_##AVS_TYPE(AVS_Parameter_Handle parameter,                    \
+    virtual TYPE get_##AVS_TYPE(const Parameter* parameter,                        \
                                 const std::vector<int64_t>& parameter_path = {}) { \
         return get<TYPE>(parameter, parameter_path);                               \
     }                                                                              \
-    virtual bool set_##AVS_TYPE(AVS_Parameter_Handle parameter,                    \
+    virtual bool set_##AVS_TYPE(const Parameter* parameter,                        \
                                 TYPE value,                                        \
                                 const std::vector<int64_t>& parameter_path = {}) { \
         return set<TYPE>(parameter, value, parameter_path);                        \
@@ -450,11 +420,10 @@ class Configurable_Effect : public Effect {
     GET_SET_PARAMETER(color, uint64_t)
     GET_SET_PARAMETER(string, const char*)
 
-#define GET_ARRAY_PARAMETER(AVS_TYPE, TYPE)                \
-    virtual std::vector<TYPE> get_##AVS_TYPE##_array(      \
-        AVS_Parameter_Handle parameter,                    \
-        const std::vector<int64_t>& parameter_path = {}) { \
-        return get_array<TYPE>(parameter, parameter_path); \
+#define GET_ARRAY_PARAMETER(AVS_TYPE, TYPE)                                            \
+    virtual std::vector<TYPE> get_##AVS_TYPE##_array(                                  \
+        const Parameter* parameter, const std::vector<int64_t>& parameter_path = {}) { \
+        return get_array<TYPE>(parameter, parameter_path);                             \
     }
     GET_ARRAY_PARAMETER(int, int64_t)
     GET_ARRAY_PARAMETER(float, double)
@@ -609,27 +578,27 @@ class Configurable_Effect : public Effect {
                               size_t num_parameters,
                               std::vector<int64_t>& parameter_path) {
         for (size_t i = 0; i < num_parameters; i++) {
-            auto param = parameters[i];
-            if (param.type == AVS_PARAM_ACTION) {
+            auto param = &parameters[i];
+            if (param->type == AVS_PARAM_ACTION) {
                 continue;
             }
-            const char* global_or_not = param.is_global ? "G" : " ";
-            printf("%s  %s %s: ", indent.c_str(), global_or_not, param.name);
-            switch (param.type) {
+            const char* global_or_not = param->is_global ? "G" : " ";
+            printf("%s  %s %s: ", indent.c_str(), global_or_not, param->name);
+            switch (param->type) {
                 case AVS_PARAM_BOOL: {
-                    auto value = this->get_bool(param.handle, parameter_path);
+                    auto value = this->get_bool(param, parameter_path);
                     printf("%s\n", value ? "true" : "false");
                     break;
                 }
                 case AVS_PARAM_INT:
-                    printf("%lld\n", this->get_int(param.handle, parameter_path));
+                    printf("%lld\n", this->get_int(param, parameter_path));
                     break;
                 case AVS_PARAM_FLOAT:
-                    printf("%f\n", this->get_float(param.handle, parameter_path));
+                    printf("%f\n", this->get_float(param, parameter_path));
                     break;
                 case AVS_PARAM_RESOURCE: [[fallthrough]];
                 case AVS_PARAM_STRING: {
-                    std::string str = this->get_string(param.handle, parameter_path);
+                    std::string str = this->get_string(param, parameter_path);
                     // if string contains newlines replace them with escaped newlines
                     if (str.find('\n') != std::string::npos) {
                         std::string::size_type pos = 0;
@@ -653,12 +622,12 @@ class Configurable_Effect : public Effect {
                     break;
                 }
                 case AVS_PARAM_COLOR:
-                    printf("%08llx\n", this->get_color(param.handle, parameter_path));
+                    printf("%08llx\n", this->get_color(param, parameter_path));
                     break;
                 case AVS_PARAM_SELECT: {
                     int64_t num_options = 0;
-                    auto options = param.get_options(&num_options);
-                    auto selection = this->get_int(param.handle, parameter_path);
+                    auto options = param->get_options(&num_options);
+                    auto selection = this->get_int(param, parameter_path);
                     if (options == nullptr) {
                         printf("<no options> (selected %lld)\n", selection);
                         break;
@@ -671,15 +640,15 @@ class Configurable_Effect : public Effect {
                     break;
                 }
                 case AVS_PARAM_LIST: {
-                    auto list_length = param.list_length(
-                        this->get_config_address(&param, parameter_path));
+                    auto list_length = param->list_length(
+                        this->get_config_address(param, parameter_path));
                     printf("list (%u entries)\n", list_length);
                     for (size_t k = 0; k < list_length; k++) {
                         std::vector<int64_t> new_parameter_path = parameter_path;
                         new_parameter_path.push_back(k);
                         this->print_config(indent + "  ",
-                                           param.child_parameters,
-                                           param.num_child_parameters,
+                                           param->child_parameters,
+                                           param->num_child_parameters,
                                            new_parameter_path);
                     }
                     break;

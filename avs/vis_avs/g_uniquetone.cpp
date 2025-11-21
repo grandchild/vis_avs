@@ -11,9 +11,9 @@
 
 int win32_dlgproc_uniquetone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto g_this = (E_UniqueTone*)g_current_render;
-    AVS_Parameter_Handle p_color = UniqueTone_Info::parameters[0].handle;
-    AVS_Parameter_Handle p_blend_mode = UniqueTone_Info::parameters[1].handle;
-    AVS_Parameter_Handle p_invert = UniqueTone_Info::parameters[2].handle;
+    const Parameter* p_color = &UniqueTone_Info::parameters[0];
+    const Parameter* p_blend_mode = &UniqueTone_Info::parameters[1];
+    const Parameter* p_invert = &UniqueTone_Info::parameters[2];
 
     switch (uMsg) {
         case WM_INITDIALOG: {

@@ -12,15 +12,15 @@
 #include <string>
 
 void show_hide_blendmode_dependent_ui(E_EffectList* g_this,
-                                      const Parameter& p_input_blend_mode,
-                                      const Parameter& p_output_blend_mode,
+                                      const Parameter* p_input_blend_mode,
+                                      const Parameter* p_output_blend_mode,
                                       HWND hwndDlg) {
     int64_t length = 0;
-    auto blend_mode_strings = p_input_blend_mode.get_options(&length);
+    auto blend_mode_strings = p_input_blend_mode->get_options(&length);
     std::string input_blend_mode_str =
-        blend_mode_strings[g_this->get_int(p_input_blend_mode.handle)];
+        blend_mode_strings[g_this->get_int(p_input_blend_mode)];
     std::string output_blend_mode_str =
-        blend_mode_strings[g_this->get_int(p_output_blend_mode.handle)];
+        blend_mode_strings[g_this->get_int(p_output_blend_mode)];
 
     bool input_blend_is_adjustable = input_blend_mode_str == "Adjustable";
     bool output_blend_is_adjustable = output_blend_mode_str == "Adjustable";
@@ -36,23 +36,20 @@ void show_hide_blendmode_dependent_ui(E_EffectList* g_this,
 
 int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto g_this = (E_EffectList*)g_current_render;
-    AVS_Parameter_Handle p_enabled_on_beat = EffectList_Info::parameters[0].handle;
-    AVS_Parameter_Handle p_enabled_on_beat_frames =
-        EffectList_Info::parameters[1].handle;
-    AVS_Parameter_Handle p_clear_every_frame = EffectList_Info::parameters[2].handle;
-    const Parameter& p_input_blend_mode = EffectList_Info::parameters[3];
-    const Parameter& p_output_blend_mode = EffectList_Info::parameters[4];
-    const Parameter& p_input_blend_adjustable = EffectList_Info::parameters[5];
-    const Parameter& p_output_blend_adjustable = EffectList_Info::parameters[6];
-    const Parameter& p_input_blend_buffer = EffectList_Info::parameters[7];
-    const Parameter& p_output_blend_buffer = EffectList_Info::parameters[8];
-    AVS_Parameter_Handle p_input_blend_buffer_invert =
-        EffectList_Info::parameters[9].handle;
-    AVS_Parameter_Handle p_output_blend_buffer_invert =
-        EffectList_Info::parameters[10].handle;
-    AVS_Parameter_Handle p_use_code = EffectList_Info::parameters[11].handle;
-    AVS_Parameter_Handle p_init = EffectList_Info::parameters[12].handle;
-    AVS_Parameter_Handle p_frame = EffectList_Info::parameters[13].handle;
+    const Parameter* p_enabled_on_beat = &EffectList_Info::parameters[0];
+    const Parameter* p_enabled_on_beat_frames = &EffectList_Info::parameters[1];
+    const Parameter* p_clear_every_frame = &EffectList_Info::parameters[2];
+    const Parameter* p_input_blend_mode = &EffectList_Info::parameters[3];
+    const Parameter* p_output_blend_mode = &EffectList_Info::parameters[4];
+    const Parameter* p_input_blend_adjustable = &EffectList_Info::parameters[5];
+    const Parameter* p_output_blend_adjustable = &EffectList_Info::parameters[6];
+    const Parameter* p_input_blend_buffer = &EffectList_Info::parameters[7];
+    const Parameter* p_output_blend_buffer = &EffectList_Info::parameters[8];
+    const Parameter* p_input_blend_buffer_invert = &EffectList_Info::parameters[9];
+    const Parameter* p_output_blend_buffer_invert = &EffectList_Info::parameters[10];
+    const Parameter* p_use_code = &EffectList_Info::parameters[11];
+    const Parameter* p_init = &EffectList_Info::parameters[12];
+    const Parameter* p_frame = &EffectList_Info::parameters[13];
 
     static bool is_start = false;
 
@@ -64,17 +61,15 @@ int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             CheckDlgButton(hwndDlg, IDC_CHECK3, enabled_on_beat);
             EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT1), enabled_on_beat);
 
-            auto input_blend_mode = g_this->get_int(p_input_blend_mode.handle);
+            auto input_blend_mode = g_this->get_int(p_input_blend_mode);
             init_select(p_input_blend_mode, input_blend_mode, hwndDlg, IDC_COMBO2);
-            auto output_blend_mode = g_this->get_int(p_output_blend_mode.handle);
+            auto output_blend_mode = g_this->get_int(p_output_blend_mode);
             init_select(p_output_blend_mode, output_blend_mode, hwndDlg, IDC_COMBO1);
 
-            auto input_blend_adjustable =
-                g_this->get_int(p_input_blend_adjustable.handle);
+            auto input_blend_adjustable = g_this->get_int(p_input_blend_adjustable);
             init_ranged_slider(
                 p_input_blend_adjustable, input_blend_adjustable, hwndDlg, IDC_INSLIDE);
-            auto output_blend_adjustable =
-                g_this->get_int(p_output_blend_adjustable.handle);
+            auto output_blend_adjustable = g_this->get_int(p_output_blend_adjustable);
             init_ranged_slider(p_output_blend_adjustable,
                                output_blend_adjustable,
                                hwndDlg,
@@ -84,15 +79,15 @@ int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 g_this, p_input_blend_mode, p_output_blend_mode, hwndDlg);
 
             char txt[16];
-            for (int i = 0; i < p_input_blend_buffer.int_max; i++) {
+            for (int i = 0; i < p_input_blend_buffer->int_max; i++) {
                 wsprintf(txt, "Buffer %d", i + 1);
                 SendDlgItemMessage(hwndDlg, IDC_CBBUF1, CB_ADDSTRING, 0, (int)txt);
                 SendDlgItemMessage(hwndDlg, IDC_CBBUF2, CB_ADDSTRING, 0, (int)txt);
             }
-            auto input_blend_buffer = g_this->get_int(p_input_blend_buffer.handle);
+            auto input_blend_buffer = g_this->get_int(p_input_blend_buffer);
             SendDlgItemMessage(
                 hwndDlg, IDC_CBBUF1, CB_SETCURSEL, (WPARAM)input_blend_buffer, 0);
-            auto output_blend_buffer = g_this->get_int(p_output_blend_buffer.handle);
+            auto output_blend_buffer = g_this->get_int(p_output_blend_buffer);
             SendDlgItemMessage(
                 hwndDlg, IDC_CBBUF1, CB_SETCURSEL, (WPARAM)output_blend_buffer, 0);
 
@@ -133,7 +128,7 @@ int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         int sel =
                             SendDlgItemMessage(hwndDlg, IDC_COMBO1, CB_GETCURSEL, 0, 0);
                         if (sel != CB_ERR) {
-                            g_this->set_int(p_output_blend_mode.handle, sel);
+                            g_this->set_int(p_output_blend_mode, sel);
                             show_hide_blendmode_dependent_ui(g_this,
                                                              p_input_blend_mode,
                                                              p_output_blend_mode,
@@ -146,7 +141,7 @@ int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         int sel =
                             SendDlgItemMessage(hwndDlg, IDC_COMBO2, CB_GETCURSEL, 0, 0);
                         if (sel != CB_ERR) {
-                            g_this->set_int(p_input_blend_mode.handle, sel);
+                            g_this->set_int(p_input_blend_mode, sel);
                             show_hide_blendmode_dependent_ui(g_this,
                                                              p_input_blend_mode,
                                                              p_output_blend_mode,
@@ -156,14 +151,14 @@ int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     break;
                 case IDC_CBBUF1:
                     if (HIWORD(wParam) == CBN_SELCHANGE) {
-                        g_this->set_int(p_input_blend_buffer.handle,
+                        g_this->set_int(p_input_blend_buffer,
                                         SendDlgItemMessage(
                                             hwndDlg, IDC_CBBUF1, CB_GETCURSEL, 0, 0));
                     }
                     break;
                 case IDC_CBBUF2:
                     if (HIWORD(wParam) == CBN_SELCHANGE) {
-                        g_this->set_int(p_output_blend_buffer.handle,
+                        g_this->set_int(p_output_blend_buffer,
                                         SendDlgItemMessage(
                                             hwndDlg, IDC_CBBUF2, CB_GETCURSEL, 0, 0));
                     }
@@ -215,9 +210,9 @@ int win32_dlgproc_effectlist(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             HWND control = (HWND)lParam;
             auto value = SendMessage(control, TBM_GETPOS, 0, 0);
             if (control == GetDlgItem(hwndDlg, IDC_INSLIDE)) {
-                g_this->set_int(p_input_blend_adjustable.handle, value);
+                g_this->set_int(p_input_blend_adjustable, value);
             } else if (control == GetDlgItem(hwndDlg, IDC_OUTSLIDE)) {
-                g_this->set_int(p_output_blend_adjustable.handle, value);
+                g_this->set_int(p_output_blend_adjustable, value);
             }
             return 1;
         }

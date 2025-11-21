@@ -40,14 +40,14 @@ void load_map_file(E_ColorMap* colormap, int map_index, HWND hwndDlg);
 int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     E_ColorMap* g_this = (E_ColorMap*)g_current_render;
 
-    const Parameter& p_color_key = g_this->info.parameters[0];
-    const Parameter& p_blendmode = g_this->info.parameters[1];
-    const Parameter& p_map_cycle_mode = g_this->info.parameters[2];
-    const Parameter& p_map_cycle_speed = g_this->info.parameters[5];
-    const Parameter& p_maps = g_this->info.parameters[6];
+    const Parameter* p_color_key = &g_this->info.parameters[0];
+    const Parameter* p_blendmode = &g_this->info.parameters[1];
+    const Parameter* p_map_cycle_mode = &g_this->info.parameters[2];
+    const Parameter* p_map_cycle_speed = &g_this->info.parameters[5];
+    const Parameter* p_maps = &g_this->info.parameters[6];
 
-    const Parameter& p_flip_map = g_this->info.map_params[4];
-    const Parameter& p_clear_map = g_this->info.map_params[5];
+    const Parameter* p_flip_map = &g_this->info.map_params[4];
+    const Parameter* p_clear_map = &g_this->info.map_params[5];
 
     int64_t options_length;
     const char* const* options;
@@ -59,7 +59,7 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
     }
     int64_t num_maps = 0;
     if (g_this != NULL) {
-        num_maps = g_this->parameter_list_length(p_maps.handle);
+        num_maps = g_this->parameter_list_length(p_maps);
         if (current_map >= num_maps) {
             current_map = num_maps - 1;
         }
@@ -80,11 +80,11 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
             if (wNotifyCode == CBN_SELCHANGE) {
                 switch (LOWORD(wParam)) {
                     case IDC_COLORMAP_KEY_SELECT:
-                        g_this->set_int(p_color_key.handle,
+                        g_this->set_int(p_color_key,
                                         SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0));
                         return 0;
                     case IDC_COLORMAP_OUT_BLENDMODE:
-                        g_this->set_int(p_blendmode.handle,
+                        g_this->set_int(p_blendmode,
                                         SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0));
                         EnableWindow(
                             GetDlgItem(hwndDlg, IDC_COLORMAP_ADJUSTABLE_SLIDER),
@@ -106,7 +106,7 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                             g_this->config.maps[current_map].filepath.c_str());
                         return 0;
                     case IDC_COLORMAP_MAP_CYCLING_SELECT:
-                        g_this->set_int(p_map_cycle_mode.handle,
+                        g_this->set_int(p_map_cycle_mode,
                                         SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0));
                         EnableWindow(GetDlgItem(hwndDlg, IDC_COLORMAP_MAP_CYCLE_SPEED),
                                      g_this->config.map_cycle_mode);
@@ -143,7 +143,7 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                             == BST_CHECKED;
                         return 0;
                     case IDC_COLORMAP_FLIP_MAP:
-                        g_this->run_action(p_flip_map.handle, {current_map});
+                        g_this->run_action(p_flip_map, {current_map});
                         InvalidateRect(GetDlgItem(hwndDlg, IDC_COLORMAP_MAPVIEW), 0, 0);
                         return 0;
                     case IDC_COLORMAP_CLEAR_MAP:
@@ -152,7 +152,7 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                                             "Color Map",
                                             MB_ICONWARNING | MB_YESNO);
                         if (choice != IDNO) {
-                            g_this->run_action(p_clear_map.handle, {current_map});
+                            g_this->run_action(p_clear_map, {current_map});
                             InvalidateRect(
                                 GetDlgItem(hwndDlg, IDC_COLORMAP_MAPVIEW), 0, 0);
                             SetDlgItemText(
@@ -200,7 +200,7 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                     hwndDlg,
                     IDC_COLORMAP_MAP_ENABLE,
                     g_this->config.maps[g_this->config.current_map].enabled != 0);
-                options = p_map_cycle_mode.get_options(&options_length);
+                options = p_map_cycle_mode->get_options(&options_length);
                 for (unsigned int i = 0; i < options_length; i++) {
                     SendDlgItemMessage(hwndDlg,
                                        IDC_COLORMAP_MAP_CYCLING_SELECT,
@@ -213,7 +213,7 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                                    CB_SETCURSEL,
                                    g_this->config.map_cycle_mode,
                                    0);
-                options = p_color_key.get_options(&options_length);
+                options = p_color_key->get_options(&options_length);
                 for (unsigned int i = 0; i < options_length; i++) {
                     SendDlgItemMessage(hwndDlg,
                                        IDC_COLORMAP_KEY_SELECT,
@@ -226,7 +226,7 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                                    CB_SETCURSEL,
                                    g_this->config.color_key,
                                    0);
-                options = p_blendmode.get_options(&options_length);
+                options = p_blendmode->get_options(&options_length);
                 for (unsigned int i = 0; i < options_length; i++) {
                     SendDlgItemMessage(hwndDlg,
                                        IDC_COLORMAP_OUT_BLENDMODE,
@@ -267,7 +267,7 @@ int win32_dlgproc_colormap(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                     IDC_COLORMAP_MAP_CYCLE_SPEED,
                     TBM_SETRANGE,
                     TRUE,
-                    MAKELONG(p_map_cycle_speed.int_min, p_map_cycle_speed.int_max));
+                    MAKELONG(p_map_cycle_speed->int_min, p_map_cycle_speed->int_max));
                 SendDlgItemMessageA(hwndDlg,
                                     IDC_COLORMAP_MAP_CYCLE_SPEED,
                                     TBM_SETPOS,
@@ -336,12 +336,12 @@ static int win32_dlgproc_colormap_edit(HWND hwndDlg,
                                        WPARAM wParam,
                                        LPARAM lParam) {
     E_ColorMap* g_this = (E_ColorMap*)g_current_render;
-    const Parameter& p_maps = g_this->info.parameters[6];
+    const Parameter* p_maps = &g_this->info.parameters[6];
 
-    const Parameter& p_colors = g_this->info.map_params[3];
+    const Parameter* p_colors = &g_this->info.map_params[3];
 
-    const Parameter& p_position = g_this->info.map_color_params[0];
-    const Parameter& p_color = g_this->info.map_color_params[1];
+    const Parameter* p_position = &g_this->info.map_color_params[0];
+    const Parameter* p_color = &g_this->info.map_color_params[1];
 
     if (g_this == NULL) {
         return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
@@ -351,7 +351,7 @@ static int win32_dlgproc_colormap_edit(HWND hwndDlg,
     if (current_map < 0) {
         current_map = 0;
     }
-    int64_t num_maps = g_this->parameter_list_length(p_maps.handle);
+    int64_t num_maps = g_this->parameter_list_length(p_maps);
     if (current_map >= num_maps) {
         current_map = num_maps - 1;
     }
@@ -515,7 +515,7 @@ static int win32_dlgproc_colormap_edit(HWND hwndDlg,
                      i++) {
                     if (g_this->config.maps[current_map].colors[i].color_id
                         == g_currently_selected_color_id) {
-                        g_this->set_int(p_position.handle,
+                        g_this->set_int(p_position,
                                         TRANSLATE_RANGE(x,
                                                         draw_rect.left,
                                                         draw_rect.right,
@@ -621,12 +621,16 @@ static int win32_dlgproc_colormap_edit(HWND hwndDlg,
                         position_value.i = color_position;
                         AVS_Value color_value;
                         color_value.c = BGR_TO_RGB(choosecolor.rgbResult);
+                        AVS_Parameter_Handle p_position_handle =
+                            g_child_parameters_for_api[p_colors][0];
+                        AVS_Parameter_Handle p_color_handle =
+                            g_child_parameters_for_api[p_colors][1];
                         std::vector<AVS_Parameter_Value> new_color = {
-                            {p_position.handle, position_value},
-                            {p_color.handle, color_value},
+                            {p_position_handle, position_value},
+                            {p_color_handle, color_value},
                         };
                         g_this->parameter_list_entry_add(
-                            p_colors.handle, -1, new_color, {current_map});
+                            p_colors, -1, new_color, {current_map});
                         // c.config["Maps"][current_map]["Colors"].add_child(
                         //     -1,
                         //     {{"Position", position_value}, {"Color", color_value}});
@@ -642,7 +646,7 @@ static int win32_dlgproc_colormap_edit(HWND hwndDlg,
                     choosecolor.Flags = CC_RGBINIT | CC_FULLOPEN | CC_ANYCOLOR;
                     has_chosen_color = ChooseColor(&choosecolor);
                     if (has_chosen_color) {
-                        g_this->set_color(p_color.handle,
+                        g_this->set_color(p_color,
                                           BGR_TO_RGB(choosecolor.rgbResult),
                                           {current_map, selected_color_index});
                     }
@@ -654,7 +658,7 @@ static int win32_dlgproc_colormap_edit(HWND hwndDlg,
                         if (g_this->config.maps[current_map].colors[i].color_id
                             == g_currently_selected_color_id) {
                             g_this->parameter_list_entry_remove(
-                                p_colors.handle, i, {current_map});
+                                p_colors, i, {current_map});
                         }
                     }
                     break;
@@ -667,7 +671,7 @@ static int win32_dlgproc_colormap_edit(HWND hwndDlg,
                                    hwndDlg,
                                    (DLGPROC)win32_dlgproc_colormap_color_position,
                                    0);
-                    g_this->set_int(p_position.handle,
+                    g_this->set_int(p_position,
                                     g_ColorSetValue,
                                     {current_map, selected_color_index});
                     break;
@@ -739,8 +743,8 @@ void save_map_file(E_ColorMap* colormap, int map_index, HWND hwndDlg) {
         return;
     }
     colormap->config.maps[map_index].filepath = filepath;
-    const Parameter& p_save_map = colormap->info.map_params[6];
-    colormap->run_action(p_save_map.handle, {map_index});
+    const Parameter* p_save_map = &colormap->info.map_params[6];
+    colormap->run_action(p_save_map, {map_index});
     filenamepos = filepath.rfind('\\') + 1;
     filename = filepath.substr(filenamepos);
     SetDlgItemText(hwndDlg, IDC_COLORMAP_FILENAME_VIEW, filename.c_str());
@@ -779,8 +783,8 @@ void load_map_file(E_ColorMap* colormap, int map_index, HWND hwndDlg) {
         return;
     }
     colormap->config.maps[map_index].filepath = openfilename.lpstrFile;
-    const Parameter& p_load_map = colormap->info.map_params[7];
-    colormap->run_action(p_load_map.handle, {map_index});
+    const Parameter* p_load_map = &colormap->info.map_params[7];
+    colormap->run_action(p_load_map, {map_index});
     InvalidateRect(GetDlgItem(hwndDlg, IDC_COLORMAP_MAPVIEW), NULL, 0);
     filenamepos = colormap->config.maps[map_index].filepath.rfind('\\') + 1;
     filename = colormap->config.maps[map_index].filepath.substr(filenamepos);

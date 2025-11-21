@@ -12,15 +12,15 @@
 
 int win32_dlgproc_onbeatclear(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto g_this = (E_OnBeatClear*)g_current_render;
-    AVS_Parameter_Handle p_color = OnBeatClear_Info::parameters[0].handle;
-    AVS_Parameter_Handle p_blend_mode = OnBeatClear_Info::parameters[1].handle;
-    const Parameter& p_every_n_beats = OnBeatClear_Info::parameters[2];
+    const Parameter* p_color = &OnBeatClear_Info::parameters[0];
+    const Parameter* p_blend_mode = &OnBeatClear_Info::parameters[1];
+    const Parameter* p_every_n_beats = &OnBeatClear_Info::parameters[2];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
             auto blend_mode = g_this->get_int(p_blend_mode);
             CheckDlgButton(hwndDlg, IDC_BLEND, blend_mode == BLEND_SIMPLE_5050);
-            auto every_n_beats = g_this->get_int(p_every_n_beats.handle);
+            auto every_n_beats = g_this->get_int(p_every_n_beats);
             init_ranged_slider(p_every_n_beats, every_n_beats, hwndDlg, IDC_SLIDER1);
             return 1;
         }
@@ -36,8 +36,7 @@ int win32_dlgproc_onbeatclear(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
         case WM_HSCROLL: {
             HWND swnd = (HWND)lParam;
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER1)) {
-                g_this->set_int(p_every_n_beats.handle,
-                                SendMessage(swnd, TBM_GETPOS, 0, 0));
+                g_this->set_int(p_every_n_beats, SendMessage(swnd, TBM_GETPOS, 0, 0));
             }
         }
             return 0;

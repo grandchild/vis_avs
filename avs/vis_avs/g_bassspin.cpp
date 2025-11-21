@@ -9,11 +9,11 @@
 
 int win32_dlgproc_bassspin(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto g_this = (E_BassSpin*)g_current_render;
-    AVS_Parameter_Handle p_enabled_left = BassSpin_Info::parameters[0].handle;
-    AVS_Parameter_Handle p_enabled_right = BassSpin_Info::parameters[1].handle;
-    AVS_Parameter_Handle p_color_left = BassSpin_Info::parameters[2].handle;
-    AVS_Parameter_Handle p_color_right = BassSpin_Info::parameters[3].handle;
-    AVS_Parameter_Handle p_mode = BassSpin_Info::parameters[4].handle;
+    const Parameter* p_enabled_left = &BassSpin_Info::parameters[0];
+    const Parameter* p_enabled_right = &BassSpin_Info::parameters[1];
+    const Parameter* p_color_left = &BassSpin_Info::parameters[2];
+    const Parameter* p_color_right = &BassSpin_Info::parameters[3];
+    const Parameter* p_mode = &BassSpin_Info::parameters[4];
 
     switch (uMsg) {
         case WM_INITDIALOG:

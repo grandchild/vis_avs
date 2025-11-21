@@ -62,7 +62,6 @@ typedef void (*list_edit_handler)(Effect* component,
                                   int64_t index2);
 
 struct Parameter {
-    AVS_Parameter_Handle handle = 0;
     size_t offset = 0;
     AVS_Parameter_Type type = AVS_PARAM_INVALID;
     const char* name = NULL;
@@ -199,7 +198,6 @@ constexpr Parameter PARAM(size_t offset,
                           value_change_handler on_value_change = NULL,
                           bool is_saved = true) {
     Parameter _param = Parameter();
-    _param.handle = Handles::comptime_get(name);
     _param.offset = offset;
     _param.type = type;
     _param.name = name;
@@ -469,30 +467,6 @@ struct Effect_Info {
     }
     virtual bool can_have_child_components() const { return false; }
     virtual bool is_createable_by_user() const { return true; }
-    const Parameter* get_parameter_from_handle(AVS_Parameter_Handle to_find) {
-        return Effect_Info::_get_parameter_from_handle(
-            this->get_num_parameters(), this->get_parameters(), to_find);
-    }
-    static const Parameter* _get_parameter_from_handle(uint32_t num_parameters,
-                                                       const Parameter* parameters,
-                                                       AVS_Parameter_Handle to_find) {
-        for (uint32_t i = 0; i < num_parameters; i++) {
-            if (parameters[i].handle == to_find) {
-                return &parameters[i];
-            }
-            if (parameters[i].type == AVS_PARAM_LIST) {
-                const Parameter* subtree_result =
-                    Effect_Info::_get_parameter_from_handle(
-                        parameters[i].num_child_parameters,
-                        parameters[i].child_parameters,
-                        to_find);
-                if (subtree_result != nullptr) {
-                    return subtree_result;
-                }
-            }
-        }
-        return nullptr;
-    }
     /**
      * This is the heart of ugliness around parameter introspection. It makes use of
      * `sizeof` and `offsetof`, both recorded in each field's Parameter struct, to find
@@ -522,35 +496,20 @@ struct Effect_Info {
                     return subtree_result;
                 }
             }
-            if (parameter->handle == param_list[i].handle) {
+            if (parameter == &param_list[i]) {
                 return parameter_address;
             }
         }
         return NULL;
     }
 
-    /**
-     * In the case of nested parameters, the child handles have to be returned as a
-     * plain array in the API. But the handles are inside the Parameter's children
-     * structs. So, upon first request, cache all child handles in a vector in the
-     * global 'h_parameter_children' map, keyed by their parent parameter's handle.
-     * Finally, return the plain C array from the vector.
-     */
     const AVS_Parameter_Handle* get_parameter_children_for_api(
-        const Parameter* parameter,
-        bool reset = false) const {
-        if (parameter->type != AVS_PARAM_LIST) {
-            return NULL;
+        const Parameter* parameter) const {
+        if (g_child_parameters_for_api.find(parameter)
+            == g_child_parameters_for_api.end()) {
+            return nullptr;
         }
-        if (h_parameter_children.find(parameter->handle) == h_parameter_children.end()
-            || reset) {
-            h_parameter_children[parameter->handle].clear();
-            for (uint32_t i = 0; i < parameter->num_child_parameters; i++) {
-                h_parameter_children[parameter->handle].push_back(
-                    parameter->child_parameters[i].handle);
-            }
-        }
-        return h_parameter_children[parameter->handle].data();
+        return g_child_parameters_for_api[parameter].data();
     }
 
     void load_config(Effect_Config* config,
@@ -598,31 +557,12 @@ bool operator!=(const Effect_Info& a, const Effect_Info* b);
     virtual uint32_t get_num_parameters() const { return this->num_parameters; } \
     virtual const Parameter* get_parameters() const { return this->parameters; } \
     virtual const AVS_Parameter_Handle* get_parameters_for_api() const {         \
-        static Parameter_Handle_List<num_parameters> parameter_handles_for_api(  \
-            parameters);                                                         \
-        return parameter_handles_for_api.handles;                                \
+        if (g_effect_parameters_for_api.find(this)                               \
+            == g_effect_parameters_for_api.end()) {                              \
+            return nullptr;                                                      \
+        }                                                                        \
+        return g_effect_parameters_for_api[this].data();                         \
     }
-
-/**
- * Another glorious C++ trick: A constexpr-(a.k.a. compile-time-)array, initialized not
- * by a `{ ... }`-literal, but from data in another array. `get_parameters_for_api()`
- * used to contain a static `AVS_Parameter_Handle[]` array instead of this, which was
- * filled when calling the method. However, this loop ran on each call and additionally
- * some compilers are not happy about static arrays with constexpr but non-literal
- * length.
- *
- * This way the looping can happen at compile time and the array is stored in the static
- * Parameter_Handle_List-typed variable in `get_parameters_for_api()`
- */
-template <int N>
-struct Parameter_Handle_List {
-    AVS_Parameter_Handle handles[N] = {};
-    constexpr Parameter_Handle_List(const Parameter* parameters) {
-        for (size_t i = 0; i < N; i++) {
-            handles[i] = parameters[i].handle;
-        }
-    }
-};
 
 /**
  * This is needed by the `Configurable_Effect` template class, but it's here since it

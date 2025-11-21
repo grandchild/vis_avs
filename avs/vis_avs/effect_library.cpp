@@ -30,6 +30,70 @@ static std::unordered_map<std::string, uint32_t> find_duplicate_effect_names(
     return duplicates;
 }
 
+/**
+ * Parameter Handles
+ *
+ * Parameter handles are created by hashing its "Effect/Path/To/Parameter" string, which
+ * for the overwhelming majority is simply "Effect/Parameter".
+ *
+ * We also check for hash collisions globally. A collision is highly unlikely, with an
+ * output space of 2^32-1 and around 400 parameters across all effects.
+ */
+
+static bool check_handle_collision(AVS_Parameter_Handle handle,
+                                   const std::string& path) {
+    auto other = g_param_map.find(handle);
+    if (other != g_param_map.end()) {
+        // TODO[feature]: Find out effect/path for other parameter, so that the error
+        //                message becomes more actionable.
+        log_err(
+            "Effect lib: Parameter handle collision %s with %s: %d\n"
+            "This is a rare collision in the FNV1a hash function, and the only way to"
+            " resolve this is to rename one or more of the parameters.",
+            path.c_str(),
+            other->second->name,
+            handle);
+        return true;
+    }
+    return false;
+}
+
+static void register_nested_parameters(const Parameter* parent,
+                                       const std::string& parent_path) {
+    g_child_parameters_for_api[parent].clear();
+    auto params = parent->child_parameters;
+    for (uint32_t i = 0; i < parent->num_child_parameters; i++) {
+        std::string path = parent_path + params[i].name;
+        auto handle = Handles::comptime_get(path.c_str());
+        if (check_handle_collision(handle, path)) {
+            continue;
+        }
+        g_param_map[handle] = &params[i];
+        g_child_parameters_for_api[parent].push_back(handle);
+        if (params[i].type == AVS_PARAM_LIST) {
+            register_nested_parameters(&params[i], path + "/");
+        }
+    }
+}
+
+static void register_parameters(const Effect_Info* effect) {
+    auto root_path = std::string(effect->get_name()) + "/";
+    g_effect_parameters_for_api[effect].clear();
+    auto params = effect->get_parameters();
+    for (uint32_t i = 0; i < effect->get_num_parameters(); i++) {
+        std::string path = root_path + params[i].name;
+        auto handle = Handles::comptime_get(path.c_str());
+        if (check_handle_collision(handle, path)) {
+            continue;
+        }
+        g_param_map[handle] = &params[i];
+        g_effect_parameters_for_api[effect].push_back(handle);
+        if (params[i].type == AVS_PARAM_LIST) {
+            register_nested_parameters(&params[i], path + "/");
+        }
+    }
+}
+
 #define MAKE_EFFECT_LIB_ENTRY(NAME)                                                \
     extern Effect_Info* create_##NAME##_Info(void);                                \
     extern Effect* create_##NAME(AVS_Instance*);                                   \
@@ -133,6 +197,13 @@ bool make_effect_lib() {
         }
         g_effect_lib.clear();
         return false;
+    }
+    for (auto const& effect : g_effect_lib) {
+        if (effect.second->get_parameters() == nullptr
+            || effect.second->get_num_parameters() == 0) {
+            continue;
+        }
+        register_parameters(effect.second);
     }
     return true;
 }

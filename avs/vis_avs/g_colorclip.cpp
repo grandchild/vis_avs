@@ -10,11 +10,11 @@
 
 int win32_dlgproc_colorclip(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto g_this = (E_ColorClip*)g_current_render;
-    const Parameter& p_mode = ColorClip_Info::parameters[0];
-    AVS_Parameter_Handle p_color_in = ColorClip_Info::parameters[1].handle;
-    AVS_Parameter_Handle p_color_out = ColorClip_Info::parameters[2].handle;
-    const Parameter& p_distance = ColorClip_Info::parameters[3];
-    AVS_Parameter_Handle p_copy_in_to_out = ColorClip_Info::parameters[4].handle;
+    const Parameter* p_mode = &ColorClip_Info::parameters[0];
+    const Parameter* p_color_in = &ColorClip_Info::parameters[1];
+    const Parameter* p_color_out = &ColorClip_Info::parameters[2];
+    const Parameter* p_distance = &ColorClip_Info::parameters[3];
+    const Parameter* p_copy_in_to_out = &ColorClip_Info::parameters[4];
 
     switch (uMsg) {
         case WM_DRAWITEM: {
@@ -32,19 +32,19 @@ int win32_dlgproc_colorclip(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
         case WM_INITDIALOG: {
             CheckDlgButton(hwndDlg, IDC_OFF, !g_this->enabled);
             if (g_this->enabled) {
-                auto mode = g_this->get_int(p_mode.handle);
+                auto mode = g_this->get_int(p_mode);
                 CheckDlgButton(hwndDlg, IDC_BELOW, mode == COLORCLIP_BELOW);
                 CheckDlgButton(hwndDlg, IDC_ABOVE, mode == COLORCLIP_ABOVE);
                 CheckDlgButton(hwndDlg, IDC_NEAR, mode == COLORCLIP_NEAR);
             }
-            auto distance = g_this->get_int(p_distance.handle);
+            auto distance = g_this->get_int(p_distance);
             init_ranged_slider(p_distance, distance, hwndDlg, IDC_DISTANCE, 4);
             return 1;
         }
         case WM_NOTIFY:
             if (LOWORD(wParam) == IDC_DISTANCE) {
                 g_this->set_int(
-                    p_distance.handle,
+                    p_distance,
                     SendDlgItemMessage(hwndDlg, IDC_DISTANCE, TBM_GETPOS, 0, 0));
             }
             return 0;
@@ -58,13 +58,13 @@ int win32_dlgproc_colorclip(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
                         g_this->set_enabled(false);
                     } else if (IsDlgButtonChecked(hwndDlg, IDC_BELOW)) {
                         g_this->set_enabled(true);
-                        g_this->set_int(p_mode.handle, COLORCLIP_BELOW);
+                        g_this->set_int(p_mode, COLORCLIP_BELOW);
                     } else if (IsDlgButtonChecked(hwndDlg, IDC_ABOVE)) {
                         g_this->set_enabled(true);
-                        g_this->set_int(p_mode.handle, COLORCLIP_ABOVE);
+                        g_this->set_int(p_mode, COLORCLIP_ABOVE);
                     } else {
                         g_this->set_enabled(true);
-                        g_this->set_int(p_mode.handle, COLORCLIP_NEAR);
+                        g_this->set_int(p_mode, COLORCLIP_NEAR);
                     }
                     return 0;
                 case IDC_LC: {

@@ -9,7 +9,7 @@
 
 int win32_dlgproc_rotstar(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     E_RotStar* g_this = (E_RotStar*)g_current_render;
-    const AVS_Parameter_Handle p_colors = g_this->info.parameters[0].handle;
+    const Parameter* p_colors = &g_this->info.parameters[0];
 
     switch (uMsg) {
         case WM_DRAWITEM: {

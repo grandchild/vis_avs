@@ -10,8 +10,8 @@
 
 int win32_dlgproc_fade(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     E_Fadeout* g_this = (E_Fadeout*)g_current_render;
-    const Parameter& p_fadelen = g_this->info.parameters[0];
-    const AVS_Parameter_Handle p_color = g_this->info.parameters[1].handle;
+    const Parameter* p_fadelen = &g_this->info.parameters[0];
+    const Parameter* p_color = &g_this->info.parameters[1];
 
     switch (uMsg) {
         case WM_DRAWITEM: {
@@ -24,7 +24,7 @@ int win32_dlgproc_fade(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return 0;
         }
         case WM_INITDIALOG: {
-            auto fadelen = g_this->get_int(p_fadelen.handle);
+            auto fadelen = g_this->get_int(p_fadelen);
             init_ranged_slider(p_fadelen, fadelen, hwndDlg, IDC_SLIDER1);
             return 1;
         }
@@ -32,7 +32,7 @@ int win32_dlgproc_fade(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             HWND swnd = (HWND)lParam;
             int t = (int)SendMessage(swnd, TBM_GETPOS, 0, 0);
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER1)) {
-                g_this->set_int(p_fadelen.handle, t);
+                g_this->set_int(p_fadelen, t);
             }
             return 0;
         }

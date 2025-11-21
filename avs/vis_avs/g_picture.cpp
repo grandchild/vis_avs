@@ -19,18 +19,18 @@ static void enable_controls(HWND hwndDlg, bool on_beat, bool stretch) {
 
 int win32_dlgproc_picture(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     auto g_this = (E_Picture*)g_current_render;
-    const Parameter& p_image = Picture_Info::parameters[0];
-    AVS_Parameter_Handle p_blend_mode = Picture_Info::parameters[1].handle;
-    AVS_Parameter_Handle p_on_beat_additive = Picture_Info::parameters[2].handle;
-    const Parameter& p_on_beat_duration = Picture_Info::parameters[3];
-    AVS_Parameter_Handle p_fit = Picture_Info::parameters[4].handle;
-    AVS_Parameter_Handle p_error_msg = Picture_Info::parameters[5].handle;
+    const Parameter* p_image = &Picture_Info::parameters[0];
+    const Parameter* p_blend_mode = &Picture_Info::parameters[1];
+    const Parameter* p_on_beat_additive = &Picture_Info::parameters[2];
+    const Parameter* p_on_beat_duration = &Picture_Info::parameters[3];
+    const Parameter* p_fit = &Picture_Info::parameters[4];
+    const Parameter* p_error_msg = &Picture_Info::parameters[5];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
             CheckDlgButton(hwndDlg, IDC_ENABLED, g_this->enabled);
 
-            auto image = g_this->get_string(p_image.handle);
+            auto image = g_this->get_string(p_image);
             init_resource(p_image, image, hwndDlg, OBJ_COMBO, MAX_PATH);
             SetDlgItemText(hwndDlg, IDC_PICTURE_ERROR, g_this->get_string(p_error_msg));
 
@@ -43,7 +43,7 @@ int win32_dlgproc_picture(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
             CheckDlgButton(
                 hwndDlg, IDC_5050, blend_mode == BLEND_SIMPLE_5050 && !on_beat);
             CheckDlgButton(hwndDlg, IDC_ADAPT, on_beat);
-            auto on_beat_duration = g_this->get_int(p_on_beat_duration.handle);
+            auto on_beat_duration = g_this->get_int(p_on_beat_duration);
             init_ranged_slider(
                 p_on_beat_duration, on_beat_duration, hwndDlg, IDC_PERSIST);
 
@@ -59,7 +59,7 @@ int win32_dlgproc_picture(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
         case WM_NOTIFY:
             if (LOWORD(wParam) == IDC_PERSIST) {
                 g_this->set_int(
-                    p_on_beat_duration.handle,
+                    p_on_beat_duration,
                     SendDlgItemMessage(hwndDlg, IDC_PERSIST, TBM_GETPOS, 0, 0));
             }
             return 0;
@@ -101,7 +101,7 @@ int win32_dlgproc_picture(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
                     SendDlgItemMessage(hwndDlg, OBJ_COMBO, CB_GETLBTEXTLEN, sel, 0) + 1;
                 char* buf = (char*)calloc(filename_length, sizeof(char));
                 SendDlgItemMessage(hwndDlg, OBJ_COMBO, CB_GETLBTEXT, sel, (LPARAM)buf);
-                g_this->set_string(p_image.handle, buf);
+                g_this->set_string(p_image, buf);
                 SetDlgItemText(
                     hwndDlg, IDC_PICTURE_ERROR, g_this->get_string(p_error_msg));
                 free(buf);

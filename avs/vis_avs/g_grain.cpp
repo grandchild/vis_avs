@@ -10,13 +10,13 @@
 
 int win32_dlgproc_grain(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     E_Grain* g_this = (E_Grain*)g_current_render;
-    AVS_Parameter_Handle p_blend_mode = g_this->info.parameters[0].handle;
-    const Parameter& p_amount = g_this->info.parameters[1];
-    AVS_Parameter_Handle p_static = g_this->info.parameters[2].handle;
+    const Parameter* p_blend_mode = &g_this->info.parameters[0];
+    const Parameter* p_amount = &g_this->info.parameters[1];
+    const Parameter* p_static = &g_this->info.parameters[2];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
-            auto amount = g_this->get_int(p_amount.handle);
+            auto amount = g_this->get_int(p_amount);
             init_ranged_slider(p_amount, amount, hwndDlg, IDC_MAX);
             CheckDlgButton(hwndDlg, IDC_CHECK1, g_this->enabled);
             CheckDlgButton(hwndDlg, IDC_STATGRAIN, g_this->get_bool(p_static));
@@ -36,7 +36,7 @@ int win32_dlgproc_grain(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
         }
         case WM_NOTIFY: {
             if (LOWORD(wParam) == IDC_MAX) {
-                g_this->set_int(p_amount.handle,
+                g_this->set_int(p_amount,
                                 SendDlgItemMessage(hwndDlg, IDC_MAX, TBM_GETPOS, 0, 0));
             }
             return 0;

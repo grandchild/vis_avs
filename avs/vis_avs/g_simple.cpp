@@ -9,12 +9,12 @@
 
 int win32_dlgproc_simple(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto g_this = (E_Simple*)g_current_render;
-    const AVS_Parameter_Handle p_audio_source = Simple_Info::parameters[0].handle;
-    const AVS_Parameter_Handle p_draw_mode = Simple_Info::parameters[1].handle;
-    const AVS_Parameter_Handle p_audio_channel = Simple_Info::parameters[2].handle;
-    const AVS_Parameter_Handle p_position = Simple_Info::parameters[3].handle;
-    const AVS_Parameter_Handle p_colors = Simple_Info::parameters[4].handle;
-    const AVS_Parameter_Handle p_color = Simple_Info::color_params[0].handle;
+    const Parameter* p_audio_source = &Simple_Info::parameters[0];
+    const Parameter* p_draw_mode = &Simple_Info::parameters[1];
+    const Parameter* p_audio_channel = &Simple_Info::parameters[2];
+    const Parameter* p_position = &Simple_Info::parameters[3];
+    const Parameter* p_colors = &Simple_Info::parameters[4];
+    const Parameter* p_color = &Simple_Info::color_params[0];
 
     switch (uMsg) {
         case WM_DRAWITEM: {

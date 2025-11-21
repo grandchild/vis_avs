@@ -10,7 +10,7 @@
 
 int win32_dlgproc_colorreduction(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     E_ColorReduction* g_this = (E_ColorReduction*)g_current_render;
-    const Parameter& p_levels = g_this->info.parameters[0];
+    const Parameter* p_levels = &g_this->info.parameters[0];
 
     int64_t options_length;
 
@@ -34,12 +34,12 @@ int win32_dlgproc_colorreduction(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM)
             return 1;
         }
         case WM_INITDIALOG: {
-            p_levels.get_options(&options_length);
+            p_levels->get_options(&options_length);
             SendMessage(GetDlgItem(hwndDlg, IDC_LEVELS),
                         TBM_SETRANGE,
                         TRUE,
                         MAKELONG(1, options_length));
-            int64_t levels = g_this->get_int(p_levels.handle);
+            int64_t levels = g_this->get_int(p_levels);
             SendMessage(GetDlgItem(hwndDlg, IDC_LEVELS), TBM_SETPOS, TRUE, levels);
             SetFocus(GetDlgItem(hwndDlg, IDC_LEVELS));
             char buf[4];

@@ -10,12 +10,12 @@
 
 int win32_dlgproc_oscstar(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto g_this = (E_OscilloscopeStar*)g_current_render;
-    AVS_Parameter_Handle p_audio_channel = OscilloscopeStar_Info::parameters[0].handle;
-    AVS_Parameter_Handle p_position = OscilloscopeStar_Info::parameters[1].handle;
-    const Parameter& p_size = OscilloscopeStar_Info::parameters[2];
-    const Parameter& p_rotation = OscilloscopeStar_Info::parameters[3];
-    AVS_Parameter_Handle p_colors = OscilloscopeStar_Info::parameters[4].handle;
-    AVS_Parameter_Handle p_color = OscilloscopeStar_Info::color_params[0].handle;
+    const Parameter* p_audio_channel = &OscilloscopeStar_Info::parameters[0];
+    const Parameter* p_position = &OscilloscopeStar_Info::parameters[1];
+    const Parameter* p_size = &OscilloscopeStar_Info::parameters[2];
+    const Parameter* p_rotation = &OscilloscopeStar_Info::parameters[3];
+    const Parameter* p_colors = &OscilloscopeStar_Info::parameters[4];
+    const Parameter* p_color = &OscilloscopeStar_Info::color_params[0];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
@@ -29,9 +29,9 @@ int win32_dlgproc_oscstar(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckDlgButton(hwndDlg, IDC_CENTER, position == HPOS_CENTER);
             SetDlgItemInt(
                 hwndDlg, IDC_NUMCOL, g_this->parameter_list_length(p_colors), false);
-            auto size = g_this->get_int(p_size.handle);
+            auto size = g_this->get_int(p_size);
             init_ranged_slider(p_size, size, hwndDlg, IDC_SLIDER1);
-            auto rotation = g_this->get_int(p_size.handle);
+            auto rotation = g_this->get_int(p_size);
             init_ranged_slider(p_rotation, rotation, hwndDlg, IDC_SLIDER2);
             return 1;
         }
@@ -125,10 +125,10 @@ int win32_dlgproc_oscstar(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             HWND swnd = (HWND)lParam;
             int t = (int)SendMessage(swnd, TBM_GETPOS, 0, 0);
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER1)) {
-                g_this->set_int(p_size.handle, t);
+                g_this->set_int(p_size, t);
             }
             if (swnd == GetDlgItem(hwndDlg, IDC_SLIDER2)) {
-                g_this->set_int(p_rotation.handle, t);
+                g_this->set_int(p_rotation, t);
             }
             return 0;
         }

@@ -10,10 +10,10 @@
 
 int win32_dlgproc_triangle(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     E_Triangle* g_this = (E_Triangle*)g_current_render;
-    AVS_Parameter_Handle h_init = g_this->info.parameters[0].handle;
-    AVS_Parameter_Handle h_frame = g_this->info.parameters[1].handle;
-    AVS_Parameter_Handle h_beat = g_this->info.parameters[2].handle;
-    AVS_Parameter_Handle h_point = g_this->info.parameters[3].handle;
+    const Parameter* h_init = &g_this->info.parameters[0];
+    const Parameter* h_frame = &g_this->info.parameters[1];
+    const Parameter* h_beat = &g_this->info.parameters[2];
+    const Parameter* h_point = &g_this->info.parameters[3];
 
     switch (uMsg) {
         case WM_COMMAND: {

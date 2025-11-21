@@ -11,7 +11,7 @@
 
 int win32_dlgproc_root(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     auto* g_this = (E_Root*)g_current_render;
-    AVS_Parameter_Handle p_clear = Root_Info::parameters[0].handle;
+    const Parameter* p_clear = &Root_Info::parameters[0];
 
     switch (uMsg) {
         case WM_INITDIALOG: {

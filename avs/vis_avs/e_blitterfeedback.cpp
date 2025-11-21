@@ -51,7 +51,7 @@ void BlitterFeedback_Info::on_zoom_change(Effect* component,
                                           const Parameter* parameter,
                                           const std::vector<int64_t>&) {
     auto blitter = (E_BlitterFeedback*)component;
-    blitter->set_current_zoom((int32_t)blitter->get_int(parameter->handle));
+    blitter->set_current_zoom((int32_t)blitter->get_int(parameter));
 }
 
 // {0x1000100,0x1000100}; <<- this is actually more correct, but we're going for

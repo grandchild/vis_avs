@@ -11,22 +11,22 @@
 
 int win32_dlgproc_setrendermode(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     auto g_this = (E_SetRenderMode*)g_current_render;
-    const Parameter& p_blend = SetRenderMode_Info::parameters[0];
-    const Parameter& p_adjustable_blend = SetRenderMode_Info::parameters[1];
-    const Parameter& p_line_size = SetRenderMode_Info::parameters[2];
+    const Parameter* p_blend = &SetRenderMode_Info::parameters[0];
+    const Parameter* p_adjustable_blend = &SetRenderMode_Info::parameters[1];
+    const Parameter* p_line_size = &SetRenderMode_Info::parameters[2];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
             CheckDlgButton(hwndDlg, IDC_CHECK1, g_this->enabled);
 
-            auto adjustable_blend = g_this->get_int(p_adjustable_blend.handle);
+            auto adjustable_blend = g_this->get_int(p_adjustable_blend);
             init_ranged_slider(
                 p_adjustable_blend, adjustable_blend, hwndDlg, IDC_ALPHASLIDE);
 
-            auto line_size = g_this->get_int(p_line_size.handle);
+            auto line_size = g_this->get_int(p_line_size);
             SetDlgItemInt(hwndDlg, IDC_EDIT1, line_size, false);
 
-            auto blend = g_this->get_int(p_blend.handle);
+            auto blend = g_this->get_int(p_blend);
             init_select(p_blend, blend, hwndDlg, IDC_COMBO1);
             EnableWindow(GetDlgItem(hwndDlg, IDC_OUTSLIDE), blend == BLEND_ADJUSTABLE);
             return 1;
@@ -38,7 +38,7 @@ int win32_dlgproc_setrendermode(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) 
                     uint32_t line_size =
                         GetDlgItemInt(hwndDlg, IDC_EDIT1, &success, /*signed*/ false);
                     if (success) {
-                        g_this->set_int(p_line_size.handle, line_size);
+                        g_this->set_int(p_line_size, line_size);
                     }
                     break;
                 }
@@ -50,7 +50,7 @@ int win32_dlgproc_setrendermode(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) 
                         int blend =
                             SendDlgItemMessage(hwndDlg, IDC_COMBO1, CB_GETCURSEL, 0, 0);
                         if (blend != CB_ERR) {
-                            g_this->set_int(p_blend.handle, blend);
+                            g_this->set_int(p_blend, blend);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_OUTSLIDE),
                                          blend == BLEND_ADJUSTABLE);
                         }
@@ -61,7 +61,7 @@ int win32_dlgproc_setrendermode(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) 
         case WM_NOTIFY:
             if (LOWORD(wParam) == IDC_ALPHASLIDE) {
                 g_this->set_int(
-                    p_adjustable_blend.handle,
+                    p_adjustable_blend,
                     SendDlgItemMessage(hwndDlg, IDC_ALPHASLIDE, TBM_GETPOS, 0, 0));
             }
             break;

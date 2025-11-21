@@ -58,10 +58,9 @@ static bool resolve_handles(AVS_Handle avs,
     }
     if (parameter_out != NULL) {
         if (effect_out != NULL && *effect_out != NULL) {
-            *parameter_out = (*effect_out)->get_parameter_from_handle(parameter);
+            *parameter_out = g_param_map[parameter];
         } else if (component_out != NULL && *component_out != NULL) {
-            *parameter_out =
-                (*component_out)->get_info()->get_parameter_from_handle(parameter);
+            *parameter_out = g_param_map[parameter];
         } else {
             instance->error =
                 "Internal error: Wrong call to \"resolve_handles()\":"
@@ -87,8 +86,9 @@ static inline void set_out(T* length_out, T value) {
     }
 }
 
-static inline std::vector<int64_t> make_parameter_tree_path(uint32_t list_depth,
-                                                            int64_t* list_indices) {
+static inline std::vector<int64_t> make_parameter_tree_path(
+    uint32_t list_depth,
+    const int64_t* list_indices) {
     return std::vector<int64_t>(list_indices, list_indices + list_depth);
 }
 
@@ -396,11 +396,13 @@ bool avs_parameter_get_bool(AVS_Handle avs,
                             uint32_t list_depth,
                             const int64_t* list_indices) {
     Effect* _component;
-    if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
+    const Parameter* _parameter;
+    if (!resolve_handles(
+            avs, 0, component, parameter, NULL, NULL, &_component, &_parameter)) {
         return false;
     }
     auto parameter_path = make_parameter_tree_path(list_depth, list_indices);
-    return _component->get_bool(parameter, parameter_path);
+    return _component->get_bool(_parameter, parameter_path);
 }
 AVS_EDITOR_API
 int64_t avs_parameter_get_int(AVS_Handle avs,
@@ -409,11 +411,13 @@ int64_t avs_parameter_get_int(AVS_Handle avs,
                               uint32_t list_depth,
                               const int64_t* list_indices) {
     Effect* _component;
-    if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
+    const Parameter* _parameter;
+    if (!resolve_handles(
+            avs, 0, component, parameter, NULL, NULL, &_component, &_parameter)) {
         return 0;
     }
     auto parameter_path = make_parameter_tree_path(list_depth, list_indices);
-    return _component->get_int(parameter, parameter_path);
+    return _component->get_int(_parameter, parameter_path);
 }
 AVS_EDITOR_API
 double avs_parameter_get_float(AVS_Handle avs,
@@ -422,11 +426,13 @@ double avs_parameter_get_float(AVS_Handle avs,
                                uint32_t list_depth,
                                const int64_t* list_indices) {
     Effect* _component;
-    if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
+    const Parameter* _parameter;
+    if (!resolve_handles(
+            avs, 0, component, parameter, NULL, NULL, &_component, &_parameter)) {
         return 0.0;
     }
     auto parameter_path = make_parameter_tree_path(list_depth, list_indices);
-    return _component->get_float(parameter, parameter_path);
+    return _component->get_float(_parameter, parameter_path);
 }
 AVS_EDITOR_API
 uint64_t avs_parameter_get_color(AVS_Handle avs,
@@ -435,11 +441,13 @@ uint64_t avs_parameter_get_color(AVS_Handle avs,
                                  uint32_t list_depth,
                                  const int64_t* list_indices) {
     Effect* _component;
-    if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
+    const Parameter* _parameter;
+    if (!resolve_handles(
+            avs, 0, component, parameter, NULL, NULL, &_component, &_parameter)) {
         return 0;
     }
     auto parameter_path = make_parameter_tree_path(list_depth, list_indices);
-    return _component->get_color(parameter, parameter_path);
+    return _component->get_color(_parameter, parameter_path);
 }
 AVS_EDITOR_API
 const char* avs_parameter_get_string(AVS_Handle avs,
@@ -448,11 +456,13 @@ const char* avs_parameter_get_string(AVS_Handle avs,
                                      uint32_t list_depth,
                                      const int64_t* list_indices) {
     Effect* _component;
-    if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
+    const Parameter* _parameter;
+    if (!resolve_handles(
+            avs, 0, component, parameter, NULL, NULL, &_component, &_parameter)) {
         return "";
     }
     auto parameter_path = make_parameter_tree_path(list_depth, list_indices);
-    return _component->get_string(parameter, parameter_path);
+    return _component->get_string(_parameter, parameter_path);
 }
 
 AVS_EDITOR_API
@@ -464,11 +474,13 @@ bool avs_parameter_set_bool(AVS_Handle avs,
                             const int64_t* list_indices) {
     AVS_Instance* instance;
     Effect* _component;
-    if (!resolve_handles(avs, 0, component, 0, &instance, NULL, &_component)) {
+    const Parameter* _parameter;
+    if (!resolve_handles(
+            avs, 0, component, parameter, &instance, NULL, &_component, &_parameter)) {
         return false;
     }
     auto parameter_path = make_parameter_tree_path(list_depth, list_indices);
-    return _component->set_bool(parameter, value, parameter_path);
+    return _component->set_bool(_parameter, value, parameter_path);
 }
 AVS_EDITOR_API
 bool avs_parameter_set_int(AVS_Handle avs,
@@ -479,11 +491,13 @@ bool avs_parameter_set_int(AVS_Handle avs,
                            const int64_t* list_indices) {
     AVS_Instance* instance;
     Effect* _component;
-    if (!resolve_handles(avs, 0, component, 0, &instance, NULL, &_component)) {
+    const Parameter* _parameter;
+    if (!resolve_handles(
+            avs, 0, component, parameter, &instance, NULL, &_component, &_parameter)) {
         return false;
     }
     auto parameter_path = make_parameter_tree_path(list_depth, list_indices);
-    return _component->set_int(parameter, value, parameter_path);
+    return _component->set_int(_parameter, value, parameter_path);
 }
 AVS_EDITOR_API
 bool avs_parameter_set_float(AVS_Handle avs,
@@ -494,11 +508,13 @@ bool avs_parameter_set_float(AVS_Handle avs,
                              const int64_t* list_indices) {
     AVS_Instance* instance;
     Effect* _component;
-    if (!resolve_handles(avs, 0, component, 0, &instance, NULL, &_component)) {
+    const Parameter* _parameter;
+    if (!resolve_handles(
+            avs, 0, component, parameter, &instance, NULL, &_component, &_parameter)) {
         return false;
     }
     auto parameter_path = make_parameter_tree_path(list_depth, list_indices);
-    return _component->set_float(parameter, value, parameter_path);
+    return _component->set_float(_parameter, value, parameter_path);
 }
 AVS_EDITOR_API
 bool avs_parameter_set_color(AVS_Handle avs,
@@ -509,11 +525,13 @@ bool avs_parameter_set_color(AVS_Handle avs,
                              const int64_t* list_indices) {
     AVS_Instance* instance;
     Effect* _component;
-    if (!resolve_handles(avs, 0, component, 0, &instance, NULL, &_component)) {
+    const Parameter* _parameter;
+    if (!resolve_handles(
+            avs, 0, component, parameter, &instance, NULL, &_component, &_parameter)) {
         return false;
     }
     auto parameter_path = make_parameter_tree_path(list_depth, list_indices);
-    return _component->set_color(parameter, value, parameter_path);
+    return _component->set_color(_parameter, value, parameter_path);
 }
 AVS_EDITOR_API
 bool avs_parameter_set_string(AVS_Handle avs,
@@ -524,11 +542,13 @@ bool avs_parameter_set_string(AVS_Handle avs,
                               const int64_t* list_indices) {
     AVS_Instance* instance;
     Effect* _component;
-    if (!resolve_handles(avs, 0, component, 0, &instance, NULL, &_component)) {
+    const Parameter* _parameter;
+    if (!resolve_handles(
+            avs, 0, component, parameter, &instance, NULL, &_component, &_parameter)) {
         return false;
     }
     auto parameter_path = make_parameter_tree_path(list_depth, list_indices);
-    return _component->set_string(parameter, value, parameter_path);
+    return _component->set_string(_parameter, value, parameter_path);
 }
 
 AVS_EDITOR_API
@@ -539,12 +559,14 @@ const int64_t* avs_parameter_get_int_array(AVS_Handle avs,
                                            uint32_t list_depth,
                                            const int64_t* list_indices) {
     Effect* _component;
-    if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
+    const Parameter* _parameter;
+    if (!resolve_handles(
+            avs, 0, component, parameter, NULL, NULL, &_component, &_parameter)) {
         *length_out = 0;
         return NULL;
     }
     auto parameter_path = make_parameter_tree_path(list_depth, list_indices);
-    auto array = _component->get_int_array(parameter, parameter_path);
+    auto array = _component->get_int_array(_parameter, parameter_path);
     *length_out = array.size();
     return array.data();
 }
@@ -556,12 +578,14 @@ const double* avs_parameter_get_float_array(AVS_Handle avs,
                                             uint32_t list_depth,
                                             const int64_t* list_indices) {
     Effect* _component;
-    if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
+    const Parameter* _parameter;
+    if (!resolve_handles(
+            avs, 0, component, parameter, NULL, NULL, &_component, &_parameter)) {
         *length_out = 0;
         return NULL;
     }
     auto parameter_path = make_parameter_tree_path(list_depth, list_indices);
-    auto array = _component->get_float_array(parameter, parameter_path);
+    auto array = _component->get_float_array(_parameter, parameter_path);
     *length_out = array.size();
     return array.data();
 }
@@ -573,12 +597,14 @@ const uint64_t* avs_parameter_get_color_array(AVS_Handle avs,
                                               uint32_t list_depth,
                                               const int64_t* list_indices) {
     Effect* _component;
-    if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
+    const Parameter* _parameter;
+    if (!resolve_handles(
+            avs, 0, component, parameter, NULL, NULL, &_component, &_parameter)) {
         *length_out = 0;
         return NULL;
     }
     auto parameter_path = make_parameter_tree_path(list_depth, list_indices);
-    auto array = _component->get_color_array(parameter, parameter_path);
+    auto array = _component->get_color_array(_parameter, parameter_path);
     *length_out = array.size();
     return array.data();
 }
@@ -591,10 +617,12 @@ bool avs_parameter_run_action(AVS_Handle avs,
                               const int64_t* list_indices) {
     AVS_Instance* instance;
     Effect* _component;
-    if (!resolve_handles(avs, 0, component, 0, &instance, NULL, &_component)) {
+    const Parameter* _parameter;
+    if (!resolve_handles(
+            avs, 0, component, parameter, &instance, NULL, &_component, &_parameter)) {
         return false;
     }
-    return _component->run_action(parameter,
+    return _component->run_action(_parameter,
                                   make_parameter_tree_path(list_depth, list_indices));
 }
 
@@ -616,7 +644,7 @@ int64_t avs_parameter_list_length(AVS_Handle avs,
         return -1;
     }
     size_t length = _component->parameter_list_length(
-        parameter, make_parameter_tree_path(list_depth, list_indices));
+        _parameter, make_parameter_tree_path(list_depth, list_indices));
 #if SIZE_MAX > INT64_MAX
     if (length > INT64_MAX) {
         instance->error = "List length clamped";
@@ -647,7 +675,7 @@ bool avs_parameter_list_element_add(AVS_Handle avs,
         return false;
     }
     return _component->parameter_list_entry_add(
-        parameter,
+        _parameter,
         before,
         std::vector<AVS_Parameter_Value>(values, values + values_length),
         make_parameter_tree_path(list_depth, list_indices));
@@ -672,7 +700,7 @@ bool avs_parameter_list_element_move(AVS_Handle avs,
         return -1;
     }
     return _component->parameter_list_entry_move(
-        parameter,
+        _parameter,
         from_index,
         to_index,
         make_parameter_tree_path(list_depth, list_indices));
@@ -696,5 +724,5 @@ bool avs_parameter_list_element_remove(AVS_Handle avs,
         return -1;
     }
     return _component->parameter_list_entry_remove(
-        parameter, remove_index, make_parameter_tree_path(list_depth, list_indices));
+        _parameter, remove_index, make_parameter_tree_path(list_depth, list_indices));
 }

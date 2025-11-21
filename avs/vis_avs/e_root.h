@@ -53,7 +53,7 @@ struct Root_Info : public Effect_Info {
     static constexpr Parameter remix_parameters[num_remix_parameters] = {
         P_STRING(offsetof(Root_BasedOn_Config, id), "ID", "UUID of the predecessor"),
         P_STRING(offsetof(Root_BasedOn_Config, title),
-                 "Title Before",
+                 "Title",
                  "Title of the predecessor"),
         P_STRING(offsetof(Root_BasedOn_Config, date),
                  "Date",

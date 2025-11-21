@@ -9,13 +9,13 @@
 
 int win32_dlgproc_superscope(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     E_SuperScope* g_this = (E_SuperScope*)g_current_render;
-    const Parameter& p_init = g_this->info.parameters[0];
-    const Parameter& p_frame = g_this->info.parameters[1];
-    const Parameter& p_beat = g_this->info.parameters[2];
-    const Parameter& p_point = g_this->info.parameters[3];
-    const AVS_Parameter_Handle p_colors = g_this->info.parameters[4].handle;
-    const Parameter& p_example = g_this->info.parameters[8];
-    const Parameter& p_load_example = g_this->info.parameters[9];
+    const Parameter* p_init = &g_this->info.parameters[0];
+    const Parameter* p_frame = &g_this->info.parameters[1];
+    const Parameter* p_beat = &g_this->info.parameters[2];
+    const Parameter* p_point = &g_this->info.parameters[3];
+    const Parameter* p_colors = &g_this->info.parameters[4];
+    const Parameter* p_example = &g_this->info.parameters[8];
+    const Parameter* p_load_example = &g_this->info.parameters[9];
 
     static int isstart;
     switch (uMsg) {
@@ -84,19 +84,19 @@ int win32_dlgproc_superscope(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 switch (LOWORD(wParam)) {
                     case IDC_EDIT1:
                         GetDlgItemText(hwndDlg, IDC_EDIT1, buf, length);
-                        g_this->set_string(p_point.handle, buf);
+                        g_this->set_string(p_point, buf);
                         break;
                     case IDC_EDIT2:
                         GetDlgItemText(hwndDlg, IDC_EDIT2, buf, length);
-                        g_this->set_string(p_frame.handle, buf);
+                        g_this->set_string(p_frame, buf);
                         break;
                     case IDC_EDIT3:
                         GetDlgItemText(hwndDlg, IDC_EDIT3, buf, length);
-                        g_this->set_string(p_beat.handle, buf);
+                        g_this->set_string(p_beat, buf);
                         break;
                     case IDC_EDIT4:
                         GetDlgItemText(hwndDlg, IDC_EDIT4, buf, length);
-                        g_this->set_string(p_init.handle, buf);
+                        g_this->set_string(p_init, buf);
                         break;
                 }
                 delete[] buf;
@@ -135,7 +135,7 @@ int win32_dlgproc_superscope(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 int x;
 
                 int64_t options_length;
-                const char* const* options = p_example.get_options(&options_length);
+                const char* const* options = p_example->get_options(&options_length);
                 const int index_offset = 16;
                 for (x = 0; x < options_length; x++) {
                     i.fMask = MIIM_TYPE | MIIM_DATA | MIIM_ID;
@@ -156,8 +156,8 @@ int win32_dlgproc_superscope(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                    hwndDlg,
                                    NULL);
                 if (x >= index_offset && x < index_offset + options_length) {
-                    g_this->set_int(p_example.handle, x - index_offset);
-                    g_this->run_action(p_load_example.handle);
+                    g_this->set_int(p_example, x - index_offset);
+                    g_this->run_action(p_load_example);
                     SetDlgItemText(
                         hwndDlg, IDC_EDIT1, (char*)g_this->config.point.c_str());
                     SetDlgItemText(

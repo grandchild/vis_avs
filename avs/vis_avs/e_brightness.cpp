@@ -51,7 +51,7 @@ void Brightness_Info::on_color_change(Effect* component,
                                       const std::vector<int64_t>&) {
     auto brightness = (E_Brightness*)component;
     if (!brightness->config.separate) {
-        auto new_value = brightness->get_int(parameter->handle);
+        auto new_value = brightness->get_int(parameter);
         // Yes, one of these 3 lines will always be superfluous,
         // but the alternative would be much uglier code.
         brightness->config.red = new_value;

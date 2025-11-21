@@ -16,7 +16,7 @@ void edit_num_field(HWND hwndDlg,
                     int control_id,
                     UINT event,
                     E_Convolution* g_this,
-                    AVS_Parameter_Handle param,
+                    const Parameter* param,
                     std::vector<int64_t> param_path = {}) {
     if (event == EN_CHANGE) {
         BOOL int_parse_success = false;
@@ -34,17 +34,17 @@ void edit_num_field(HWND hwndDlg,
 
 int win32_dlgproc_convolution(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM) {
     auto g_this = (E_Convolution*)g_current_render;
-    AVS_Parameter_Handle p_wrap = Convolution_Info::parameters[0].handle;
-    AVS_Parameter_Handle p_absolute = Convolution_Info::parameters[1].handle;
-    AVS_Parameter_Handle p_two_pass = Convolution_Info::parameters[2].handle;
-    AVS_Parameter_Handle p_bias = Convolution_Info::parameters[3].handle;
-    AVS_Parameter_Handle p_scale = Convolution_Info::parameters[4].handle;
-    AVS_Parameter_Handle p_kernel_value = Convolution_Info::kernel_params[0].handle;
-    AVS_Parameter_Handle p_save_file = Convolution_Info::parameters[6].handle;
-    AVS_Parameter_Handle p_autoscale = Convolution_Info::parameters[7].handle;
-    AVS_Parameter_Handle p_clear = Convolution_Info::parameters[8].handle;
-    AVS_Parameter_Handle p_save = Convolution_Info::parameters[9].handle;
-    AVS_Parameter_Handle p_load = Convolution_Info::parameters[10].handle;
+    const Parameter* p_wrap = &Convolution_Info::parameters[0];
+    const Parameter* p_absolute = &Convolution_Info::parameters[1];
+    const Parameter* p_two_pass = &Convolution_Info::parameters[2];
+    const Parameter* p_bias = &Convolution_Info::parameters[3];
+    const Parameter* p_scale = &Convolution_Info::parameters[4];
+    const Parameter* p_kernel_value = &Convolution_Info::kernel_params[0];
+    const Parameter* p_save_file = &Convolution_Info::parameters[6];
+    const Parameter* p_autoscale = &Convolution_Info::parameters[7];
+    const Parameter* p_clear = &Convolution_Info::parameters[8];
+    const Parameter* p_save = &Convolution_Info::parameters[9];
+    const Parameter* p_load = &Convolution_Info::parameters[10];
 
     static bool ignore_command_messages = false;
     switch (uMsg) {

@@ -2,5 +2,8 @@
 
 Handles h_instances;
 Handles h_components;
-Handles h_effects;
-std::map<AVS_Parameter_Handle, std::vector<AVS_Parameter_Handle>> h_parameter_children;
+std::unordered_map<AVS_Parameter_Handle, const Parameter*> g_param_map;
+std::unordered_map<const Effect_Info*, std::vector<AVS_Parameter_Handle>>
+    g_effect_parameters_for_api;
+std::unordered_map<const Parameter*, std::vector<AVS_Parameter_Handle>>
+    g_child_parameters_for_api;

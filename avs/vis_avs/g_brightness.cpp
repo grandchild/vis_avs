@@ -10,24 +10,24 @@
 
 int win32_dlgproc_brightness(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto g_this = (E_Brightness*)g_current_render;
-    AVS_Parameter_Handle p_blend_mode = Brightness_Info::parameters[0].handle;
-    const Parameter& p_red = Brightness_Info::parameters[1];
-    const Parameter& p_green = Brightness_Info::parameters[2];
-    const Parameter& p_blue = Brightness_Info::parameters[3];
-    AVS_Parameter_Handle p_separate = Brightness_Info::parameters[4].handle;
-    AVS_Parameter_Handle p_exclude = Brightness_Info::parameters[5].handle;
-    AVS_Parameter_Handle p_exclude_color = Brightness_Info::parameters[6].handle;
-    const Parameter& p_exclude_distance = Brightness_Info::parameters[7];
+    const Parameter* p_blend_mode = &Brightness_Info::parameters[0];
+    const Parameter* p_red = &Brightness_Info::parameters[1];
+    const Parameter* p_green = &Brightness_Info::parameters[2];
+    const Parameter* p_blue = &Brightness_Info::parameters[3];
+    const Parameter* p_separate = &Brightness_Info::parameters[4];
+    const Parameter* p_exclude = &Brightness_Info::parameters[5];
+    const Parameter* p_exclude_color = &Brightness_Info::parameters[6];
+    const Parameter* p_exclude_distance = &Brightness_Info::parameters[7];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
-            auto red = g_this->get_int(p_red.handle);
+            auto red = g_this->get_int(p_red);
             init_ranged_slider(p_red, red, hwndDlg, IDC_RED, 256);
-            auto green = g_this->get_int(p_green.handle);
+            auto green = g_this->get_int(p_green);
             init_ranged_slider(p_green, green, hwndDlg, IDC_GREEN, 256);
-            auto blue = g_this->get_int(p_blue.handle);
+            auto blue = g_this->get_int(p_blue);
             init_ranged_slider(p_blue, blue, hwndDlg, IDC_BLUE, 256);
-            auto distance = g_this->get_int(p_exclude_distance.handle);
+            auto distance = g_this->get_int(p_exclude_distance);
             init_ranged_slider(p_exclude_distance, distance, hwndDlg, IDC_DISTANCE, 16);
 
             CheckDlgButton(hwndDlg, IDC_CHECK1, g_this->enabled);
@@ -51,38 +51,36 @@ int win32_dlgproc_brightness(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
         case WM_NOTIFY: {
             if (LOWORD(wParam) == IDC_DISTANCE) {
                 g_this->set_int(
-                    p_exclude_distance.handle,
+                    p_exclude_distance,
                     SendDlgItemMessage(hwndDlg, IDC_DISTANCE, TBM_GETPOS, 0, 0));
             }
             if (LOWORD(wParam) == IDC_RED) {
-                g_this->set_int(p_red.handle,
+                g_this->set_int(p_red,
                                 SendDlgItemMessage(hwndDlg, IDC_RED, TBM_GETPOS, 0, 0));
                 if (!g_this->get_bool(p_separate)) {
-                    auto green = g_this->get_int(p_green.handle);
+                    auto green = g_this->get_int(p_green);
                     SendDlgItemMessage(hwndDlg, IDC_GREEN, TBM_SETPOS, TRUE, green);
-                    auto blue = g_this->get_int(p_blue.handle);
+                    auto blue = g_this->get_int(p_blue);
                     SendDlgItemMessage(hwndDlg, IDC_BLUE, TBM_SETPOS, TRUE, blue);
                 }
             }
             if (LOWORD(wParam) == IDC_GREEN) {
                 g_this->set_int(
-                    p_green.handle,
-                    SendDlgItemMessage(hwndDlg, IDC_GREEN, TBM_GETPOS, 0, 0));
+                    p_green, SendDlgItemMessage(hwndDlg, IDC_GREEN, TBM_GETPOS, 0, 0));
                 if (!g_this->get_bool(p_separate)) {
-                    auto red = g_this->get_int(p_red.handle);
+                    auto red = g_this->get_int(p_red);
                     SendDlgItemMessage(hwndDlg, IDC_RED, TBM_SETPOS, TRUE, red);
-                    auto blue = g_this->get_int(p_blue.handle);
+                    auto blue = g_this->get_int(p_blue);
                     SendDlgItemMessage(hwndDlg, IDC_BLUE, TBM_SETPOS, TRUE, blue);
                 }
             }
             if (LOWORD(wParam) == IDC_BLUE) {
                 g_this->set_int(
-                    p_blue.handle,
-                    SendDlgItemMessage(hwndDlg, IDC_BLUE, TBM_GETPOS, 0, 0));
+                    p_blue, SendDlgItemMessage(hwndDlg, IDC_BLUE, TBM_GETPOS, 0, 0));
                 if (!g_this->get_bool(p_separate)) {
-                    auto red = g_this->get_int(p_red.handle);
+                    auto red = g_this->get_int(p_red);
                     SendDlgItemMessage(hwndDlg, IDC_RED, TBM_SETPOS, TRUE, red);
-                    auto green = g_this->get_int(p_green.handle);
+                    auto green = g_this->get_int(p_green);
                     SendDlgItemMessage(hwndDlg, IDC_GREEN, TBM_SETPOS, TRUE, green);
                 }
             }
@@ -110,37 +108,37 @@ int win32_dlgproc_brightness(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     break;
                 }
                 case IDC_BRED: {
-                    g_this->set_int(p_red.handle, 0);
-                    auto red = g_this->get_int(p_red.handle);
+                    g_this->set_int(p_red, 0);
+                    auto red = g_this->get_int(p_red);
                     SendDlgItemMessage(hwndDlg, IDC_RED, TBM_SETPOS, TRUE, red);
                     if (!g_this->get_bool(p_separate)) {
-                        auto green = g_this->get_int(p_green.handle);
+                        auto green = g_this->get_int(p_green);
                         SendDlgItemMessage(hwndDlg, IDC_GREEN, TBM_SETPOS, TRUE, green);
-                        auto blue = g_this->get_int(p_blue.handle);
+                        auto blue = g_this->get_int(p_blue);
                         SendDlgItemMessage(hwndDlg, IDC_BLUE, TBM_SETPOS, TRUE, blue);
                     }
                     break;
                 }
                 case IDC_BGREEN: {
-                    g_this->set_int(p_green.handle, 0);
-                    auto green = g_this->get_int(p_green.handle);
+                    g_this->set_int(p_green, 0);
+                    auto green = g_this->get_int(p_green);
                     SendDlgItemMessage(hwndDlg, IDC_GREEN, TBM_SETPOS, TRUE, green);
                     if (!g_this->get_bool(p_separate)) {
-                        auto red = g_this->get_int(p_red.handle);
+                        auto red = g_this->get_int(p_red);
                         SendDlgItemMessage(hwndDlg, IDC_RED, TBM_SETPOS, TRUE, red);
-                        auto blue = g_this->get_int(p_blue.handle);
+                        auto blue = g_this->get_int(p_blue);
                         SendDlgItemMessage(hwndDlg, IDC_BLUE, TBM_SETPOS, TRUE, blue);
                     }
                     break;
                 }
                 case IDC_BBLUE: {
-                    g_this->set_int(p_blue.handle, 0);
-                    auto blue = g_this->get_int(p_blue.handle);
+                    g_this->set_int(p_blue, 0);
+                    auto blue = g_this->get_int(p_blue);
                     SendDlgItemMessage(hwndDlg, IDC_BLUE, TBM_SETPOS, TRUE, blue);
                     if (!g_this->get_bool(p_separate)) {
-                        auto red = g_this->get_int(p_red.handle);
+                        auto red = g_this->get_int(p_red);
                         SendDlgItemMessage(hwndDlg, IDC_RED, TBM_SETPOS, TRUE, red);
-                        auto green = g_this->get_int(p_green.handle);
+                        auto green = g_this->get_int(p_green);
                         SendDlgItemMessage(hwndDlg, IDC_GREEN, TBM_SETPOS, TRUE, green);
                     }
                     break;
@@ -153,9 +151,9 @@ int win32_dlgproc_brightness(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                      IsDlgButtonChecked(hwndDlg, IDC_SEPARATE));
                     g_this->set_bool(p_exclude,
                                      IsDlgButtonChecked(hwndDlg, IDC_EXCLUDE));
-                    auto green = g_this->get_int(p_green.handle);
+                    auto green = g_this->get_int(p_green);
                     SendDlgItemMessage(hwndDlg, IDC_GREEN, TBM_SETPOS, TRUE, green);
-                    auto blue = g_this->get_int(p_blue.handle);
+                    auto blue = g_this->get_int(p_blue);
                     SendDlgItemMessage(hwndDlg, IDC_BLUE, TBM_SETPOS, TRUE, blue);
                     break;
                 }

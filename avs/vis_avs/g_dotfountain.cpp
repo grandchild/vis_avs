@@ -10,15 +10,15 @@
 
 int win32_dlgproc_dotfountain(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto g_this = (E_DotFountain*)g_current_render;
-    const Parameter& p_rotation_speed = DotFountain_Info::parameters[1];
-    const Parameter& p_angle = DotFountain_Info::parameters[2];
-    AVS_Parameter_Handle p_color = DotFountain_Info::color_params[0].handle;
+    const Parameter* p_rotation_speed = &DotFountain_Info::parameters[1];
+    const Parameter* p_angle = &DotFountain_Info::parameters[2];
+    const Parameter* p_color = &DotFountain_Info::color_params[0];
 
     switch (uMsg) {
         case WM_INITDIALOG: {
-            auto rotation_speed = g_this->get_int(p_rotation_speed.handle);
+            auto rotation_speed = g_this->get_int(p_rotation_speed);
             init_ranged_slider(p_rotation_speed, rotation_speed, hwndDlg, IDC_SLIDER1);
-            auto angle = g_this->get_int(p_angle.handle);
+            auto angle = g_this->get_int(p_angle);
             init_ranged_slider(p_angle, angle, hwndDlg, IDC_ANGLE);
             return 1;
         }
@@ -34,7 +34,7 @@ int win32_dlgproc_dotfountain(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
         case WM_COMMAND: {
             auto control = LOWORD(wParam);
             if (control == IDC_BUTTON1) {
-                g_this->set_int(p_rotation_speed.handle, 0);
+                g_this->set_int(p_rotation_speed, 0);
                 SendDlgItemMessage(hwndDlg, IDC_SLIDER1, TBM_SETPOS, 1, 0);
                 return 0;
             }
@@ -52,9 +52,9 @@ int win32_dlgproc_dotfountain(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
             HWND control = (HWND)lParam;
             int value = (int)SendMessage(control, TBM_GETPOS, 0, 0);
             if (control == GetDlgItem(hwndDlg, IDC_SLIDER1)) {
-                g_this->set_int(p_rotation_speed.handle, value);
+                g_this->set_int(p_rotation_speed, value);
             } else if (control == GetDlgItem(hwndDlg, IDC_ANGLE)) {
-                g_this->set_int(p_angle.handle, value);
+                g_this->set_int(p_angle, value);
             }
             return 0;
         }

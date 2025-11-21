@@ -10,12 +10,12 @@
 
 int win32_dlgproc_mirror(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto g_this = (E_Mirror*)g_current_render;
-    AVS_Parameter_Handle p_top_to_bottom = Mirror_Info::parameters[0].handle;
-    AVS_Parameter_Handle p_bottom_to_top = Mirror_Info::parameters[1].handle;
-    AVS_Parameter_Handle p_left_to_right = Mirror_Info::parameters[2].handle;
-    AVS_Parameter_Handle p_right_to_left = Mirror_Info::parameters[3].handle;
-    AVS_Parameter_Handle p_on_beat_random = Mirror_Info::parameters[4].handle;
-    const Parameter& p_transition_duration = Mirror_Info::parameters[5];
+    const Parameter* p_top_to_bottom = &Mirror_Info::parameters[0];
+    const Parameter* p_bottom_to_top = &Mirror_Info::parameters[1];
+    const Parameter* p_left_to_right = &Mirror_Info::parameters[2];
+    const Parameter* p_right_to_left = &Mirror_Info::parameters[3];
+    const Parameter* p_on_beat_random = &Mirror_Info::parameters[4];
+    const Parameter* p_transition_duration = &Mirror_Info::parameters[5];
 
     static int64_t transition_duration_save;
     switch (uMsg) {
@@ -28,7 +28,7 @@ int win32_dlgproc_mirror(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             auto on_beat = g_this->get_bool(p_on_beat_random);
             CheckDlgButton(hwndDlg, IDC_STAT, !on_beat);
             CheckDlgButton(hwndDlg, IDC_ONBEAT, on_beat);
-            auto transition_duration = g_this->get_int(p_transition_duration.handle);
+            auto transition_duration = g_this->get_int(p_transition_duration);
             transition_duration_save = transition_duration;
             CheckDlgButton(hwndDlg, IDC_SMOOTH, transition_duration > 0);
             init_ranged_slider(
@@ -81,7 +81,7 @@ int win32_dlgproc_mirror(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     bool smooth_on = IsDlgButtonChecked(hwndDlg, IDC_SMOOTH);
                     int32_t value =
                         smooth_on ? max((int32_t)transition_duration_save, 1) : 0;
-                    g_this->set_int(p_transition_duration.handle, value);
+                    g_this->set_int(p_transition_duration, value);
                     SendDlgItemMessage(hwndDlg, IDC_SLOWER, TBM_SETPOS, 1, value);
                     break;
             }
@@ -91,7 +91,7 @@ int win32_dlgproc_mirror(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HWND control = (HWND)lParam;
             if (control == GetDlgItem(hwndDlg, IDC_SLOWER)) {
                 int value = (int)SendMessage(control, TBM_GETPOS, 0, 0);
-                g_this->set_int(p_transition_duration.handle, value);
+                g_this->set_int(p_transition_duration, value);
                 transition_duration_save = value;
                 CheckDlgButton(hwndDlg, IDC_SMOOTH, value > 0);
             }

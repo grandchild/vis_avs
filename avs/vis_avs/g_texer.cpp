@@ -11,10 +11,10 @@
 
 int win32_dlgproc_texer(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     E_Texer* g_this = (E_Texer*)g_current_render;
-    const Parameter& p_image = g_this->info.parameters[0];
-    const AVS_Parameter_Handle p_add_to_input = g_this->info.parameters[1].handle;
-    const AVS_Parameter_Handle p_colorize = g_this->info.parameters[2].handle;
-    const AVS_Parameter_Handle p_num_particles = g_this->info.parameters[3].handle;
+    const Parameter* p_image = &g_this->info.parameters[0];
+    const Parameter* p_add_to_input = &g_this->info.parameters[1];
+    const Parameter* p_colorize = &g_this->info.parameters[2];
+    const Parameter* p_num_particles = &g_this->info.parameters[3];
 
     char num_particles_label[5];
     switch (uMsg) {
@@ -37,7 +37,7 @@ int win32_dlgproc_texer(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                                                         : IDC_TEXER_OUTPUT_NORMAL,
                            BST_CHECKED);
 
-            auto image = g_this->get_string(p_image.handle);
+            auto image = g_this->get_string(p_image);
             init_resource(p_image, image, hwndDlg, IDC_TEXER_IMAGE, MAX_PATH);
             return 1;
         }
@@ -53,7 +53,7 @@ int win32_dlgproc_texer(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                     SendDlgItemMessage(hwndDlg, control, CB_GETLBTEXTLEN, sel, 0) + 1;
                 char* buf = (char*)calloc(filename_length, sizeof(char));
                 SendDlgItemMessage(hwndDlg, control, CB_GETLBTEXT, sel, (LPARAM)buf);
-                g_this->set_string(p_image.handle, buf);
+                g_this->set_string(p_image, buf);
                 free(buf);
                 break;
             } else if (command == BN_CLICKED) {

@@ -74,7 +74,7 @@ E_Mirror::E_Mirror(AVS_Instance* avs)
 
 void E_Mirror::on_mode_change(const Parameter* param) {
     std::string param_name = param->name;
-    if (this->config.on_beat_random || !this->get_bool(param->handle)) {
+    if (this->config.on_beat_random || !this->get_bool(param)) {
         return;
     }
     if (param_name == "Top to Bottom") {
