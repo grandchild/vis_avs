@@ -496,9 +496,9 @@ bool avs_parameter_run_action(AVS_Handle avs,
  *   Parameter Lists
  *
  * Parameter lists are rare but they allow effects to have a variable-length list of
- * items with a set of multiple parameters. The `AVS_Effect_Info`- and
- * `AVS_Parameter_Info` API around this can be a bit complex. First let's start with
- * changing the value of a nested parameter.
+ * sets of multiple parameters. The `AVS_Effect_Info`- and `AVS_Parameter_Info` API
+ * around this can be a bit complex. First let's start with changing the value of a
+ * nested parameter.
  *
  *
  *   Accessing Nested Parameters
