@@ -265,6 +265,7 @@ void avs_free(AVS_Handle avs) {
     }
     AVS_Instance* instance = get_instance_from_handle(avs);
     if (instance != NULL) {
+        AVS_EEL_IF_quit(instance);
         g_instances.erase(avs);
         delete instance;
     }
