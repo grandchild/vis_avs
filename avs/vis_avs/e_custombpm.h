@@ -40,7 +40,7 @@ struct CustomBPM_Info : public Effect_Info {
 
     static constexpr uint32_t num_parameters = 6;
     static constexpr Parameter parameters[num_parameters] = {
-        P_SELECT(offsetof(CustomBPM_Config, mode), "Mode", bpm_modes, nullptr),
+        P_SELECT(offsetof(CustomBPM_Config, mode), "Mode", bpm_modes),
         P_IRANGE(offsetof(CustomBPM_Config, fixed_bpm), "Fixed BPM", 6, 300),
         P_IRANGE(offsetof(CustomBPM_Config, skip), "Skip", 1, 16),
         P_IRANGE(offsetof(CustomBPM_Config, skip_first_beats),
