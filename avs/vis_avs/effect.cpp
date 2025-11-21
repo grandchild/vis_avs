@@ -43,6 +43,7 @@ void Effect::swap(Effect& other) {
     std::swap(this->handle, other.handle);
     std::swap(this->avs, other.avs);
     std::swap(this->enabled, other.enabled);
+    std::swap(this->comment, other.comment);
     std::swap(this->children, other.children);
     std::swap(this->child_handles_for_api, other.child_handles_for_api);
 }
