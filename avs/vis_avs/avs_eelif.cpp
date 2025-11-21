@@ -172,9 +172,9 @@ static double getmouse(AVS_Instance* avs, double* which) {
     switch (w) {
         case 1: return avs->get_mouse_pos(/*get_y*/ false) * 2.0 - 1.0;
         case 2: return avs->get_mouse_pos(/*get_y*/ true) * 2.0 - 1.0;
-        case 3: [[fallthrough]];
-        case 4: [[fallthrough]];
-        case 5: return avs->get_mouse_button_state(w) ? 1.0 : 0.0;
+        case 3: return avs->get_mouse_button_state(0) ? 1.0 : 0.0;
+        case 4: return avs->get_mouse_button_state(2) ? 1.0 : 0.0;
+        case 5: return avs->get_mouse_button_state(1) ? 1.0 : 0.0;
         default: return avs->get_key_state(w) ? 1.0 : 0.0;
     }
     return 0.0;
