@@ -53,6 +53,7 @@ struct AVS_Video::LibAV {
     static decltype(&av_read_frame) read_frame;
     static decltype(&av_seek_frame) seek_frame;
     static decltype(&av_frame_unref) frame_unref;
+    static decltype(&av_strerror) strerror;
     static decltype(&avcodec_find_decoder) find_decoder;
     static decltype(&avcodec_alloc_context3) alloc_context3;
     static decltype(&avcodec_parameters_to_context) parameters_to_context;

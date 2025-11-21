@@ -25,6 +25,7 @@ bool AVS_Video::LibAV::load_libav_dlibs() {
     LOAD_FUNC(AVS_Video::LibAV, libavformat, av, read_frame);
     LOAD_FUNC(AVS_Video::LibAV, libavformat, av, seek_frame);
     LOAD_FUNC(AVS_Video::LibAV, libavutil, av, frame_unref);
+    LOAD_FUNC(AVS_Video::LibAV, libavutil, av, strerror);
     LOAD_FUNC(AVS_Video::LibAV, libavcodec, avcodec, find_decoder);
     LOAD_FUNC(AVS_Video::LibAV, libavcodec, avcodec, alloc_context3);
     LOAD_FUNC(AVS_Video::LibAV, libavcodec, avcodec, parameters_to_context);
@@ -55,6 +56,7 @@ DEFINE_FUNC(AVS_Video::LibAV, av, packet_unref);
 DEFINE_FUNC(AVS_Video::LibAV, av, read_frame);
 DEFINE_FUNC(AVS_Video::LibAV, av, seek_frame);
 DEFINE_FUNC(AVS_Video::LibAV, av, frame_unref);
+DEFINE_FUNC(AVS_Video::LibAV, av, strerror);
 DEFINE_FUNC(AVS_Video::LibAV, avcodec, find_decoder);
 DEFINE_FUNC(AVS_Video::LibAV, avcodec, alloc_context3);
 DEFINE_FUNC(AVS_Video::LibAV, avcodec, parameters_to_context);
