@@ -13,23 +13,18 @@ std::unordered_map<std::string, AVS_Effect_Handle> g_legacy_ape_effect_lib;
 std::vector<AVS_Effect_Handle> g_effect_lib_handles_for_api;
 std::unordered_map<Effect_Info*, effect_component_factory> g_component_factories;
 
-static std::vector<std::string> find_duplicate_effect_names(
+static std::unordered_map<std::string, uint32_t> find_duplicate_effect_names(
     const std::unordered_map<AVS_Effect_Handle, Effect_Info*>& lib) {
-    std::vector<std::string> seen_names;
-    std::vector<std::string> duplicates;
-    seen_names.reserve(lib.size());
+    std::unordered_map<std::string, uint32_t> duplicates;
     for (auto const& entry : lib) {
         std::string name = entry.second->get_name();
-        bool is_duplicate = false;
-        for (auto const& seen_name : seen_names) {
-            if (seen_name == name) {
-                duplicates.push_back(name);
-                is_duplicate = true;
-                break;
-            }
-        }
-        if (!is_duplicate) {
-            seen_names.push_back(name);
+        duplicates[name]++;
+    }
+    for (auto entry = duplicates.begin(); entry != duplicates.end();) {
+        if (entry->second <= 1) {
+            entry = duplicates.erase(entry);
+        } else {
+            entry++;
         }
     }
     return duplicates;
@@ -131,6 +126,11 @@ bool make_effect_lib() {
     }
     auto duplicate_names = find_duplicate_effect_names(g_effect_lib);
     if (!duplicate_names.empty()) {
+        for (auto const& entry : duplicate_names) {
+            log_err("Effect lib: %d duplicate effects named: \"%s\"",
+                    entry.second,
+                    entry.first.c_str());
+        }
         g_effect_lib.clear();
         return false;
     }
