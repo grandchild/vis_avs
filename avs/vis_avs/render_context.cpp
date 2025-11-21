@@ -76,7 +76,27 @@ RenderContext::RenderContext(size_t w,
       framebuffers{Buffer(w, h, pixel_format, external_buffer),
                    Buffer(w, h, pixel_format)},
       global_buffers(global_buffers),
-      audio(audio) {}
+      audio(audio) {
+    this->fill_framebuffers_with_uninit_pattern();
+}
+
+// Uninitialized framebuffer pixels should not appear in the output. If they do, it
+// means some effect is not rendering to the framebuffer(s) completely and correctly.
+// Framebuffer 0: red/green checkerboard
+// Framebuffer 1: yellow/magenta checkerboard
+void RenderContext::fill_framebuffers_with_uninit_pattern() {
+    auto fb0 = (pixel_rgb0_8*)this->framebuffers[0].data;
+    auto fb1 = (pixel_rgb0_8*)this->framebuffers[1].data;
+    bool color_switch = false;
+    for (size_t y = 0; y < h; y++) {
+        for (size_t x = 0; x < w; x++) {
+            fb0[y * w + x] = color_switch ? 0x00ff0000 : 0x0000ff00;
+            fb1[y * w + x] = color_switch ? 0x00ffff00 : 0x00ff00ff;
+            color_switch = !color_switch;
+        }
+        color_switch = !color_switch;
+    }
+}
 
 void RenderContext::swap_framebuffers() {
     std::swap(this->framebuffers[0], this->framebuffers[1]);

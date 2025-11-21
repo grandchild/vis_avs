@@ -46,6 +46,7 @@ struct RenderContext {
                   std::array<Buffer, 8>& global_buffers,
                   Audio& audio,
                   void* external_buffer = nullptr);
+    void fill_framebuffers_with_uninit_pattern();
     void swap_framebuffers();
     void copy_secondary_to_output_framebuffer_if_needed();
 };
