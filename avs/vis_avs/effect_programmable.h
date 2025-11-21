@@ -175,12 +175,12 @@ class Programmable_Effect
           code_point(this->avs, this->vm_context, this->config.init, this->code_lock) {}
     Programmable_Effect& operator=(const Programmable_Effect& other) {
         Programmable_Effect tmp(other);
-        this->swap(tmp);
+        this->swap_code(tmp);
         return *this;
     }
     Programmable_Effect(Programmable_Effect&& other) noexcept
         : Super(std::move(other)) {
-        this->swap(other);
+        this->swap_code(other);
     }
     Programmable_Effect& operator=(Programmable_Effect&& other) noexcept {
         Super::operator=(std::move(other));
@@ -234,7 +234,7 @@ class Programmable_Effect
     virtual void on_load() { this->need_full_recompile(); }
 
    protected:
-    void swap(Programmable_Effect& other) {
+    virtual void swap_code(Programmable_Effect& other) {
         std::swap(this->vm_context, other.vm_context);
         std::swap(this->code_lock, other.code_lock);
         std::swap(this->code_init, other.code_init);
