@@ -78,8 +78,8 @@ int E_Normalise::scan_min_max_sse2(int* framebuffer,
 
     unsigned char four_px_max[16];
     unsigned char four_px_min[16];
-    _mm_store_si128((__m128i*)four_px_max, max4);
-    _mm_store_si128((__m128i*)four_px_min, min4);
+    _mm_storeu_si128((__m128i*)four_px_max, max4);
+    _mm_storeu_si128((__m128i*)four_px_min, min4);
     for (int i = 0; i < 16; i++) {
         *max_out = four_px_max[i] > *max_out ? four_px_max[i] : *max_out;
         *min_out = four_px_min[i] < *min_out ? four_px_min[i] : *min_out;
