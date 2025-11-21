@@ -84,6 +84,7 @@ class AVS_Instance {
     std::string error;
     const char* audio_devices[1] = {""};
 
+    RenderContext* render_context = nullptr;
     E_Root root;
     /** Used for transitioning between presets. */
     E_Root root_secondary;

@@ -30,6 +30,7 @@ AVS_Instance::AVS_Instance(const char* base_path,
 }
 
 AVS_Instance::~AVS_Instance() {
+    delete this->render_context;
     if (this->audio_source == AVS_AUDIO_INTERNAL) {
         this->audio.audio_in_stop();
     }
@@ -50,15 +51,25 @@ bool AVS_Instance::render_frame(void* framebuffer,
                                 AVS_Pixel_Format pixel_format) {
     this->init_global_buffers_if_needed(width, height, pixel_format);
     this->update_time(time_in_ms);
-    auto render_context = RenderContext(
-        width, height, pixel_format, *this->global_buffers, this->audio, framebuffer);
+    if (!this->render_context) {
+        this->render_context = new RenderContext(width,
+                                                 height,
+                                                 pixel_format,
+                                                 *this->global_buffers,
+                                                 this->audio,
+                                                 framebuffer);
+        if (!this->render_context) {
+            this->error = "Failed to allocate render context";
+            return false;
+        }
+    }
     this->audio.get();
     if (this->beat_source == AVS_BEAT_EXTERNAL) {
         this->audio.is_beat = is_beat;
     } else if (this->beat_source == AVS_BEAT_INTERNAL && is_beat) {
         log_warn("`is_beat` is set to true but beat_source is AVS_BEAT_INTERNAL");
     }
-    this->root.render_with_context(render_context);
+    this->root.render_with_context(*this->render_context);
 
     // char visdata[2][2][AUDIO_BUFFER_LEN];
     // this->root.render(
