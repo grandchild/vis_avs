@@ -161,7 +161,7 @@ const AVS_Component_Handle* avs_component_children(AVS_Handle avs,
                                                    uint32_t* length_out) {
     Effect* _component;
     if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
-        set_out<uint32_t>(length_out, 0);
+        set_out<uint32_t>(length_out, INT32_MAX);
         return NULL;
     }
     set_out<uint32_t>(length_out, _component->children.size());

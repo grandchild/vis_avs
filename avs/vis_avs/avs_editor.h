@@ -277,8 +277,9 @@ AVS_Component_Handle avs_component_root(AVS_Handle avs);
  * between "leaf"- and "tree"-type components. Note: The overwhelming majority of
  * effects/components cannot have child components.
  *
- * `avs_component_children()` will return 0 both on error and if the component has no
- * children.
+ * `avs_component_children()` will return NULL on error. If the component has no
+ * children, length_out will be 0, but the return value will be a pointer to a zero-
+ * sized array.
  */
 bool avs_component_can_have_child_components(AVS_Handle avs,
                                              AVS_Component_Handle component);
