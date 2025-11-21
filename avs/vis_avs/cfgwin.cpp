@@ -1839,7 +1839,7 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     temp[0] = 0;
                     l.lpstrInitialDir = buf1;
                     l.hwndOwner = hwndDlg;
-                    l.lpstrFilter = "AVS presets\0*.avs\0All files\0*.*\0";
+                    l.lpstrFilter = "AVS presets\0*.avs;*.avs-preset\0All files\0*.*\0";
                     l.lpstrFile = temp;
                     l.nMaxFile = 2048 - 1;
                     l.lpstrTitle = "Load Preset";
