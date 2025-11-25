@@ -603,12 +603,12 @@ static inline void blend_adjustable_rgb0_8_c(const uint32_t* src1,
     uint8_t v = param & 0xff;
     uint8_t iv = 0xff - v;
     int32_t output =
-        lut_u8_multiply[*src1 & 0xFF][v] + lut_u8_multiply[*src2 & 0xFF][iv];
-    output |= (lut_u8_multiply[(*src1 & 0xFF00) >> 8][v]
-               + lut_u8_multiply[(*src2 & 0xFF00) >> 8][iv])
+        lut_u8_multiply[*src1 & 0xFF][iv] + lut_u8_multiply[*src2 & 0xFF][v];
+    output |= (lut_u8_multiply[(*src1 & 0xFF00) >> 8][iv]
+               + lut_u8_multiply[(*src2 & 0xFF00) >> 8][v])
               << 8;
-    output |= (lut_u8_multiply[(*src1 & 0xFF0000) >> 16][v]
-               + lut_u8_multiply[(*src2 & 0xFF0000) >> 16][iv])
+    output |= (lut_u8_multiply[(*src1 & 0xFF0000) >> 16][iv]
+               + lut_u8_multiply[(*src2 & 0xFF0000) >> 16][v])
               << 16;
     *dest = output;
 }
@@ -626,10 +626,10 @@ static inline void blend_adjustable_rgb0_8_x86v128(const uint32_t* src1,
     __m128i src2_hi_2px = _mm_unpackhi_epi8(src2_4px, zero);
     __m128i v = _mm_set1_epi16(param);
     __m128i iv = _mm_xor_si128(v, _mm_set1_epi16(0x00ff));
-    __m128i mul_src1_lo = _mm_mullo_epi16(src1_lo_2px, v);
-    __m128i mul_src1_hi = _mm_mullo_epi16(src1_hi_2px, v);
-    __m128i mul_src2_lo = _mm_mullo_epi16(src2_lo_2px, iv);
-    __m128i mul_src2_hi = _mm_mullo_epi16(src2_hi_2px, iv);
+    __m128i mul_src1_lo = _mm_mullo_epi16(src1_lo_2px, iv);
+    __m128i mul_src1_hi = _mm_mullo_epi16(src1_hi_2px, iv);
+    __m128i mul_src2_lo = _mm_mullo_epi16(src2_lo_2px, v);
+    __m128i mul_src2_hi = _mm_mullo_epi16(src2_hi_2px, v);
     __m128i lo = _mm_adds_epu16(mul_src1_lo, mul_src2_lo);
     __m128i hi = _mm_adds_epu16(mul_src1_hi, mul_src2_hi);
     __m128i lo_norm = _mm_srli_epi16(lo, 8);
@@ -709,9 +709,9 @@ static inline void blend_buffer_rgb0_8_c(const uint32_t* src1,
     uint8_t src2_r = *src2 >> 16 & 0xff;
     uint8_t src2_g = *src2 >> 8 & 0xff;
     uint8_t src2_b = *src2 & 0xff;
-    *dest = (lut_u8_multiply[src1_r][v] + lut_u8_multiply[src2_r][iv]) << 16
-            | (lut_u8_multiply[src1_g][v] + lut_u8_multiply[src2_g][iv]) << 8
-            | (lut_u8_multiply[src1_b][v] + lut_u8_multiply[src2_b][iv]);
+    *dest = (lut_u8_multiply[src1_r][iv] + lut_u8_multiply[src2_r][v]) << 16
+            | (lut_u8_multiply[src1_g][iv] + lut_u8_multiply[src2_g][v]) << 8
+            | (lut_u8_multiply[src1_b][iv] + lut_u8_multiply[src2_b][v]);
 }
 
 static inline void blend_buffer_rgb0_8_x86v128(const uint32_t* src1,
@@ -762,13 +762,13 @@ static inline void blend_buffer_rgb0_8_x86v128(const uint32_t* src1,
     __m128i src1_lo_2px = _mm_unpacklo_epi8(src1_4px, zero);
     __m128i src2_hi_2px = _mm_unpackhi_epi8(src2_4px, zero);
     __m128i src2_lo_2px = _mm_unpacklo_epi8(src2_4px, zero);
-    // src1 * v
-    __m128i src1_hi_v = _mm_mullo_epi16(src1_hi_2px, buf_hi_2px);
-    __m128i src1_lo_v = _mm_mullo_epi16(src1_lo_2px, buf_lo_2px);
-    // src2 * (255 - v)
-    __m128i src2_hi_v = _mm_mullo_epi16(src2_hi_2px, buf_hi_inv_2px);
-    __m128i src2_lo_v = _mm_mullo_epi16(src2_lo_2px, buf_lo_inv_2px);
-    // src1 * v + src2 * (255 - v)
+    // src1 * (255 - v)
+    __m128i src1_hi_v = _mm_mullo_epi16(src1_hi_2px, buf_hi_inv_2px);
+    __m128i src1_lo_v = _mm_mullo_epi16(src1_lo_2px, buf_lo_inv_2px);
+    // src2 * v
+    __m128i src2_hi_v = _mm_mullo_epi16(src2_hi_2px, buf_hi_2px);
+    __m128i src2_lo_v = _mm_mullo_epi16(src2_lo_2px, buf_lo_2px);
+    // src1 * (255 - v) + src2 * v
     __m128i hi = _mm_add_epi16(src1_hi_v, src2_hi_v);
     __m128i lo = _mm_add_epi16(src1_lo_v, src2_lo_v);
     __m128i his8 = _mm_srli_epi16(hi, 8);
