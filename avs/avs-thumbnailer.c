@@ -1,6 +1,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "3rdparty/stb_image_write.h"
 #include "vis_avs/avs.h"
+#include "vis_avs/avs_editor.h"
 
 #include <stdlib.h>  // random(), malloc(), free()
 
@@ -20,7 +21,7 @@ int main(int argc, char const* argv[]) {
         return 2;
     }
     const char* output_png = argv[3];
-    int warmup = 0;
+    int warmup = -1;
     if (argc >= 5) {
         warmup = atoi(argv[4]);
         if (warmup < 0) {
@@ -37,13 +38,48 @@ int main(int argc, char const* argv[]) {
         avs_free(avs);
         return 4;
     }
+    if (warmup < 0) {
+        AVS_Component_Handle root = avs_component_root(avs);
+        if (!root) {
+            printf("Error finding root component: %s\n", avs_error_str(avs));
+            avs_free(avs);
+            return 5;
+        }
+        AVS_Effect_Handle root_effect = avs_component_effect(avs, root);
+        if (!root_effect) {
+            printf("Error getting root effect: %s\n", avs_error_str(avs));
+            avs_free(avs);
+            return 6;
+        }
+        AVS_Effect_Info root_info;
+        if (!avs_effect_info(avs, root_effect, &root_info)) {
+            printf("Error getting root info: %s\n", avs_error_str(avs));
+            avs_free(avs);
+            return 7;
+        }
+        for (uint32_t i = 0; i < root_info.parameters_length; i++) {
+            AVS_Parameter_Info param;
+            if (!avs_parameter_info(
+                    avs, root_effect, root_info.parameters[i], &param)) {
+                printf("Error getting root param at index %d: %s\n",
+                       i,
+                       avs_error_str(avs));
+                avs_free(avs);
+                return 8;
+            }
+            if (!strncmp(param.name, "Warmup Frames", sizeof("Warmup Frames"))) {
+                warmup =
+                    avs_parameter_get_int(avs, root, root_info.parameters[i], 0, NULL);
+            }
+        }
+    }
     size_t width = size;
     size_t height = size;
     uint32_t* framebuffer = (uint32_t*)malloc(width * height * sizeof(uint32_t));
     if (!framebuffer) {
         printf("Error allocating framebuffer\n");
         avs_free(avs);
-        return 5;
+        return 9;
     }
     int64_t time_in_ms = 0;
     // TODO [bug]: Reenable audio code after fixing AVS audio setter
@@ -63,7 +99,7 @@ int main(int argc, char const* argv[]) {
             printf("Error during warmup: %s\n", avs_error_str(avs));
             free(framebuffer);
             avs_free(avs);
-            return 6;
+            return 10;
         }
         time_in_ms += 1000 / FRAMERATE;
     }
@@ -75,7 +111,7 @@ int main(int argc, char const* argv[]) {
             printf("Error allocating output image data\n");
             free(framebuffer);
             avs_free(avs);
-            return 7;
+            return 11;
         }
         for (size_t i = 0; i < width * height; i++) {
             img_data[i * 4 + 0] = (framebuffer[i] >> 16) & 0xFF;
@@ -89,7 +125,7 @@ int main(int argc, char const* argv[]) {
         printf("Error rendering: %s\n", avs_error_str(avs));
         free(framebuffer);
         avs_free(avs);
-        return 8;
+        return 12;
     }
     printf("Successfully thumbnailed %s to %s\n", preset, output_png);
     free(framebuffer);

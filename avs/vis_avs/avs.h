@@ -28,7 +28,7 @@
  *     #include <stdint.h>  // uint32_t etc.
  *
  *     int main() {
- *         AVS_Handle avs = avs_init(AVS_AUDIO_INTERNAL, AVS_BEAT_INTERNAL);
+ *         AVS_Handle avs = avs_init(NULL, AVS_AUDIO_INTERNAL, AVS_BEAT_INTERNAL, NULL);
  *         if(!avs) {
  *             printf("Error initializing AVS: %s\n", avs_error_str(avs));
  *             return 1;
