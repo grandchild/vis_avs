@@ -46,6 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math.h>
 #include <process.h>
 #include <stdio.h>
+#include <string.h>
 
 #ifdef WA3_COMPONENT
 #include "wasabicfg.h"
@@ -143,6 +144,8 @@ static void config(struct winampVisModule* this_mod) {
 static int g_is_beat;
 char g_path[1024];
 AVS_Instance* g_single_instance;
+static char g_log_file_path[1024];
+static FILE* g_log_file;
 
 int beat_peak1, beat_peak2, beat_cnt, beat_peak1_peak;
 
@@ -207,6 +210,14 @@ static int init(struct winampVisModule* this_mod) {
 #endif
     g_ThreadQuit = 0;
     g_visdata_pstat = 1;
+
+    log_set_level(LOG_INFO);
+    char* log_file_path = (char*)calloc(1036, sizeof(char));
+    strncpy(log_file_path, g_path, 1024);
+    strcat(log_file_path, "\\avs_log.txt");
+    g_log_file = fopen(log_file_path, "a");
+    log_set_out_file(g_log_file);
+    free(log_file_path);
 
     g_single_instance = new AVS_Instance(g_path, AVS_AUDIO_INTERNAL, AVS_BEAT_INTERNAL);
 
@@ -363,6 +374,7 @@ static void quit(struct winampVisModule*) {
 
     delete g_single_instance;
     g_single_instance = NULL;
+    fclose(g_log_file);
 }
 
 #ifdef WA3_COMPONENT
