@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -205,6 +206,17 @@ extern enum LogLevel g_log_level;
  * Set the current log level.
  */
 void log_set_level(enum LogLevel level);
+/**
+ * Specify an output file for log messages. Messages will be sent to both this file and
+ * stderr, unless disabled with `log_disable_stderr()`.
+ * If this method is not called logs will not be written to disk.
+ */
+void log_set_out_file(FILE* file);
+/**
+ * Disable logging to stderr. Useful if logs should only be written to the file set with
+ * `log_set_out_file()`, if any.
+ */
+void log_disable_stderr();
 /**
  * Log a message at DEBUG level, i.e. the most verbose.
  * If not compiled with DEBUG compile flag, this is a no-op regardless of log level.

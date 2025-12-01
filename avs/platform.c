@@ -15,7 +15,12 @@ int max(int a, int b) { return a < b ? b : a; }
 unsigned int umin(unsigned int a, unsigned int b) { return a > b ? b : a; }
 unsigned int umax(unsigned int a, unsigned int b) { return a < b ? b : a; }
 
+static FILE* log_file;
+static bool log_no_stderr;
+
 enum LogLevel g_log_level = LOG_WARN;
+void log_set_out_file(FILE* file) { log_file = file; }
+void log_disable_stderr() { log_no_stderr = true; }
 void log_set_level(enum LogLevel level) { g_log_level = level; }
 #define LOG(level)                                                              \
     if (g_log_level <= LOG_##level) {                                           \
@@ -35,7 +40,12 @@ void log_set_level(enum LogLevel level) { g_log_level = level; }
         strcat(log_fmt_str, "\n");                                              \
         va_list args;                                                           \
         va_start(args, fmt);                                                    \
-        vfprintf(stderr, log_fmt_str, args);                                    \
+        if (!log_no_stderr) {                                                   \
+            vfprintf(stderr, log_fmt_str, args);                                \
+        }                                                                       \
+        if (log_file != NULL) {                                                 \
+            vfprintf(log_file, log_fmt_str, args);                              \
+        }                                                                       \
     }
 #ifdef DEBUG
 void log_debug(const char* fmt, ...) { LOG(DEBUG); }
