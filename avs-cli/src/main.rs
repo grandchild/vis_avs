@@ -35,7 +35,8 @@ struct AvsArgs {
 
 fn main() -> Result<()> {
     let args: AvsArgs = argh::from_env();
-    let mut avs = Avs::new(None, AvsAudioSource::Internal, AvsBeatSource::External)?;
+    let mut avs =
+        Avs::new(None, AvsAudioSource::Internal, AvsBeatSource::External, None)?;
     println!("{:?}", Avs::lib_version());
     // save preset_format_schema output to a file
     std::fs::write("avs-preset.v0-0.schema.json", Avs::preset_format_schema()?)?;

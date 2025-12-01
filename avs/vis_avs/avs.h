@@ -109,13 +109,18 @@ typedef enum { AVS_BEAT_INTERNAL = 0, AVS_BEAT_EXTERNAL = 1 } AVS_Beat_Source;
  *       internal input device), and the `is_beat` parameter to `avs_render_frame()` is
  *       ignored.
  *
+ *  `log_file_path`
+ *       If not `NULL`, AVS will log messages to the specified file path. Logs will
+ *       always also be sent to stderr.
+ *
  * Note: `audio_source` and `beat_source` are independent of one another, all 4 settings
  * combinations are valid. (Having internal audio and external beat detection makes
  * little sense though, although you could disable beat detection this way.)
  */
 AVS_Handle avs_init(const char* base_path,
                     AVS_Audio_Source audio_source,
-                    AVS_Beat_Source beat_source);
+                    AVS_Beat_Source beat_source,
+                    const char* log_file_path);
 
 /**
  * Render a single frame of the loaded preset. If rendering fails due to invalid

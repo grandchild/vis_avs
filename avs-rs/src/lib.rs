@@ -60,16 +60,15 @@ impl Avs {
         base_path: Option<&str>,
         audio_source: AvsAudioSource,
         beat_source: AvsBeatSource,
+        log_file_path: Option<&str>,
     ) -> Result<Self, AvsError> {
-        let base_path_ptr = match base_path {
-            Some(path) => {
-                let base_path_str = CString::new(path).unwrap();
-                base_path_str.as_ptr()
-            }
-            None => std::ptr::null(),
-        };
         let handle = unsafe {
-            avs_init(base_path_ptr, audio_source.to_value(), beat_source.to_value())
+            avs_init(
+                c_str_ptr_or_null(base_path),
+                audio_source.to_value(),
+                beat_source.to_value(),
+                c_str_ptr_or_null(log_file_path),
+            )
         };
         if handle == 0 {
             return Err(Avs::default().error("init"));
@@ -781,7 +780,11 @@ impl Avs {
     }
 }
 
-impl AvsComponent {}
+fn c_str_ptr_or_null(string: Option<&str>) -> *const i8 {
+    string
+        .and_then(|s| CString::new(s).ok())
+        .map_or(std::ptr::null(), |cstr| cstr.as_ptr())
+}
 
 fn str_from_c_lossy_or_empty(cstr: *const i8) -> String {
     str_from_c_lossy(cstr).unwrap_or(String::new())

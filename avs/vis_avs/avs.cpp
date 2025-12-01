@@ -20,6 +20,7 @@
 std::unordered_map<AVS_Handle, AVS_Instance*> g_instances;
 const char* g_error = "";
 unsigned char g_blendtable[256][256];
+FILE* g_log_file = NULL;
 
 uint64_t const mmx_blend4_revn = 0x00ff00ff00ff00ff;
 // {0x1000100,0x1000100}; <<- this is actually more correct, but we're going for
@@ -42,7 +43,12 @@ AVS_Instance* get_instance_from_handle(AVS_Handle avs) {
 AVS_API
 AVS_Handle avs_init(const char* base_path,
                     AVS_Audio_Source audio_source,
-                    AVS_Beat_Source beat_source) {
+                    AVS_Beat_Source beat_source,
+                    const char* log_file_path) {
+    if (log_file_path != nullptr) {
+        g_log_file = fopen(log_file_path, "a");
+        log_set_out_file(g_log_file);
+    }
     if (g_instances.empty()) {
         make_effect_lib();
         make_blend_LUTs();
@@ -268,6 +274,10 @@ void avs_free(AVS_Handle avs) {
         AVS_EEL_IF_quit(instance);
         g_instances.erase(avs);
         delete instance;
+    }
+    if (g_instances.empty() && g_log_file != NULL) {
+        fclose(g_log_file);
+        g_log_file = NULL;
     }
 }
 

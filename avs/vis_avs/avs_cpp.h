@@ -189,8 +189,9 @@ class AVS {
 
     explicit AVS(const std::string& base_path = "",
                  AVS_Audio_Source audio = AVS_AUDIO_INTERNAL,
-                 AVS_Beat_Source beat = AVS_BEAT_INTERNAL)
-        : handle(avs_init(base_path.c_str(), audio, beat)) {
+                 AVS_Beat_Source beat = AVS_BEAT_INTERNAL,
+                 const std::string& log_file_path = "")
+        : handle(avs_init(base_path.c_str(), audio, beat, log_file_path.c_str())) {
         if (this->handle == 0) {
             this->_error = AVS::global_error_str();
             return;

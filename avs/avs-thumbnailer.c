@@ -28,7 +28,7 @@ int main(int argc, char const* argv[]) {
             warmup = 0;
         }
     }
-    AVS_Handle avs = avs_init(nullptr, AVS_AUDIO_EXTERNAL, AVS_BEAT_EXTERNAL);
+    AVS_Handle avs = avs_init(NULL, AVS_AUDIO_EXTERNAL, AVS_BEAT_EXTERNAL, NULL);
     if (!avs) {
         printf("Error initializing AVS: %s\n", avs_error_str(avs));
         return 3;

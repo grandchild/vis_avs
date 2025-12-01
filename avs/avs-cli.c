@@ -153,7 +153,7 @@ int main(int argc, char const* argv[]) {
         return 1;
     }
 #endif
-    AVS_Handle avs = avs_init(".", AVS_AUDIO_INTERNAL, AVS_BEAT_EXTERNAL);
+    AVS_Handle avs = avs_init(".", AVS_AUDIO_INTERNAL, AVS_BEAT_EXTERNAL, NULL);
     if (argc <= 1) {
         size_t num_effects = 0;
         const AVS_Effect_Handle* effects = avs_effect_library(avs, &num_effects);
