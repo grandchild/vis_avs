@@ -130,7 +130,7 @@ void E_ChannelShift::shift_ssse3(int* framebuffer, int l) {
             for (int i = 0; i < l; i += 4) {
                 four_px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
                 four_px = _mm_shuffle_epi8(four_px, shuffle_gbr);
-                _mm_store_si128((__m128i*)&framebuffer[i], four_px);
+                _mm_storeu_si128((__m128i*)&framebuffer[i], four_px);
             }
             break;
         }
@@ -140,7 +140,7 @@ void E_ChannelShift::shift_ssse3(int* framebuffer, int l) {
             for (int i = 0; i < l; i += 4) {
                 four_px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
                 four_px = _mm_shuffle_epi8(four_px, shuffle_brg);
-                _mm_store_si128((__m128i*)&framebuffer[i], four_px);
+                _mm_storeu_si128((__m128i*)&framebuffer[i], four_px);
             }
             break;
         }
@@ -150,7 +150,7 @@ void E_ChannelShift::shift_ssse3(int* framebuffer, int l) {
             for (int i = 0; i < l; i += 4) {
                 four_px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
                 four_px = _mm_shuffle_epi8(four_px, shuffle_rbg);
-                _mm_store_si128((__m128i*)&framebuffer[i], four_px);
+                _mm_storeu_si128((__m128i*)&framebuffer[i], four_px);
             }
             break;
         }
@@ -160,7 +160,7 @@ void E_ChannelShift::shift_ssse3(int* framebuffer, int l) {
             for (int i = 0; i < l; i += 4) {
                 four_px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
                 four_px = _mm_shuffle_epi8(four_px, shuffle_bgr);
-                _mm_store_si128((__m128i*)&framebuffer[i], four_px);
+                _mm_storeu_si128((__m128i*)&framebuffer[i], four_px);
             }
             break;
         }
@@ -170,7 +170,7 @@ void E_ChannelShift::shift_ssse3(int* framebuffer, int l) {
             for (int i = 0; i < l; i += 4) {
                 four_px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
                 four_px = _mm_shuffle_epi8(four_px, shuffle_grb);
-                _mm_store_si128((__m128i*)&framebuffer[i], four_px);
+                _mm_storeu_si128((__m128i*)&framebuffer[i], four_px);
             }
             break;
         }

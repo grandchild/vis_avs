@@ -254,7 +254,7 @@ inline void E_Texer::render_particle_sse2(int* framebuffer,
                 four_source_px = _mm_packus_epi16(two_16bit_px1, two_16bit_px2);
                 four_dest_px = _mm_loadu_si128((__m128i*)&fbout[fbx + fby * w]);
                 four_dest_px = _mm_adds_epu8(four_dest_px, four_source_px);
-                _mm_store_si128((__m128i*)&fbout[fbx + fby * w], four_dest_px);
+                _mm_storeu_si128((__m128i*)&fbout[fbx + fby * w], four_dest_px);
             }
         }
     } else {
@@ -265,7 +265,7 @@ inline void E_Texer::render_particle_sse2(int* framebuffer,
                     (__m128i*)&this->image_data[ix + iy * this->image_data_width]);
                 four_dest_px = _mm_loadu_si128((__m128i*)&fbout[fbx + fby * w]);
                 four_dest_px = _mm_adds_epu8(four_dest_px, four_source_px);
-                _mm_store_si128((__m128i*)&fbout[fbx + fby * w], four_dest_px);
+                _mm_storeu_si128((__m128i*)&fbout[fbx + fby * w], four_dest_px);
             }
         }
     }

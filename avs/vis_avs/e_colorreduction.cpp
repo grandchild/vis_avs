@@ -75,7 +75,7 @@ void render_simd(int32_t* framebuffer, int length, uint32_t mask) {
     for (int i = 0; i < length; i += 4) {
         __m128i four_px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
         four_px = _mm_and_si128(four_px, mask4);
-        _mm_store_si128((__m128i*)&framebuffer[i], four_px);
+        _mm_storeu_si128((__m128i*)&framebuffer[i], four_px);
     }
 }
 

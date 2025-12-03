@@ -128,7 +128,7 @@ inline void E_MultiFilter::chrome_sse2(int* framebuffer, uint32_t fb_length) {
                 four_px_out = _mm_adds_epu8(four_px_in, four_px_in);
                 four_px_out = _mm_subs_epu8(four_px_out, four_px_in);
                 four_px_out = _mm_adds_epu8(four_px_out, four_px_out);
-                _mm_store_si128((__m128i*)&framebuffer[i], four_px_out);
+                _mm_storeu_si128((__m128i*)&framebuffer[i], four_px_out);
             }
             break;
         case MULTIFILTER_DOUBLE_CHROME:
@@ -140,7 +140,7 @@ inline void E_MultiFilter::chrome_sse2(int* framebuffer, uint32_t fb_length) {
                 four_px_out = _mm_adds_epu8(four_px_1, four_px_1);
                 four_px_out = _mm_subs_epu8(four_px_out, four_px_1);
                 four_px_out = _mm_adds_epu8(four_px_out, four_px_out);
-                _mm_store_si128((__m128i*)&framebuffer[i], four_px_out);
+                _mm_storeu_si128((__m128i*)&framebuffer[i], four_px_out);
             }
             break;
         case MULTIFILTER_TRIPLE_CHROME:
@@ -155,7 +155,7 @@ inline void E_MultiFilter::chrome_sse2(int* framebuffer, uint32_t fb_length) {
                 four_px_out = _mm_adds_epu8(four_px_2, four_px_2);
                 four_px_out = _mm_subs_epu8(four_px_out, four_px_2);
                 four_px_out = _mm_adds_epu8(four_px_out, four_px_out);
-                _mm_store_si128((__m128i*)&framebuffer[i], four_px_out);
+                _mm_storeu_si128((__m128i*)&framebuffer[i], four_px_out);
             }
             break;
     }

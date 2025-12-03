@@ -439,8 +439,8 @@ void E_ColorMap::blend_ssse3(std::vector<uint64_t>& blend_map,
         case COLORMAP_BLENDMODE_REPLACE:
             for (int i = 0; i < w * h; i += 4) {
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
-                _mm_store_si128((__m128i*)four_keys,
-                                this->get_key_ssse3(framebuffer_4px));
+                _mm_storeu_si128((__m128i*)four_keys,
+                                 this->get_key_ssse3(framebuffer_4px));
                 for (int k = 0; k < 4; k++) {
                     framebuffer[i + k] = blend_map[four_keys[k]];
                 }
@@ -449,86 +449,86 @@ void E_ColorMap::blend_ssse3(std::vector<uint64_t>& blend_map,
         case COLORMAP_BLENDMODE_ADDITIVE:
             for (int i = 0; i < w * h; i += 4) {
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
-                _mm_store_si128((__m128i*)four_keys,
-                                this->get_key_ssse3(framebuffer_4px));
+                _mm_storeu_si128((__m128i*)four_keys,
+                                 this->get_key_ssse3(framebuffer_4px));
                 colors_4px = _mm_set_epi32(blend_map[four_keys[3]],
                                            blend_map[four_keys[2]],
                                            blend_map[four_keys[1]],
                                            blend_map[four_keys[0]]);
                 framebuffer_4px = _mm_adds_epu8(framebuffer_4px, colors_4px);
-                _mm_store_si128((__m128i*)&framebuffer[i], framebuffer_4px);
+                _mm_storeu_si128((__m128i*)&framebuffer[i], framebuffer_4px);
             }
             break;
         case COLORMAP_BLENDMODE_MAXIMUM:
             for (int i = 0; i < w * h; i += 4) {
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
-                _mm_store_si128((__m128i*)four_keys,
-                                this->get_key_ssse3(framebuffer_4px));
+                _mm_storeu_si128((__m128i*)four_keys,
+                                 this->get_key_ssse3(framebuffer_4px));
                 colors_4px = _mm_set_epi32(blend_map[four_keys[3]],
                                            blend_map[four_keys[2]],
                                            blend_map[four_keys[1]],
                                            blend_map[four_keys[0]]);
                 framebuffer_4px = _mm_max_epu8(framebuffer_4px, colors_4px);
-                _mm_store_si128((__m128i*)&framebuffer[i], framebuffer_4px);
+                _mm_storeu_si128((__m128i*)&framebuffer[i], framebuffer_4px);
             }
             break;
         case COLORMAP_BLENDMODE_MINIMUM:
             for (int i = 0; i < w * h; i += 4) {
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
-                _mm_store_si128((__m128i*)four_keys,
-                                this->get_key_ssse3(framebuffer_4px));
+                _mm_storeu_si128((__m128i*)four_keys,
+                                 this->get_key_ssse3(framebuffer_4px));
                 colors_4px = _mm_set_epi32(blend_map[four_keys[3]],
                                            blend_map[four_keys[2]],
                                            blend_map[four_keys[1]],
                                            blend_map[four_keys[0]]);
                 framebuffer_4px = _mm_min_epu8(framebuffer_4px, colors_4px);
-                _mm_store_si128((__m128i*)&framebuffer[i], framebuffer_4px);
+                _mm_storeu_si128((__m128i*)&framebuffer[i], framebuffer_4px);
             }
             break;
         case COLORMAP_BLENDMODE_5050:
             for (int i = 0; i < w * h; i += 4) {
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
-                _mm_store_si128((__m128i*)four_keys,
-                                this->get_key_ssse3(framebuffer_4px));
+                _mm_storeu_si128((__m128i*)four_keys,
+                                 this->get_key_ssse3(framebuffer_4px));
                 colors_4px = _mm_set_epi32(blend_map[four_keys[3]],
                                            blend_map[four_keys[2]],
                                            blend_map[four_keys[1]],
                                            blend_map[four_keys[0]]);
                 framebuffer_4px = _mm_avg_epu8(framebuffer_4px, colors_4px);
-                _mm_store_si128((__m128i*)&framebuffer[i], framebuffer_4px);
+                _mm_storeu_si128((__m128i*)&framebuffer[i], framebuffer_4px);
             }
             break;
         case COLORMAP_BLENDMODE_SUB1:
             for (int i = 0; i < w * h; i += 4) {
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
-                _mm_store_si128((__m128i*)four_keys,
-                                this->get_key_ssse3(framebuffer_4px));
+                _mm_storeu_si128((__m128i*)four_keys,
+                                 this->get_key_ssse3(framebuffer_4px));
                 colors_4px = _mm_set_epi32(blend_map[four_keys[3]],
                                            blend_map[four_keys[2]],
                                            blend_map[four_keys[1]],
                                            blend_map[four_keys[0]]);
                 framebuffer_4px = _mm_subs_epu8(framebuffer_4px, colors_4px);
-                _mm_store_si128((__m128i*)&framebuffer[i], framebuffer_4px);
+                _mm_storeu_si128((__m128i*)&framebuffer[i], framebuffer_4px);
             }
             break;
         case COLORMAP_BLENDMODE_SUB2:
             for (int i = 0; i < w * h; i += 4) {
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
-                _mm_store_si128((__m128i*)four_keys,
-                                this->get_key_ssse3(framebuffer_4px));
+                _mm_storeu_si128((__m128i*)four_keys,
+                                 this->get_key_ssse3(framebuffer_4px));
                 colors_4px = _mm_set_epi32(blend_map[four_keys[3]],
                                            blend_map[four_keys[2]],
                                            blend_map[four_keys[1]],
                                            blend_map[four_keys[0]]);
                 framebuffer_4px = _mm_subs_epu8(colors_4px, framebuffer_4px);
-                _mm_store_si128((__m128i*)&framebuffer[i], framebuffer_4px);
+                _mm_storeu_si128((__m128i*)&framebuffer[i], framebuffer_4px);
             }
             break;
         case COLORMAP_BLENDMODE_MULTIPLY:
             for (int i = 0; i < w * h; i += 4) {
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
-                _mm_store_si128((__m128i*)four_keys,
-                                this->get_key_ssse3(framebuffer_4px));
+                _mm_storeu_si128((__m128i*)four_keys,
+                                 this->get_key_ssse3(framebuffer_4px));
                 colors_4px = _mm_set_epi32(blend_map[four_keys[3]],
                                            blend_map[four_keys[2]],
                                            blend_map[four_keys[1]],
@@ -557,20 +557,20 @@ void E_ColorMap::blend_ssse3(std::vector<uint64_t>& blend_map,
                 // Pack the expanded 16bit values back into 8bit values.
                 framebuffer_4px =
                     _mm_packus_epi16(framebuffer_2_px[0], framebuffer_2_px[1]);
-                _mm_store_si128((__m128i*)&framebuffer[i], framebuffer_4px);
+                _mm_storeu_si128((__m128i*)&framebuffer[i], framebuffer_4px);
             }
             break;
         case COLORMAP_BLENDMODE_XOR:
             for (int i = 0; i < w * h; i += 4) {
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
-                _mm_store_si128((__m128i*)four_keys,
-                                this->get_key_ssse3(framebuffer_4px));
+                _mm_storeu_si128((__m128i*)four_keys,
+                                 this->get_key_ssse3(framebuffer_4px));
                 colors_4px = _mm_set_epi32(blend_map[four_keys[3]],
                                            blend_map[four_keys[2]],
                                            blend_map[four_keys[1]],
                                            blend_map[four_keys[0]]);
                 framebuffer_4px = _mm_xor_si128(framebuffer_4px, colors_4px);
-                _mm_store_si128((__m128i*)&framebuffer[i], framebuffer_4px);
+                _mm_storeu_si128((__m128i*)&framebuffer[i], framebuffer_4px);
             }
             break;
         case COLORMAP_BLENDMODE_ADJUSTABLE:
@@ -579,8 +579,8 @@ void E_ColorMap::blend_ssse3(std::vector<uint64_t>& blend_map,
                                          - this->config.adjustable_alpha);
             for (int i = 0; i < w * h; i += 4) {
                 framebuffer_4px = _mm_loadu_si128((__m128i*)&framebuffer[i]);
-                _mm_store_si128((__m128i*)four_keys,
-                                this->get_key_ssse3(framebuffer_4px));
+                _mm_storeu_si128((__m128i*)four_keys,
+                                 this->get_key_ssse3(framebuffer_4px));
                 colors_4px = _mm_set_epi32(blend_map[four_keys[3]],
                                            blend_map[four_keys[2]],
                                            blend_map[four_keys[1]],
@@ -606,7 +606,7 @@ void E_ColorMap::blend_ssse3(std::vector<uint64_t>& blend_map,
                 framebuffer_2_px[1] = _mm_srli_epi16(framebuffer_2_px[1], 8);
                 framebuffer_4px =
                     _mm_packus_epi16(framebuffer_2_px[0], framebuffer_2_px[1]);
-                _mm_store_si128((__m128i*)&framebuffer[i], framebuffer_4px);
+                _mm_storeu_si128((__m128i*)&framebuffer[i], framebuffer_4px);
             }
             break;
     }
