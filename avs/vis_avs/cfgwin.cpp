@@ -1682,7 +1682,8 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                             lock_lock(g_single_instance->render_lock);
                             parent->insert(new_component,
                                            selected ? selected : parent,
-                                           Effect::INSERT_CHILD);
+                                           selected == parent ? Effect::INSERT_CHILD
+                                                              : Effect::INSERT_AFTER);
                             lock_unlock(g_single_instance->render_lock);
                             TV_INSERTSTRUCT is = {};
                             is.hParent = h_parent;
@@ -1692,12 +1693,11 @@ static BOOL CALLBACK dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                                 new_component->can_have_child_components();
                             is.item.lParam = (int)new_component;
                             if (!h_selected || h_parent == h_selected) {
-                                is.hInsertAfter = TVI_FIRST;
+                                is.hInsertAfter = TVI_LAST;
                             } else {
-                                is.hInsertAfter = TreeView_GetPrevSibling(
-                                    GetDlgItem(hwndDlg, IDC_TREE1), h_selected);
+                                is.hInsertAfter = h_selected;
                                 if (!is.hInsertAfter) {
-                                    is.hInsertAfter = TVI_FIRST;
+                                    is.hInsertAfter = TVI_LAST;
                                 }
                             }
                             HTREEITEM newh = TreeView_InsertItem(
