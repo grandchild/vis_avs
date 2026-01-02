@@ -9,7 +9,7 @@ enum BlitterFeedback_Blend_Mode {
 };
 
 struct BlitterFeedback_Config : public Effect_Config {
-    int64_t zoom = 30;
+    int64_t zoom = -2;
     bool on_beat = false;
     int64_t on_beat_zoom = 30;
     int64_t blend_mode = BLITTER_BLEND_REPLACE;
@@ -38,15 +38,15 @@ struct BlitterFeedback_Info : public Effect_Info {
     static constexpr Parameter parameters[num_parameters] = {
         P_IRANGE(offsetof(BlitterFeedback_Config, zoom),
                  "Zoom",
-                 0,
-                 256,
+                 -32,
+                 224,
                  nullptr,
                  on_zoom_change),
         P_BOOL(offsetof(BlitterFeedback_Config, on_beat), "On Beat"),
         P_IRANGE(offsetof(BlitterFeedback_Config, on_beat_zoom),
                  "On Beat Zoom",
-                 0,
-                 256,
+                 -32,
+                 224,
                  nullptr,
                  on_zoom_change),
         P_SELECT(offsetof(BlitterFeedback_Config, blend_mode),

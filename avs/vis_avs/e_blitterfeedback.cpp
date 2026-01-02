@@ -36,11 +36,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "blend.h"
 
-#define PUT_INT(y)                   \
-    data[pos] = (y) & 255;           \
-    data[pos + 1] = (y >> 8) & 255;  \
-    data[pos + 2] = (y >> 16) & 255; \
-    data[pos + 3] = (y >> 24) & 255
+#define PUT_INT(y)                     \
+    data[pos] = (y) & 255;             \
+    data[pos + 1] = ((y) >> 8) & 255;  \
+    data[pos + 2] = ((y) >> 16) & 255; \
+    data[pos + 3] = ((y) >> 24) & 255
 
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
@@ -71,7 +71,7 @@ int E_BlitterFeedback::blitter_out(uint32_t* framebuffer,
                                    int h,
                                    int32_t zoom) {
     const int32_t adj = 7;
-    int32_t ds_x = ((zoom + (1 << adj) - 32) << (16 - adj));
+    int32_t ds_x = ((zoom + (1 << adj)) << (16 - adj));
     int32_t x_len = ((w << 16) / ds_x) & ~3;
     int32_t y_len = (h << 16) / ds_x;
 
@@ -138,7 +138,7 @@ int E_BlitterFeedback::blitter_normal(uint32_t* framebuffer,
                                       int w,
                                       int h,
                                       int32_t zoom) {
-    int32_t ds_x = ((zoom + 32) << 16) / 64;
+    int32_t ds_x = ((zoom + 64) << 16) / 64;
     int32_t isx = (((w << 16) - ((ds_x * w))) / 2);
     int32_t s_y = (((h << 16) - ((ds_x * h))) / 2);
 
@@ -502,15 +502,15 @@ int E_BlitterFeedback::render(char[2][2][576],
         this->current_zoom += 3;
     }
 
-    if (target_zoom < 0) {
+    if (target_zoom < this->info.parameters[0].int_min) {
         target_zoom = 0;
     }
 
-    if (target_zoom < 32) {
+    if (target_zoom < 0) {
         return blitter_normal(
             (uint32_t*)framebuffer, (uint32_t*)fbout, w, h, target_zoom);
     }
-    if (target_zoom > 32) {
+    if (target_zoom > 0) {
         return blitter_out((uint32_t*)framebuffer, (uint32_t*)fbout, w, h, target_zoom);
     }
     return 0;
@@ -519,11 +519,11 @@ int E_BlitterFeedback::render(char[2][2][576],
 void E_BlitterFeedback::load_legacy(unsigned char* data, int len) {
     int pos = 0;
     if (len - pos >= 4) {
-        this->config.zoom = GET_INT();
+        this->config.zoom = GET_INT() - 32;
         pos += 4;
     }
     if (len - pos >= 4) {
-        this->config.on_beat_zoom = GET_INT();
+        this->config.on_beat_zoom = GET_INT() - 32;
         pos += 4;
     }
     if (len - pos >= 4) {
@@ -544,9 +544,9 @@ void E_BlitterFeedback::load_legacy(unsigned char* data, int len) {
 
 int E_BlitterFeedback::save_legacy(unsigned char* data) {
     int pos = 0;
-    PUT_INT(this->config.zoom);
+    PUT_INT(this->config.zoom + 32);
     pos += 4;
-    PUT_INT(this->config.on_beat_zoom);
+    PUT_INT(this->config.on_beat_zoom + 32);
     pos += 4;
     PUT_INT(this->config.blend_mode);
     pos += 4;
