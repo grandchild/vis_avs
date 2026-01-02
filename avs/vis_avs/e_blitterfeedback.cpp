@@ -133,11 +133,11 @@ int E_BlitterFeedback::blitter_out(uint32_t* framebuffer,
     return 0;
 }
 
-int E_BlitterFeedback::blitter_normal(uint32_t* framebuffer,
-                                      uint32_t* fbout,
-                                      int w,
-                                      int h,
-                                      int32_t zoom) {
+int E_BlitterFeedback::blitter_in(uint32_t* framebuffer,
+                                  uint32_t* fbout,
+                                  int w,
+                                  int h,
+                                  int32_t zoom) {
     int32_t ds_x = ((zoom + 64) << 16) / 64;
     int32_t isx = (((w << 16) - ((ds_x * w))) / 2);
     int32_t s_y = (((h << 16) - ((ds_x * h))) / 2);
@@ -149,281 +149,23 @@ int E_BlitterFeedback::blitter_normal(uint32_t* framebuffer,
             uint32_t* src = ((uint32_t*)framebuffer) + (s_y >> 16) * w;
             int32_t ypart = (s_y >> 8) & 0xff;
             s_y += ds_x;
-#ifdef NO_MMX
-            {
-                ypart = (ypart * 255) >> 8;
-                int32_t x = w / 4;
-                while (x--) {
-                    fbout[0] = BLEND4(src + (s_x >> 16), w, (s_x >> 8) & 0xff, ypart);
-                    s_x += ds_x;
-                    fbout[1] = BLEND4(src + (s_x >> 16), w, (s_x >> 8) & 0xff, ypart);
-                    s_x += ds_x;
-                    fbout[2] = BLEND4(src + (s_x >> 16), w, (s_x >> 8) & 0xff, ypart);
-                    s_x += ds_x;
-                    fbout[3] = BLEND4(src + (s_x >> 16), w, (s_x >> 8) & 0xff, ypart);
-                    s_x += ds_x;
-                    fbout += 4;
-                }
+            ypart = (ypart * 255) >> 8;
+            int32_t x = w / 4;
+            while (x--) {
+                fbout[0] =
+                    blend_bilinear_2x2(src + (s_x >> 16), w, (s_x >> 8) & 0xff, ypart);
+                s_x += ds_x;
+                fbout[1] =
+                    blend_bilinear_2x2(src + (s_x >> 16), w, (s_x >> 8) & 0xff, ypart);
+                s_x += ds_x;
+                fbout[2] =
+                    blend_bilinear_2x2(src + (s_x >> 16), w, (s_x >> 8) & 0xff, ypart);
+                s_x += ds_x;
+                fbout[3] =
+                    blend_bilinear_2x2(src + (s_x >> 16), w, (s_x >> 8) & 0xff, ypart);
+                s_x += ds_x;
+                fbout += 4;
             }
-#else
-            {
-                int64_t mem5 = 0;
-                int64_t mem7 = 0;
-#ifdef _MSC_VER  // MSVC asm
-                __asm {
-            mov edi, fbout
-            mov esi, w
-
-            movd mm7, ypart
-            punpcklwd mm7,mm7
-
-            movq mm5, revn
-            punpckldq mm7,mm7
-
-            psubw mm5, mm7
-            mov ecx, esi
-
-            movq mem5,mm5
-            movq mem7,mm7
-
-            shr ecx, 1
-            mov edx, s_x
-
-            align 16
-      mmx_scale_loop1:
-
-            mov ebx, edx
-            mov eax, edx
-
-            shr eax, 14
-            add edx, ds_x
-
-            shr ebx, 8
-            and eax, ~3
-
-            add eax, src
-            and ebx, 0xff
-
-            movd mm6, ebx
-
-            movq mm4, revn
-            punpcklwd mm6,mm6
-
-            movd mm0, [eax]
-            punpckldq mm6,mm6
-
-            movd mm1, [eax+4]
-            psubw mm4, mm6
-
-            movd mm2, [eax+esi*4]
-            punpcklbw mm0, [zero]
-
-            movd mm3, [eax+esi*4+4]
-            pmullw mm0, mm4  // mm0 used in divide for 3 cycles
-
-            punpcklbw mm1, [zero]
-            mov eax, edx
-
-            pmullw mm1, mm6  // mm1 used in divide for 3 cycles
-            punpcklbw mm2, [zero]
-
-            pmullw mm2, mm4  // mm2 used in divide for 3 cycles
-            punpcklbw mm3, [zero]
-
-            pmullw mm3, mm6  // mm3 used in divide for 3 cycles
-            shr eax, 14
-
-            mov ebx, edx
-            and eax, ~3
-
-            paddw mm0, mm1
-            shr ebx, 8
-
-            psrlw mm0, 8
-            add eax, src
-
-            paddw mm2, mm3
-            and ebx, 0xff
-
-            pmullw mm0, mem5
-            psrlw mm2, 8
-
-            pmullw mm2, mem7
-            add edx, ds_x
-
-
-            movd mm6, ebx
-
-            movq mm4, revn
-            punpcklwd mm6,mm6
-
-
-            movd mm1, [eax+4]
-
-            movd mm7, [eax+esi*4]
-            paddw mm0, mm2
-
-            movd mm5, [eax]
-            psrlw mm0, 8
-
-            movd mm3, [eax+esi*4+4]
-            packuswb mm0, mm0
-
-            movd [edi], mm0
-            punpckldq mm6,mm6
-
-                        // poop
-
-            punpcklbw mm5, [zero]
-            psubw mm4, mm6
-
-            punpcklbw mm1, [zero]
-            pmullw mm5, mm4
-
-            punpcklbw mm7, [zero]
-            pmullw mm1, mm6
-
-            punpcklbw mm3, [zero]
-            pmullw mm7, mm4
-
-                        // cycle
-
-            paddw mm5, mm1
-
-            pmullw mm3, mm6
-            psrlw mm5, 8
-
-            pmullw mm5, mem5
-            add edi, 8
-
-                    // cycle
-
-            paddw mm7, mm3
-
-            psrlw mm7, 8
-
-            pmullw mm7, mem7
-            dec ecx
-
-                        // cycle
-
-            paddw mm5, mm7
-
-            psrlw mm5, 8
-
-            packuswb mm5, mm5
-
-            movd [edi-4], mm5
-
-            jnz mmx_scale_loop1
-            mov fbout, edi
-            emms
-                }
-#else            // _MSC_VER, GCC asm
-                __asm__ __volatile__(
-                    "push      %%edi\n\t"
-                    "mov       %%edi, %[fbout]\n\t"
-                    "mov       %%esi, %[w]\n\t"
-                    "movd      %%mm7, %[ypart]\n\t"
-                    "punpcklwd %%mm7, %%mm7\n\t"
-                    "movq      %%mm5, [%[revn]]\n\t"
-                    "punpckldq %%mm7, %%mm7\n\t"
-                    "psubw     %%mm5, %%mm7\n\t"
-                    "mov       %%ecx, %%esi\n\t"
-                    "movq      [%[mem5]], %%mm5\n\t"
-                    "movq      [%[mem7]], %%mm7\n\t"
-                    "shr       %%ecx, 1\n\t"
-                    "mov       %%edx, %[s_x]\n\t"
-                    ".align    16\n"
-                    "mmx_scale_loop1:\n\t"
-                    "mov       %%ebx, %%edx\n\t"
-                    "mov       %%eax, %%edx\n\t"
-                    "shr       %%eax, 14\n\t"
-                    "add       %%edx, %[ds_x]\n\t"
-                    "shr       %%ebx, 8\n\t"
-                    "and       %%eax, ~3\n\t"
-                    "add       %%eax, %[src]\n\t"
-                    "and       %%ebx, 0xff\n\t"
-                    "movd      %%mm6, %%ebx\n\t"
-                    "movq      %%mm4, [%[revn]]\n\t"
-                    "punpcklwd %%mm6, %%mm6\n\t"
-                    "movd      %%mm0, [%%eax]\n\t"
-                    "punpckldq %%mm6, %%mm6\n\t"
-                    "movd      %%mm1, [%%eax+4]\n\t"
-                    "psubw     %%mm4, %%mm6\n\t"
-                    "movd      %%mm2, [%%eax + %%esi * 4]\n\t"
-                    "punpcklbw %%mm0, %[zero]\n\t"
-                    "movd      %%mm3, [%%eax + %%esi * 4 + 4]\n\t"
-                    "pmullw    %%mm0, %%mm4\n\t"
-                    "punpcklbw %%mm1, %[zero]\n\t"
-                    "mov       %%eax, %%edx\n\t"
-                    "pmullw    %%mm1, %%mm6\n\t"
-                    "punpcklbw %%mm2, %[zero]\n\t"
-                    "pmullw    %%mm2, %%mm4\n\t"
-                    "punpcklbw %%mm3, %[zero]\n\t"
-                    "pmullw    %%mm3, %%mm6\n\t"
-                    "shr       %%eax, 14\n\t"
-                    "mov       %%ebx, %%edx\n\t"
-                    "and       %%eax, ~3\n\t"
-                    "paddw     %%mm0, %%mm1\n\t"
-                    "shr       %%ebx, 8\n\t"
-                    "psrlw     %%mm0, 8\n\t"
-                    "add       %%eax, %[src]\n\t"
-                    "paddw     %%mm2, %%mm3\n\t"
-                    "and       %%ebx, 0xff\n\t"
-                    "pmullw    %%mm0, %[mem5]\n\t"
-                    "psrlw     %%mm2, 8\n\t"
-                    "pmullw    %%mm2, %[mem7]\n\t"
-                    "add       %%edx, %[ds_x]\n\t"
-                    "movd      %%mm6, %%ebx\n\t"
-                    "movq      %%mm4, [%[revn]]\n\t"
-                    "punpcklwd %%mm6, %%mm6\n\t"
-                    "movd      %%mm1, [%%eax+4]\n\t"
-                    "movd      %%mm7, [%%eax + %%esi * 4]\n\t"
-                    "paddw     %%mm0, %%mm2\n\t"
-                    "movd      %%mm5, [%%eax]\n\t"
-                    "psrlw     %%mm0, 8\n\t"
-                    "movd      %%mm3, [%%eax + %%esi * 4 + 4]\n\t"
-                    "packuswb  %%mm0, %%mm0\n\t"
-                    "movd      [%%edi], %%mm0\n\t"
-                    "punpckldq %%mm6, %%mm6\n\t"
-                    "punpcklbw %%mm5, %[zero]\n\t"
-                    "psubw     %%mm4, %%mm6\n\t"
-                    "punpcklbw %%mm1, %[zero]\n\t"
-                    "pmullw    %%mm5, %%mm4\n\t"
-                    "punpcklbw %%mm7, %[zero]\n\t"
-                    "pmullw    %%mm1, %%mm6\n\t"
-                    "punpcklbw %%mm3, %[zero]\n\t"
-                    "pmullw    %%mm7, %%mm4\n\t"
-                    "paddw     %%mm5, %%mm1\n\t"
-                    "pmullw    %%mm3, %%mm6\n\t"
-                    "psrlw     %%mm5, 8\n\t"
-                    "pmullw    %%mm5, %[mem5]\n\t"
-                    "add       %%edi, 8\n\t"
-                    "paddw     %%mm7, %%mm3\n\t"
-                    "psrlw     %%mm7, 8\n\t"
-                    "pmullw    %%mm7, %[mem7]\n\t"
-                    "dec       %%ecx\n\t"
-                    "paddw     %%mm5, %%mm7\n\t"
-                    "psrlw     %%mm5, 8\n\t"
-                    "packuswb  %%mm5, %%mm5\n\t"
-                    "movd      [%%edi - 4], %%mm5\n\t"
-                    "jnz       mmx_scale_loop1\n\t"
-                    "mov       %[fbout], %%edi\n\t"
-                    "pop       %%edi\n\t"
-                    "emms\n\t"
-                    : [fbout] "+m"(fbout), [mem5] "+m"(mem5), [mem7] "+m"(mem7)
-                    : [w] "m"(w),
-                      [ypart] "rm"(ypart),
-                      [revn] "m"(revn),
-                      [s_x] "rm"(s_x),
-                      [ds_x] "rm"(ds_x),
-                      [src] "m"(src),
-                      [zero] "m"(zero)
-                    : "eax", "ebx", "ecx", "edx", "esi");  //, "edi");
-#endif           // _MSC_VER
-            }  // end mmx
-#endif
             if (this->config.blend_mode == BLITTER_BLEND_5050) {
                 // reblend this scanline with the original
                 fbout -= w;
@@ -438,7 +180,7 @@ int E_BlitterFeedback::blitter_normal(uint32_t* framebuffer,
                     s2 += 4;
                 }
             }
-        }  // end subpixel y loop
+        }
     } else {  // !this->config.bilinear
         int32_t y;
         for (y = 0; y < h; y++) {
@@ -507,8 +249,7 @@ int E_BlitterFeedback::render(char[2][2][576],
     }
 
     if (target_zoom < 0) {
-        return blitter_normal(
-            (uint32_t*)framebuffer, (uint32_t*)fbout, w, h, target_zoom);
+        return blitter_in((uint32_t*)framebuffer, (uint32_t*)fbout, w, h, target_zoom);
     }
     if (target_zoom > 0) {
         return blitter_out((uint32_t*)framebuffer, (uint32_t*)fbout, w, h, target_zoom);
