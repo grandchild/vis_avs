@@ -570,29 +570,29 @@ void blend_every_other_line(const uint32_t* src,
     }
 #endif
 
-BLEND_SRC_DEST_1PX(blend_add)
-BLEND_SRC_DEST_FILL(blend_add)
-BLEND_SRC_DEST_1PX(blend_5050)
-BLEND_SRC_DEST_FILL(blend_5050)
-BLEND_SRC_DEST_1PX(blend_multiply)
-BLEND_SRC_DEST_FILL(blend_multiply)
-BLEND_SRC_DEST_1PX(blend_screen)
-BLEND_SRC_DEST_FILL(blend_screen)
-BLEND_SRC_DEST_1PX(blend_color_dodge)
-BLEND_SRC_DEST_1PX(blend_color_burn)
-BLEND_SRC_DEST_1PX(blend_linear_burn)
-BLEND_SRC_DEST_1PX(blend_maximum)
-BLEND_SRC_DEST_FILL(blend_maximum)
-BLEND_SRC_DEST_1PX(blend_minimum)
-BLEND_SRC_DEST_FILL(blend_minimum)
-BLEND_SRC_DEST_1PX(blend_sub_src1_from_src2)
-BLEND_SRC_DEST_FILL(blend_sub_src1_from_src2)
-BLEND_SRC_DEST_1PX(blend_sub_src2_from_src1)
-BLEND_SRC_DEST_FILL(blend_sub_src2_from_src1)
-BLEND_SRC_DEST_1PX(blend_sub_src1_from_src2_abs)
-BLEND_SRC_DEST_FILL(blend_sub_src1_from_src2_abs)
-BLEND_SRC_DEST_1PX(blend_xor)
-BLEND_SRC_DEST_FILL(blend_xor)
+BLEND_SRC_DEST_1PX(blend_add)                      // blend_add_1px
+BLEND_SRC_DEST_FILL(blend_add)                     // blend_add_fill
+BLEND_SRC_DEST_1PX(blend_5050)                     // blend_5050_1px
+BLEND_SRC_DEST_FILL(blend_5050)                    // blend_5050_fill
+BLEND_SRC_DEST_1PX(blend_multiply)                 // blend_multiply_1px
+BLEND_SRC_DEST_FILL(blend_multiply)                // blend_multiply_fill
+BLEND_SRC_DEST_1PX(blend_screen)                   // blend_screen_1px
+BLEND_SRC_DEST_FILL(blend_screen)                  // blend_screen_fill
+BLEND_SRC_DEST_1PX(blend_color_dodge)              // blend_color_dodge_1px
+BLEND_SRC_DEST_1PX(blend_color_burn)               // blend_color_burn_1px
+BLEND_SRC_DEST_1PX(blend_linear_burn)              // blend_linear_burn_1px
+BLEND_SRC_DEST_1PX(blend_maximum)                  // blend_maximum_1px
+BLEND_SRC_DEST_FILL(blend_maximum)                 // blend_maximum_fill
+BLEND_SRC_DEST_1PX(blend_minimum)                  // blend_minimum_1px
+BLEND_SRC_DEST_FILL(blend_minimum)                 // blend_minimum_fill
+BLEND_SRC_DEST_1PX(blend_sub_src1_from_src2)       // blend_sub_src1_from_src2_1px
+BLEND_SRC_DEST_FILL(blend_sub_src1_from_src2)      // blend_sub_src1_from_src2_fill
+BLEND_SRC_DEST_1PX(blend_sub_src2_from_src1)       // blend_sub_src2_from_src1_1px
+BLEND_SRC_DEST_FILL(blend_sub_src2_from_src1)      // blend_sub_src2_from_src1_fill
+BLEND_SRC_DEST_1PX(blend_sub_src1_from_src2_abs)   // blend_sub_src1_from_src2_abs_1px
+BLEND_SRC_DEST_FILL(blend_sub_src1_from_src2_abs)  // blend_sub_src1_from_src2_abs_fill
+BLEND_SRC_DEST_1PX(blend_xor)                      // blend_xor_1px
+BLEND_SRC_DEST_FILL(blend_xor)                     // blend_xor_fill
 
 // ADJUSTABLE BLEND
 
