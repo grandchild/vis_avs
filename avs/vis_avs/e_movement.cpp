@@ -560,9 +560,6 @@ void E_Movement::smp_render(int this_thread,
                 dest++;
                 trans++;
             }
-#ifndef NO_MMX
-            _mm_empty();
-#endif
         } else if (this->transform.bilinear) {
             while (x--) {
                 int offs = trans[0] & OFFSET_MASK;
