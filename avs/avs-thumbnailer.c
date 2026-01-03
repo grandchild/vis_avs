@@ -82,18 +82,21 @@ int main(int argc, char const* argv[]) {
         return 9;
     }
     int64_t time_in_ms = 0;
-    // TODO [bug]: Reenable audio code after fixing AVS audio setter
-    // float audio[2][AUDIO_SRATE];
-    // srandom(0x12345678);
+    float audio[2][AUDIO_SRATE];
+    srandom(0x12345678);
     for (int i = 0; i < warmup; i++) {
-        // if (i % FRAMERATE == 0) {
-        //     for (size_t s = 0; s < AUDIO_SRATE; s++) {
-        //         audio[0][s] = ((float)(random() % 2000) / 1000.0f) - 1.0f;
-        //         audio[1][s] = ((float)(random() % 2000) / 1000.0f) - 1.0f;
-        //     }
-        //     avs_audio_set(avs, audio[0], audio[1], AUDIO_SRATE, AUDIO_SRATE, (i + 1)
-        //     * AUDIO_SRATE);
-        // }
+        if (i % FRAMERATE == 0) {
+            for (size_t s = 0; s < AUDIO_SRATE; s++) {
+                audio[0][s] = ((float)(random() % 2000) / 1000.0f) - 1.0f;
+                audio[1][s] = ((float)(random() % 2000) / 1000.0f) - 1.0f;
+            }
+            avs_audio_set(avs,
+                          audio[0],
+                          audio[1],
+                          AUDIO_SRATE,
+                          AUDIO_SRATE,
+                          (i + 1) * AUDIO_SRATE);
+        }
         if (!avs_render_frame(
                 avs, framebuffer, width, height, time_in_ms, false, AVS_PIXEL_RGB0_8)) {
             printf("Error during warmup: %s\n", avs_error_str(avs));

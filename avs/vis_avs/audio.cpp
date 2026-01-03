@@ -14,9 +14,7 @@ struct Audio::RingIter {
         : length((int64_t)length),
           ring((int64_t)(from % length)),
           linear(reverse ? length - 1 : 0),
-          reverse(reverse) {
-        // printf("RingIter: %ld %ld %d\n", length, from, reverse);
-    }
+          reverse(reverse) {}
     int64_t length;
     int64_t ring;
     size_t linear;
@@ -99,7 +97,6 @@ int32_t Audio::set(const float* audio_left,
                    size_t audio_length,
                    size_t samples_per_second,
                    int64_t end_time_samples) {
-    printf("set: %ld\n", end_time_samples);
     auto remaining = this->samples_remaining(end_time_samples);
     if (audio_length != 0 && this->latest_sample_time < end_time_samples) {
         if (audio_left == nullptr || audio_right == nullptr
@@ -118,7 +115,7 @@ int32_t Audio::set(const float* audio_left,
         }
         this->samples_per_second = samples_per_second;
         for (RingIter it(this->buffer.capacity(), this->write_head);
-             it.linear < audio_length;
+             it.linear < (audio_length - source_audio_offset);
              ++it, ++this->write_head) {
             this->buffer[it.ring].left =
                 fminf(1.0, fmaxf(-1.0, audio_left[source_audio_offset + it.linear]));
