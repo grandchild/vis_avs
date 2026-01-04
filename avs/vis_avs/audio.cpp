@@ -18,7 +18,7 @@ struct Audio::RingIter {
     int64_t length;
     int64_t ring;
     size_t linear;
-    size_t reverse;
+    bool reverse;
     RingIter& operator++() {
         if (this->length == 0) {
             return *this;
