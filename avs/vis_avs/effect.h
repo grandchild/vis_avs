@@ -488,8 +488,12 @@ class Configurable_Effect : public Effect {
     virtual json save() {
         json save_data;
         save_data["effect"] = this->info.get_name();
-        save_data["enabled"] = this->enabled;
-        save_data["comment"] = Effect_Info::save_string(this->comment);
+        if (!this->enabled) {
+            save_data["enabled"] = this->enabled;
+        }
+        if (!this->comment.empty()) {
+            save_data["comment"] = Effect_Info::save_string(this->comment);
+        }
         auto save_config = this->info.save_config(&this->config, &this->global->config);
         if (!save_config.is_null()) {
             save_data["config"] = save_config;
