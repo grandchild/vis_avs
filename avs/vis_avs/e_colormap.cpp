@@ -21,9 +21,6 @@ index from the baked map.
 #include <cstdio>
 #include <time.h>
 
-// Integer range-mapping macros. Avoid truncation by multiplying first.
-// Map point A from one value range to another.
-// Get distance from A to B (in B-range) by mapping A to B.
 #define GET_INT() \
     (data[pos] | (data[pos + 1] << 8) | (data[pos + 2] << 16) | (data[pos + 3] << 24))
 #define PUT_INT(y)                      \

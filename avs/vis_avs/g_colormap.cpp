@@ -16,6 +16,9 @@
     (((color) & 0xff0000) >> 16 | ((color) & 0xff00) | ((color) & 0xff) << 16)
 #define BGR_TO_RGB(color)  RGB_TO_BGR(color)  // is its own inverse
 #define CLAMP(x, from, to) ((x) >= (to) ? (to) : ((x) <= (from) ? (from) : (x)))
+// Integer range-mapping macros. Avoid truncation by multiplying first.
+// Map point A from one value range to another.
+// Get distance from A to B (in B-range) by mapping A to B.
 #define TRANSLATE_RANGE(a, a_min, a_max, b_min, b_max) \
     (((a) - (a_min)) * ((b_max) - (b_min)) / ((a_max) - (a_min)))
 #define TRANSLATE_DISTANCE(a, a_min, a_max, b, b_min, b_max) \
