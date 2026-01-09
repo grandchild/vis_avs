@@ -58,7 +58,7 @@ macro(ensure_platform_vars)
 endmacro()
 
 macro(ensure_compiler_vars)
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         set(GCC ON)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         set(MSVC ON)
