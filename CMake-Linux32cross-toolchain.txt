@@ -10,9 +10,6 @@ SET(ENV{PKG_CONFIG_LIBDIR} ${LIB32}/pkgconfig)
 # the name of the target operating system
 set(CMAKE_SYSTEM_NAME Linux)
 
-# which compilers to use for C and C++
-set(CMAKE_C_COMPILER gcc)
-set(CMAKE_CXX_COMPILER g++)
 # target 32-bit
 set(CMAKE_C_FLAGS -m32)
 set(CMAKE_CXX_FLAGS -m32)
