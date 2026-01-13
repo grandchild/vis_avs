@@ -1104,7 +1104,7 @@ void E_Blur::load_legacy(unsigned char* data, int len) {
 
 int E_Blur::save_legacy(unsigned char* data) {
     int pos = 0;
-    uint32_t blur_level;
+    uint32_t blur_level = 0;
     if (this->enabled) {
         switch (this->config.level) {
             case BLUR_LIGHT: blur_level = 2; break;
@@ -1112,8 +1112,6 @@ int E_Blur::save_legacy(unsigned char* data) {
             case BLUR_MEDIUM: blur_level = 1; break;
             case BLUR_HEAVY: blur_level = 3; break;
         }
-    } else {
-        blur_level = 0;
     }
     PUT_INT(blur_level);
     pos += 4;

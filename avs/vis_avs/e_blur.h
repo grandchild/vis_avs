@@ -27,11 +27,10 @@ struct Blur_Info : public Effect_Info {
     static constexpr char* legacy_ape_id = NULL;
 
     static const char* const* blur_levels(int64_t* length_out) {
-        *length_out = 4;
-        static const char* const options[4] = {
-            "None",
-            "Medium",
+        *length_out = 3;
+        static const char* const options[3] = {
             "Light",
+            "Medium",
             "Heavy",
         };
         return options;
