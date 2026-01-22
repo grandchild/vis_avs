@@ -452,7 +452,7 @@ impl Avs {
     }
 
     fn effect_library(avs_handle: AVS_Handle) -> Result<AvsEffectLibrary, AvsError> {
-        let mut length_out = 0u32;
+        let mut length_out = 0usize;
         let library_ptr = unsafe { avs_effect_library(avs_handle, &mut length_out) };
         if library_ptr.is_null() {
             return Err(Avs::default().error("effect_library"));
@@ -692,7 +692,7 @@ impl Avs {
         parent: Option<usize>,
         component: AvsComponent,
     ) -> Result<(), AvsError> {
-        let mut length_out = 0u32;
+        let mut length_out = 0usize;
         let child_handles = unsafe {
             avs_component_children(self.handle, component.handle, &mut length_out)
         };

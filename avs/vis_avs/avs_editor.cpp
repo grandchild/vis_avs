@@ -93,9 +93,9 @@ static inline std::vector<int64_t> make_parameter_tree_path(
 }
 
 AVS_EDITOR_API
-const AVS_Effect_Handle* avs_effect_library(AVS_Handle avs, uint32_t* length_out) {
+const AVS_Effect_Handle* avs_effect_library(AVS_Handle avs, size_t* length_out) {
     (void)avs;  // The library is static but might be instance-specific in the future.
-    set_out<uint32_t>(length_out, g_effect_lib_handles_for_api.size());
+    set_out<size_t>(length_out, g_effect_lib_handles_for_api.size());
     return g_effect_lib_handles_for_api.data();
 }
 
@@ -158,13 +158,13 @@ bool avs_component_can_have_child_components(AVS_Handle avs,
 AVS_EDITOR_API
 const AVS_Component_Handle* avs_component_children(AVS_Handle avs,
                                                    AVS_Component_Handle component,
-                                                   uint32_t* length_out) {
+                                                   size_t* length_out) {
     Effect* _component;
     if (!resolve_handles(avs, 0, component, 0, NULL, NULL, &_component)) {
-        set_out<uint32_t>(length_out, INT32_MAX);
+        set_out<size_t>(length_out, SIZE_MAX);
         return NULL;
     }
-    set_out<uint32_t>(length_out, _component->children.size());
+    set_out<size_t>(length_out, _component->children.size());
     return _component->get_child_handles_for_api();
 }
 

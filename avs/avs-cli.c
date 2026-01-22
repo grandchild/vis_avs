@@ -67,7 +67,7 @@ AVS_Component_Handle get_nth_child_component_by_name(AVS_Handle avs,
                                                      const char* name,
                                                      size_t n,
                                                      AVS_Component_Handle parent) {
-    uint32_t length_out;
+    size_t length_out;
     const AVS_Component_Handle* components =
         avs_component_children(avs, parent, &length_out);
     for (size_t i = 0; i < length_out; ++i) {

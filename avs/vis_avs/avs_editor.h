@@ -239,7 +239,7 @@ typedef struct {
  * Note that effects' names are globally unique, not just within their group. Groups
  * exist purely as categories for better overview.
  */
-const AVS_Effect_Handle* avs_effect_library(AVS_Handle avs, uint32_t* length_out);
+const AVS_Effect_Handle* avs_effect_library(AVS_Handle avs, size_t* length_out);
 
 /**
  * Query information about a specific effect.
@@ -285,7 +285,7 @@ bool avs_component_can_have_child_components(AVS_Handle avs,
                                              AVS_Component_Handle component);
 const AVS_Component_Handle* avs_component_children(AVS_Handle avs,
                                                    AVS_Component_Handle component,
-                                                   uint32_t* length_out);
+                                                   size_t* length_out);
 
 /**
  * Add a new component of the type given by `effect`. The component is added near an
