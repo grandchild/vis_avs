@@ -247,7 +247,7 @@ elseif(LINUX)
     add_executable(avs-cli avs/avs-cli.c)
     target_link_libraries(avs-cli libavs)
     add_executable(avs-thumbnailer avs/avs-thumbnailer.c)
-    target_link_libraries(avs-thumbnailer libavs)
+    target_link_libraries(avs-thumbnailer libavs m)
 endif()
 
 

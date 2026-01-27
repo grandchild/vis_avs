@@ -3,6 +3,7 @@
 #include "vis_avs/avs.h"
 #include "vis_avs/avs_editor.h"
 
+#include <math.h>    // sin
 #include <stdlib.h>  // random(), malloc(), free()
 
 #define AUDIO_SRATE 44100
@@ -87,8 +88,12 @@ int main(int argc, char const* argv[]) {
     for (int i = 0; i < warmup; i++) {
         if (i % FRAMERATE == 0) {
             for (size_t s = 0; s < AUDIO_SRATE; s++) {
-                audio[0][s] = ((float)(random() % 2000) / 1000.0f) - 1.0f;
-                audio[1][s] = ((float)(random() % 2000) / 1000.0f) - 1.0f;
+                float ran_left = ((float)(random() % 2000) / 1000.0f) - 1.0f;
+                float ran_right = ((float)(random() % 2000) / 1000.0f) - 1.0f;
+                // audio[0][s] = ((float)(s % 20) / 10.f) - 1.0f;
+                // audio[1][s] = ((float)(s % 20) / 10.f) - 1.0f;
+                audio[0][s] = sinf((float)s * 0.1f * (i + 10) * .02) + ran_left * .1;
+                audio[1][s] = sinf((float)s * 0.1f * (i + 10) * .02) + ran_right * .1;
             }
             avs_audio_set(avs,
                           audio[0],
