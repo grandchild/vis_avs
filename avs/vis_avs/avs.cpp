@@ -111,7 +111,7 @@ AVS_API
 int32_t avs_audio_device_count(AVS_Handle avs) {
     AVS_Instance* instance = get_instance_from_handle(avs);
     if (instance == NULL) {
-        return NULL;
+        return -1;
     }
     if (instance->audio_source == AVS_AUDIO_EXTERNAL) {
         instance->error = "Audio source set to external on init";
