@@ -8,8 +8,11 @@ include(ExternalProject)
 include(FindPkgConfig)
 include(utils.cmake)
 
+enable_language(ASM_NASM)
+
 ensure_platform_vars()
 ensure_compiler_vars()
+ensure_arch_vars()
 
 file(GLOB SRC_FILES_EEL2
     avs/3rdparty/WDL-EEL2/eel2/nseel-*.c
@@ -36,6 +39,10 @@ file(GLOB SRC_FILES_AVS_COMMON
     avs/uuid.cpp
     avs/3rdparty/md_fft.cpp
 )
+if(ARCH_64BIT)
+    file(GLOB EXCLUDE_FOR_64BIT avs/vis_avs/e_texer2.cpp)
+    list(REMOVE_ITEM SRC_FILES_AVS_COMMON ${EXCLUDE_FOR_64BIT})
+endif()
 file(GLOB SRC_FILES_LIBAVS
     avs/vis_avs/r_text.cpp
 )
@@ -92,10 +99,10 @@ elseif(GCC)
         message(SEND_ERROR
             "need GCC version >=8, for naked-function support for x86 target")
     endif()
-    add_compile_options(
+    # C & C++-specific flags
+    set(AVS_C_COMPILER_FLAGS
         -g
         -O2
-        -m32                # Compile for 32-bit x86.
         -masm=intel         # Use Intel instead of AT&T inline assembly syntax.
         -march=native       # Convolution-Filter uses inlined mmintrin.h functions, and
                             # a pentium4 arch seems to be roughly the minimum for that.
@@ -112,13 +119,26 @@ elseif(GCC)
                             # compilation for debugging. The .s files will be output
                             # into the base build directory.
     )
+    if(ARCH_32BIT)
+        list(APPEND AVS_C_COMPILER_FLAGS
+            -m32                # Compile for 32-bit x86.
+        )
+    elseif(ARCH_64BIT)
+        list(APPEND AVS_C_COMPILER_FLAGS
+            -fPIC               # Something in files.cpp needs relocation, not sure what
+                                # exactly.
+        )
+    endif()
     # C++-specific flags
     set(AVS_CXX_COMPILER_FLAGS
         -std=c++14          # Pin to C++14 features
     )
-    # (CMake generator expressions cannot be multiline, hence the AVS_CXX_COMPILE_FLAGS
+    # (CMake generator expressions cannot be multiline, hence the AVS*_COMPILER_FLAGS
     # variable in a foreach workaround.)
-    foreach(FLAG ${AVS_CXX_COMPILER_FLAGS})
+    foreach(FLAG IN LISTS AVS_C_COMPILER_FLAGS)
+        add_compile_options($<$<COMPILE_LANGUAGE:C>:${FLAG}>)
+    endforeach()
+    foreach(FLAG IN LISTS AVS_C_COMPILER_FLAGS AVS_CXX_COMPILER_FLAGS)
         add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${FLAG}>)
     endforeach()
 else() # TODO: Clang option
@@ -141,12 +161,22 @@ add_compile_definitions(
 set(CMAKE_SHARED_LIBRARY_PREFIX "")  # Remove "lib" prefix from output to get original
                                      # filename "vis_avs.dll".
 
+if(ARCH_64BIT)
+    # Note that AMD64 _requires_ SSE support.
+    list(APPEND SRC_FILES_EEL2 avs/3rdparty/WDL-EEL2/eel2/asm-nseel-x64-sse.asm)
+endif()
 add_library(avs_eel OBJECT ${SRC_FILES_EEL2})
 if(GCC)
-    target_compile_options(avs_eel PRIVATE
+    set(AVS_EEL2_C_COMPILER_FLAGS
         -masm=att           # EEL2 uses AT&T syntax for inline assembly.
         -w                  # No warnings for code we don't control.
     )
+    foreach(FLAG IN LISTS AVS_EEL2_C_COMPILER_FLAGS)
+        target_compile_options(avs_eel PRIVATE $<$<COMPILE_LANGUAGE:C>:${FLAG}>)
+    endforeach()
+    if(LINUX AND ARCH_64BIT)
+        target_compile_definitions(avs_eel PRIVATE AMD64ABI)
+    endif()
 endif()
 add_library(avs_common OBJECT ${SRC_FILES_AVS_COMMON})
 
@@ -270,6 +300,9 @@ elseif(NOT RUSTC)
     set(SKIP_RUST ON)
 elseif(NOT CARGO)
     message(WARNING "Cargo not found. Rust code skipped.")
+    set(SKIP_RUST ON)
+elseif(ARCH_64BIT)
+    message(WARNING "Rust build for 64bit not yet supported. Rust code skipped.")
     set(SKIP_RUST ON)
 else()
     execute_process(COMMAND ${RUSTC} --target ${RUST_TARGET} --print target-libdir

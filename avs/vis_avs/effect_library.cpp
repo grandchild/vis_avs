@@ -169,7 +169,9 @@ bool make_effect_lib() {
     MAKE_EFFECT_LIB_ENTRY(VideoDelay);
     MAKE_EFFECT_LIB_ENTRY(MultiDelay);
     MAKE_EFFECT_LIB_ENTRY(Convolution);
+#ifndef __amd64__
     MAKE_EFFECT_LIB_ENTRY(Texer2);
+#endif
     MAKE_EFFECT_LIB_ENTRY(Normalise);
     MAKE_EFFECT_LIB_ENTRY(ColorMap);
     MAKE_EFFECT_LIB_ENTRY(AddBorders);
