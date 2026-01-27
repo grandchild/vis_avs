@@ -83,6 +83,13 @@ typedef enum { AVS_PIXEL_RGB0_8 = 0 } AVS_Pixel_Format;  // To be expanded.
 
 typedef enum { AVS_AUDIO_INTERNAL = 0, AVS_AUDIO_EXTERNAL = 1 } AVS_Audio_Source;
 typedef enum { AVS_BEAT_INTERNAL = 0, AVS_BEAT_EXTERNAL = 1 } AVS_Beat_Source;
+typedef enum {
+    AVS_LOG_NONE = 1,
+    AVS_LOG_ERR = 2,
+    AVS_LOG_WARN = 3,
+    AVS_LOG_INFO = 4,
+    AVS_LOG_DEBUG = 5,
+} AVS_Log_Level;
 
 /**
  * Initialize an AVS instance. If initialization fails for some reason, the returned
@@ -402,6 +409,14 @@ bool avs_preset_save_legacy(AVS_Handle avs, const char* file_path);
  * for validation tools and libraries.
  */
 const char* avs_preset_format_schema();
+
+/**
+ * Set the log level.
+ *
+ * Note, this is global for all AVS instances, and can be set before calling
+ * `avs_init()`.
+ */
+void avs_set_log_level(AVS_Log_Level log_level);
 
 /**
  * When called, will return a string with the most recent error for the given AVS

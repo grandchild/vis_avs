@@ -255,6 +255,20 @@ const char* avs_preset_format_schema() {
 }
 
 AVS_API
+void avs_set_log_level(AVS_Log_Level log_level) {
+    LogLevel _log_level = LOG_ERR;
+    switch (log_level) {
+        case AVS_LOG_NONE: _log_level = LOG_NONE; break;
+        default:
+        case AVS_LOG_ERR: _log_level = LOG_ERR; break;
+        case AVS_LOG_WARN: _log_level = LOG_WARN; break;
+        case AVS_LOG_INFO: _log_level = LOG_INFO; break;
+        case AVS_LOG_DEBUG: _log_level = LOG_DEBUG; break;
+    }
+    log_set_level(_log_level);
+}
+
+AVS_API
 const char* avs_error_str(AVS_Handle avs) {
     AVS_Instance* instance = get_instance_from_handle(avs);
     if (instance == NULL) {
