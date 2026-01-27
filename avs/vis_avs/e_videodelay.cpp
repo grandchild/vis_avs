@@ -135,31 +135,31 @@ int E_VideoDelay::render(char[2][2][576],
                         return 0;
                     }
                 } else {
-                    uint32_t size =
-                        (((uint32_t)this->buffer) + this->old_virtual_buffersize)
-                        - ((uint32_t)this->in_out_pos);
-                    uint32_t l = ((uint32_t)this->buffer) + this->virtual_buffersize;
-                    uint32_t d = l - size;
+                    size_t size =
+                        (((size_t)this->buffer) + this->old_virtual_buffersize)
+                        - ((size_t)this->in_out_pos);
+                    size_t l = ((size_t)this->buffer) + this->virtual_buffersize;
+                    size_t d = l - size;
                     memmove((void*)d, this->in_out_pos, size);
-                    for (l = (uint32_t)this->in_out_pos; l < d; l += this->frame_mem) {
+                    for (l = (size_t)this->in_out_pos; l < d; l += this->frame_mem) {
                         memcpy((void*)l, (void*)d, this->frame_mem);
                     }
                 }
             } else {  // this->virtual_buffersize < old_virtual_buffersize
-                uint32_t presegsize = ((uint32_t)this->in_out_pos)
-                                      - ((uint32_t)this->buffer) + this->frame_mem;
+                size_t presegsize = ((size_t)this->in_out_pos) - ((size_t)this->buffer)
+                                    + this->frame_mem;
                 if (presegsize > this->virtual_buffersize) {
                     memmove(this->buffer,
-                            (void*)(((uint32_t)this->buffer) + presegsize
+                            (void*)(((size_t)this->buffer) + presegsize
                                     - this->virtual_buffersize),
                             this->virtual_buffersize);
                     this->in_out_pos =
-                        (void*)(((uint32_t)this->buffer) + this->virtual_buffersize
+                        (void*)(((size_t)this->buffer) + this->virtual_buffersize
                                 - this->frame_mem);
                 } else if (presegsize < this->virtual_buffersize) {
                     memmove(
-                        (void*)(((uint32_t)this->in_out_pos) + this->frame_mem),
-                        (void*)(((uint32_t)this->buffer) + this->old_virtual_buffersize
+                        (void*)(((size_t)this->in_out_pos) + this->frame_mem),
+                        (void*)(((size_t)this->buffer) + this->old_virtual_buffersize
                                 + presegsize - this->virtual_buffersize),
                         this->virtual_buffersize - presegsize);
                 }
@@ -190,9 +190,8 @@ int E_VideoDelay::render(char[2][2][576],
     this->old_frame_mem = this->frame_mem;
     memcpy(fbout, this->in_out_pos, this->frame_mem);
     memcpy(this->in_out_pos, framebuffer, this->frame_mem);
-    this->in_out_pos = (void*)(((uint32_t)this->in_out_pos) + this->frame_mem);
-    if ((uint32_t)this->in_out_pos
-        >= ((uint32_t)this->buffer) + this->virtual_buffersize) {
+    this->in_out_pos = (void*)(((size_t)this->in_out_pos) + this->frame_mem);
+    if ((size_t)this->in_out_pos >= ((size_t)this->buffer) + this->virtual_buffersize) {
         this->in_out_pos = this->buffer;
     }
     return 1;

@@ -159,7 +159,7 @@ class AVS_Video {
      * Inspect the current cache state for debugging video playback/caching performance.
      */
     struct Cache_State {
-        int64_t size = 0;
+        uint64_t size = 0;
         int64_t start = 0;
         int64_t play_head = 0;
         int64_t max_size = 0;

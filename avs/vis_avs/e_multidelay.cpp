@@ -92,12 +92,12 @@ int E_MultiDelay::render(char[2][2][576],
     if (g.render_id == this->global->instances.size()) {
         for (int i = 0; i < MULTIDELAY_NUM_BUFFERS; i++) {
             auto& b = g.buffers[i];
-            b.in_pos = (void*)(((uint32_t)b.in_pos) + g.frame_mem_size);
-            b.out_pos = (void*)(((uint32_t)b.out_pos) + g.frame_mem_size);
-            if ((uint32_t)b.in_pos >= ((uint32_t)b.buffer) + b.virtual_size) {
+            b.in_pos = (void*)(((size_t)b.in_pos) + g.frame_mem_size);
+            b.out_pos = (void*)(((size_t)b.out_pos) + g.frame_mem_size);
+            if ((size_t)b.in_pos >= ((size_t)b.buffer) + b.virtual_size) {
                 b.in_pos = b.buffer;
             }
-            if ((uint32_t)b.out_pos >= ((uint32_t)b.buffer) + b.virtual_size) {
+            if ((size_t)b.out_pos >= ((size_t)b.buffer) + b.virtual_size) {
                 b.out_pos = b.buffer;
             }
         }
@@ -144,7 +144,7 @@ inline void E_MultiDelay::manage_buffers(bool is_beat, int64_t frame_size) {
                                 b.buffer = calloc(b.size, 1);
                             }
                             b.out_pos = b.buffer;
-                            b.in_pos = (void*)((uint32_t)b.buffer + b.virtual_size
+                            b.in_pos = (void*)((size_t)b.buffer + b.virtual_size
                                                - g.frame_mem_size);
                             if (b.buffer == NULL) {
                                 b.frame_delay = 0;
@@ -157,31 +157,29 @@ inline void E_MultiDelay::manage_buffers(bool is_beat, int64_t frame_size) {
                             }
                         } else {
                             // needed buffer size is still within actual buffer size
-                            uint32_t size = (uint32_t)b.buffer + b.old_virtual_size
-                                            - (uint32_t)b.out_pos;
-                            uint32_t l = (uint32_t)b.buffer + b.virtual_size;
-                            uint32_t d = l - size;
+                            size_t size = (size_t)b.buffer + b.old_virtual_size
+                                          - (size_t)b.out_pos;
+                            size_t l = (size_t)b.buffer + b.virtual_size;
+                            size_t d = l - size;
                             memmove((void*)d, b.out_pos, size);
-                            for (l = (uint32_t)b.out_pos; l < d;
-                                 l += g.frame_mem_size) {
+                            for (l = (size_t)b.out_pos; l < d; l += g.frame_mem_size) {
                                 memcpy((void*)l, (void*)d, g.frame_mem_size);
                             }
                         }
                     } else {
                         // delay has decreased: reduce ring buffer virtual size
-                        uint32_t pre_seg_size =
-                            ((uint32_t)b.out_pos) - ((uint32_t)b.buffer);
+                        size_t pre_seg_size = ((size_t)b.out_pos) - ((size_t)b.buffer);
                         if (pre_seg_size > b.virtual_size) {
                             memmove(b.buffer,
-                                    (void*)(((uint32_t)b.buffer) + pre_seg_size
+                                    (void*)(((size_t)b.buffer) + pre_seg_size
                                             - b.virtual_size),
                                     b.virtual_size);
-                            b.in_pos = (void*)(((uint32_t)b.buffer) + b.virtual_size
+                            b.in_pos = (void*)(((size_t)b.buffer) + b.virtual_size
                                                - g.frame_mem_size);
                             b.out_pos = b.buffer;
                         } else if (pre_seg_size < b.virtual_size) {
                             memmove(b.out_pos,
-                                    (void*)(((uint32_t)b.buffer) + b.old_virtual_size
+                                    (void*)(((size_t)b.buffer) + b.old_virtual_size
                                             + pre_seg_size - b.virtual_size),
                                     b.virtual_size - pre_seg_size);
                         }
@@ -204,7 +202,7 @@ inline void E_MultiDelay::manage_buffers(bool is_beat, int64_t frame_size) {
                 }
                 b.out_pos = b.buffer;
                 b.in_pos =
-                    (void*)(((uint32_t)b.buffer) + b.virtual_size - g.frame_mem_size);
+                    (void*)(((size_t)b.buffer) + b.virtual_size - g.frame_mem_size);
                 if (b.buffer == NULL) {
                     b.frame_delay = 0;
                     if (b.use_beats) {
