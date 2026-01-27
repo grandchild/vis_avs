@@ -5,8 +5,8 @@
 #include <unordered_map>
 #include <vector>
 
-class Effect_Info;  // effect_info.h
-class Parameter;    // effect_info.h
+struct Effect_Info;  // effect_info.h
+struct Parameter;    // effect_info.h
 
 class Handles {
    private:
