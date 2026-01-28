@@ -71,16 +71,14 @@ function run_winamp() {
 function build_linux32() {
     verbose=${1:-}
     if [ "$verbose" == "verbose" ]; then
-        _verbose="VERBOSE=1"
+        _verbose="--verbose"
     fi
     build_dir=build_linux32
-    mkdir -p "$build_dir"
-    pushd "$build_dir" || return 1
-    cmake -DCMAKE_TOOLCHAIN_FILE=CMake-Linux32cross-toolchain.txt .. \
+    cmake -B "$build_dir" \
+        --toolchain CMake-Linux32cross-toolchain.txt \
         || return $GIT_BISECT_CANNOT_CHECK
     # shellcheck disable=SC2086  # $_verbose should be omitted if empty
-    make -k -j "$parallel" $_verbose || return 1
-    popd || return 1
+    cmake --build "$build_dir" --parallel "$parallel" $_verbose
 }
 
 function run_c_cli() {
