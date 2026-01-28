@@ -135,7 +135,6 @@ int main(int argc, char const* argv[]) {
         avs_free(avs);
         return 12;
     }
-    printf("Successfully thumbnailed %s to %s\n", preset, output_png);
     free(framebuffer);
     avs_free(avs);
     return 0;
