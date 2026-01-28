@@ -81,6 +81,17 @@ function build_linux32() {
     cmake --build "$build_dir" --parallel "$parallel" $_verbose
 }
 
+function build_linux64() {
+    verbose=${1:-}
+    if [ "$verbose" == "verbose" ]; then
+        _verbose="--verbose"
+    fi
+    build_dir=build_linux64
+    cmake -B "$build_dir"|| return $GIT_BISECT_CANNOT_CHECK
+    # shellcheck disable=SC2086  # $_verbose should be omitted if empty
+    cmake --build "$build_dir" --parallel "$parallel" $_verbose
+}
+
 function run_c_cli() {
     if [ ! -e build_linux32/libavs.so ]; then
         build_linux32 || return
@@ -187,6 +198,9 @@ case $task in
     "build-linux32")
         (build_linux32 "$1")
         ;;
+    "build-linux64")
+        (build_linux64 "$1")
+        ;;
     "run-c-cli")
         (run_c_cli "$1")
         ;;
@@ -217,6 +231,7 @@ case $task in
         echo "    build-win32 [verbose]"
         echo "    run-winamp <winamp-dir>"
         echo "    build-linux32 [verbose]"
+        echo "    build-linux64 [verbose]"
         echo "    run-rust-cli <preset>"
         echo "    check-clang-format [dump]"
         echo "    all-checks [verbose]"
