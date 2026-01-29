@@ -283,14 +283,21 @@ endif()
 
 # Rust
 if(WIN32)
-    if(MSVC)
-        set(RUST_TARGET "i686-pc-windows-msvc")
-    else()
-        set(RUST_TARGET "i686-pc-windows-gnu")
-    endif()
+    set(RUST_TARGET_OS "pc-windows")
 elseif(LINUX)
-    set(RUST_TARGET "i686-unknown-linux-gnu")
+    set(RUST_TARGET_OS "unknown-linux")
 endif()
+if(MSVC)
+    set(RUST_TARGET_COMPILER "msvc")
+else()
+    set(RUST_TARGET_COMPILER "gnu")
+endif()
+if(ARCH_64BIT)
+    set(RUST_TARGET_ARCH "x86_64")
+else()
+    set(RUST_TARGET_ARCH "i686")
+endif()
+set(RUST_TARGET "${RUST_TARGET_ARCH}-${RUST_TARGET_OS}-${RUST_TARGET_COMPILER}")
 find_program(RUSTC rustc)
 find_program(CARGO cargo)
 if(WIN32)  # Disable experimental Rust build on Windows for now, to make the CI green.
@@ -300,9 +307,6 @@ elseif(NOT RUSTC)
     set(SKIP_RUST ON)
 elseif(NOT CARGO)
     message(WARNING "Cargo not found. Rust code skipped.")
-    set(SKIP_RUST ON)
-elseif(ARCH_64BIT)
-    message(WARNING "Rust build for 64bit not yet supported. Rust code skipped.")
     set(SKIP_RUST ON)
 else()
     execute_process(COMMAND ${RUSTC} --target ${RUST_TARGET} --print target-libdir
@@ -321,16 +325,13 @@ if(NOT SKIP_RUST)
         CONFIGURE_COMMAND ""  # default configure looks for the toolchain file in parent dir
         BINARY_DIR "${CMAKE_SOURCE_DIR}"
         BUILD_COMMAND ${CMAKE_COMMAND} -E env
-            "RUSTFLAGS=-L ${CMAKE_BINARY_DIR} -l avs"
-            LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}
-            PKG_CONFIG_SYSROOT_DIR=/usr/lib32/
+            AVS_LIB_DIR=${CMAKE_BINARY_DIR}
             cargo build
-                --target ${RUST_TARGET}
                 --release
-                --target-dir ${CMAKE_BINARY_DIR}
+                --target ${RUST_TARGET}
                 --bin avs-cli
         INSTALL_COMMAND ${CMAKE_COMMAND} -E copy
-            ${CMAKE_BINARY_DIR}/${RUST_TARGET}/release/avs-cli
+            target/${RUST_TARGET}/release/avs-cli
             ${CMAKE_BINARY_DIR}/avs
         LOG_BUILD ON
     )

@@ -1,5 +1,4 @@
-// use cmake;
-// use std::env;
+use std::env;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-changed=build.rs");
@@ -17,14 +16,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .generate()?
         .write_to_file("bindings/bindings.rs")?;
 
-    // if cfg!(target_os = "linux") && cfg!(target_arch = "x86") {
-    //     env::set_var("PKG_CONFIG_PATH", "/usr/lib32/pkgconfig");
-    // }
-    // cmake::Config::new("..").out_dir("..").build_target("libavs").build();
-
-    // println!("cargo::rustc-link-search=native=../build_linux32");
-    println!("cargo::rustc-link-search=build_linux32");
-    println!("cargo::rustc-env=LD_LIBRARY_PATH=build_linux32");
+    if let Ok(lib_dir) = env::var("AVS_LIB_DIR") {
+        println!("cargo:rustc-link-search=native={lib_dir}");
+    }
+    println!("cargo:rustc-link-lib=dylib=avs");
 
     Ok(())
 }
