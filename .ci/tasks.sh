@@ -101,30 +101,36 @@ function run_c_cli() {
     "$build_dir/avs-cli" "$1" || return 1
 }
 
-function run_rust_cli() {
-    if [ ! -e build_linux32/libavs.so ]; then
-        build_linux32 || return
+function _run_rust() {
+    build_dir=build_linux64
+    if [ ! -e "$build_dir/libavs.so" ]; then
+        build_linux64 || return
     fi
+    no_build=0
     if [ "$1" == "nobuild" ]; then
         shift
         no_build=1
     fi
-    build_dir=build_linux32
+    if [ "$1" == "cli" ] || [ "$1" == "ui" ]; then
+        bin=avs-$1
+        shift
+    fi
     export RUST_BACKTRACE=${RUST_BACKTRACE:-1}
-    export RUSTFLAGS="-L $build_dir -l avs"
+    export AVS_LIB_DIR=$build_dir
     export LD_LIBRARY_PATH=$build_dir
-    export PKG_CONFIG_SYSROOT_DIR=/usr/lib32/
     if [ "$no_build" -eq 1 ] \
-            && [ -e target/i686-unknown-linux-gnu/debug/avs-cli ]; then
-        target/i686-unknown-linux-gnu/debug/avs-cli "$@"
+            && [ -e target/x86_64-unknown-linux-gnu/debug/"$bin" ]; then
+                target/x86_64-unknown-linux-gnu/debug/"$bin" "$@"
     else
         cargo run \
-            --bin avs-cli \
-            --target i686-unknown-linux-gnu \
+            --bin "$bin" \
             -- \
             "$@"
     fi
 }
+
+function run_rust_cli() { _run_rust cli "$@"; }
+function run_rust_ui() { _run_rust ui "$@"; }
 
 function install_deps() {
     distro=${1:-}
