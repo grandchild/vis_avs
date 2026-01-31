@@ -1,3 +1,18 @@
+//! A simple insert-only tree structure.
+//! Example usage:
+//! ```rust
+//! use avs_rs::tree::InsertOnlyTree;
+//! let mut tree = InsertOnlyTree::new();
+//! let root_id = tree.insert(None, "root").unwrap();
+//! let child1_id = tree.insert(Some(root_id), "child1").unwrap();
+//! let child2_id = tree.insert(Some(root_id), "child2").unwrap();
+//! for (depth, val) in tree.iter() {
+//!     for i in 0..depth {
+//!         print!("  ");
+//!     }
+//!     println!("Value: {}", val);
+//! }
+//! ```
 use std::collections::VecDeque;
 
 #[derive(Debug, Default)]
@@ -61,6 +76,10 @@ where
 
     pub(crate) fn root(&self) -> &T {
         &self.arena[0].val
+    }
+
+    pub(crate) fn root_mut(&mut self) -> &mut T {
+        &mut self.arena[0].val
     }
 
     pub(crate) fn parent(&self, val: &T) -> Option<&T> {

@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use minifb::Key as MinifbKey;
-use minifb::MouseButton as MinifbMouseButton;
 
 #[derive(Eq, PartialEq, Hash)]
 enum Key {

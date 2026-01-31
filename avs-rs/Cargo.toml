@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 libc = "0"
 memmap = "0"
+memmap2 = "0"
 # dlopen = "0.1"
 avs-binding-macros = { path = "avs-binding-macros" }
 
