@@ -87,7 +87,8 @@ void E_Text::reinit(int w, int h) {
     myBuffer = (int*)malloc(w * h * 4);
 }
 
-E_Text::E_Text(AVS_Instance* avs) : Configurable_Effect(avs), text(new AVS_Text()) {
+E_Text::E_Text(AVS_Instance* avs)
+    : Configurable_Effect(avs), font(nullptr), text(new AVS_Text()) {
     old_valign = 0;
     old_halign = 0;
     old_border_mode = -1;
