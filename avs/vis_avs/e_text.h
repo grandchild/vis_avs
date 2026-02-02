@@ -208,7 +208,8 @@ class E_Text : public Configurable_Effect<Text_Info, Text_Config> {
     int forceredraw;
     int old_valign, old_halign;
     int old_border_mode;
-    int old_curword, old_clipcolor;
+    int old_curword;
+    uint32_t old_clipcolor;
     char oldtxt[256];
     int old_blend1, old_blend2, old_blend3;
     int oldxshift, oldyshift;

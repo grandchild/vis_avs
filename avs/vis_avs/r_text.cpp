@@ -407,7 +407,7 @@ void E_Text::on_font() {
 
 int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, int h) {
     int i, j;
-    int clipcolor;
+    uint32_t clipcolor;
     char thisText[256];
 
     if (updating) {
@@ -475,11 +475,11 @@ int E_Text::render(char[2][2][576], int is_beat, int* framebuffer, int*, int w, 
             this->text->get_text_render_size(
                 thisText, this->font, w, h, &text_w, &text_h);
             _halign = HPOS_LEFT;
-            if (text_w < w) {
+            if (text_w < (size_t)w) {
                 _xshift = rand() % (int)(((float)(w - text_w) / (float)w) * 100.0F);
             }
             _valign = VPOS_TOP;
-            if (text_h < h) {
+            if (text_h < (size_t)h) {
                 _yshift = rand() % (int)(((float)(h - text_h) / (float)h) * 100.0F);
             }
             forceshift = 1;

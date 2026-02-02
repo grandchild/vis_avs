@@ -159,7 +159,7 @@ class AVS_Video {
      * Inspect the current cache state for debugging video playback/caching performance.
      */
     struct Cache_State {
-        uint64_t size = 0;
+        int64_t size = 0;
         int64_t start = 0;
         int64_t play_head = 0;
         int64_t max_size = 0;
@@ -202,7 +202,7 @@ class AVS_Video {
         AVS_Video::Frame* get_frame(int64_t index);
         void prune(int64_t head_index);
         void reset(int64_t head_index = 0);
-        size_t size();
+        int64_t size();
         bool is_filled(int64_t head_index);
         bool is_frame_in_cache(int64_t frame_index);
         bool is_frame_in_cache_range(int64_t frame_index);

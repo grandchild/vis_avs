@@ -72,22 +72,22 @@ void on_map_cycle_mode_change(Effect* component,
 void flip_map(Effect* component,
               const Parameter*,
               const std::vector<int64_t>& parameter_path) {
-    ((E_ColorMap*)component)->flip_map(CLAMP(parameter_path[0], 0, SIZE_MAX));
+    ((E_ColorMap*)component)->flip_map(CLAMP(parameter_path[0], 0, INT64_MAX));
 }
 void clear_map(Effect* component,
                const Parameter*,
                const std::vector<int64_t>& parameter_path) {
-    ((E_ColorMap*)component)->clear_map(CLAMP(parameter_path[0], 0, SIZE_MAX));
+    ((E_ColorMap*)component)->clear_map(CLAMP(parameter_path[0], 0, INT64_MAX));
 }
 void save_map(Effect* component,
               const Parameter*,
               const std::vector<int64_t>& parameter_path) {
-    ((E_ColorMap*)component)->save_map(CLAMP(parameter_path[0], 0, SIZE_MAX));
+    ((E_ColorMap*)component)->save_map(CLAMP(parameter_path[0], 0, INT64_MAX));
 }
 void load_map(Effect* component,
               const Parameter*,
               const std::vector<int64_t>& parameter_path) {
-    ((E_ColorMap*)component)->load_map(CLAMP(parameter_path[0], 0, SIZE_MAX));
+    ((E_ColorMap*)component)->load_map(CLAMP(parameter_path[0], 0, INT64_MAX));
 }
 
 E_ColorMap::E_ColorMap(AVS_Instance* avs)

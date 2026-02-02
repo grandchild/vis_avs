@@ -680,7 +680,7 @@ AVS_Video::Frame* AVS_Video::Cache::get_frame(int64_t index) {
     lock_lock(this->lock);
     auto cache_index = this->cache_index(index);
     AVS_Video::Frame* out;
-    if (cache_index >= 0 && cache_index < this->frames.size()) {
+    if (cache_index >= 0 && cache_index < this->size()) {
         out = &this->frames[cache_index];
     } else {
         out = NULL;
@@ -692,7 +692,7 @@ AVS_Video::Frame* AVS_Video::Cache::get_frame(int64_t index) {
 void AVS_Video::Cache::prune(int64_t head_index) {
     lock_lock(this->lock);
     auto cache_index = this->cache_index(head_index);
-    while (cache_index > this->backward_length && cache_index < this->frames.size()) {
+    while (cache_index > this->backward_length && cache_index < this->size()) {
         if (!this->frames.empty()) {
             this->frames.pop_front();
         }
@@ -712,12 +712,12 @@ void AVS_Video::Cache::reset(int64_t head_index) {
     lock_unlock(this->lock);
 }
 
-size_t AVS_Video::Cache::size() { return this->frames.size(); }
+int64_t AVS_Video::Cache::size() { return this->frames.size(); }
 
 bool AVS_Video::Cache::is_filled(int64_t head_index) {
     lock_lock(this->lock);
-    auto forward_length = (int64_t)this->frames.size()
-                          - (this->cache_index(head_index) - this->backward_length);
+    auto forward_length =
+        (int64_t)this->size() - (this->cache_index(head_index) - this->backward_length);
     bool out = forward_length >= this->max_length;
     lock_unlock(this->lock);
     return out;
@@ -726,7 +726,7 @@ bool AVS_Video::Cache::is_filled(int64_t head_index) {
 bool AVS_Video::Cache::is_frame_in_cache(int64_t frame_index) {
     lock_lock(this->lock);
     auto cache_index = this->cache_index(frame_index);
-    bool out = cache_index >= 0 && cache_index < this->frames.size();
+    bool out = cache_index >= 0 && cache_index < this->size();
     lock_unlock(this->lock);
     return out;
 }
@@ -735,7 +735,7 @@ bool AVS_Video::Cache::is_frame_in_cache_range(int64_t frame_index) {
     lock_lock(this->lock);
     auto cache_index = this->cache_index(frame_index);
     bool out = cache_index >= 0
-               && (cache_index < this->max_length || cache_index < this->frames.size());
+               && (cache_index < this->max_length || cache_index < this->size());
     lock_unlock(this->lock);
     return out;
 }
@@ -744,11 +744,11 @@ int64_t AVS_Video::Cache::nearest_cached_frame_index(int64_t frame_index) {
     lock_lock(this->lock);
     auto cache_index = this->cache_index(frame_index);
     int64_t out = this->start + cache_index;
-    if (cache_index < 0 || cache_index >= this->frames.size()) {
+    if (cache_index < 0 || cache_index >= this->size()) {
         int64_t split_frame =
-            this->frames.size() + max(this->video_length - this->frames.size(), 0) / 2;
+            this->size() + max(this->video_length - this->size(), 0) / 2;
         if (cache_index < split_frame) {
-            out = this->start + this->frames.size() - 1;
+            out = this->start + this->size() - 1;
         } else {
             out = this->start;
         }

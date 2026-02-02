@@ -117,7 +117,7 @@ static json split_string_lines(const std::string& str) {
 }
 
 static std::string& replace_lf_newlines_with_crlf_for_winamp_ui(std::string& str) {
-    for (int64_t i = 0; i < str.size(); i++) {
+    for (uint64_t i = 0; i < str.size(); i++) {
         if (str[i] == '\n') {
             str.insert(i, "\r");
         }
