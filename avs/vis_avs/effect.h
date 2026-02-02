@@ -35,8 +35,9 @@
 
 #include "../platform.h"
 
-#include <algorithm>  // std::remove
-#include <memory>     // std::shared_ptr, std::weak_ptr
+#include <algorithm>   // std::remove
+#include <inttypes.h>  // portable printf format identifiers
+#include <memory>      // std::shared_ptr, std::weak_ptr
 #include <set>
 #include <stdint.h>
 #include <string.h>
@@ -354,7 +355,7 @@ class Configurable_Effect : public Effect {
             if (this->trace_parameter_changes) {
                 auto prefix =
                     trace_prefix(this->info.name, parameter->name, parameter_path);
-                log_info("%s added new entry #%lld\n", prefix.c_str(), before);
+                log_info("%s added new entry #%" PRIi64 "\n", prefix.c_str(), before);
             }
         }
         return success;
@@ -373,7 +374,10 @@ class Configurable_Effect : public Effect {
             if (this->trace_parameter_changes) {
                 auto prefix =
                     trace_prefix(this->info.name, parameter->name, parameter_path);
-                log_info("%s moved entry #%lld to #%lld\n", prefix.c_str(), from, to);
+                log_info("%s moved entry #%" PRIi64 " to #%" PRIi64 "\n",
+                         prefix.c_str(),
+                         from,
+                         to);
             }
         }
         return success;
@@ -392,7 +396,7 @@ class Configurable_Effect : public Effect {
             if (this->trace_parameter_changes) {
                 auto prefix =
                     trace_prefix(this->info.name, parameter->name, parameter_path);
-                log_info("%s removed entry #%lld\n", prefix.c_str(), to_remove);
+                log_info("%s removed entry #%" PRIi64 "\n", prefix.c_str(), to_remove);
             }
         }
         return success;
@@ -623,7 +627,7 @@ class Configurable_Effect : public Effect {
                     break;
                 }
                 case AVS_PARAM_INT:
-                    printf("%lld\n", this->get_int(param, parameter_path));
+                    printf("%" PRIi64 "\n", this->get_int(param, parameter_path));
                     break;
                 case AVS_PARAM_FLOAT:
                     printf("%f\n", this->get_float(param, parameter_path));
@@ -654,18 +658,19 @@ class Configurable_Effect : public Effect {
                     break;
                 }
                 case AVS_PARAM_COLOR:
-                    printf("%08llx\n", this->get_color(param, parameter_path));
+                    printf("%08" PRIx64 "\n", this->get_color(param, parameter_path));
                     break;
                 case AVS_PARAM_SELECT: {
                     int64_t num_options = 0;
                     auto options = param->get_options(&num_options);
                     auto selection = this->get_int(param, parameter_path);
                     if (options == nullptr) {
-                        printf("<no options> (selected %lld)\n", selection);
+                        printf("<no options> (selected %" PRIi64 ")\n", selection);
                         break;
                     }
                     if (selection < 0 || selection >= num_options) {
-                        printf("<invalid selection> (selected %lld)\n", selection);
+                        printf("<invalid selection> (selected %" PRIi64 ")\n",
+                               selection);
                         break;
                     }
                     printf("%s\n", options[selection]);
@@ -674,7 +679,7 @@ class Configurable_Effect : public Effect {
                 case AVS_PARAM_LIST: {
                     auto list_length = param->list_length(
                         this->get_config_address(param, parameter_path));
-                    printf("list (%u entries)\n", list_length);
+                    printf("list (%" PRIuPTR " entries)\n", list_length);
                     for (size_t k = 0; k < list_length; k++) {
                         std::vector<int64_t> new_parameter_path = parameter_path;
                         new_parameter_path.push_back(k);

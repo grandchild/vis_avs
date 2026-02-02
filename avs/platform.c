@@ -7,6 +7,7 @@ int max(int a, int b) { return a < b ? b : a; }
 // Otherwise MSVC will complain: "error C2059: syntax error: '<parameter-list>'"
 // TODO [clean][bug]: Fix cleanly or ensure that min/max still works as intended on
 //                    Windows.
+#include <inttypes.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,30 +23,30 @@ enum LogLevel g_log_level = LOG_WARN;
 void log_set_out_file(FILE* file) { log_file = file; }
 void log_disable_stderr() { log_no_stderr = true; }
 void log_set_level(enum LogLevel level) { g_log_level = level; }
-#define LOG(level)                                                              \
-    if (g_log_level <= LOG_##level) {                                           \
-        const char* prefix = #level;                                            \
-        uint64_t time = timer_ms();                                             \
-        char time_str[32];                                                      \
-        snprintf(time_str, 32, "%llu.%03llu", time / 1000, time % 1000);        \
-        size_t fmt_str_len = strlen(time_str) + strlen(" ") + strlen(prefix)    \
-                             + strlen(": ") + strnlen(fmt, 1024) + strlen("\n") \
-                             + sizeof('\0');                                    \
-        char* log_fmt_str = (char*)calloc(fmt_str_len, sizeof(char));           \
-        strcpy(log_fmt_str, time_str);                                          \
-        strcat(log_fmt_str, " ");                                               \
-        strcat(log_fmt_str, prefix);                                            \
-        strcat(log_fmt_str, ": ");                                              \
-        strncat(log_fmt_str, fmt, 1024);                                        \
-        strcat(log_fmt_str, "\n");                                              \
-        va_list args;                                                           \
-        va_start(args, fmt);                                                    \
-        if (!log_no_stderr) {                                                   \
-            vfprintf(stderr, log_fmt_str, args);                                \
-        }                                                                       \
-        if (log_file != NULL) {                                                 \
-            vfprintf(log_file, log_fmt_str, args);                              \
-        }                                                                       \
+#define LOG(level)                                                                  \
+    if (g_log_level <= LOG_##level) {                                               \
+        const char* prefix = #level;                                                \
+        uint64_t time = timer_ms();                                                 \
+        char time_str[32];                                                          \
+        snprintf(time_str, 32, "%" PRIu64 ".%03" PRIu64, time / 1000, time % 1000); \
+        size_t fmt_str_len = strlen(time_str) + strlen(" ") + strlen(prefix)        \
+                             + strlen(": ") + strnlen(fmt, 1024) + strlen("\n")     \
+                             + sizeof('\0');                                        \
+        char* log_fmt_str = (char*)calloc(fmt_str_len, sizeof(char));               \
+        strcpy(log_fmt_str, time_str);                                              \
+        strcat(log_fmt_str, " ");                                                   \
+        strcat(log_fmt_str, prefix);                                                \
+        strcat(log_fmt_str, ": ");                                                  \
+        strncat(log_fmt_str, fmt, 1024);                                            \
+        strcat(log_fmt_str, "\n");                                                  \
+        va_list args;                                                               \
+        va_start(args, fmt);                                                        \
+        if (!log_no_stderr) {                                                       \
+            vfprintf(stderr, log_fmt_str, args);                                    \
+        }                                                                           \
+        if (log_file != NULL) {                                                     \
+            vfprintf(log_file, log_fmt_str, args);                                  \
+        }                                                                           \
     }
 #ifdef DEBUG
 void log_debug(const char* fmt, ...) { LOG(DEBUG); }

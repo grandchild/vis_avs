@@ -5,6 +5,7 @@
 #include "effect_library.h"
 #include "handles.h"
 #include "instance.h"
+#include "inttypes.h"
 #include "pixel_format.h"
 #include "render_context.h"
 
@@ -112,7 +113,8 @@ void AVS_Instance::update_time(int64_t time_in_ms) {
             // add the new given timestamp and finally subtract 1 so that the first
             // video-mode frame doesn't have the same time as the last realtime frame.
             this->time_mode_switch_offset = -this->current_time_in_ms + time_in_ms - 1;
-            log_info("Time mode switch: Realtime -> Video, offset: %lld, time: %lld",
+            log_info("Time mode switch: Realtime -> Video, offset: %" PRIi64
+                     ", time: %" PRIi64,
                      this->time_mode_switch_offset,
                      this->current_time_in_ms);
         }
@@ -131,7 +133,8 @@ void AVS_Instance::update_time(int64_t time_in_ms) {
             // When switching from video to realtime mode, similar requirements apply.
             // Offset by the previous time, add the current realtime and subtract 1.
             this->time_mode_switch_offset = -this->current_time_in_ms + timer_ms() - 1;
-            log_info("Time mode switch: Video -> Realtime, offset: %lld, time: %lld",
+            log_info("Time mode switch: Video -> Realtime, offset: %" PRIi64
+                     ", time: %" PRIi64,
                      this->time_mode_switch_offset,
                      this->current_time_in_ms);
         }

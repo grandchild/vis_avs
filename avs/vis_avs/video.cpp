@@ -4,6 +4,8 @@
 
 #include "video_libav.h"
 
+#include <inttypes.h>
+
 /**
  * The maximum wait time for a frame to be decoded (`WAIT_FRAMES_AVAILABLE`) is hard to
  * compromise on. It shouldn't wait forever in case the threading code does something
@@ -617,10 +619,10 @@ int64_t AVS_Video::wrap_frame_index(int64_t frame_index) {
 void AVS_Video::print_info() {
     auto stream = this->av->demuxer->streams[this->video_stream];
     printf("video stream properties:\n");
-    printf("> #frames: %lld\n", stream->nb_frames);
+    printf("> #frames: %" PRIi64 "\n", stream->nb_frames);
     printf("> timebase: %d/%d\n", stream->time_base.num, stream->time_base.den);
-    printf("> start: %lld\n", stream->start_time);
-    printf("> duration: %lld\n", stream->duration);
+    printf("> start: %" PRIi64 "\n", stream->start_time);
+    printf("> duration: %" PRIi64 "\n", stream->duration);
     printf("> avg framerate: %d/%d\n",
            stream->avg_frame_rate.num,
            stream->avg_frame_rate.den);

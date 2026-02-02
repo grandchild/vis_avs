@@ -280,7 +280,7 @@ uint32_t Effect::string_nt_save_legacy(std::string& src,
 void Effect::print_tree(std::string indent) {
     printf("%s%s [%08x]", indent.c_str(), this->get_desc(), this->handle);
     if (this->can_have_child_components()) {
-        printf("(children: %d)", this->children.size());
+        printf("(children: %" PRIu64 ")", this->children.size());
     }
     printf("\n");
     this->print_config(indent + " ");
