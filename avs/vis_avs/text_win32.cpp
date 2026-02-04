@@ -174,8 +174,8 @@ void AVS_Text::get_text_render_size(std::string string,
                                     AVS_Font* font,
                                     size_t w,
                                     size_t h,
-                                    uint32_t* out_w,
-                                    uint32_t* out_h) {
+                                    size_t* out_w,
+                                    size_t* out_h) {
     if (!this->context || this->last_h != h || this->last_w != w) {
         this->reset(w, h);
         this->last_w = w;
@@ -211,7 +211,7 @@ void AVS_Text::render(std::string string,
                       pixel_rgb0_8 color,
                       TextBorderMode border,
                       pixel_rgb0_8 border_color,
-                      size_t border_size) {
+                      uint32_t border_size) {
     (void)w;
     if (string.empty() || buffer == nullptr) {
         return;

@@ -353,10 +353,10 @@ static void _dosetsel(HWND hwndDlg) {
     SetDlgItemText(hwndDlg, IDC_EDIT1, text);
 }
 
-static BOOL CALLBACK evalHelpDlgProc(HWND hwndDlg,
-                                     UINT uMsg,
-                                     WPARAM wParam,
-                                     LPARAM lParam) {
+static INT_PTR CALLBACK evalHelpDlgProc(HWND hwndDlg,
+                                        UINT uMsg,
+                                        WPARAM wParam,
+                                        LPARAM lParam) {
     switch (uMsg) {
         case WM_INITDIALOG: {
             TCITEM item;
@@ -409,7 +409,7 @@ void compilerfunctionlist(HWND hwndDlg, const char* title, const char* text) {
                    MAKEINTRESOURCE(IDD_EVAL_HELP),
                    hwndDlg,
                    evalHelpDlgProc,
-                   (LONG)info.c_str());
+                   (LPARAM)info.c_str());
 }
 
 void init_ranged_slider(const Parameter* param,

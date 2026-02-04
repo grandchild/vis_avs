@@ -164,7 +164,7 @@ void E_Text::getWord(int n, char* buf, int maxlen) {
                                         (LPARAM)105,
                                         SMTO_BLOCK,
                                         50,
-                                        (LPDWORD)&pos)) {
+                                        (PDWORD_PTR)&pos)) {
                     pos = 0;
                 }
             }
