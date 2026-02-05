@@ -9,16 +9,16 @@
 # Check if your CROSS_CC_NAME is correct by trying to directly
 # execute
 #     /usr/bin/CROSS_CC_NAME-gcc
-#     (e.g.: /usr/bin/x86_64-w64-mingw32-gcc)
+#     (e.g.: /usr/bin/i686-w64-mingw32-gcc)
 # If you get an error like "no input files, compilation terminated" then that's the
 # *correct* setting. Otherwise, if you see something like "command not found", then it's
 # not the correct one yet.
 #
 # Check if your CROSS_CC_PREFIX is correct by checking whether the file
 #     CROSS_CC_PREFIX/bin/libstdc++-6.dll
-#     (e.g.: /usr/x86_64-w64-ming32/bin/libstdc++-6.dll)
+#     (e.g.: /usr/i686-w64-ming32/bin/libstdc++-6.dll)
 # exists.
-SET(CROSS_CC_NAME x86_64-w64-mingw32)
+SET(CROSS_CC_NAME i686-w64-mingw32)
 SET(CROSS_CC_PREFIX /usr/${CROSS_CC_NAME})
 SET(ENV{PKG_CONFIG_LIBDIR} ${CROSS_CC_PREFIX}/lib/pkgconfig)
 

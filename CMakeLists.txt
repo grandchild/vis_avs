@@ -201,12 +201,6 @@ if(WIN32)
         NOMINMAX                            # Don't define min()/max() in windows.h on
                                             # MSVC. Use our own functions everywhere.
     )
-    add_library(vis_avs SHARED
-        $<TARGET_OBJECTS:avs_eel>
-        $<TARGET_OBJECTS:avs_common>
-        ${SRC_FILES_VIS_AVS}
-    )
-    target_compile_definitions(vis_avs PUBLIC CAN_TALK_TO_WINAMP)
 
     if(MSVC)
         check_linker_flag(C "/NXCOMPAT:NO" HAS_DISABLE_NXCOMPAT)
@@ -224,26 +218,37 @@ if(WIN32)
                         " No standalone Win32 C/C++ binaries possible (libs will work)."
                         " Needs binutils 2.36 or higher.")
     endif()
-    target_link_libraries(vis_avs
-        ddraw  # draw.cpp includes ddraw.h
-               # https://docs.microsoft.com/en-us/windows/win32/api/ddraw/nf-ddraw-directdrawcreate
-        rpcrt4 # UUIDs
-    )
+
     target_link_libraries(libavs
         rpcrt4 # UUIDs
     )
 
-    get_filename_component(WINAMP_DIR "[HKEY_CURRENT_USER\\SOFTWARE\\Winamp]" ABSOLUTE)
-    if(WINAMP_DIR STREQUAL "")
-        set(WINAMP_DIR "" CACHE PATH "Winamp installation directory (contains winamp.exe)." FORCE)
-    endif()
-    if(EXISTS "${WINAMP_DIR}")
-        add_custom_command(TARGET vis_avs POST_BUILD
-            COMMENT "Copy AVS .dll to Winamp plugins directory"
-            COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:vis_avs>" "${WINAMP_DIR}/Plugins"
+    if(ARCH_32BIT)
+        add_library(vis_avs SHARED
+            $<TARGET_OBJECTS:avs_eel>
+            $<TARGET_OBJECTS:avs_common>
+            ${SRC_FILES_VIS_AVS}
         )
-    else()
-        message(WARNING "Winamp installation directory ('${WINAMP_DIR}') not found or not set. Skipped creating debug task.")
+        target_compile_definitions(vis_avs PUBLIC CAN_TALK_TO_WINAMP)
+
+        target_link_libraries(vis_avs
+            ddraw  # draw.cpp includes ddraw.h
+                   # https://docs.microsoft.com/en-us/windows/win32/api/ddraw/nf-ddraw-directdrawcreate
+            rpcrt4 # UUIDs
+        )
+
+        get_filename_component(WINAMP_DIR "[HKEY_CURRENT_USER\\SOFTWARE\\Winamp]" ABSOLUTE)
+        if(WINAMP_DIR STREQUAL "")
+            set(WINAMP_DIR "" CACHE PATH "Winamp installation directory (contains winamp.exe)." FORCE)
+        endif()
+        if(EXISTS "${WINAMP_DIR}")
+            add_custom_command(TARGET vis_avs POST_BUILD
+                COMMENT "Copy AVS .dll to Winamp plugins directory"
+                COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:vis_avs>" "${WINAMP_DIR}/Plugins"
+            )
+        else()
+            message(WARNING "Winamp installation directory ('${WINAMP_DIR}') not found or not set. Skipped creating debug task.")
+        endif()
     endif()
 
     #[[

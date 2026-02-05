@@ -50,6 +50,25 @@ function build_win32() {
     if grep -q "Arch Linux" /etc/os-release; then
         i686-w64-mingw32-cmake .. || return $GIT_BISECT_CANNOT_CHECK
     else
+        cmake -DCMAKE_TOOLCHAIN_FILE=CMake-MingWcross-32bit-toolchain.txt .. \
+            || return $GIT_BISECT_CANNOT_CHECK
+    fi
+    # shellcheck disable=SC2086  # $_verbose should be omitted if empty
+    make -k -j "$parallel" $_verbose all || return 1
+    popd || return 1
+}
+
+function build_win64() {
+    verbose=${1:-}
+    if [ "$verbose" == "verbose" ]; then
+        _verbose="VERBOSE=1"
+    fi
+    build_dir=build_win64
+    mkdir -p "$build_dir"
+    pushd "$build_dir" || return 1
+    if grep -q "Arch Linux" /etc/os-release; then
+        x86_64-w64-mingw32-cmake .. || return $GIT_BISECT_CANNOT_CHECK
+    else
         cmake -DCMAKE_TOOLCHAIN_FILE=CMake-MingWcross-toolchain.txt .. \
             || return $GIT_BISECT_CANNOT_CHECK
     fi
@@ -198,6 +217,9 @@ case $task in
     "build-win32")
         (build_win32 "$1")
         ;;
+    "build-win64")
+        (build_win64 "$1")
+        ;;
     "run-winamp")
         (run_winamp "$1")
         ;;
@@ -235,6 +257,7 @@ case $task in
         echo
         echo "Tasks:"
         echo "    build-win32 [verbose]"
+        echo "    build-win64 [verbose]"
         echo "    run-winamp <winamp-dir>"
         echo "    build-linux32 [verbose]"
         echo "    build-linux64 [verbose]"

@@ -57,7 +57,7 @@ jobs:
           set -e
           mkdir build
           cd build
-          cmake -DCMAKE_TOOLCHAIN_FILE=CMake-MingWcross-toolchain.txt ..
+          cmake -DCMAKE_TOOLCHAIN_FILE=CMake-MingW32cross-toolchain.txt ..
 
       - name: Make
         run: |-

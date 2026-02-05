@@ -115,7 +115,7 @@ cd build
 
 # Debian- and Ubuntu-based distros don't provide ready-made cross-compiling CMake
 # packages, so you'll have to tell CMake about your toolchain.
-cmake -D CMAKE_TOOLCHAIN_FILE=../CMake-MingWcross-toolchain.txt ..
+cmake -D CMAKE_TOOLCHAIN_FILE=../CMake-MingW32cross-toolchain.txt ..
 
 make
 ```
