@@ -165,8 +165,7 @@ void my_getViewport(RECT* r, RECT* sr) {
             (LPCRECT lpcr, DWORD dwFlags) =
                 FORCE_FUNCTION_CAST(HMONITOR(WINAPI*)(LPCRECT, DWORD))
                     GetProcAddress(h, "MonitorFromRect");
-            BOOL(WINAPI * Gmi)
-            (HMONITOR mon, LPMONITORINFO lpmi) =
+            BOOL(WINAPI * Gmi)(HMONITOR mon, LPMONITORINFO lpmi) =
                 FORCE_FUNCTION_CAST(BOOL(WINAPI*)(HMONITOR, LPMONITORINFO))
                     GetProcAddress(h, "GetMonitorInfoA");
             if (Mfr && Gmi) {
