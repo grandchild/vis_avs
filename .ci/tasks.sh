@@ -166,6 +166,7 @@ function install_deps() {
             mingw-w64-cmake \
             mingw-w64-gcc \
             mingw-w64-ffmpeg-minimal \
+            nasm \
             lib32-util-linux \
             lib32-libpipewire \
             lib32-ffmpeg-minimal-dev \
@@ -176,7 +177,7 @@ function install_deps() {
             cmake pkg-config mingw-w64 gcc-multilib g++-multilib \
             autoconf gettext flex bison libtool autopoint \
             libavformat-dev libavcodec-dev libswscale-dev \
-            libpipewire-0.3-dev \
+            libpipewire-0.3-dev nasm \
             #
     fi
 }

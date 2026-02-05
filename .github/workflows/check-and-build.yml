@@ -50,7 +50,14 @@ jobs:
 
       - name: Install build dependencies
         run: |-
-          sudo apt update && sudo apt install --yes mingw-w64 libavformat-dev libavcodec-dev libswscale-dev
+          deps=(
+            mingw-w64
+            libavformat-dev
+            libavcodec-dev
+            libswscale-dev
+            nasm
+          )
+          sudo apt update && sudo apt install --yes "${deps[@]}"
 
       - name: Configure
         run: |-
@@ -112,6 +119,7 @@ jobs:
             libavcodec-dev
             libswscale-dev
             libpipewire-0.3-dev
+            nasm
             autoconf gettext flex bison libtool autopoint  # for util-linux/libuuid
           )
           sudo apt update && sudo apt install --yes "${deps[@]}"
