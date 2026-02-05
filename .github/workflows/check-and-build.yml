@@ -119,6 +119,8 @@ jobs:
             libavcodec-dev
             libswscale-dev
             libpipewire-0.3-dev
+            libfontconfig-dev
+            libfreetype-dev
             nasm
             autoconf gettext flex bison libtool autopoint  # for util-linux/libuuid
           )

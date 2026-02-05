@@ -163,6 +163,8 @@ function install_deps() {
             base-devel \
             cmake \
             clang \
+            fontconfig \
+            freetype2 \
             mingw-w64-cmake \
             mingw-w64-gcc \
             mingw-w64-ffmpeg-minimal \
@@ -177,7 +179,8 @@ function install_deps() {
             cmake pkg-config mingw-w64 gcc-multilib g++-multilib \
             autoconf gettext flex bison libtool autopoint \
             libavformat-dev libavcodec-dev libswscale-dev \
-            libpipewire-0.3-dev nasm \
+            libpipewire-0.3-dev libfontconfig-dev libfreetype-dev \
+            nasm \
             #
     fi
 }
